@@ -1,2 +1,3 @@
-# my-nix
+# dotfiles
+
 My NixOS settings
