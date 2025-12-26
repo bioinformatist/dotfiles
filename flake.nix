@@ -14,9 +14,10 @@
     hyprland.url = "github:hyprwm/Hyprland";
     swww.url = "github:LGFae/swww";
     yazi.url = "github:sxyazi/yazi";
+    impermanence.url = "github:nix-community/impermanence";
   };
   
-  outputs = inputs@{ nixpkgs, disko, home-manager, yazi, ... }: {
+  outputs = inputs@{ nixpkgs, disko, home-manager, yazi, impermanence, ... }: {
     nixpkgs.overlays = [
       yazi.overlays.default
       import ./overlays {inherit inputs;}
@@ -37,7 +38,7 @@
           modules = [ 
             ./nixos/configuration.nix
             disko.nixosModules.disko
-
+            impermanence.nixosModules.impermanence
             home-manager.nixosModules.home-manager
             {
               home-manager.useGlobalPkgs = true;
