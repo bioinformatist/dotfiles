@@ -1,0 +1,7 @@
+keys:
+  - &key_ysun age176uhkwuqd5ry737n7lqkc8mclmdrzsdvn2hen9g27les6m3uxf8qc88s2q
+creation_rules:
+  - path_regex: secrets/.*
+    key_groups:
+      - age:
+          - *key_ysun

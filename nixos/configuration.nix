@@ -86,7 +86,14 @@
     isNormalUser = true;
     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
     shell = pkgs.nushell;
-    hashedPasswordFile = "/persist/passwords/ysun";
+    hashedPasswordFile = config.sops.secrets."ysun-password".path;
+  };
+
+  sops.defaultSopsFile = ../secrets/secrets.yaml;
+  sops.defaultSopsFormat = "yaml";
+  sops.age.keyFile = "/var/lib/sops-nix/key.txt";
+  sops.secrets."ysun-password" = {
+    neededForUsers = true;
   };
 
   fonts.packages = with pkgs; [
@@ -198,6 +205,7 @@
       "/var/lib/nixos"
       "/var/lib/systemd/coredump"
       "/etc/NetworkManager/system-connections"
+      "/var/lib/sops-nix"
       {
         directory = "/var/lib/colord";
         user = "colord";
