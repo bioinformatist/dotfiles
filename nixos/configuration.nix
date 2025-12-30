@@ -48,8 +48,11 @@
       # tr -d '\n' < filename-containing-ssid | od -tx1 -An | tr -d ' ' | tr -d '\n'
       "536e6f772773".pskRaw = "8fe856b34c6755995a3258a5ad9c4e58ff4c089f41e2226dc814ca0b07d7e83a";
     };
-    userControlled.enable = true;
+    # userControlled.enable = true;
   };
+
+  # Increase download buffer size to avoid warnings
+  nix.settings.download-buffer-size = 1024 * 1024 * 1024; # 1GB is safe enough
 
   # Set your time zone.
   time.timeZone = "Asia/Shanghai";
