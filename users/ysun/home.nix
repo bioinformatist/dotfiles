@@ -26,7 +26,8 @@
   };
 
   i18n.inputMethod = {
-    enabled = "fcitx5";
+    enable = true;
+    type = "fcitx5";
     fcitx5 = {
       addons = with pkgs; [
         fcitx5-gtk
@@ -39,6 +40,10 @@
 
   programs.git = {
     enable = true;
+    # settings = {
+    #   user.name = "Yu Sun";
+    #   user.email = "ysun@sctmes.com";
+    # };
     userName = "Yu Sun";
     userEmail = "ysun@sctmes.com";
   };

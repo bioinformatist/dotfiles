@@ -96,9 +96,31 @@
     neededForUsers = true;
   };
 
-  fonts.packages = with pkgs; [
-    maple-mono
-  ];
+  fonts = {
+    packages = with pkgs; [
+      sarasa-gothic
+      noto-fonts-cjk-sans
+      noto-fonts-cjk-serif
+      jetbrains-mono
+    ];
+
+    fontconfig.defaultFonts = {
+      serif = [
+        "Noto Serif CJK SC"
+        "Noto Serif"
+      ];
+      sansSerif = [
+        "Sarasa UI SC"
+        "Noto Sans CJK SC"
+        "Noto Sans"
+      ];
+      monospace = [
+        "JetBrains Mono"
+        "Sarasa Mono SC"
+        "Noto Sans Mono CJK SC"
+      ];
+    };
+  };
 
   security.sudo.extraRules = [
     {
@@ -127,7 +149,7 @@
       google-chrome
     ]
     ++ [
-      inputs.swww.packages.${pkgs.system}.swww
+      inputs.swww.packages.${pkgs.stdenv.hostPlatform.system}.swww
     ];
 
   home-manager.backupFileExtension = "backup";

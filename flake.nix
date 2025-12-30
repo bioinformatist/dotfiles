@@ -76,7 +76,7 @@
             (
               { pkgs, ... }:
               {
-                home.packages = [ yazi.packages.${pkgs.system}.default ];
+                home.packages = [ yazi.packages.${pkgs.stdenv.hostPlatform.system}.default ];
               }
             )
           ];
