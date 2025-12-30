@@ -43,7 +43,6 @@
                       "space_cache=v2"
                     ];
                     mountpoint = "/persist";
-                    neededForBoot = true;
                   };
                 };
               };
