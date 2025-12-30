@@ -32,7 +32,7 @@
         fcitx5-gtk
         fcitx5-rime
         kdePackages.fcitx5-configtool
-        fcitx5-chinese-addons
+        kdePackages.fcitx5-chinese-addons
       ];
     };
   };
