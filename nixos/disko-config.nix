@@ -28,17 +28,22 @@
                 subvolumes = {
                   "/nix" = {
                     mountOptions = [
-                      "compress=zstd"
+                      "compress=zstd:1"
                       "noatime"
+                      "discard=async"
+                      "space_cache=v2"
                     ];
                     mountpoint = "/nix";
                   };
                   "/persist" = {
                     mountOptions = [
-                      "compress=zstd"
+                      "compress=zstd:1"
                       "noatime"
+                      "discard=async"
+                      "space_cache=v2"
                     ];
                     mountpoint = "/persist";
+                    neededForBoot = true;
                   };
                 };
               };
@@ -52,8 +57,9 @@
         fsType = "tmpfs";
         mountOptions = [
           "defaults"
-          "size=2G"
+          "size=50%"
           "mode=755"
+          "noatime"
         ];
       };
     };
