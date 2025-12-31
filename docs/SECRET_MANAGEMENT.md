@@ -91,3 +91,30 @@ sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
 sudo mkdir -p /mnt/var/lib/sops-nix
 sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
 ```
+
+## 6. Adding a New Device SSH Key
+To give a new machine (like `vm-test`) access to GitHub using a unique key:
+
+1.  **Generate the Key**:
+    ```bash
+    # Generate a new ed25519 key (no passphrase, as it's encrypted at rest by sops)
+    ssh-keygen -t ed25519 -f ./id_github_vm_test -C "ysun@vm-test" -N ""
+    ```
+
+2.  **Add to Secrets**:
+    Use a temporary shell with `sops` (no need to install it globally):
+    ```bash
+    nix shell nixpkgs#sops --command sops secrets/secrets.yaml
+    ```
+    
+    Add the key content under a new key (e.g., `github-ssh-key`):
+    ```yaml
+    github-ssh-key: |
+      -----BEGIN OPENSSH PRIVATE KEY-----
+      ... (content of ./id_github_vm_test) ...
+      -----END OPENSSH PRIVATE KEY-----
+    ```
+    *Note: Indent the key content correctly.*
+
+3.  **Cleanup**:
+    Delete the generated key files (`id_github_vm_test` and `.pub`) after verifying they are in sops. The system will auto-provision them to `~/.ssh/` on next rebuild.
