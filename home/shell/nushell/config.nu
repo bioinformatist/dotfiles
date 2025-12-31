@@ -5,3 +5,4 @@ $env.config = {
 
 $env.EDITOR = "hx"
 $env.VISUAL = "hx"
+$env.SOPS_AGE_KEY_FILE = ("~/.config/sops/age/keys.txt" | path expand)
