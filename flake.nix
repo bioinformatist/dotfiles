@@ -46,7 +46,10 @@
         vm-test =
           let
             username = "ysun";
-            specialArgs = { inherit username; };
+            specialArgs = {
+              inherit username;
+              isVM = true;
+            };
           in
           nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";

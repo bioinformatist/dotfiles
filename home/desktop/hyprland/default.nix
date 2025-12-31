@@ -1,4 +1,9 @@
 {
+  lib,
+  isVM ? false,
+  ...
+}:
+{
   xdg.configFile = {
     "hypr/scripts" = {
       source = ./scripts;
@@ -14,5 +19,8 @@
     systemd.enable = false;
     enable = true;
     extraConfig = builtins.readFile ./hyprland.conf;
+    settings = lib.mkIf isVM {
+      debug.damage_tracking = 0;
+    };
   };
 }
