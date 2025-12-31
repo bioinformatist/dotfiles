@@ -20,8 +20,8 @@ git clone https://github.com/bioinformatist/dotfiles /tmp/dotfiles
 cd /tmp/dotfiles
 git checkout feat/ephemeral-root
 
-# Mount partitions to /mnt
-sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode mount ./nixos/disko-config.nix
+# Mount the disks using disko (Mode Mount)
+sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode mount ./hosts/vm-test/disko-config.nix
 ```
 
 ## 3. Deploy Secrets to Ephemeral Root
@@ -42,7 +42,8 @@ Run the install command. verify that it uses the USTC mirror.
 Files already in `/mnt/nix/store` will be reused, making this process very fast.
 
 ```bash
-sudo nixos-install --flake .#homePC --no-root-passwd --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
+# Note replacing 'homePC' with 'vm-test' as per new structure
+sudo nixos-install --flake .#vm-test --no-root-passwd --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
 ```
 
 ## 5. Reboot

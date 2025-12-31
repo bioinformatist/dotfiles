@@ -26,13 +26,13 @@ echo "substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://cach
 # Clone repo directly (git is included in minimal ISO)
 git clone https://github.com/bioinformatist/dotfiles /tmp/dotfiles
 cd /tmp/dotfiles
-# git checkout feat/ephemeral-root
+git checkout feat/ephemeral-root
 ```
 
 #### Step 2: Partition & Format
 Using `disko` to partition the disk (wipe-on-install setup):
 ```bash
-sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./nixos/disko-config.nix
+sudo nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- --mode disko ./hosts/vm-test/disko-config.nix
 ```
 
 #### 3. Deploy Age Key (CRITICAL STEP - Sops)
