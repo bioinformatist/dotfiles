@@ -98,7 +98,7 @@ To give a new machine (like `vm-test`) access to GitHub using a unique key:
 1.  **Generate the Key**:
     ```bash
     # Generate a new ed25519 key (no passphrase, as it's encrypted at rest by sops)
-    ssh-keygen -t ed25519 -f ./id_github_vm_test -C "ysun@vm-test" -N ""
+    ssh-keygen -t ed25519 -C "ysun@vm-test" -N ""
     ```
 
 2.  **Add to Secrets**:
@@ -111,10 +111,10 @@ To give a new machine (like `vm-test`) access to GitHub using a unique key:
     ```yaml
     github-ssh-key: |
       -----BEGIN OPENSSH PRIVATE KEY-----
-      ... (content of ./id_github_vm_test) ...
+      ... (content of ~/.ssh/id_ed25519) ...
       -----END OPENSSH PRIVATE KEY-----
     ```
     *Note: Indent the key content correctly.*
 
 3.  **Cleanup**:
-    Delete the generated key files (`id_github_vm_test` and `.pub`) after verifying they are in sops. The system will auto-provision them to `~/.ssh/` on next rebuild.
+    Delete the generated key files (`~/.ssh/id_ed25519` and `.pub`) after verifying they are in sops. The system will auto-provision them to `~/.ssh/` on next rebuild.
