@@ -43,7 +43,7 @@
       homeManagerModules = import ./modules/home-manager;
 
       nixosConfigurations = {
-        homePC =
+        vm-test =
           let
             username = "ysun";
             specialArgs = { inherit username; };
@@ -53,7 +53,7 @@
             specialArgs = { inherit username inputs; };
 
             modules = [
-              ./nixos/configuration.nix
+              ./hosts/vm-test/configuration.nix
               disko.nixosModules.disko
               impermanence.nixosModules.impermanence
               sops-nix.nixosModules.sops
@@ -70,7 +70,7 @@
       };
 
       homeConfigurations = {
-        "ysun@homePC" = home-manager.lib.homeManagerConfiguration {
+        "ysun@vm-test" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-linux;
           modules = [
             (
