@@ -228,7 +228,7 @@
 
   fileSystems."/persist".neededForBoot = true;
 
-  sops.secrets."github-ssh-key" = {
+  sops.secrets."github-ssh-key-vm-test" = {
     owner = "ysun";
     path = "/home/ysun/.ssh/id_ed25519";
   };

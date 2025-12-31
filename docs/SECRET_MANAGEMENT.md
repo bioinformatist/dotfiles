@@ -109,9 +109,9 @@ To give a new machine (like `vm-test`) access to GitHub using a unique key:
     nix shell nixpkgs#sops --command sops secrets/secrets.yaml
     ```
     
-    Add the key content under a new key (e.g., `github-ssh-key`):
+    Add the key content under a new key (e.g., `github-ssh-key-vm-test`):
     ```yaml
-    github-ssh-key: |
+    github-ssh-key-vm-test: |
       -----BEGIN OPENSSH PRIVATE KEY-----
       ... (content of ~/.ssh/id_ed25519) ...
       -----END OPENSSH PRIVATE KEY-----
