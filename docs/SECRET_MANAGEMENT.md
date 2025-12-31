@@ -102,6 +102,8 @@ To give a new machine (like `vm-test`) access to GitHub using a unique key:
     ```
 
 2.  **Add to Secrets**:
+    Ensure your master identity key is at `~/.config/sops/age/keys.txt`.
+    
     Use a temporary shell with `sops` (no need to install it globally):
     ```bash
     nix shell nixpkgs#sops --command sops secrets/secrets.yaml
