@@ -261,6 +261,7 @@
     users.ysun = {
       directories = [
         "github.com"
+        ".config/sops"
       ];
     };
   };
