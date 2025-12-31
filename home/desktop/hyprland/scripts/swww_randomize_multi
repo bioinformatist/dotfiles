@@ -40,7 +40,8 @@ INTERVAL=30
 #    -   fit:  Resize the image to fit inside the screen, preserving the original aspect ratio
 RESIZE_TYPE="fit"
 
-DISPLAY_LIST=$(swww query | grep -Po "^[^:]+")
+# Parse display list robustly (removes leading colons/spaces handled by weird VM outputs)
+DISPLAY_LIST=$(swww query | sed 's/^[: ]*//' | cut -d: -f1)
 
 while true; do
     find -L ${WALLPAPER_DIR} -type f \
