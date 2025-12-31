@@ -8,6 +8,8 @@ My NixOS Settings.
 *   **China Network**: Ensure you configure USTC mirrors to speed up downloads.
 *   **Sops Keys**: You must have generated Age keys and configured secrets before installing.
     *   👉 **See [docs/SECRET_MANAGEMENT.md](docs/SECRET_MANAGEMENT.md) for details on generating keys and resetting passwords.**
+*   **Rescue & Updates**: If you need to fix a broken system without wiping data:
+    *   👉 **See [docs/RECOVERY_AND_UPDATE.md](docs/RECOVERY_AND_UPDATE.md) for incremental update instructions.**
 
 ### 2. Manual Installation
 

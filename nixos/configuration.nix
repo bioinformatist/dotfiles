@@ -94,7 +94,8 @@
 
   sops.defaultSopsFile = ../secrets/secrets.yaml;
   sops.defaultSopsFormat = "yaml";
-  sops.age.keyFile = "/var/lib/sops-nix/key.txt";
+  # Use the direct path in /persist to avoid race conditions with impermanence bind mounts
+  sops.age.keyFile = "/persist/var/lib/sops-nix/key.txt";
   sops.secrets."ysun-password" = {
     neededForUsers = true;
   };
