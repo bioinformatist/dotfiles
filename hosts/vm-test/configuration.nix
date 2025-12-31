@@ -228,8 +228,6 @@
 
   fileSystems."/persist".neededForBoot = true;
 
-  };
-
   sops.secrets."github-ssh-key" = {
     owner = "ysun";
     path = "/home/ysun/.ssh/id_ed25519";
