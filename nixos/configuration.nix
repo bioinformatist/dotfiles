@@ -170,6 +170,7 @@
     portalPackage =
       inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
+
   programs.proxychains = {
     enable = true;
     quietMode = false;
