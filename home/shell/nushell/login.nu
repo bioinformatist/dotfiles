@@ -1,1 +1,1 @@
-uwsm check may-start; exec uwsm start default
+uwsm check may-start; exec uwsm start hyprland-uwsm.desktop
