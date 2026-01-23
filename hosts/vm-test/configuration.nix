@@ -59,7 +59,10 @@
   # Set your time zone.
   time.timeZone = "Asia/Shanghai";
 
-  # Proxy is configured in proxy.local.nix (git-ignored)
+  # System Proxy: Always point to local proxy client (Clash Verge)
+  # Dynamic routing is handled by the client's GUI, not NixOS config.
+  networking.proxy.default = "http://127.0.0.1:7897";
+  networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
   # i18n.defaultLocale = "en_US.UTF-8";
