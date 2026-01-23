@@ -16,7 +16,8 @@
     ./hardware-configuration.nix
     ./disko-config.nix
     ../../modules/nixos/vm-tweaks.nix
-  ];
+  ]
+  ++ lib.optional (builtins.pathExists ./proxy.local.nix) ./proxy.local.nix;
 
   nix.settings = {
     experimental-features = [
@@ -58,9 +59,7 @@
   # Set your time zone.
   time.timeZone = "Asia/Shanghai";
 
-  # Configure network proxy if necessary
-  networking.proxy.default = "http://127.0.0.1:7897";
-  networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+  # Proxy is configured in proxy.local.nix (git-ignored)
 
   # Select internationalisation properties.
   # i18n.defaultLocale = "en_US.UTF-8";
