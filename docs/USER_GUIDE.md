@@ -35,7 +35,7 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + F` | Toggle **Fullscreen** or Floating |
 | `SUPER + K` | Launch **Terminal** (Kitty) |
 | `SUPER + B` | Launch **Browser** (Chrome) |
-| `SUPER + G` | Launch **Antigravity IDE** |
+| `SUPER + SHIFT + G` | Launch **Antigravity IDE** |
 | `SUPER + SHIFT + P` | Launch **Proxy Client** (Clash Verge) |
 
 ### Window & Workspace Management
