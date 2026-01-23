@@ -183,6 +183,17 @@
       port = 7897;
     };
   };
+
+  programs.nix-ld.enable = true;
+
+  i18n.inputMethod = {
+    enable = true;
+    type = "fcitx5";
+    fcitx5.waylandFrontend = true;
+    fcitx5.addons = with pkgs; [
+      fcitx5-chinese-addons
+    ];
+  };
   # programs.mtr.enable = true;
   # programs.gnupg.agent = {
   #   enable = true;
