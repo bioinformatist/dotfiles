@@ -2,6 +2,11 @@
 
 My NixOS Settings.
 
+## 📖 Reference
+*   👉 **[User Guide: Programs & Keybindings](docs/USER_GUIDE.md)**: What's inside and how to use it.
+*   👉 **[Secret Management](docs/SECRET_MANAGEMENT.md)**: SSH keys, Sops-Nix, and Age keys.
+*   👉 **[Recovery & Updates](docs/RECOVERY_AND_UPDATE.md)**: Fixing a broken system or incremental updates.
+
 ## Installation Guide (VM / Fresh Install)
 
 ### 1. Pre-requisites

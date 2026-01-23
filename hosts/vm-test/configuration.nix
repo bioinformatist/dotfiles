@@ -156,6 +156,7 @@
     ]
     ++ [
       inputs.swww.packages.${pkgs.stdenv.hostPlatform.system}.swww
+      inputs.antigravity.packages.${pkgs.stdenv.hostPlatform.system}.default
     ];
 
   home-manager.backupFileExtension = "backup";
@@ -184,7 +185,7 @@
     };
   };
 
-  programs.nix-ld.enable = true;
+  programs.nix-ld.enable = true; # Useful for other unpatched binaries, keeping it just in case.
 
   i18n.inputMethod = {
     enable = true;
