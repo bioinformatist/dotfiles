@@ -30,7 +30,7 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 ### System Actions
 | Command | Action |
 | :--- | :--- |
-| `SUPER + Q` | **Logout** (Stop session via uwsm) |
+| `SUPER + Q` | **Force Logout** (Kill Hyprland session) |
 | `SUPER + C` | **Kill** Active Window |
 | `SUPER + F` | Toggle **Fullscreen** or Floating |
 | `SUPER + K` | Launch **Terminal** (Kitty) |
