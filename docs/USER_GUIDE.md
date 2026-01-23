@@ -79,3 +79,28 @@ If you are on a new machine and `sops` fails to find your keys, run this in Nush
 $env.SOPS_AGE_KEY_FILE = ("~/.config/sops/age/keys.txt" | path expand)
 ```
 This is already configured in `config.nu`, but may be needed if you haven't rebooted or re-applied the configuration.
+
+### Network Proxy & Dynamic Routing
+The system follows a **"Localhost Abstraction"** strategy:
+- **NixOS (System-wide)**: Configured to *always* trust `http://127.0.0.1:7897` (localhost). You never need to change system config when moving underlying networks.
+- **Clash Verge (User GUI)**: Handles the actul upstream connection (e.g., your LAN proxy, airport Wi-Fi, 5G hotspot).
+
+**How to set up an upstream LAN proxy (e.g. `192.168.0.116:7890`):**
+1.  Launch **Clash Verge** (`SUPER + SHIFT + P`).
+2.  Go to **Profiles** -> **New Local Profile**.
+3.  Right-click the new profile -> **Edit File**.
+4.  Add your LAN proxy as a "Proxy" node:
+    ```yaml
+    proxies:
+      - name: "My LAN Proxy"
+        type: http # or socks5
+        server: 192.168.0.116
+        port: 7890
+    
+    proxy-groups:
+      - name: Proxy
+        type: select
+        proxies:
+          - "My LAN Proxy"
+    ```
+5.  Select this profile to activate it. The system will automatically route traffic through it via the localhost interface.
