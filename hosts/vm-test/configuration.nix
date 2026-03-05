@@ -143,6 +143,11 @@
 
   nixpkgs.config.allowUnfree = true;
 
+  programs.clash-verge = {
+    enable = true;
+    package = pkgs.clash-verge-rev;
+  };
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages =
@@ -153,7 +158,6 @@
       ghostty
       eww
       dunst
-      clash-verge-rev
       google-chrome
       hyprlock
       wechat-uos
@@ -276,6 +280,7 @@
       directories = [
         "github.com"
         ".config/sops"
+        ".local/share/io.github.clash-verge-rev.clash-verge-rev"
       ];
     };
   };

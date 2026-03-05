@@ -30,7 +30,7 @@ Currently only one host is defined:
 
 **System**: `/var/log`, `/var/lib/bluetooth`, `/var/lib/nixos`, `/var/lib/systemd/coredump`, `/etc/NetworkManager/system-connections`, `/var/lib/sops-nix`, `/var/lib/colord`, `/etc/machine-id`, SSH host keys.
 
-**User (`ysun`)**: `~/github.com`, `~/.config/sops`.
+**User (`ysun`)**: `~/github.com`, `~/.config/sops`, `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` (proxy subscriptions).
 
 Everything else is wiped on reboot.
 
@@ -45,7 +45,7 @@ Everything else is wiped on reboot.
 | **Hyprland** | `inputs.hyprland` (flake) | Dynamic tiling Wayland compositor, launched via UWSM |
 | **Ghostty** | `pkgs.ghostty` | Modern GPU-accelerated terminal emulator (Zig), native GTK on Linux |
 | **Google Chrome** | `pkgs.google-chrome` | Web browser |
-| **Clash Verge** | `pkgs.clash-verge-rev` | GUI proxy client (network flexibility) |
+| **Clash Verge** | `programs.clash-verge` (NixOS module) | GUI proxy client (network flexibility) |
 | **Eww** | `pkgs.eww` + Home Manager | Desktop widgets and status bar |
 | **Dunst** | Home Manager service | Notification daemon |
 | **swww** | `inputs.swww` (flake) | Wayland wallpaper daemon with custom multi-monitor rotation script |

@@ -30,7 +30,7 @@
 
 **系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。
 
-**用户（`ysun`）**：`~/github.com`、`~/.config/sops`。
+**用户（`ysun`）**：`~/github.com`、`~/.config/sops`、`~/.local/share/io.github.clash-verge-rev.clash-verge-rev`（代理订阅配置）。
 
 其他所有内容在重启时清除。
 
@@ -45,7 +45,7 @@
 | **Hyprland** | `inputs.hyprland`（flake） | 动态平铺 Wayland 合成器，通过 UWSM 启动 |
 | **Ghostty** | `pkgs.ghostty` | 现代 GPU 加速终端模拟器（Zig），Linux 上原生 GTK |
 | **Google Chrome** | `pkgs.google-chrome` | Web 浏览器 |
-| **Clash Verge** | `pkgs.clash-verge-rev` | GUI 代理客户端（灵活网络管理） |
+| **Clash Verge** | `programs.clash-verge`（NixOS 模块） | GUI 代理客户端（灵活网络管理） |
 | **Eww** | `pkgs.eww` + Home Manager | 桌面小部件和状态栏 |
 | **Dunst** | Home Manager 服务 | 通知守护进程 |
 | **swww** | `inputs.swww`（flake） | Wayland 壁纸守护进程，附带多显示器随机轮换脚本 |
