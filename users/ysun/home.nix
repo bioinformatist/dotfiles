@@ -40,12 +40,10 @@
 
   programs.git = {
     enable = true;
-    # settings = {
-    #   user.name = "Yu Sun";
-    #   user.email = "ysun@sctmes.com";
-    # };
-    userName = "Yu Sun";
-    userEmail = "ysun@sctmes.com";
+    settings = {
+      user.name = "Yu Sun";
+      user.email = "ysun@sctmes.com";
+    };
   };
 
   services.ssh-agent.enable = true;

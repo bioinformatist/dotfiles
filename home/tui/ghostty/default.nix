@@ -11,7 +11,7 @@
 
     settings = {
       font-family = "Maple Mono";
-      theme = "catppuccin-mocha";
+      theme = "Catppuccin Mocha";
       window-decoration = false;
       gtk-titlebar = false;
     };
