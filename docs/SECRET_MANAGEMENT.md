@@ -120,3 +120,25 @@ To give a new machine (like `vm-test`) access to GitHub using a unique key:
 
 3.  **Cleanup**:
     Delete the generated key files (`~/.ssh/id_ed25519` and `.pub`) after verifying they are in sops. The system will auto-provision them to `~/.ssh/` on next rebuild.
+
+## 7. Managing Clash Subscription URL
+The Clash proxy subscription URL is stored as an encrypted secret so it can be version-controlled safely.
+
+1.  **Add/Update the URL**:
+    ```bash
+    sops secrets/secrets.yaml
+    ```
+    Add or update the `clash-subscription-url` field:
+    ```yaml
+    clash-subscription-url: "https://your-provider.com/subscribe?token=xxxxx"
+    ```
+
+2.  **Runtime Access**:
+    After `nixos-rebuild switch`, the decrypted URL is available at:
+    ```
+    /run/secrets/clash-subscription-url
+    ```
+    This file is on `tmpfs` and only accessible by the `ysun` user.
+
+3.  **First-Time Import into Clash Verge**:
+    See [USER_GUIDE.md § Network Proxy](./USER_GUIDE.md) for step-by-step instructions on importing the subscription into Clash Verge GUI.

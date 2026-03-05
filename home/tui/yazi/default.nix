@@ -3,8 +3,9 @@
 
   programs.yazi = {
     enable = true;
+    shellWrapperName = "y";
     enableNushellIntegration = true;
     initLua = ./init.lua;
-    settings = builtins.fromTOML(builtins.readFile ./yazi.toml);
+    settings = builtins.fromTOML (builtins.readFile ./yazi.toml);
   };
 }

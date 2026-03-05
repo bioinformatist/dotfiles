@@ -30,7 +30,7 @@
 
 **系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。
 
-**用户（`ysun`）**：`~/github.com`、`~/.config/sops`、`~/.local/share/io.github.clash-verge-rev.clash-verge-rev`（代理订阅配置）。
+**用户（`ysun`）**：`~/github.com`、`~/.config/sops`、`~/.config/nushell`（Shell 历史记录）、`~/.local/share/io.github.clash-verge-rev.clash-verge-rev`（代理订阅配置）。
 
 其他所有内容在重启时清除。
 
@@ -197,3 +197,18 @@ $env.SOPS_AGE_KEY_FILE = ("~/.config/sops/age/keys.txt" | path expand)
           - "My LAN Proxy"
     ```
 5.  选择此配置文件激活。系统将自动通过本地回环接口路由流量。
+
+**如何从 sops 导入订阅（新机器首次设置）：**
+
+订阅链接通过 sops-nix 加密存储在仓库中（参见 [密钥管理指南 § 7](./SECRET_MANAGEMENT.zh-CN.md)）。执行 `nixos-rebuild switch` 后，将其导入 Clash Verge：
+
+1.  读取解密后的订阅链接：
+    ```bash
+    cat /run/secrets/clash-subscription-url
+    ```
+2.  启动 **Clash Verge**（`SUPER + SHIFT + P`）。
+3.  进入 **Profiles** 页面。
+4.  将链接粘贴到顶部输入框并点击 **Import**。
+5.  点击导入的配置文件以**激活**。
+
+> 每台机器只需执行一次。配置文件数据持久化在 `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` 中，重启后保留。Clash Verge 也会按设定间隔自动更新订阅。

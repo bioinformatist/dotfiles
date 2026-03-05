@@ -120,3 +120,25 @@ sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
 
 3.  **清理**：
     确认密钥已存入 sops 后，删除生成的密钥文件（`~/.ssh/id_ed25519` 和 `.pub`）。系统将在下次重建时自动将其配置到 `~/.ssh/` 目录下。
+
+## 7. 管理 Clash 订阅链接
+Clash 代理订阅链接以加密密钥的形式存储，以便安全地进行版本控制。
+
+1.  **添加/更新订阅链接**：
+    ```bash
+    sops secrets/secrets.yaml
+    ```
+    添加或更新 `clash-subscription-url` 字段：
+    ```yaml
+    clash-subscription-url: "https://your-provider.com/subscribe?token=xxxxx"
+    ```
+
+2.  **运行时访问**：
+    执行 `nixos-rebuild switch` 后，解密后的订阅链接可在以下路径获取：
+    ```
+    /run/secrets/clash-subscription-url
+    ```
+    此文件位于 `tmpfs` 上，仅 `ysun` 用户可访问。
+
+3.  **首次导入到 Clash Verge**：
+    参见 [用户指南 § 网络代理](./USER_GUIDE.zh-CN.md) 中关于将订阅导入 Clash Verge GUI 的逐步说明。

@@ -253,6 +253,10 @@
     path = "/home/ysun/.ssh/id_ed25519";
   };
 
+  sops.secrets."clash-subscription-url" = {
+    owner = "ysun";
+  };
+
   environment.persistence."/persist" = {
     hideMounts = true;
     directories = [
@@ -280,6 +284,7 @@
       directories = [
         "github.com"
         ".config/sops"
+        ".config/nushell"
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
       ];
     };

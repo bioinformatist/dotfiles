@@ -30,7 +30,7 @@ Currently only one host is defined:
 
 **System**: `/var/log`, `/var/lib/bluetooth`, `/var/lib/nixos`, `/var/lib/systemd/coredump`, `/etc/NetworkManager/system-connections`, `/var/lib/sops-nix`, `/var/lib/colord`, `/etc/machine-id`, SSH host keys.
 
-**User (`ysun`)**: `~/github.com`, `~/.config/sops`, `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` (proxy subscriptions).
+**User (`ysun`)**: `~/github.com`, `~/.config/sops`, `~/.config/nushell` (shell history), `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` (proxy subscriptions).
 
 Everything else is wiped on reboot.
 
@@ -197,3 +197,18 @@ The system follows a **"Localhost Abstraction"** strategy:
           - "My LAN Proxy"
     ```
 5.  Select this profile to activate it. The system will automatically route traffic through it via the localhost interface.
+
+**How to import a subscription from sops (first-time setup on a new machine):**
+
+The subscription URL is stored encrypted in the repository via sops-nix (see [SECRET_MANAGEMENT.md § 7](./SECRET_MANAGEMENT.md)). After `nixos-rebuild switch`, import it into Clash Verge:
+
+1.  Read the decrypted URL:
+    ```bash
+    cat /run/secrets/clash-subscription-url
+    ```
+2.  Launch **Clash Verge** (`SUPER + SHIFT + P`).
+3.  Go to the **Profiles** page.
+4.  Paste the URL into the input box at the top and click **Import**.
+5.  Click the imported profile to **activate** it.
+
+> This only needs to be done once per machine. The profile data is persisted at `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` and survives reboots. Clash Verge will also auto-update the subscription periodically.
