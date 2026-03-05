@@ -125,6 +125,7 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + B` | Launch **Browser** (Chrome) |
 | `SUPER + SHIFT + G` | Launch **Antigravity IDE** |
 | `SUPER + SHIFT + P` | Launch **Proxy Client** (Clash Verge) |
+| `SUPER + W` | Launch **WeChat** |
 | `SUPER + L` | **Lock Screen** (hyprlock) |
 | `SUPER + R` | Enter **Resize Mode** (arrow keys to resize, `Escape` to exit) |
 

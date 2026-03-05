@@ -125,6 +125,7 @@
 | `SUPER + B` | 启动**浏览器**（Chrome） |
 | `SUPER + SHIFT + G` | 启动 **Antigravity IDE** |
 | `SUPER + SHIFT + P` | 启动**代理客户端**（Clash Verge） |
+| `SUPER + W` | 启动**微信** |
 | `SUPER + L` | **锁屏**（hyprlock） |
 | `SUPER + R` | 进入**调整大小模式**（方向键调整，`Escape` 退出） |
 
