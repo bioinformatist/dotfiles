@@ -1,7 +1,7 @@
 {
   imports = [
     ./helix
-    ./kitty
+    ./ghostty
     ./yazi
     ./zellij
   ];

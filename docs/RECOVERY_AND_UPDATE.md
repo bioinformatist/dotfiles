@@ -115,5 +115,5 @@ If decryption failed, you must align the keys:
         ```
     *   **Re-install**:
         ```bash
-        sudo nixos-install --flake .#homePC --no-root-passwd --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
+        sudo nixos-install --flake .#vm-test --no-root-passwd --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
         ```

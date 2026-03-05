@@ -2,24 +2,111 @@
 
 This guide provides an overview of the applications and keybindings configured in this NixOS system.
 
+## 🖥️ Host Configuration
+
+Currently only one host is defined:
+
+| Property | Value |
+| :--- | :--- |
+| **Host Name** | `vm-test` (hostname: `homePC`) |
+| **Architecture** | `x86_64-linux` |
+| **User** | `ysun` |
+| **Boot** | GRUB (EFI, removable) |
+| **Root FS** | Ephemeral (`tmpfs`), persistent data at `/persist` (btrfs) |
+| **Timezone** | `Asia/Shanghai` |
+| **State Version** | `24.11` |
+
+### NixOS Infrastructure Modules
+
+| Module | Purpose |
+| :--- | :--- |
+| [disko](https://github.com/nix-community/disko) | Declarative disk partitioning (GPT, btrfs subvolumes for `/nix` and `/persist`) |
+| [impermanence](https://github.com/nix-community/impermanence) | Ephemeral root — only whitelisted paths survive reboot |
+| [sops-nix](https://github.com/Mic92/sops-nix) | Declarative secret management with Age encryption |
+| [home-manager](https://github.com/nix-community/home-manager) | User-level configuration (integrated as NixOS module) |
+| `vm-tweaks.nix` | VMware guest support, forces software rendering (`LIBGL_ALWAYS_SOFTWARE=1`) |
+
+### Persisted Paths (Impermanence)
+
+**System**: `/var/log`, `/var/lib/bluetooth`, `/var/lib/nixos`, `/var/lib/systemd/coredump`, `/etc/NetworkManager/system-connections`, `/var/lib/sops-nix`, `/var/lib/colord`, `/etc/machine-id`, SSH host keys.
+
+**User (`ysun`)**: `~/github.com`, `~/.config/sops`.
+
+Everything else is wiped on reboot.
+
 ---
 
-## 🚀 Core Applications
+## 🚀 Installed Software
 
 ### Desktop & GUI
-- **Compositor**: [Hyprland](https://hyprland.org/) - A dynamic tiling Wayland compositor that is smooth and highly customizable.
-- **Terminal**: [Kitty](https://sw.kovidgoyal.net/kitty/) - A fast, feature-rich, GPU-based terminal emulator.
-- **Browser**: Google Chrome - Stabilized and ready for common web tasks.
-- **Proxy Client**: Clash Verge - Managed proxy connections for network flexibility.
-- **Input Method**: Fcitx5 - Configured for multilingual support.
-- **Widgets & Bar**: [Eww](https://elkowar.github.io/eww/) - Powering the bar and system widgets.
-- **Wallpaper**: `swww` with a custom randomization script (`swww_randomize_multi`) that rotates backgrounds across multiple monitors.
+
+| Application | Package / Source | Description |
+| :--- | :--- | :--- |
+| **Hyprland** | `inputs.hyprland` (flake) | Dynamic tiling Wayland compositor, launched via UWSM |
+| **Ghostty** | `pkgs.ghostty` | Modern GPU-accelerated terminal emulator (Zig), native GTK on Linux |
+| **Google Chrome** | `pkgs.google-chrome` | Web browser |
+| **Clash Verge** | `pkgs.clash-verge-rev` | GUI proxy client (network flexibility) |
+| **Eww** | `pkgs.eww` + Home Manager | Desktop widgets and status bar |
+| **Dunst** | Home Manager service | Notification daemon |
+| **swww** | `inputs.swww` (flake) | Wayland wallpaper daemon with custom multi-monitor rotation script |
+| **Antigravity** | `inputs.antigravity` (flake) | IDE |
+| **hyprlock** | `pkgs.hyprlock` | Hyprland-native lock screen |
+| **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland-native portal for screen sharing, file dialogs, etc. |
+| **WeChat** | `pkgs.wechat-uos` | WeChat desktop client (runs via XWayland) |
 
 ### TUI & Shell
-- **Shell**: [Nushell](https://www.nushell.sh/) - A modern shell that treats data as structured tables.
-- **Editor**: [Helix](https://helix-editor.com/) (`hx`) - A post-modern modal text editor (configured as the default for `$EDITOR` and `$VISUAL`).
-- **File Manager**: [Yazi](https://yazi-rs.github.io/) - A blazing fast terminal file manager written in Rust.
-- **Multiplexer**: [Zellij](https://zellij.dev/) - A terminal workspace with panes and tabs, designed for productivity.
+
+| Application | Package / Source | Description |
+| :--- | :--- | :--- |
+| **[Nushell](https://www.nushell.sh/)** | `pkgs.nushell` (default shell) | Modern shell treating data as structured tables |
+| **[Starship](https://starship.rs/)** | Home Manager | Minimal, blazing-fast cross-shell prompt |
+| **[Helix](https://helix-editor.com/)** (`hx`) | Home Manager | Post-modern modal text editor (`$EDITOR` / `$VISUAL`) |
+| **[Yazi](https://yazi-rs.github.io/)** | `inputs.yazi` (flake) | Blazing fast terminal file manager (Rust) |
+| **[Zellij](https://zellij.dev/)** | Home Manager | Terminal multiplexer with panes and tabs |
+| **[ripgrep](https://github.com/BurntSushi/ripgrep)** (`rg`) | Home Manager | Recursive regex search tool |
+
+### System Utilities
+
+| Package | Description |
+| :--- | :--- |
+| `git` | Version control |
+| `wl-clipboard` | Wayland clipboard utilities (`wl-copy` / `wl-paste`) |
+| `proxychains` | Force any program through SOCKS5/HTTP proxy (`127.0.0.1:7897`) |
+| `nix-ld` | Dynamic linker for unpatched binaries |
+
+### Input Method
+
+| Component | Description |
+| :--- | :--- |
+| **Fcitx5** (system) | Input method framework, Wayland frontend enabled |
+| **Fcitx5** (user / Home Manager) | Addons: `fcitx5-rime`, `fcitx5-gtk`, `fcitx5-chinese-addons`, `fcitx5-configtool` |
+
+### Fonts
+
+| Font | Usage |
+| :--- | :--- |
+| Sarasa Gothic | Default sans-serif (CJK) |
+| Noto Sans/Serif CJK SC | Fallback CJK fonts |
+| JetBrains Mono | Default monospace |
+
+### Services & Security
+
+| Item | Detail |
+| :--- | :--- |
+| **PipeWire** | Audio server (ALSA + PulseAudio compat, 32-bit support) |
+| **OpenSSH** | SSH daemon enabled |
+| **ssh-agent** | User-level SSH agent (Home Manager service) |
+| **rtkit** | Realtime scheduling for PipeWire |
+| **sudo** | `ysun` has passwordless `NOPASSWD` sudo |
+
+### Networking & Proxy
+
+| Item | Detail |
+| :--- | :--- |
+| **WiFi** | `wpa_supplicant` with 2 pre-configured SSIDs |
+| **System Proxy** | Always points to `http://127.0.0.1:7897` (localhost abstraction) |
+| **Clash Verge** | Handles actual upstream routing (LAN proxy, airport, hotspot, etc.) |
+| **Nix Substituters** | USTC mirror (primary), Hyprland cachix, Yazi cachix |
 
 ---
 
@@ -30,18 +117,22 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 ### System Actions
 | Command | Action |
 | :--- | :--- |
-| `SUPER + Q` | **Force Logout** (Kill Hyprland session) |
+| `SUPER + SHIFT + Q` | **Force Logout** (Kill Hyprland session) |
 | `SUPER + C` | **Kill** Active Window |
-| `SUPER + F` | Toggle **Fullscreen** or Floating |
-| `SUPER + K` | Launch **Terminal** (Kitty) |
+| `SUPER + V` | Toggle **Floating** |
+| `SUPER + F` | Toggle **Fullscreen** |
+| `SUPER + Return` | Launch **Terminal** (Ghostty) |
 | `SUPER + B` | Launch **Browser** (Chrome) |
 | `SUPER + SHIFT + G` | Launch **Antigravity IDE** |
 | `SUPER + SHIFT + P` | Launch **Proxy Client** (Clash Verge) |
+| `SUPER + L` | **Lock Screen** (hyprlock) |
+| `SUPER + R` | Enter **Resize Mode** (arrow keys to resize, `Escape` to exit) |
 
 ### Window & Workspace Management
 | Command | Action |
 | :--- | :--- |
 | `SUPER + Arrow Keys` | Move focus between windows |
+| `SUPER + SHIFT + Arrow Keys` | Move/swap window position |
 | `SUPER + [1-0]` | Switch to **Workspace** 1-10 |
 | `SUPER + SHIFT + [1-0]` | Move active window to **Workspace** 1-10 |
 | `SUPER + S` | Toggle **Special Workspace** (Scratchpad) |
@@ -49,6 +140,7 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + G` | Toggle Group (Tabs) |
 | `SUPER + A` | Change active window within Group |
 | `SUPER + P` | Pseudo-tile (Dwindle layout) |
+| `SUPER + J` | Toggle split direction (Dwindle layout) |
 | `SUPER + Mouse LMB` | Drag to move window |
 | `SUPER + Mouse RMB` | Drag to resize window |
 
@@ -71,7 +163,7 @@ This system uses an **ephemeral root** approach. Only specific directories are p
 - Everything else in the Home directory is wiped on reboot to ensure a clean state.
 
 ### Software Rendering (VM Tweak)
-In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1` to ensure applications like Kitty launch reliably.
+In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1` to ensure applications like Ghostty launch reliably.
 
 ### Sops Bootstrapping (First Time)
 If you are on a new machine and `sops` fails to find your keys, run this in Nushell:
@@ -83,7 +175,7 @@ This is already configured in `config.nu`, but may be needed if you haven't rebo
 ### Network Proxy & Dynamic Routing
 The system follows a **"Localhost Abstraction"** strategy:
 - **NixOS (System-wide)**: Configured to *always* trust `http://127.0.0.1:7897` (localhost). You never need to change system config when moving underlying networks.
-- **Clash Verge (User GUI)**: Handles the actul upstream connection (e.g., your LAN proxy, airport Wi-Fi, 5G hotspot).
+- **Clash Verge (User GUI)**: Handles the actual upstream connection (e.g., your LAN proxy, airport Wi-Fi, 5G hotspot).
 
 **How to set up an upstream LAN proxy (e.g. `192.168.0.116:7890`):**
 1.  Launch **Clash Verge** (`SUPER + SHIFT + P`).

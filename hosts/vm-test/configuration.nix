@@ -150,11 +150,13 @@
     [
       wl-clipboard
       git
-      kitty
+      ghostty
       eww
       dunst
       clash-verge-rev
       google-chrome
+      hyprlock
+      wechat-uos
     ]
     ++ [
       inputs.swww.packages.${pkgs.stdenv.hostPlatform.system}.swww
