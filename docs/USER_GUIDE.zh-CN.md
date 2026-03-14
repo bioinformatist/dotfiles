@@ -279,12 +279,15 @@ nix run github:nix-community/nixos-anywhere -- \
 Live 环境默认从官方源下载，在大陆极慢。**先配置 USTC 镜像再做任何事**：
 
 ```bash
-mkdir -p ~/.config/nix
-cat > ~/.config/nix/nix.conf << 'EOF'
+# 为当前用户和 root 都配置（后续命令会用 sudo nix）
+for dir in ~/.config/nix /root/.config/nix; do
+  sudo mkdir -p "$dir"
+  sudo tee "$dir/nix.conf" > /dev/null << 'EOF'
 substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org
 trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
 extra-experimental-features = nix-command flakes
 EOF
+done
 ```
 
 #### B.3 克隆仓库
@@ -304,6 +307,10 @@ cd /tmp/dotfiles
 ```bash
 sudo nix run github:nix-community/disko -- \
   --mode disko ./hosts/workstation/disko-config.nix
+
+# 如果报错 experimental feature 'nix-command' is disabled，手动加参数：
+# sudo nix --extra-experimental-features 'nix-command flakes' \
+#   run github:nix-community/disko -- --mode disko ./hosts/workstation/disko-config.nix
 ```
 
 执行完毕后，`/mnt` 下的挂载布局为：

@@ -279,12 +279,15 @@ After completion the machine reboots automatically. Jump to [After First Boot](#
 The live environment defaults to official substituters, which are very slow in China. **Do this before anything else**:
 
 ```bash
-mkdir -p ~/.config/nix
-cat > ~/.config/nix/nix.conf << 'EOF'
+# Configure for both current user and root (subsequent commands use sudo nix)
+for dir in ~/.config/nix /root/.config/nix; do
+  sudo mkdir -p "$dir"
+  sudo tee "$dir/nix.conf" > /dev/null << 'EOF'
 substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org
 trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
 extra-experimental-features = nix-command flakes
 EOF
+done
 ```
 
 #### B.3 Clone the Repository
@@ -304,6 +307,10 @@ Run disko to partition and mount according to `disko-config.nix`.
 ```bash
 sudo nix run github:nix-community/disko -- \
   --mode disko ./hosts/workstation/disko-config.nix
+
+# If you get 'experimental feature nix-command is disabled', add the flag manually:
+# sudo nix --extra-experimental-features 'nix-command flakes' \
+#   run github:nix-community/disko -- --mode disko ./hosts/workstation/disko-config.nix
 ```
 
 After completion, `/mnt` layout:
