@@ -4,17 +4,18 @@ This guide provides an overview of the applications and keybindings configured i
 
 ## 🖥️ Host Configuration
 
-Currently only one host is defined:
+This repository supports multiple host configurations, sharing common settings via modules (`nixos/common.nix`, `nixos/desktop.nix`):
 
-| Property | Value |
-| :--- | :--- |
-| **Host Name** | `vm-test` (hostname: `homePC`) |
-| **Architecture** | `x86_64-linux` |
-| **User** | `ysun` |
-| **Boot** | GRUB (EFI, removable) |
-| **Root FS** | Ephemeral (`tmpfs`), persistent data at `/persist` (btrfs) |
-| **Timezone** | `Asia/Shanghai` |
-| **State Version** | `24.11` |
+| Property | `vm-test` | `workstation` |
+| :--- | :--- | :--- |
+| **Hostname** | `homePC` | `homePC` |
+| **Architecture** | `x86_64-linux` | `x86_64-linux` |
+| **User** | `ysun` | `ysun` |
+| **Boot** | GRUB (EFI, removable) | systemd-boot |
+| **Root FS** | Ephemeral (`tmpfs`), persistent at `/persist` | Same |
+| **Networking** | `wpa_supplicant` (hardcoded SSIDs) | `NetworkManager` |
+| **GPU** | Software rendering (`vm-tweaks.nix`) | Hardware accelerated |
+| **Timezone** | `Asia/Shanghai` | `Asia/Shanghai` |
 
 ### NixOS Infrastructure Modules
 
@@ -22,15 +23,15 @@ Currently only one host is defined:
 | :--- | :--- |
 | [disko](https://github.com/nix-community/disko) | Declarative disk partitioning (GPT, btrfs subvolumes for `/nix` and `/persist`) |
 | [impermanence](https://github.com/nix-community/impermanence) | Ephemeral root — only whitelisted paths survive reboot |
-| [sops-nix](https://github.com/Mic92/sops-nix) | Declarative secret management with Age encryption |
+| [sops-nix](https://github.com/Mic92/sops-nix) | Declarative secret management with Age encryption (same key shared across machines) |
 | [home-manager](https://github.com/nix-community/home-manager) | User-level configuration (integrated as NixOS module) |
-| `vm-tweaks.nix` | VMware guest support, forces software rendering (`LIBGL_ALWAYS_SOFTWARE=1`) |
+| `vm-tweaks.nix` | `vm-test` only: VMware guest support, forces software rendering |
 
 ### Persisted Paths (Impermanence)
 
-**System**: `/var/log`, `/var/lib/bluetooth`, `/var/lib/nixos`, `/var/lib/systemd/coredump`, `/etc/NetworkManager/system-connections`, `/var/lib/sops-nix`, `/var/lib/colord`, `/etc/machine-id`, SSH host keys.
+**System**: `/var/log`, `/var/lib/bluetooth`, `/var/lib/nixos`, `/var/lib/systemd/coredump`, `/etc/NetworkManager/system-connections`, `/var/lib/sops-nix`, `/var/lib/colord`, `/etc/machine-id`, SSH host keys. `workstation` additionally persists `/var/lib/NetworkManager`.
 
-**User (`ysun`)**: `~/github.com`, `~/.config/sops`, `~/.config/nushell` (shell history), `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` (proxy subscriptions).
+**User (`ysun`)**: `~/github.com`, `~/.config/sops`, `~/.config/nushell`, `~/.local/share/io.github.clash-verge-rev.clash-verge-rev`. `workstation` additionally persists `~/Downloads`, `~/Documents`, `~/.mozilla`.
 
 Everything else is wiped on reboot.
 
@@ -103,7 +104,7 @@ Everything else is wiped on reboot.
 
 | Item | Detail |
 | :--- | :--- |
-| **WiFi** | `wpa_supplicant` with 2 pre-configured SSIDs |
+| **WiFi** | `vm-test`: `wpa_supplicant`; `workstation`: `NetworkManager` |
 | **System Proxy** | Always points to `http://127.0.0.1:7897` (localhost abstraction) |
 | **Clash Verge** | Handles actual upstream routing (LAN proxy, airport, hotspot, etc.) |
 | **Nix Substituters** | USTC mirror (primary), Hyprland cachix, Yazi cachix |
@@ -163,8 +164,8 @@ This system uses an **ephemeral root** approach. Only specific directories are p
 - **Persisted User Paths**: `~/github.com`, `~/.config/sops`.
 - Everything else in the Home directory is wiped on reboot to ensure a clean state.
 
-### Software Rendering (VM Tweak)
-In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1` to ensure applications like Ghostty launch reliably.
+### Software Rendering (VM Only)
+In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1`. The physical machine (`workstation`) does not include this setting.
 
 ### Sops Bootstrapping (First Time)
 If you are on a new machine and `sops` fails to find your keys, run this in Nushell:
@@ -212,3 +213,50 @@ The subscription URL is stored encrypted in the repository via sops-nix (see [SE
 5.  Click the imported profile to **activate** it.
 
 > This only needs to be done once per machine. The profile data is persisted at `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` and survives reboots. Clash Verge will also auto-update the subscription periodically.
+
+---
+
+## 💻 Physical Machine First-Time Deployment
+
+The following steps apply to installing the `workstation` configuration on a new physical machine.
+
+### 1. Prepare NixOS Installation USB
+Download a minimal ISO from [nixos.org](https://nixos.org/download/) and flash it to a USB drive.
+
+### 2. Partition and Mount
+Use disko for automatic partitioning (in the live environment):
+```bash
+# Clone the repository (may need proxy)
+git clone https://github.com/bioinformatist/dotfiles /tmp/dotfiles
+
+# Partition and mount with disko
+sudo nix --experimental-features 'nix-command flakes' run \
+  github:nix-community/disko -- --mode disko /tmp/dotfiles/hosts/workstation/disko-config.nix
+```
+
+### 3. Generate Hardware Configuration
+```bash
+sudo nixos-generate-config --root /mnt
+# Copy the generated file to replace the placeholder
+cp /mnt/etc/nixos/hardware-configuration.nix /tmp/dotfiles/hosts/workstation/hardware-configuration.nix
+```
+
+### 4. Copy sops Age Key
+Both machines share the same Age key. Copy from the VM:
+```bash
+sudo mkdir -p /mnt/persist/var/lib/sops-nix
+# Copy key.txt from VM (via USB drive or SSH)
+sudo cp /path/to/key.txt /mnt/persist/var/lib/sops-nix/key.txt
+sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
+```
+
+### 5. Install
+```bash
+cd /tmp/dotfiles
+sudo nixos-install --flake .#workstation
+```
+
+### 6. After First Boot
+- Set user password (if sops password not auto-applied): `sudo passwd ysun`
+- Import Clash Verge subscription (see "Import subscription from sops" section above)
+- Connect WiFi via NetworkManager: `nmcli device wifi connect <SSID> password <password>`

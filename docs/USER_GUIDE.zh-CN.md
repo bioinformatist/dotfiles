@@ -4,17 +4,18 @@
 
 ## 🖥️ 主机配置
 
-当前仅定义了一个主机：
+本仓库支持多主机配置，通过共享模块（`nixos/common.nix`、`nixos/desktop.nix`）复用通用配置：
 
-| 属性 | 值 |
-| :--- | :--- |
-| **主机名** | `vm-test`（hostname: `homePC`） |
-| **架构** | `x86_64-linux` |
-| **用户** | `ysun` |
-| **引导** | GRUB（EFI，可移动模式） |
-| **根文件系统** | 临时（`tmpfs`），持久化数据位于 `/persist`（btrfs） |
-| **时区** | `Asia/Shanghai` |
-| **State Version** | `24.11` |
+| 属性 | `vm-test` | `workstation` |
+| :--- | :--- | :--- |
+| **主机名** | `homePC` | `homePC` |
+| **架构** | `x86_64-linux` | `x86_64-linux` |
+| **用户** | `ysun` | `ysun` |
+| **引导** | GRUB（EFI，可移动模式） | systemd-boot |
+| **根文件系统** | 临时（`tmpfs`），持久化于 `/persist` | 同左 |
+| **网络** | `wpa_supplicant`（硬编码 SSID） | `NetworkManager` |
+| **GPU** | 软件渲染（`vm-tweaks.nix`） | 硬件加速 |
+| **时区** | `Asia/Shanghai` | `Asia/Shanghai` |
 
 ### NixOS 基础设施模块
 
@@ -22,15 +23,15 @@
 | :--- | :--- |
 | [disko](https://github.com/nix-community/disko) | 声明式磁盘分区（GPT，btrfs 子卷用于 `/nix` 和 `/persist`） |
 | [impermanence](https://github.com/nix-community/impermanence) | 临时根文件系统 —— 仅白名单路径在重启后保留 |
-| [sops-nix](https://github.com/Mic92/sops-nix) | 声明式密钥管理，使用 Age 加密 |
+| [sops-nix](https://github.com/Mic92/sops-nix) | 声明式密钥管理，使用 Age 加密（两台机器共享同一 key） |
 | [home-manager](https://github.com/nix-community/home-manager) | 用户级配置管理（作为 NixOS 模块集成） |
-| `vm-tweaks.nix` | VMware 虚拟机支持，强制软件渲染（`LIBGL_ALWAYS_SOFTWARE=1`） |
+| `vm-tweaks.nix` | 仅 `vm-test`：VMware 虚拟机支持，强制软件渲染 |
 
 ### 持久化路径（Impermanence）
 
-**系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。
+**系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。`workstation` 额外持久化 `/var/lib/NetworkManager`。
 
-**用户（`ysun`）**：`~/github.com`、`~/.config/sops`、`~/.config/nushell`（Shell 历史记录）、`~/.local/share/io.github.clash-verge-rev.clash-verge-rev`（代理订阅配置）。
+**用户（`ysun`）**：`~/github.com`、`~/.config/sops`、`~/.config/nushell`、`~/.local/share/io.github.clash-verge-rev.clash-verge-rev`。`workstation` 额外持久化 `~/Downloads`、`~/Documents`、`~/.mozilla`。
 
 其他所有内容在重启时清除。
 
@@ -103,7 +104,7 @@
 
 | 项目 | 详情 |
 | :--- | :--- |
-| **WiFi** | `wpa_supplicant`，已配置 2 个 SSID |
+| **WiFi** | `vm-test`: `wpa_supplicant`；`workstation`: `NetworkManager` |
 | **系统代理** | 始终指向 `http://127.0.0.1:7897`（本地回环抽象） |
 | **Clash Verge** | 处理实际上游路由（局域网代理、机场、热点等） |
 | **Nix Substituters** | USTC 镜像（主）、Hyprland cachix、Yazi cachix |
@@ -163,8 +164,8 @@
 - **已持久化用户路径**：`~/github.com`、`~/.config/sops`。
 - 家目录下的其他所有内容在重启时将被清除，以确保干净的状态。
 
-### 软件渲染（VM 调优）
-在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染，以确保 Ghostty 等应用程序能可靠启动。
+### 软件渲染（仅 VM）
+在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染。物理机（`workstation`）不包含此设置。
 
 ### Sops 首次引导
 如果你在新机器上运行 `sops` 时找不到密钥，请在 Nushell 中运行：
@@ -212,3 +213,50 @@ $env.SOPS_AGE_KEY_FILE = ("~/.config/sops/age/keys.txt" | path expand)
 5.  点击导入的配置文件以**激活**。
 
 > 每台机器只需执行一次。配置文件数据持久化在 `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` 中，重启后保留。Clash Verge 也会按设定间隔自动更新订阅。
+
+---
+
+## 💻 物理机首次部署
+
+以下步骤适用于在新物理机上首次安装 `workstation` 配置。
+
+### 1. 准备 NixOS 安装 U 盘
+从 [nixos.org](https://nixos.org/download/) 下载最小化 ISO 并制作启动 U 盘。
+
+### 2. 分区与挂载
+使用 disko 自动分区（在 live 环境中）：
+```bash
+# 克隆仓库（可能需要代理）
+git clone https://github.com/bioinformatist/dotfiles /tmp/dotfiles
+
+# 使用 disko 分区并挂载
+sudo nix --experimental-features 'nix-command flakes' run \
+  github:nix-community/disko -- --mode disko /tmp/dotfiles/hosts/workstation/disko-config.nix
+```
+
+### 3. 生成硬件配置
+```bash
+sudo nixos-generate-config --root /mnt
+# 将生成的文件复制到仓库中替换占位文件
+cp /mnt/etc/nixos/hardware-configuration.nix /tmp/dotfiles/hosts/workstation/hardware-configuration.nix
+```
+
+### 4. 复制 sops Age 密钥
+两台机器共享同一个 Age key，从 VM 复制：
+```bash
+sudo mkdir -p /mnt/persist/var/lib/sops-nix
+# 从 VM 复制 key.txt（通过 U 盘或 SSH）
+sudo cp /path/to/key.txt /mnt/persist/var/lib/sops-nix/key.txt
+sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
+```
+
+### 5. 安装
+```bash
+cd /tmp/dotfiles
+sudo nixos-install --flake .#workstation
+```
+
+### 6. 首次启动后
+- 设置用户密码（如果 sops 密码未自动应用）：`sudo passwd ysun`
+- 导入 Clash Verge 订阅（参见上方「从 sops 导入订阅」章节）
+- 通过 NetworkManager 连接 WiFi：`nmcli device wifi connect <SSID> password <password>`

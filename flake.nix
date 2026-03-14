@@ -46,48 +46,64 @@
       nixosModules = import ./modules/nixos;
       homeManagerModules = import ./modules/home-manager;
 
-      nixosConfigurations = {
-        vm-test =
-          let
-            username = "ysun";
-            specialArgs = {
-              inherit username;
-              isVM = true;
+      nixosConfigurations =
+        let
+          username = "ysun";
+          mkHost =
+            { hostDir, isVM }:
+            let
+              specialArgs = {
+                inherit username isVM;
+              };
+            in
+            nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              specialArgs = { inherit username inputs; };
+
+              modules = [
+                ./hosts/${hostDir}/configuration.nix
+                disko.nixosModules.disko
+                impermanence.nixosModules.impermanence
+                sops-nix.nixosModules.sops
+                home-manager.nixosModules.home-manager
+                {
+                  home-manager.useGlobalPkgs = true;
+                  home-manager.useUserPackages = true;
+
+                  home-manager.extraSpecialArgs = inputs // specialArgs;
+                  home-manager.users.${username} = import ./users/${username}/home.nix;
+                }
+              ];
             };
-          in
-          nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            specialArgs = { inherit username inputs; };
+        in
+        {
+          vm-test = mkHost {
+            hostDir = "vm-test";
+            isVM = true;
+          };
+          workstation = mkHost {
+            hostDir = "workstation";
+            isVM = false;
+          };
+        };
 
+      homeConfigurations =
+        let
+          mkHome = home-manager.lib.homeManagerConfiguration {
+            pkgs = nixpkgs.legacyPackages.x86_64-linux;
             modules = [
-              ./hosts/vm-test/configuration.nix
-              disko.nixosModules.disko
-              impermanence.nixosModules.impermanence
-              sops-nix.nixosModules.sops
-              home-manager.nixosModules.home-manager
-              {
-                home-manager.useGlobalPkgs = true;
-                home-manager.useUserPackages = true;
-
-                home-manager.extraSpecialArgs = inputs // specialArgs;
-                home-manager.users.${username} = import ./users/${username}/home.nix;
-              }
+              (
+                { pkgs, ... }:
+                {
+                  home.packages = [ yazi.packages.${pkgs.stdenv.hostPlatform.system}.default ];
+                }
+              )
             ];
           };
-      };
-
-      homeConfigurations = {
-        "ysun@vm-test" = home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.x86_64-linux;
-          modules = [
-            (
-              { pkgs, ... }:
-              {
-                home.packages = [ yazi.packages.${pkgs.stdenv.hostPlatform.system}.default ];
-              }
-            )
-          ];
+        in
+        {
+          "ysun@vm-test" = mkHome;
+          "ysun@workstation" = mkHome;
         };
-      };
     };
 }
