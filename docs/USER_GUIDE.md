@@ -218,45 +218,166 @@ The subscription URL is stored encrypted in the repository via sops-nix (see [SE
 
 ## 💻 Physical Machine First-Time Deployment
 
-The following steps apply to installing the `workstation` configuration on a new physical machine.
+Install the `workstation` configuration on a new physical machine. This section provides two paths — choose the one that fits your situation.
 
-### 1. Prepare NixOS Installation USB
-Download a minimal ISO from [nixos.org](https://nixos.org/download/) and flash it to a USB drive.
+### Prerequisites (Both Paths)
 
-### 2. Partition and Mount
-Use disko for automatic partitioning (in the live environment):
+Before starting, prepare the **Age private key** (`key.txt`). Both machines share the same key.
+
+> Your Age private key is stored in the VM at `/persist/var/lib/sops-nix/key.txt`.
+> Copy it to a USB drive, transfer via SSH, or any method you prefer.
+> If you don't have a key at all, see [Secret Management § 2](./SECRET_MANAGEMENT.md) to generate one.
+
+---
+
+### Path A: Remote Install from Another Machine (nixos-anywhere)
+
+**When to use**: You have a machine with Nix and good network (e.g., the VM), and can SSH as root to the physical machine (running NixOS Live CD or any Linux).
+
+**Where to run**: All commands on the VM.
+
 ```bash
-# Clone the repository (may need proxy)
-git clone https://github.com/bioinformatist/dotfiles /tmp/dotfiles
+# ① Prepare sops key directory (nixos-anywhere copies this to /mnt on the target)
+mkdir -p /tmp/extra/persist/var/lib/sops-nix
+cp /persist/var/lib/sops-nix/key.txt /tmp/extra/persist/var/lib/sops-nix/key.txt
 
-# Partition and mount with disko
-sudo nix --experimental-features 'nix-command flakes' run \
-  github:nix-community/disko -- --mode disko /tmp/dotfiles/hosts/workstation/disko-config.nix
+# ② Enter the dotfiles repo
+cd ~/github.com/bioinformatist/dotfiles
+
+# ③ Single command does everything:
+#    - SSH into the physical machine
+#    - Run disko partitioning (⚠️ erases /dev/sda)
+#    - Generate real hardware-configuration.nix on the target
+#    - Run nixos-install
+#    - Copy sops key to persistent storage
+nix run github:nix-community/nixos-anywhere -- \
+  --flake .#workstation \
+  --extra-files /tmp/extra \
+  --generate-hardware-config nixos-generate-config \
+    ./hosts/workstation/hardware-configuration.nix \
+  root@<PHYSICAL_MACHINE_IP>
 ```
 
-### 3. Generate Hardware Configuration
+After completion the machine reboots automatically. Jump to [After First Boot](#after-first-boot).
+
+---
+
+### Path B: USB Boot Manual Install
+
+**When to use**: The physical machine is not SSH-accessible, or you prefer to work locally on it.
+
+#### B.1 Create USB Boot Drive
+
+1. Download the NixOS minimal ISO:
+   - Official: `https://channels.nixos.org/nixos-25.11/latest-nixos-minimal-x86_64-linux.iso`
+   - USTC mirror (China): `https://mirrors.ustc.edu.cn/nixos-channels/nixos-25.11/latest-nixos-minimal-x86_64-linux.iso`
+2. Write to USB with [Rufus](https://rufus.ie) (Windows): select **GPT + UEFI**.
+3. Boot the physical machine from the USB drive.
+
+#### B.2 Configure Nix Mirrors (Mainland China)
+
+The live environment defaults to official substituters, which are very slow in China. **Do this before anything else**:
+
 ```bash
-sudo nixos-generate-config --root /mnt
-# Copy the generated file to replace the placeholder
-cp /mnt/etc/nixos/hardware-configuration.nix /tmp/dotfiles/hosts/workstation/hardware-configuration.nix
+mkdir -p ~/.config/nix
+cat > ~/.config/nix/nix.conf << 'EOF'
+substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+extra-experimental-features = nix-command flakes
+EOF
 ```
 
-### 4. Copy sops Age Key
-Both machines share the same Age key. Copy from the VM:
-```bash
-sudo mkdir -p /mnt/persist/var/lib/sops-nix
-# Copy key.txt from VM (via USB drive or SSH)
-sudo cp /path/to/key.txt /mnt/persist/var/lib/sops-nix/key.txt
-sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
-```
+#### B.3 Clone the Repository
 
-### 5. Install
 ```bash
+nix-shell -p git
+git clone -b feat/ephemeral-root https://github.com/bioinformatist/dotfiles /tmp/dotfiles
 cd /tmp/dotfiles
-sudo nixos-install --flake .#workstation
 ```
 
-### 6. After First Boot
-- Set user password (if sops password not auto-applied): `sudo passwd ysun`
-- Import Clash Verge subscription (see "Import subscription from sops" section above)
-- Connect WiFi via NetworkManager: `nmcli device wifi connect <SSID> password <password>`
+#### B.4 Partition
+
+Run disko to partition and mount according to `disko-config.nix`.
+
+> ⚠️ **This erases ALL data on `/dev/sda`!** Verify the disk device is correct.
+
+```bash
+sudo nix run github:nix-community/disko -- \
+  --mode disko ./hosts/workstation/disko-config.nix
+```
+
+After completion, `/mnt` layout:
+- `/mnt` — tmpfs (ephemeral root)
+- `/mnt/boot` — ESP partition (vfat)
+- `/mnt/nix` — btrfs subvolume
+- `/mnt/persist` — btrfs subvolume (persistent data)
+
+#### B.5 Generate Hardware Configuration
+
+With partitions mounted, generate the real hardware config to replace the placeholder:
+
+```bash
+nixos-generate-config --root /mnt --show-hardware-config \
+  > ./hosts/workstation/hardware-configuration.nix
+```
+
+#### B.6 Deploy sops Key
+
+During installation, sops-nix needs the key to decrypt passwords. Place it in **two** locations:
+
+```bash
+# ① Persistent location (survives reboot)
+sudo mkdir -p /mnt/persist/var/lib/sops-nix
+sudo cp <path/to/your/key.txt> /mnt/persist/var/lib/sops-nix/key.txt
+sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
+
+# ② Temporary root location (installer looks here under /mnt)
+sudo mkdir -p /mnt/var/lib/sops-nix
+sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
+```
+
+> Why two copies? The root is tmpfs and vanishes on reboot. After boot, impermanence bind-mounts the persistent path to `/var/lib/sops-nix`. But **during installation**, impermanence isn't active yet, so the installer needs the key directly at `/mnt/var/lib/sops-nix/`.
+
+#### B.7 Install
+
+```bash
+sudo nixos-install --flake .#workstation --no-root-passwd \
+  --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
+```
+
+- `--no-root-passwd`: Skip the interactive root password prompt (user password is managed by sops).
+- `--option substituters ...`: Ensure downloads go through the USTC mirror.
+
+#### B.8 Reboot
+
+```bash
+sudo reboot
+```
+
+Remove the USB drive and boot from the hard disk.
+
+---
+
+### After First Boot
+
+1. **Login**: Use username `ysun` with the password set in `secrets.yaml`. If login fails, see [Recovery Guide § 6](./RECOVERY_AND_UPDATE.md) to troubleshoot.
+
+2. **Connect WiFi** (via NetworkManager):
+   ```bash
+   nmcli device wifi connect <SSID> password <password>
+   ```
+
+3. **Import Clash Verge Subscription**:
+   ```bash
+   cat /run/secrets/clash-subscription-url
+   ```
+   Launch Clash Verge (`SUPER + SHIFT + P`) → Profiles → Paste URL → Import → Activate.
+
+4. **Commit the generated hardware config** (Path B only — the hardware config only exists in `/tmp/dotfiles` during install):
+   ```bash
+   cd ~/github.com/bioinformatist/dotfiles
+   git add hosts/workstation/hardware-configuration.nix
+   git commit -m "feat: add real hardware-configuration for workstation"
+   git push
+   ```
+

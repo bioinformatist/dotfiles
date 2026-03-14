@@ -218,45 +218,166 @@ $env.SOPS_AGE_KEY_FILE = ("~/.config/sops/age/keys.txt" | path expand)
 
 ## 💻 物理机首次部署
 
-以下步骤适用于在新物理机上首次安装 `workstation` 配置。
+将 `workstation` 配置安装到一台新物理机上。本节提供两条路线，选择适合你的情况的一条。
 
-### 1. 准备 NixOS 安装 U 盘
-从 [nixos.org](https://nixos.org/download/) 下载最小化 ISO 并制作启动 U 盘。
+### 前置准备（两条路线都需要）
 
-### 2. 分区与挂载
-使用 disko 自动分区（在 live 环境中）：
+在开始安装之前，你需要准备好 **Age 私钥**（`key.txt`）。两台机器共享同一把密钥。
+
+> 你的 Age 私钥存放在 VM 的 `/persist/var/lib/sops-nix/key.txt`。
+> 将它复制到 U 盘、通过 SSH 传输、或任何你方便的方式带到安装环境中。
+> 如果你完全没有密钥，请参阅 [密钥管理指南 § 2](./SECRET_MANAGEMENT.zh-CN.md) 生成一把新密钥。
+
+---
+
+### 路线 A：从已有机器远程安装（nixos-anywhere）
+
+**适用场景**：你有一台已安装 Nix 且网络通畅的机器（如 VM），并且能通过 SSH 以 root 身份访问物理机（物理机上有 NixOS Live CD 或任意 Linux）。
+
+**操作位置**：在 VM 上执行所有命令。
+
 ```bash
-# 克隆仓库（可能需要代理）
-git clone https://github.com/bioinformatist/dotfiles /tmp/dotfiles
+# ① 准备 sops 密钥目录（nixos-anywhere 会把这个目录复制到目标机的 /mnt）
+mkdir -p /tmp/extra/persist/var/lib/sops-nix
+cp /persist/var/lib/sops-nix/key.txt /tmp/extra/persist/var/lib/sops-nix/key.txt
 
-# 使用 disko 分区并挂载
-sudo nix --experimental-features 'nix-command flakes' run \
-  github:nix-community/disko -- --mode disko /tmp/dotfiles/hosts/workstation/disko-config.nix
+# ② 进入 dotfiles 仓库
+cd ~/github.com/bioinformatist/dotfiles
+
+# ③ 一条命令完成全部安装
+#    - 自动 SSH 到物理机
+#    - 执行 disko 分区（⚠️ 擦除 /dev/sda 全部数据）
+#    - 在目标机上生成真实的 hardware-configuration.nix
+#    - 执行 nixos-install
+#    - 将 sops 密钥复制到持久化目录
+nix run github:nix-community/nixos-anywhere -- \
+  --flake .#workstation \
+  --extra-files /tmp/extra \
+  --generate-hardware-config nixos-generate-config \
+    ./hosts/workstation/hardware-configuration.nix \
+  root@<物理机IP>
 ```
 
-### 3. 生成硬件配置
+完成后物理机会自动重启，跳到 [首次启动后](#首次启动后) 章节。
+
+---
+
+### 路线 B：USB 启动盘手动安装
+
+**适用场景**：物理机无法被 SSH 访问，或你更倾向于在物理机上本地操作。
+
+#### B.1 制作 USB 启动盘
+
+1. 下载 NixOS 最小化 ISO（选一个可用的地址）：
+   - 官方：`https://channels.nixos.org/nixos-25.11/latest-nixos-minimal-x86_64-linux.iso`
+   - USTC 镜像：`https://mirrors.ustc.edu.cn/nixos-channels/nixos-25.11/latest-nixos-minimal-x86_64-linux.iso`
+2. 使用 [Rufus](https://rufus.ie)（Windows）写入 U 盘，选择 **GPT + UEFI**。
+3. 物理机 BIOS 设置为从 U 盘启动，开机进入 NixOS Live 环境。
+
+#### B.2 配置 Nix 镜像（中国大陆必需）
+
+Live 环境默认从官方源下载，在大陆极慢。**先配置 USTC 镜像再做任何事**：
+
 ```bash
-sudo nixos-generate-config --root /mnt
-# 将生成的文件复制到仓库中替换占位文件
-cp /mnt/etc/nixos/hardware-configuration.nix /tmp/dotfiles/hosts/workstation/hardware-configuration.nix
+mkdir -p ~/.config/nix
+cat > ~/.config/nix/nix.conf << 'EOF'
+substituters = https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+extra-experimental-features = nix-command flakes
+EOF
 ```
 
-### 4. 复制 sops Age 密钥
-两台机器共享同一个 Age key，从 VM 复制：
-```bash
-sudo mkdir -p /mnt/persist/var/lib/sops-nix
-# 从 VM 复制 key.txt（通过 U 盘或 SSH）
-sudo cp /path/to/key.txt /mnt/persist/var/lib/sops-nix/key.txt
-sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
-```
+#### B.3 克隆仓库
 
-### 5. 安装
 ```bash
+nix-shell -p git
+git clone -b feat/ephemeral-root https://github.com/bioinformatist/dotfiles /tmp/dotfiles
 cd /tmp/dotfiles
-sudo nixos-install --flake .#workstation
 ```
 
-### 6. 首次启动后
-- 设置用户密码（如果 sops 密码未自动应用）：`sudo passwd ysun`
-- 导入 Clash Verge 订阅（参见上方「从 sops 导入订阅」章节）
-- 通过 NetworkManager 连接 WiFi：`nmcli device wifi connect <SSID> password <password>`
+#### B.4 分区
+
+使用 disko 按照 `disko-config.nix` 自动分区并挂载。
+
+> ⚠️ **此操作会擦除 `/dev/sda` 上的所有数据！** 确认磁盘设备正确。
+
+```bash
+sudo nix run github:nix-community/disko -- \
+  --mode disko ./hosts/workstation/disko-config.nix
+```
+
+执行完毕后，`/mnt` 下的挂载布局为：
+- `/mnt` — tmpfs（临时根）
+- `/mnt/boot` — ESP 分区（vfat）
+- `/mnt/nix` — btrfs 子卷
+- `/mnt/persist` — btrfs 子卷（持久化数据）
+
+#### B.5 生成硬件配置
+
+在分区挂载后，生成此物理机的真实硬件配置并替换占位文件：
+
+```bash
+nixos-generate-config --root /mnt --show-hardware-config \
+  > ./hosts/workstation/hardware-configuration.nix
+```
+
+#### B.6 部署 sops 密钥
+
+安装过程中 sops-nix 需要读取密钥来解密用户密码等。密钥需要放在两个位置：
+
+```bash
+# ① 持久化位置（重启后保留）
+sudo mkdir -p /mnt/persist/var/lib/sops-nix
+sudo cp <你的key.txt路径> /mnt/persist/var/lib/sops-nix/key.txt
+sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
+
+# ② 临时根位置（安装器在 /mnt 下寻找密钥）
+sudo mkdir -p /mnt/var/lib/sops-nix
+sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
+```
+
+> 为什么需要复制两份？因为根目录是 tmpfs，重启后消失。持久化目录在重启后会被 impermanence 绑定挂载到 `/var/lib/sops-nix`。但**安装阶段** impermanence 还没生效，所以安装器需要在 `/mnt/var/lib/sops-nix/` 直接找到密钥。
+
+#### B.7 安装
+
+```bash
+sudo nixos-install --flake .#workstation --no-root-passwd \
+  --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
+```
+
+- `--no-root-passwd`：跳过设置 root 密码的交互提示（用户密码由 sops 管理）。
+- `--option substituters ...`：确保下载走 USTC 镜像。
+
+#### B.8 重启
+
+```bash
+sudo reboot
+```
+
+拔掉 U 盘，从硬盘启动。
+
+---
+
+### 首次启动后
+
+1. **登录**：使用用户名 `ysun`，密码为你在 `secrets.yaml` 中设置的密码。如果无法登录，参见 [恢复指南 § 6](./RECOVERY_AND_UPDATE.zh-CN.md) 排查密钥问题。
+
+2. **连接 WiFi**（通过 NetworkManager）：
+   ```bash
+   nmcli device wifi connect <SSID> password <密码>
+   ```
+
+3. **导入 Clash Verge 订阅**：
+   ```bash
+   cat /run/secrets/clash-subscription-url
+   ```
+   启动 Clash Verge（`SUPER + SHIFT + P`）→ Profiles → 粘贴链接 → Import → 激活。
+
+4. **将生成的硬件配置提交到仓库**（如果走路线 B，硬件配置只存在于安装时的 `/tmp/dotfiles`，需要手动提交）：
+   ```bash
+   cd ~/github.com/bioinformatist/dotfiles
+   git add hosts/workstation/hardware-configuration.nix
+   git commit -m "feat: add real hardware-configuration for workstation"
+   git push
+   ```
+
