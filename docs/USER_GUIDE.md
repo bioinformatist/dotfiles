@@ -294,7 +294,7 @@ done
 
 ```bash
 nix-shell -p git
-git clone -b feat/ephemeral-root https://github.com/bioinformatist/dotfiles /tmp/dotfiles
+git clone -b feat/ephemeral-root --depth 1 https://github.com/bioinformatist/dotfiles /tmp/dotfiles
 cd /tmp/dotfiles
 ```
 
@@ -324,18 +324,28 @@ After completion, `/mnt` layout:
 With partitions mounted, generate the real hardware config to replace the placeholder:
 
 ```bash
-nixos-generate-config --root /mnt --show-hardware-config \
+sudo nixos-generate-config --root /mnt --no-filesystems --show-hardware-config \
   > ./hosts/workstation/hardware-configuration.nix
 ```
 
+> `--no-filesystems`: Skip filesystem/mount detection. These are managed declaratively by disko — letting `nixos-generate-config` also generate them would cause conflicts.
+
 #### B.6 Deploy sops Key
 
-During installation, sops-nix needs the key to decrypt passwords. Place it in **two** locations:
+During installation, sops-nix needs the key to decrypt passwords. The key must be placed in **two** locations.
 
+First, on the **VM**, view the key content (a single line starting with `AGE-SECRET-KEY-`):
+```bash
+sudo cat /persist/var/lib/sops-nix/key.txt
+```
+
+Then on the **physical machine**, write it in (paste the content from the cat above):
 ```bash
 # ① Persistent location (survives reboot)
 sudo mkdir -p /mnt/persist/var/lib/sops-nix
-sudo cp <path/to/your/key.txt> /mnt/persist/var/lib/sops-nix/key.txt
+sudo tee /mnt/persist/var/lib/sops-nix/key.txt << 'EOF'
+AGE-SECRET-KEY-xxxxx (replace with your actual key)
+EOF
 sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
 
 # ② Temporary root location (installer looks here under /mnt)
@@ -347,13 +357,21 @@ sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
 
 #### B.7 Install
 
+If a LAN proxy is available (e.g., Clash), set the proxy environment variables first. The USTC mirror only accelerates nixpkgs NAR packages, but flake inputs (Hyprland source, etc.) are downloaded directly from GitHub, which is very slow in China:
+
 ```bash
-sudo nixos-install --flake .#workstation --no-root-passwd \
+# Optional: set LAN proxy (replace with your proxy address)
+export http_proxy=http://192.168.x.x:7890
+export https_proxy=http://192.168.x.x:7890
+
+# Install (sudo -E preserves proxy env vars)
+sudo -E nixos-install --flake .#workstation --no-root-passwd \
   --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
 ```
 
+- `sudo -E`: Pass `http_proxy`/`https_proxy` to the root process.
 - `--no-root-passwd`: Skip the interactive root password prompt (user password is managed by sops).
-- `--option substituters ...`: Ensure downloads go through the USTC mirror.
+- `--option substituters ...`: Ensure NAR package downloads go through the USTC mirror.
 
 #### B.8 Reboot
 

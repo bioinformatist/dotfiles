@@ -294,7 +294,7 @@ done
 
 ```bash
 nix-shell -p git
-git clone -b feat/ephemeral-root https://github.com/bioinformatist/dotfiles /tmp/dotfiles
+git clone -b feat/ephemeral-root --depth 1 https://github.com/bioinformatist/dotfiles /tmp/dotfiles
 cd /tmp/dotfiles
 ```
 
@@ -324,18 +324,28 @@ sudo nix run github:nix-community/disko -- \
 在分区挂载后，生成此物理机的真实硬件配置并替换占位文件：
 
 ```bash
-nixos-generate-config --root /mnt --show-hardware-config \
+sudo nixos-generate-config --root /mnt --no-filesystems --show-hardware-config \
   > ./hosts/workstation/hardware-configuration.nix
 ```
 
+> `--no-filesystems`：跳过文件系统/挂载点检测。这些由 disko 声明式管理，如果让 `nixos-generate-config` 也生成一份会产生冲突。
+
 #### B.6 部署 sops 密钥
 
-安装过程中 sops-nix 需要读取密钥来解密用户密码等。密钥需要放在两个位置：
+安装过程中 sops-nix 需要读取密钥来解密用户密码等。密钥需要放在两个位置。
 
+先在 **VM** 上查看密钥内容（一行文本，以 `AGE-SECRET-KEY-` 开头）：
+```bash
+sudo cat /persist/var/lib/sops-nix/key.txt
+```
+
+然后在**物理机**上写入（把上面 cat 出来的内容粘贴进去）：
 ```bash
 # ① 持久化位置（重启后保留）
 sudo mkdir -p /mnt/persist/var/lib/sops-nix
-sudo cp <你的key.txt路径> /mnt/persist/var/lib/sops-nix/key.txt
+sudo tee /mnt/persist/var/lib/sops-nix/key.txt << 'EOF'
+AGE-SECRET-KEY-xxxxx（替换为你的实际密钥）
+EOF
 sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
 
 # ② 临时根位置（安装器在 /mnt 下寻找密钥）
@@ -347,13 +357,21 @@ sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
 
 #### B.7 安装
 
+如果局域网中有代理（如 Clash），先设置代理环境变量。USTC 镜像只加速 nixpkgs 的 NAR 包，但 flake inputs（Hyprland 源码等）仍从 GitHub 直接下载，在大陆极慢：
+
 ```bash
-sudo nixos-install --flake .#workstation --no-root-passwd \
+# 可选：设置局域网代理（替换为你的代理地址）
+export http_proxy=http://192.168.x.x:7890
+export https_proxy=http://192.168.x.x:7890
+
+# 安装（sudo -E 保留代理环境变量）
+sudo -E nixos-install --flake .#workstation --no-root-passwd \
   --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
 ```
 
+- `sudo -E`：将 `http_proxy`/`https_proxy` 传递给 root 进程。
 - `--no-root-passwd`：跳过设置 root 密码的交互提示（用户密码由 sops 管理）。
-- `--option substituters ...`：确保下载走 USTC 镜像。
+- `--option substituters ...`：确保 NAR 包下载走 USTC 镜像。
 
 #### B.8 重启
 
