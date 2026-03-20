@@ -29,13 +29,71 @@
     enable = true;
     type = "fcitx5";
     fcitx5 = {
+      waylandFrontend = true;
       addons = with pkgs; [
         fcitx5-gtk
-        fcitx5-rime
+        (fcitx5-rime.override {
+          rimeDataPkgs = [
+            rime-data # Built-in schemas (luna_pinyin, etc.)
+            (pkgs.callPackage ../../pkgs/rime-data-cantonese.nix { }) # Cantonese Jyutping
+          ];
+        })
         kdePackages.fcitx5-configtool
-        kdePackages.fcitx5-chinese-addons
       ];
     };
+  };
+
+  # --- Declarative Rime configuration ---
+  # Schema selection, per-schema defaults, and sync settings.
+  # After `nixos-rebuild switch`, run "Rime -> Redeploy" in Fcitx5 tray.
+  xdg.dataFile = {
+    # Global: which schemas to enable and input behavior
+    "fcitx5/rime/default.custom.yaml".text = ''
+      patch:
+        schema_list:
+          - schema: luna_pinyin    # Mandarin Pinyin (Simplified)
+          - schema: jyut6ping3     # Cantonese Jyutping (Traditional)
+        menu:
+          page_size: 9
+        ascii_composer:
+          switch_key:
+            Shift_L: commit_code
+            Shift_R: noop
+    '';
+
+    # Mandarin: default to Simplified Chinese output
+    "fcitx5/rime/luna_pinyin.custom.yaml".text = ''
+      patch:
+        switches:
+          - name: ascii_mode
+            reset: 0
+          - name: full_shape
+            reset: 0
+          - name: simplification
+            reset: 1
+          - name: ascii_punct
+            reset: 0
+    '';
+
+    # Cantonese: default to Traditional Chinese output
+    "fcitx5/rime/jyut6ping3.custom.yaml".text = ''
+      patch:
+        switches:
+          - name: ascii_mode
+            reset: 0
+          - name: full_shape
+            reset: 0
+          - name: simplification
+            reset: 0
+          - name: ascii_punct
+            reset: 0
+    '';
+
+    # Sync: export user dictionaries to dotfiles repo for cross-machine sync
+    "fcitx5/rime/installation.yaml".text = ''
+      installation_id: "nixos-ysun"
+      sync_dir: "/home/ysun/github.com/bioinformatist/dotfiles/rime-sync"
+    '';
   };
 
   programs.git = {
