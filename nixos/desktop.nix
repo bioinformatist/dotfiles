@@ -16,6 +16,20 @@
       inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };
 
+  # Portal configuration: add GTK portal as fallback for Screenshot interface.
+  # WeChat calls org.freedesktop.portal.Screenshot via D-Bus, but the Hyprland
+  # portal doesn't implement it. The GTK portal provides a working Screenshot
+  # backend that captures via Wayland screencopy and returns the image to the
+  # requesting app (WeChat), which then opens its own annotation editor.
+  xdg.portal = {
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    config.hyprland = {
+      default = [ "hyprland" "gtk" ];
+      "org.freedesktop.impl.portal.Screenshot" = [ "gtk" ];
+      "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
+    };
+  };
+
   programs.clash-verge = {
     enable = true;
     package = pkgs.clash-verge-rev;
