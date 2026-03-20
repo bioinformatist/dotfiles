@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   imports = [
     ../../home/core.nix
@@ -93,14 +93,11 @@
   # installation.yaml must be a regular file (not symlink) because Rime writes
   # runtime metadata (distribution_code_name, etc.) into it. Seed it only when
   # the file doesn't exist yet, so user/runtime changes are preserved.
-  home.activation.rimeInstallation = ''
+  home.activation.rimeInstallation = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     RIME_DIR="$HOME/.local/share/fcitx5/rime"
     if [ ! -f "$RIME_DIR/installation.yaml" ]; then
       mkdir -p "$RIME_DIR"
-      cat > "$RIME_DIR/installation.yaml" << 'EOF'
-installation_id: "nixos-ysun"
-sync_dir: "/home/ysun/github.com/bioinformatist/dotfiles/rime-sync"
-EOF
+      printf '%s\n' 'installation_id: "nixos-ysun"' 'sync_dir: "/home/ysun/github.com/bioinformatist/dotfiles/rime-sync"' > "$RIME_DIR/installation.yaml"
     fi
   '';
 
