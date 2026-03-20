@@ -32,7 +32,7 @@
   sops.secrets."ysun-password" = {
     neededForUsers = true;
   };
-  # TODO: Add a workstation-specific SSH key to secrets.yaml, or reuse vm-test's key
+  # Shared GitHub SSH key (same key for all hosts)
   sops.secrets."github-ssh-key-vm-test" = {
     owner = "ysun";
     path = "/home/ysun/.ssh/id_ed25519";

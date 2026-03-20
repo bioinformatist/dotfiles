@@ -16,10 +16,6 @@ nix-shell -p sops age
 If Nix fails to build sops (common in China due to Go dependency fetch failures), download the binary directly:
 1.  Download `sops` from [GitHub Releases](https://github.com/getsops/sops/releases).
 2.  `chmod +x sops-v* && sudo mv sops-v* /usr/local/bin/sops`
-3.  Use Python to generate password hash if `mkpasswd` is missing:
-    ```bash
-    python3 -c 'import crypt; print(crypt.crypt("YOUR_PASSWORD", crypt.mksalt(crypt.METHOD_SHA512)))'
-    ```
 
 ## 2. Key Generation (One-Time Setup)
 Generate a centralized Age key for your user.
@@ -37,16 +33,20 @@ age-keygen -y ~/.config/sops/age/keys.txt
 ```
 This public key must be added to `.sops.yaml` in the repository root.
 
+> **Note**: This repository uses two key paths for different purposes:
+> - `~/.config/sops/age/keys.txt` — Your local editing key, used by the `sops` CLI to decrypt and edit `secrets.yaml`.
+> - `/persist/var/lib/sops-nix/key.txt` — System-level key, used by the sops-nix service for runtime secret decryption. **Both contain the same key material**, just deployed to different locations.
+
 ## 3. Configuration (.sops.yaml)
 The `.sops.yaml` file defines which keys can decrypt which files.
 ```yaml
 keys:
-  - &my_key age1... (Your Public Key)
+  - &admin_ysun age176uhkwuqd5ry737n7lqkc8mclmdrzsdvn2hen9g27les6m3uxf8qc88s2q
 creation_rules:
   - path_regex: secrets/.*
     key_groups:
       - age:
-          - *my_key
+          - *admin_ysun
 ```
 
 ## 4. Managing Secrets
@@ -58,11 +58,11 @@ sops secrets/secrets.yaml
 
 ### Resetting User Password
 To change the user login password:
-1.  Generate a SHA-512 hash of your new password (using Python 3):
+1.  Generate a SHA-512 hash of your new password:
     ```bash
-    python3 -c 'import crypt; print(crypt.crypt("YOUR_PASSWORD", crypt.mksalt(crypt.METHOD_SHA512)))'
-    # Replace YOUR_PASSWORD with your actual password
-    # Copy the output hash (starts with $6$...)
+    # mkpasswd is available on NixOS Live ISO and installed systems
+    mkpasswd -m sha-512
+    # Enter your password interactively, copy the output hash (starts with $6$...)
     ```
 2.  Edit the secrets file:
     ```bash
@@ -82,8 +82,10 @@ You must assume the identity of the target system manually.
 # 1. Create the persistent directory for the key
 sudo mkdir -p /mnt/persist/var/lib/sops-nix
 
-# 2. Copy your private key content into it
-sudo sh -c 'echo "AGE-SECRET-KEY-..." > /mnt/persist/var/lib/sops-nix/key.txt'
+# 2. Write your private key content (type EOF and press Enter when done pasting)
+sudo tee /mnt/persist/var/lib/sops-nix/key.txt > /dev/null << 'EOF'
+# Paste your AGE-SECRET-KEY-... content here
+EOF
 sudo chmod 600 /mnt/persist/var/lib/sops-nix/key.txt
 
 # 3. CRITICAL for Wipe-on-Install:
@@ -92,13 +94,15 @@ sudo mkdir -p /mnt/var/lib/sops-nix
 sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
 ```
 
-## 6. Adding a New Device SSH Key
-To give a new machine (like `vm-test`) access to GitHub using a unique key:
+## 6. Managing Device SSH Keys
+All hosts in this repository share a single GitHub SSH key (stored as the sops secret `github-ssh-key-vm-test`), which is automatically deployed to `~/.ssh/id_ed25519` during `nixos-rebuild`.
+
+To generate a new key or replace the existing one:
 
 1.  **Generate the Key**:
     ```bash
     # Generate a new ed25519 key (no passphrase, as it's encrypted at rest by sops)
-    ssh-keygen -t ed25519 -C "ysun@vm-test" -N ""
+    ssh-keygen -t ed25519 -C "ysun@nixos" -N ""
     ```
 
 2.  **Add to Secrets**:
@@ -109,7 +113,7 @@ To give a new machine (like `vm-test`) access to GitHub using a unique key:
     nix shell nixpkgs#sops --command sops secrets/secrets.yaml
     ```
     
-    Add the key content under a new key (e.g., `github-ssh-key-vm-test`):
+    Update the `github-ssh-key-vm-test` key content:
     ```yaml
     github-ssh-key-vm-test: |
       -----BEGIN OPENSSH PRIVATE KEY-----
@@ -120,6 +124,9 @@ To give a new machine (like `vm-test`) access to GitHub using a unique key:
 
 3.  **Cleanup**:
     Delete the generated key files (`~/.ssh/id_ed25519` and `.pub`) after verifying they are in sops. The system will auto-provision them to `~/.ssh/` on next rebuild.
+
+4.  **Register the public key on GitHub**:
+    Add the contents of the `.pub` file to [GitHub > Settings > SSH keys](https://github.com/settings/keys).
 
 ## 7. Managing Clash Subscription URL
 The Clash proxy subscription URL is stored as an encrypted secret so it can be version-controlled safely.
