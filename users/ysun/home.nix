@@ -88,13 +88,21 @@
           - name: ascii_punct
             reset: 0
     '';
-
-    # Sync: export user dictionaries to dotfiles repo for cross-machine sync
-    "fcitx5/rime/installation.yaml".text = ''
-      installation_id: "nixos-ysun"
-      sync_dir: "/home/ysun/github.com/bioinformatist/dotfiles/rime-sync"
-    '';
   };
+
+  # installation.yaml must be a regular file (not symlink) because Rime writes
+  # runtime metadata (distribution_code_name, etc.) into it. Seed it only when
+  # the file doesn't exist yet, so user/runtime changes are preserved.
+  home.activation.rimeInstallation = ''
+    RIME_DIR="$HOME/.local/share/fcitx5/rime"
+    if [ ! -f "$RIME_DIR/installation.yaml" ]; then
+      mkdir -p "$RIME_DIR"
+      cat > "$RIME_DIR/installation.yaml" << 'EOF'
+installation_id: "nixos-ysun"
+sync_dir: "/home/ysun/github.com/bioinformatist/dotfiles/rime-sync"
+EOF
+    fi
+  '';
 
   programs.git = {
     enable = true;
