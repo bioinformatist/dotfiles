@@ -54,6 +54,8 @@ Everything else is wiped on reboot.
 | **hyprlock** | `pkgs.hyprlock` | Hyprland-native lock screen |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland-native portal for screen sharing, file dialogs, etc. |
 | **WeChat** | `pkgs.wechat-uos` | WeChat desktop client (runs via XWayland) |
+| **grim** + **slurp** | `pkgs.grim`, `pkgs.slurp` | Wayland screen capture + region selector |
+| **satty** | `pkgs.satty` | Screenshot annotation editor (arrows, text, blur, brush) |
 
 ### TUI & Shell
 
@@ -129,6 +131,9 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + W` | Launch **WeChat** |
 | `SUPER + L` | **Lock Screen** (hyprlock) |
 | `SUPER + R` | Enter **Resize Mode** (arrow keys to resize, `Escape` to exit) |
+| `ALT + A` | **Screenshot** region → annotate (satty) → clipboard |
+| `Print` | **Screenshot** region → annotate (satty) → clipboard |
+| `SUPER + Print` | **Screenshot** full screen → annotate (satty) → clipboard |
 
 ### Window & Workspace Management
 | Command | Action |

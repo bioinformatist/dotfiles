@@ -54,6 +54,8 @@
 | **hyprlock** | `pkgs.hyprlock` | Hyprland 原生锁屏 |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland 原生门户（屏幕共享、文件对话框等） |
 | **微信** | `pkgs.wechat-uos` | 微信桌面客户端（通过 XWayland 运行） |
+| **grim** + **slurp** | `pkgs.grim`、`pkgs.slurp` | Wayland 屏幕截图 + 区域选择器 |
+| **satty** | `pkgs.satty` | 截图标注编辑器（箭头、文字、模糊、画笔） |
 
 ### TUI & Shell
 
@@ -129,6 +131,9 @@
 | `SUPER + W` | 启动**微信** |
 | `SUPER + L` | **锁屏**（hyprlock） |
 | `SUPER + R` | 进入**调整大小模式**（方向键调整，`Escape` 退出） |
+| `ALT + A` | **截图**选区 → 标注（satty） → 剪贴板 |
+| `Print` | **截图**选区 → 标注（satty） → 剪贴板 |
+| `SUPER + Print` | **截图**全屏 → 标注（satty） → 剪贴板 |
 
 ### 窗口 & 工作区管理
 | 快捷键 | 操作 |

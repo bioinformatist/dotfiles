@@ -54,6 +54,10 @@
       google-chrome
       hyprlock
       wechat-uos
+    grim # Wayland screenshot backend
+    slurp # Wayland region selector
+    satty # Screenshot annotation editor (arrows, text, blur)
+    xclip # X11 clipboard bridge (for XWayland apps like WeChat)
     ]
     ++ [
       inputs.swww.packages.${pkgs.stdenv.hostPlatform.system}.swww
