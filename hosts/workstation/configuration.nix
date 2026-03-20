@@ -77,6 +77,7 @@
         ".config/sops"
         ".config/nushell"
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
+        "xwechat_files" # WeChat chat history and data
         # Physical machine daily-use paths
         "Downloads"
         "Documents"
