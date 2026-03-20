@@ -5,12 +5,12 @@ My NixOS Settings.
 ## 📖 Reference
 *   👉 **[User Guide: Programs & Keybindings](docs/USER_GUIDE.md)**: What's inside and how to use it.
 *   👉 **[Secret Management](docs/SECRET_MANAGEMENT.md)**: SSH keys, Sops-Nix, and Age keys.
-*   👉 **[Recovery & Updates](docs/RECOVERY_AND_UPDATE.md)**: Fixing a broken system or incremental updates.
+*   👉 **[Recovery, Updates & Maintenance](docs/RECOVERY_AND_UPDATE.md)**: Daily package updates, fixing a broken system, or incremental updates.
 
 ### 🇨🇳 中文文档
 *   👉 **[用户指南：程序与快捷键](docs/USER_GUIDE.zh-CN.md)**
 *   👉 **[密钥管理](docs/SECRET_MANAGEMENT.zh-CN.md)**
-*   👉 **[系统恢复与增量更新](docs/RECOVERY_AND_UPDATE.zh-CN.md)**
+*   👉 **[系统恢复、更新与维护](docs/RECOVERY_AND_UPDATE.zh-CN.md)**
 
 ## Installation Guide (VM / Fresh Install)
 

@@ -1,6 +1,6 @@
-# 系统恢复与增量更新
+# 系统恢复、更新与维护
 
-本指南介绍如何**修复损坏的系统**或**应用配置更新**（如密码更改）——**无需擦除磁盘**。
+本指南介绍如何**更新系统全部软件包**、**修复损坏的系统**或**应用配置更新**（如密码更改）——**无需擦除磁盘**。
 
 ## 1. 启动 & 网络（中国大陆优化）
 从 NixOS 安装 ISO 启动。
@@ -115,5 +115,90 @@ sudo reboot
         ```
     *   **重新安装**：
         ```bash
-        sudo nixos-install --flake .#vm-test --no-root-passwd --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
+         sudo nixos-install --flake .#vm-test --no-root-passwd --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
         ```
+
+## 7. 日常系统更新（在运行中的系统上）
+
+本节适用于**已安装并正常运行的系统**上的日常包更新流程。无需 ISO 或重新安装。
+
+> **Shell 说明**：第 1–6 节在 ISO 安装器环境中操作，使用 **bash**。
+> 本节在已配置好的系统上操作，使用 **Nushell**。语法有所不同。
+
+### 中国大陆网络须知
+
+更新过程中有**两类**网络请求，加速方式不同：
+
+| 请求类型 | 用途 | 加速方式 |
+|---|---|---|
+| **GitHub 源码获取** | `nix flake update` 拉取 flake inputs（HTTPS tarball） | 必须走**代理**，USTC 镜像无法加速 |
+| **二进制缓存下载** | `nixos-rebuild` 从 cache 下载预编译包 | 使用 **USTC 镜像**（`--option substituters`） |
+
+> **为什么代理能生效？** Nix 底层使用 **libcurl** 进行 HTTP 请求，libcurl 原生支持
+> `http_proxy`/`https_proxy` 环境变量。`nix flake update` 对 `github:` 类型的 input
+> 是通过 HTTPS 下载 tarball（而非 `git clone`），因此会自动使用代理。
+
+因此，完整更新需要**同时**配置代理和 USTC 镜像。
+
+**设置代理**（Nushell 语法，局域网代理或本机代理均可）：
+```nu
+# 将地址替换为你的实际代理地址
+# 本机代理示例：http://127.0.0.1:7890
+# 局域网代理示例：http://192.168.1.100:7890
+$env.http_proxy = "http://<代理地址>:<端口>"
+$env.https_proxy = "http://<代理地址>:<端口>"
+```
+
+### 第 1 步：更新 Flake 输入（`flake.lock`）
+
+此命令从 GitHub 拉取所有依赖的最新版本（nixpkgs、home-manager、hyprland 等）。
+
+```nu
+cd /path/to/dotfiles   # 例如 ~/github.com/bioinformatist/dotfiles
+
+# 确保已设置代理（见上方）
+nix flake update
+```
+
+此操作会修改 `flake.lock` 文件——之后应提交该文件。
+
+### 第 2 步：重建并切换
+
+将更新后的软件包应用到运行中的系统。
+
+> **重要**：`sudo` 默认会**丢弃**当前用户的环境变量（包括 `http_proxy`/`https_proxy`）。
+> 必须使用 `sudo -E`（`--preserve-env`）来保留代理设置，否则构建过程中需要从 GitHub 拉取源码的包会失败。
+> Nushell 通过 `$env` 设置的变量会被传递给子进程，因此 `sudo -E` 可以正确继承它们。
+
+```nu
+# 将 <host> 替换为你的主机名：vm-test、workstation 等
+# -E 保留代理环境变量；--option substituters 使用 USTC 二进制缓存镜像
+sudo -E nixos-rebuild switch --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+```
+
+如果不需要代理（网络畅通），可以省略 `-E` 和代理设置：
+```nu
+sudo nixos-rebuild switch --flake $".#<host>"
+```
+
+### 第 3 步：提交锁文件
+
+```nu
+git add flake.lock
+git commit -m "chore: update flake inputs"
+git push
+```
+
+### （可选）切换前预览变更
+
+如果想**只构建不激活**（先检查是否有构建错误）：
+
+```nu
+sudo -E nixos-rebuild build --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+```
+
+或使用 `test` 临时激活（下次重启后恢复）：
+
+```nu
+sudo -E nixos-rebuild test --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+```

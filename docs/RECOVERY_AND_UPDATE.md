@@ -1,6 +1,6 @@
-# System Recovery & Incremental Updates
+# System Recovery, Updates & Maintenance
 
-This guide explains how to **rescue a broken system** or **apply configuration updates** (like password changes) **without wiping your disk**.
+This guide explains how to **update all system packages**, **rescue a broken system**, or **apply configuration updates** (like password changes) **without wiping your disk**.
 
 ## 1. Boot & Network (China Optimized)
 Boot into the NixOS Installation ISO.
@@ -117,3 +117,88 @@ If decryption failed, you must align the keys:
         ```bash
         sudo nixos-install --flake .#vm-test --no-root-passwd --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
         ```
+
+## 7. Daily System Update (On a Running System)
+
+This section covers the normal workflow for **updating all packages** on an already-installed, running system. No ISO or reinstallation is needed.
+
+> **Shell Note**: Sections 1–6 run in the ISO installer environment using **bash**.
+> This section runs on the configured system using **Nushell**. The syntax differs.
+
+### China Network Note
+
+The update process involves **two types** of network requests, each requiring a different acceleration method:
+
+| Request Type | Purpose | Acceleration |
+|---|---|---|
+| **GitHub source fetching** | `nix flake update` pulls flake inputs (HTTPS tarballs) | Requires a **proxy**; USTC mirror cannot help |
+| **Binary cache download** | `nixos-rebuild` downloads pre-built packages from cache | Use **USTC mirror** (`--option substituters`) |
+
+> **Why does the proxy work?** Nix uses **libcurl** under the hood for HTTP requests. libcurl natively
+> supports `http_proxy`/`https_proxy` environment variables. `nix flake update` downloads tarballs via
+> HTTPS for `github:` inputs (not `git clone`), so it automatically picks up the proxy.
+
+Therefore, a full update requires **both** a proxy and the USTC mirror.
+
+**Set proxy** (Nushell syntax, LAN or localhost proxy):
+```nu
+# Replace with your actual proxy address
+# Localhost example: http://127.0.0.1:7890
+# LAN proxy example: http://192.168.1.100:7890
+$env.http_proxy = "http://<proxy-address>:<port>"
+$env.https_proxy = "http://<proxy-address>:<port>"
+```
+
+### Step 1: Update Flake Inputs (`flake.lock`)
+
+This fetches the latest versions of all dependencies from GitHub (nixpkgs, home-manager, hyprland, etc.).
+
+```nu
+cd /path/to/dotfiles   # e.g., ~/github.com/bioinformatist/dotfiles
+
+# Ensure proxy is set (see above)
+nix flake update
+```
+
+This modifies `flake.lock` — you should commit it afterward.
+
+### Step 2: Rebuild & Switch
+
+Apply the updated packages to the running system.
+
+> **Important**: `sudo` **strips** environment variables (including `http_proxy`/`https_proxy`) by default.
+> You must use `sudo -E` (`--preserve-env`) to keep your proxy settings, otherwise packages that need to fetch source from GitHub during build will fail.
+> Variables set via Nushell's `$env` are passed to child processes, so `sudo -E` inherits them correctly.
+
+```nu
+# Replace <host> with your host name: vm-test, workstation, etc.
+# -E preserves proxy env vars; --option substituters uses USTC binary cache mirror
+sudo -E nixos-rebuild switch --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+```
+
+If you don't need a proxy (network is fine), you can omit `-E` and the proxy setup:
+```nu
+sudo nixos-rebuild switch --flake $".#<host>"
+```
+
+### Step 3: Commit the Lock File
+
+```nu
+git add flake.lock
+git commit -m "chore: update flake inputs"
+git push
+```
+
+### (Optional) Preview Changes Before Switching
+
+If you want to **build without activating** (to check for build errors first):
+
+```nu
+sudo -E nixos-rebuild build --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+```
+
+Or use `test` to activate temporarily (reverts on next reboot):
+
+```nu
+sudo -E nixos-rebuild test --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+```
