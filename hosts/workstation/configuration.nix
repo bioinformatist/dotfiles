@@ -76,12 +76,18 @@
         "github.com"
         ".config/sops"
         ".config/nushell"
+        ".config/google-chrome" # Chrome profile (bookmarks, passwords, extensions)
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
+        ".local/share/fcitx5" # Fcitx5/Rime user dictionary and learned words
+        ".gemini" # Antigravity IDE data (conversations, knowledge base)
         "xwechat_files" # WeChat chat history and data
         # Physical machine daily-use paths
         "Downloads"
         "Documents"
         ".mozilla"   # Firefox profile (if used)
+      ];
+      files = [
+        ".ssh/known_hosts" # SSH host fingerprint cache
       ];
     };
   };

@@ -31,7 +31,7 @@ This repository supports multiple host configurations, sharing common settings v
 
 **System**: `/var/log`, `/var/lib/bluetooth`, `/var/lib/nixos`, `/var/lib/systemd/coredump`, `/etc/NetworkManager/system-connections`, `/var/lib/sops-nix`, `/var/lib/colord`, `/etc/machine-id`, SSH host keys. `workstation` additionally persists `/var/lib/NetworkManager`.
 
-**User (`ysun`)**: `~/github.com`, `~/.config/sops`, `~/.config/nushell`, `~/.local/share/io.github.clash-verge-rev.clash-verge-rev`. `workstation` additionally persists `~/Downloads`, `~/Documents`, `~/.mozilla`.
+**User (`ysun`)**: `~/github.com`, `~/.config/sops`, `~/.config/nushell`, `~/.config/google-chrome`, `~/.local/share/io.github.clash-verge-rev.clash-verge-rev`, `~/.local/share/fcitx5`, `~/.gemini`, `~/xwechat_files`, `~/.ssh/known_hosts`. `workstation` additionally persists `~/Downloads`, `~/Documents`, `~/.mozilla`.
 
 Everything else is wiped on reboot.
 

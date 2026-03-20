@@ -31,7 +31,7 @@
 
 **系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。`workstation` 额外持久化 `/var/lib/NetworkManager`。
 
-**用户（`ysun`）**：`~/github.com`、`~/.config/sops`、`~/.config/nushell`、`~/.local/share/io.github.clash-verge-rev.clash-verge-rev`。`workstation` 额外持久化 `~/Downloads`、`~/Documents`、`~/.mozilla`。
+**用户（`ysun`）**：`~/github.com`、`~/.config/sops`、`~/.config/nushell`、`~/.config/google-chrome`、`~/.local/share/io.github.clash-verge-rev.clash-verge-rev`、`~/.local/share/fcitx5`、`~/.gemini`、`~/xwechat_files`、`~/.ssh/known_hosts`。`workstation` 额外持久化 `~/Downloads`、`~/Documents`、`~/.mozilla`。
 
 其他所有内容在重启时清除。
 
