@@ -77,6 +77,7 @@
         ".config/sops"
         ".config/nushell"
         ".config/google-chrome" # Chrome profile (bookmarks, passwords, extensions)
+        ".config/Antigravity" # Antigravity IDE login and session state
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5" # Fcitx5/Rime user dictionary and learned words
         ".gemini" # Antigravity IDE data (conversations, knowledge base)
