@@ -1,0 +1,99 @@
+# Rime user dictionary
+#@/db_name	luna_pinyin
+#@/db_type	userdb
+#@/rime_version	1.16.1
+#@/tick	169
+#@/user_id	nixos-ysun
+a 	啊	c=1 d=0.806541 t=169
+an quan 	安全	c=0 d=0.1 t=165
+an quan de 	安全地	c=1 d=1 t=166
+ban fa 	辦法	c=1 d=1 t=128
+bang wo 	幫我	c=2 d=1.8825 t=154
+bu xi huan 	不喜歡	c=1 d=1 t=116
+cang ku 	倉庫	c=1 d=0.970446 t=169
+chang shi 	嘗試	c=1 d=0.763379 t=169
+chong xin 	重新	c=1 d=0.748264 t=169
+chu cuo 	出錯	c=1 d=0.778801 t=169
+chuang kou 	窗口	c=1 d=1 t=138
+cuo wu 	錯誤	c=1 d=0.985112 t=169
+da 	打	c=0 d=0.1 t=122
+da ming ling 	打命令	c=1 d=1 t=123
+dan shi 	但是	c=1 d=0.774916 t=169
+dao 	到	c=1 d=1 t=118
+de 	地	c=0 d=0.1 t=165
+de 	的	c=8 d=6.0551 t=169
+dui hua 	對話	c=1 d=0.99005 t=169
+fang an 	方案	c=1 d=1 t=150
+gai dong 	改動	c=1 d=1 t=164
+geng hao 	更好	c=1 d=1 t=151
+gong zuo 	工作	c=0 d=0.1 t=156
+gong zuo qu 	工作去	c=1 d=1 t=157
+gou jian 	構建	c=2 d=1.74636 t=169
+guo 	過	c=0 d=0.0847894 t=169
+he 	和	c=1 d=1 t=167
+huan jing 	環境	c=1 d=0.802519 t=169
+jia zai 	加載	c=1 d=0.752014 t=169
+jian cha 	檢查	c=3 d=2.53184 t=169
+jie chu 	解除	c=2 d=1.51357 t=169
+jiu 	就	c=2 d=1.72839 t=169
+jue de 	覺得	c=1 d=1 t=149
+kai fa 	開發	c=1 d=1 t=117
+kai qi 	開啓	c=1 d=0.818731 t=169
+kan bu dao 	看不到	c=1 d=1 t=142
+kan dao 	看到	c=6 d=4.64289 t=169
+kan kan 	看看	c=1 d=1 t=169
+ke yi 	可以	c=9 d=5.4634 t=169
+kuang 	框	c=1 d=1 t=146
+le 	了	c=3 d=2.01502 t=169
+li 	裏	c=1 d=0.895834 t=169
+ma 	嗎	c=12 d=7.1431 t=169
+mei yu dao 	沒遇到	c=0 d=0.0847894 t=169
+mei yu dao guo 	沒遇到過	c=1 d=0.852144 t=169
+ming ling 	命令	c=0 d=0.1 t=122
+neng 	能	c=0 d=0.099005 t=169
+neng xiu fu 	能修復	c=1 d=0.995012 t=169
+ni 	你	c=10 d=6.19281 t=169
+pao qu 	跑去	c=1 d=1 t=120
+pei zhi 	配置	c=1 d=0.755784 t=169
+qi ta 	其他	c=1 d=0.843665 t=169
+qing 	請	c=2 d=1.70404 t=169
+qing ni 	請你	c=2 d=1.90937 t=153
+qu 	區	c=1 d=1 t=158
+qu 	去	c=0 d=0.1 t=156
+quan ping 	全屏	c=1 d=1 t=139
+rong qi 	容器	c=1 d=0.891366 t=169
+ru he 	如何	c=1 d=0.744532 t=169
+sha xiang hua 	沙箱化	c=1 d=0.882497 t=169
+shang 	上	c=2 d=1.79913 t=169
+shi 	是	c=2 d=1.74657 t=169
+shi 	時	c=1 d=1 t=140
+shuo hua 	說話	c=6 d=4.68955 t=169
+ta men 	它們	c=1 d=1 t=168
+ti yan 	體驗	c=1 d=1 t=125
+tui song 	推送	c=1 d=1 t=161
+wan quan 	完全	c=1 d=0.946485 t=169
+wei 	未	c=1 d=1 t=160
+wei shen me 	爲什麼	c=2 d=1.48343 t=169
+wen jian 	文件	c=1 d=1 t=163
+wen ti 	問題	c=2 d=1.60153 t=169
+wo 	我	c=15 d=9.49869 t=169
+wo men 	我們	c=1 d=0.97531 t=169
+xi tong 	系統	c=2 d=1.4984 t=169
+xian zai 	現在	c=1 d=0.794534 t=169
+xian zhi 	限制	c=3 d=2.44729 t=169
+xie zhu 	協助	c=1 d=0.726149 t=169
+xiu fu 	修復	c=1 d=0.802178 t=169
+xuan zi 	選字	c=1 d=1 t=145
+yi ban 	一半	c=1 d=1 t=119
+yi ju 	依據	c=1 d=0.960789 t=169
+yi xia 	一下	c=1 d=1 t=136
+you 	有	c=1 d=1 t=127
+yun xing 	運行	c=1 d=0.873716 t=169
+zai 	在	c=2 d=1.71755 t=169
+zhe ge 	這個	c=6 d=4.18075 t=169
+zhe yang 	這樣	c=1 d=0.767206 t=169
+zhe zhong 	這種	c=2 d=1.77035 t=169
+zheng chang 	正常	c=1 d=0.985112 t=169
+zhi neng 	只能	c=1 d=0.869358 t=169
+zhong 	中	c=2 d=1.56692 t=169
+zhong duan 	終端	c=2 d=1.4187 t=169

@@ -1,0 +1,10 @@
+patch:
+  schema_list:
+    - schema: luna_pinyin    # Mandarin Pinyin (Simplified)
+    - schema: jyut6ping3     # Cantonese Jyutping (Traditional)
+  menu:
+    page_size: 9
+  ascii_composer:
+    switch_key:
+      Shift_L: commit_code
+      Shift_R: noop
