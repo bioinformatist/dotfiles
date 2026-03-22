@@ -48,7 +48,69 @@
 
   programs.nix-ld.enable = true;
 
-
+  # --- Input method: Fcitx5 + Rime (Mandarin + Cantonese) ---
+  # NixOS module writes profile/config to /etc/xdg/fcitx5/ (regular files),
+  # sets XMODIFIERS=@im=fcitx automatically, and with waylandFrontend=true
+  # deliberately omits GTK_IM_MODULE (native Wayland apps use text-input-v3).
+  i18n.inputMethod = {
+    enable = true;
+    type = "fcitx5";
+    fcitx5 = {
+      waylandFrontend = true;
+      addons = with pkgs; [
+        fcitx5-gtk
+        (fcitx5-rime.override {
+          rimeDataPkgs = [
+            rime-data
+            (callPackage ../pkgs/rime-data-cantonese.nix { })
+          ];
+        })
+        kdePackages.fcitx5-configtool
+      ];
+      settings = {
+        # /etc/xdg/fcitx5/config — trigger key and behavior
+        globalOptions = {
+          "Hotkey" = {
+            TriggerKeys = "Control+space";
+            EnumerateForwardKeys = "";
+            EnumerateBackwardKeys = "";
+            EnumerateWithTriggerKeys = "True";
+          };
+          "Hotkey/ActivateKeys" = {
+            "0" = "";
+          };
+          "Hotkey/DeactivateKeys" = {
+            "0" = "";
+          };
+          "Behavior" = {
+            ActiveByDefault = "False";
+            ShareInputState = "No";
+            PreeditEnabledByDefault = "True";
+            ShowInputMethodInformation = "True";
+          };
+        };
+        # /etc/xdg/fcitx5/profile — input method groups
+        inputMethod = {
+          "Groups/0" = {
+            Name = "Default";
+            "Default Layout" = "us";
+            DefaultIM = "rime";
+          };
+          "Groups/0/Items/0" = {
+            Name = "keyboard-us";
+            Layout = "";
+          };
+          "Groups/0/Items/1" = {
+            Name = "rime";
+            Layout = "";
+          };
+          "GroupOrder" = {
+            "0" = "Default";
+          };
+        };
+      };
+    };
+  };
 
   environment.systemPackages =
     with pkgs;

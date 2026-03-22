@@ -25,27 +25,10 @@
     };
   };
 
-  i18n.inputMethod = {
-    enable = true;
-    type = "fcitx5";
-    fcitx5 = {
-      waylandFrontend = true;
-      addons = with pkgs; [
-        fcitx5-gtk
-        (fcitx5-rime.override {
-          rimeDataPkgs = [
-            rime-data # Built-in schemas (luna_pinyin, etc.)
-            (pkgs.callPackage ../../pkgs/rime-data-cantonese.nix { }) # Cantonese Jyutping
-          ];
-        })
-        kdePackages.fcitx5-configtool
-      ];
-    };
-  };
-
-  # --- Declarative Rime configuration ---
-  # Schema selection, per-schema defaults, and sync settings.
-  # After `nixos-rebuild switch`, run "Rime -> Redeploy" in Fcitx5 tray.
+  # --- Declarative Rime schema configuration ---
+  # Fcitx5 profile/config/addons are managed at the NixOS level (desktop.nix).
+  # Here we only manage Rime's own schema YAML files via xdg.dataFile.
+  # After `nixos-rebuild switch`, redeploy Rime: fcitx5-remote -r
   xdg.dataFile = {
     # Global: which schemas to enable and input behavior
     "fcitx5/rime/default.custom.yaml".text = ''
@@ -87,62 +70,6 @@
             reset: 0
           - name: ascii_punct
             reset: 0
-    '';
-  };
-
-  # Fcitx5 global config: trigger key and behavior
-  xdg.configFile = {
-    "fcitx5/profile".text = ''
-      [Groups/0]
-      # Group Name
-      Name=Default
-      # Layout
-      Default Layout=us
-      # Default Input Method
-      DefaultIM=rime
-
-      [Groups/0/Items/0]
-      # Name
-      Name=keyboard-us
-      # Layout
-      Layout=
-
-      [Groups/0/Items/1]
-      # Name
-      Name=rime
-      # Layout
-      Layout=
-
-      [GroupOrder]
-      0=Default
-    '';
-
-    "fcitx5/config".text = ''
-      [Hotkey]
-      # Trigger Input Method
-      TriggerKeys="Control+space"
-      # Enumerate Input Method Forward
-      EnumerateForwardKeys=
-      # Enumerate Input Method Backward
-      EnumerateBackwardKeys=
-      # Enumerate when press trigger key repeatedly
-      EnumerateWithTriggerKeys=True
-
-      [Hotkey/ActivateKeys]
-      0=
-
-      [Hotkey/DeactivateKeys]
-      0=
-
-      [Behavior]
-      # Active By Default
-      ActiveByDefault=False
-      # Share Input State
-      ShareInputState=No
-      # Show preedit in application
-      PreeditEnabledByDefault=True
-      # Show Input Method Information when switch input method
-      ShowInputMethodInformation=True
     '';
   };
 
