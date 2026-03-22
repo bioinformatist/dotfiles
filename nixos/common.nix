@@ -31,6 +31,14 @@
   networking.proxy.default = "http://127.0.0.1:7897";
   networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
+  # Use public DNS so queries are routed through TUN and hijacked by Clash's
+  # DNS resolver (DoH).  Without this, DNS goes to the LAN router (e.g.
+  # 192.168.0.1) which bypasses TUN auto-route → GFW-polluted results.
+  networking.nameservers = [
+    "8.8.8.8"
+    "1.1.1.1"
+  ];
+
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
