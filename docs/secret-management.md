@@ -1,5 +1,7 @@
 # Secret Management Guide (Sops + Age)
 
+#### [中文](secret-management.zh-CN.md) | English
+
 This repository uses [sops-nix](https://github.com/Mic92/sops-nix) to manage secrets (like user passwords, API keys) declaratively. We use **Age** for encryption.
 
 ## 1. Prerequisites
@@ -107,12 +109,12 @@ To generate a new key or replace the existing one:
 
 2.  **Add to Secrets**:
     Ensure your master identity key is at `~/.config/sops/age/keys.txt`.
-    
+
     Use a temporary shell with `sops` (no need to install it globally):
     ```bash
     nix shell nixpkgs#sops --command sops secrets/secrets.yaml
     ```
-    
+
     Update the `github-ssh-key-vm-test` key content:
     ```yaml
     github-ssh-key-vm-test: |
@@ -147,5 +149,5 @@ The Clash proxy subscription URL is stored as an encrypted secret so it can be v
     ```
     This file is on `tmpfs` and only accessible by the `ysun` user.
 
-3.  **First-Time Import into Clash Verge**:
-    See [USER_GUIDE.md § Network Proxy](./USER_GUIDE.md) for step-by-step instructions on importing the subscription into Clash Verge GUI.
+3.  **First-Time Import**:
+    See [Daily Usage § Importing a Subscription](./daily-usage.md) for step-by-step instructions on importing the subscription into Clash Verge GUI.
