@@ -120,6 +120,11 @@
             "0" = "Default";
           };
         };
+        # Disable "Keep virtual keyboard object for V2 Protocol" to fix
+        # sticky modifier keys (Super/Shift appear stuck) on Hyprland.
+        addons = {
+          waylandim.globalSection.KeepVirtualKeyboardObjectV2 = "False";
+        };
       };
     };
   };
