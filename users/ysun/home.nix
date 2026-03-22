@@ -90,6 +90,62 @@
     '';
   };
 
+  # Fcitx5 global config: trigger key and behavior
+  xdg.configFile = {
+    "fcitx5/profile".text = ''
+      [Groups/0]
+      # Group Name
+      Name=Default
+      # Layout
+      Default Layout=us
+      # Default Input Method
+      DefaultIM=rime
+
+      [Groups/0/Items/0]
+      # Name
+      Name=keyboard-us
+      # Layout
+      Layout=
+
+      [Groups/0/Items/1]
+      # Name
+      Name=rime
+      # Layout
+      Layout=
+
+      [GroupOrder]
+      0=Default
+    '';
+
+    "fcitx5/config".text = ''
+      [Hotkey]
+      # Trigger Input Method
+      TriggerKeys="Control+space"
+      # Enumerate Input Method Forward
+      EnumerateForwardKeys=
+      # Enumerate Input Method Backward
+      EnumerateBackwardKeys=
+      # Enumerate when press trigger key repeatedly
+      EnumerateWithTriggerKeys=True
+
+      [Hotkey/ActivateKeys]
+      0=
+
+      [Hotkey/DeactivateKeys]
+      0=
+
+      [Behavior]
+      # Active By Default
+      ActiveByDefault=False
+      # Share Input State
+      ShareInputState=No
+      # Show preedit in application
+      PreeditEnabledByDefault=True
+      # Show Input Method Information when switch input method
+      ShowInputMethodInformation=True
+    '';
+  };
+
   # installation.yaml must be a regular file (not symlink) because Rime writes
   # runtime metadata (distribution_code_name, etc.) into it. Seed it only when
   # the file doesn't exist yet, so user/runtime changes are preserved.
