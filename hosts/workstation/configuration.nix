@@ -85,10 +85,10 @@
         # Physical machine daily-use paths
         "Downloads"
         "Documents"
-        ".mozilla"   # Firefox profile (if used)
-      ];
-      files = [
-        ".ssh/known_hosts" # SSH host fingerprint cache
+        ".mozilla" # Firefox profile (if used)
+        # Bind-mount (not symlink) so SSH can atomically update known_hosts.
+        # Symlink-based file persistence breaks link() across filesystems.
+        { directory = ".ssh"; mode = "0700"; }
       ];
     };
   };
