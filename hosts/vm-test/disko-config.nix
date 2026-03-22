@@ -26,23 +26,40 @@
                 type = "btrfs";
                 extraArgs = [ "-f" ];
                 subvolumes = {
-                  "/rootfs" = {
-                    mountpoint = "/";
-                  };
-                  "/home" = {
-                    mountOptions = [ "compress=zstd" ];
-                    mountpoint = "/home";
-                  };
                   "/nix" = {
-                    mountOptions = [ "compress=zstd" "noatime" ];
+                    mountOptions = [
+                      "compress=zstd:1"
+                      "noatime"
+                      "discard=async"
+                      "space_cache=v2"
+                    ];
                     mountpoint = "/nix";
                   };
+                  "/persist" = {
+                    mountOptions = [
+                      "compress=zstd:1"
+                      "noatime"
+                      "discard=async"
+                      "space_cache=v2"
+                    ];
+                    mountpoint = "/persist";
+                  };
                 };
-                mountpoint = "/partition-root";
               };
             };
           };
         };
+      };
+    };
+    nodev = {
+      "/" = {
+        fsType = "tmpfs";
+        mountOptions = [
+          "defaults"
+          "size=50%"
+          "mode=755"
+          "noatime"
+        ];
       };
     };
   };

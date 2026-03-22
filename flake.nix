@@ -14,51 +14,96 @@
     hyprland.url = "github:hyprwm/Hyprland";
     swww.url = "github:LGFae/swww";
     yazi.url = "github:sxyazi/yazi";
+    impermanence.url = "github:nix-community/impermanence";
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    antigravity = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  
-  outputs = inputs@{ nixpkgs, disko, home-manager, yazi, ... }: {
-    nixpkgs.overlays = [
-      yazi.overlays.default
-      import ./overlays {inherit inputs;}
-    ];
 
-    nixosModules = import ./modules/nixos;
-    homeManagerModules = import ./modules/home-manager;
-    
-    nixosConfigurations = {
-      homePC = let 
-        username = "ysun";
-        specialArgs = {inherit username;};
-      in
-        nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = { inherit username inputs; };
+  outputs =
+    inputs@{
+      nixpkgs,
+      disko,
+      home-manager,
+      yazi,
+      impermanence,
+      sops-nix,
+      ...
+    }:
+    {
+      nixpkgs.overlays = [
+        yazi.overlays.default
+        import
+        ./overlays
+        { inherit inputs; }
+      ];
 
-          modules = [ 
-            ./nixos/configuration.nix
-            disko.nixosModules.disko
+      nixosModules = import ./modules/nixos;
+      homeManagerModules = import ./modules/home-manager;
 
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
+      nixosConfigurations =
+        let
+          username = "ysun";
+          mkHost =
+            { hostDir, isVM }:
+            let
+              specialArgs = {
+                inherit username isVM;
+              };
+            in
+            nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              specialArgs = { inherit username inputs; };
 
-              home-manager.extraSpecialArgs = inputs // specialArgs;
-              home-manager.users.${username} = import ./users/${username}/home.nix;
-            }
-          ];
+              modules = [
+                ./hosts/${hostDir}/configuration.nix
+                disko.nixosModules.disko
+                impermanence.nixosModules.impermanence
+                sops-nix.nixosModules.sops
+                home-manager.nixosModules.home-manager
+                {
+                  home-manager.useGlobalPkgs = true;
+                  home-manager.useUserPackages = true;
+
+                  home-manager.extraSpecialArgs = inputs // specialArgs;
+                  home-manager.users.${username} = import ./users/${username}/home.nix;
+                }
+              ];
+            };
+        in
+        {
+          vm-test = mkHost {
+            hostDir = "vm-test";
+            isVM = true;
+          };
+          workstation = mkHost {
+            hostDir = "workstation";
+            isVM = false;
+          };
+        };
+
+      homeConfigurations =
+        let
+          mkHome = home-manager.lib.homeManagerConfiguration {
+            pkgs = nixpkgs.legacyPackages.x86_64-linux;
+            modules = [
+              (
+                { pkgs, ... }:
+                {
+                  home.packages = [ yazi.packages.${pkgs.stdenv.hostPlatform.system}.default ];
+                }
+              )
+            ];
+          };
+        in
+        {
+          "ysun@vm-test" = mkHome;
+          "ysun@workstation" = mkHome;
         };
     };
-
-    homeConfigurations = {
-			"ysun@homePC" = home-manager.lib.homeManagerConfiguration {
-				pkgs = nixpkgs.legacyPackages.x86_64-linux;
-				modules = [
-					({ pkgs, ... }: {
-						home.packages = [ yazi.packages.${pkgs.system}.default ];
-					})
-				];
-			};
-		};
-  };
 }

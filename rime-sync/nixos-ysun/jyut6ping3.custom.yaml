@@ -1,0 +1,10 @@
+patch:
+  switches:
+    - name: ascii_mode
+      reset: 0
+    - name: full_shape
+      reset: 0
+    - name: simplification
+      reset: 0
+    - name: ascii_punct
+      reset: 0
