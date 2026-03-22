@@ -52,6 +52,16 @@
   # NixOS module writes profile/config to /etc/xdg/fcitx5/ (regular files),
   # sets XMODIFIERS=@im=fcitx automatically, and with waylandFrontend=true
   # deliberately omits GTK_IM_MODULE (native Wayland apps use text-input-v3).
+  #
+  # NOTE: On Hyprland (wlroots), fcitx5's native trigger key (TriggerKeys in
+  # globalOptions) does NOT work — Wayland input-method-v2 protocol doesn't
+  # reliably deliver key events to fcitx5. We solve this with a Hyprland bind
+  # in hyprland.conf: `bind = CTRL, space, exec, fcitx5-remote -t`.
+  #
+  # Related: the "Keep virtual keyboard object for V2 Protocol" option in
+  # fcitx5's Wayland IM frontend addon can cause "sticky key" bugs on
+  # Hyprland (modifier keys appear stuck after switching IM). If this occurs,
+  # disable it via: settings.addons.waylandim.globalSection.KeepVirtualKeyboardObjectV2 = "False";
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
