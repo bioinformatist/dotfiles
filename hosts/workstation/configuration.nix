@@ -86,9 +86,14 @@
         "Downloads"
         "Documents"
         ".mozilla" # Firefox profile (if used)
-        # Bind-mount (not symlink) so SSH can atomically update known_hosts.
-        # Symlink-based file persistence breaks link() across filesystems.
-        { directory = ".ssh"; mode = "0700"; }
+      ];
+      # known_hosts is a symlink → /persist (cross-filesystem), so SSH cannot
+      # atomically update it (link() fails). We suppress the harmless warning
+      # via UpdateHostKeys=no in programs.ssh.extraConfig.
+      # NOTE: Do NOT persist .ssh as a directory — the bind mount would hide
+      # the id_ed25519 symlink that sops-nix creates on tmpfs.
+      files = [
+        ".ssh/known_hosts"
       ];
     };
   };

@@ -2,162 +2,170 @@
 #@/db_name	luna_pinyin
 #@/db_type	userdb
 #@/rime_version	1.16.1
-#@/tick	285
+#@/tick	297
 #@/user_id	nixos-ysun
-a 	啊	c=1 d=0.806541 t=285
-an quan 	安全	c=0 d=0.0980199 t=285
-an quan de 	安全地	c=1 d=0.985112 t=285
-ba 	吧	c=1 d=0.774916 t=285
-ban fa 	辦法	c=1 d=0.814647 t=285
-bang wo 	幫我	c=3 d=2.03413 t=285
-bao cuo 	報錯	c=1 d=1 t=275
-bu 	不	c=0 d=0.0965605 t=285
-bu kai qi 	不開啓	c=1 d=0.970446 t=285
-bu ke xue 	不科學	c=1 d=0.882497 t=285
-bu xi huan 	不喜歡	c=1 d=0.767206 t=285
-cang ku 	倉庫	c=2 d=1.70323 t=285
-chang shi 	嘗試	c=1 d=0.763379 t=285
-chong xin 	重新	c=1 d=0.748264 t=285
-chu 	出	c=1 d=1 t=283
-chu cuo 	出錯	c=1 d=0.778801 t=285
-chuang kou 	窗口	c=1 d=0.856415 t=285
-cuo wu 	錯誤	c=1 d=0.985112 t=285
-da 	打	c=0 d=0.0790571 t=285
-da lu 	大陸	c=1 d=0.904837 t=285
-da ming ling 	打命令	c=1 d=0.794534 t=285
-da zhi shang 	大致上	c=1 d=0.900325 t=285
-dan 	但	c=3 d=2.68955 t=285
-dan shi 	但是	c=1 d=0.774916 t=285
-dang 	當	c=1 d=0.923116 t=285
-dao 	到	c=1 d=0.774916 t=285
-de 	地	c=0 d=0.0980199 t=285
-de 	的	c=18 d=10.8143 t=285
-dui hua 	對話	c=2 d=1.83795 t=285
-fang an 	方案	c=2 d=1.72402 t=285
-gai dong 	改動	c=2 d=1.48282 t=285
-gai jin 	改進	c=1 d=0.895834 t=285
-gan shen me 	幹什麼	c=1 d=0.744532 t=285
-gan shou 	感受	c=0 d=0.0737123 t=285
-gan shou ge bie ne 	感受個別呢	c=1 d=0.740818 t=285
-ge bie 	個別	c=0 d=0.0737123 t=285
-gen mu lu 	根目錄	c=1 d=0.937067 t=285
-geng hao 	更好	c=1 d=0.913931 t=285
-gong zuo 	工作	c=0 d=0.0937067 t=285
-gong zuo qu 	工作去	c=1 d=0.941765 t=285
-gou jian 	構建	c=2 d=1.74636 t=285
-guo 	過	c=0 d=0.0847894 t=285
-hao duo 	好多	c=1 d=1 t=267
-he 	和	c=3 d=2.25767 t=285
-hen duo 	很多	c=1 d=0.814647 t=285
-hen qi guai 	很奇怪	c=1 d=0.882497 t=285
-huan jing 	環境	c=2 d=1.56538 t=285
-hun luan 	混亂	c=1 d=0.798516 t=285
-hun za 	混雜	c=1 d=0.860708 t=285
-jia zai 	加載	c=1 d=0.752014 t=285
-jian cha 	檢查	c=3 d=2.53184 t=285
-jian yi 	建議	c=0 d=0.0923116 t=285
-jie chu 	解除	c=2 d=1.51357 t=285
-jiu 	就	c=2 d=1.72839 t=285
-jiu xiang 	就像	c=1 d=0.985112 t=285
-jue de 	覺得	c=1 d=0.904837 t=285
-kai fa 	開發	c=1 d=0.771052 t=285
-kai qi 	開啓	c=2 d=1.73012 t=285
-kan bu dao 	看不到	c=1 d=0.873716 t=285
-kan dao 	看到	c=6 d=4.64289 t=285
-kan kan 	看看	c=1 d=1 t=285
-ke yi 	可以	c=12 d=6.8588 t=285
-kuang 	框	c=1 d=0.891366 t=285
-le 	了	c=6 d=4.65571 t=285
-li 	裏	c=2 d=1.51019 t=285
-lu you 	路由	c=1 d=0.980199 t=285
-ma 	嗎	c=13 d=7.36463 t=285
-mei wen ti 	沒問題	c=1 d=0.913931 t=285
-mei yu dao 	沒遇到	c=0 d=0.0847894 t=285
-mei yu dao guo 	沒遇到過	c=1 d=0.852144 t=285
-ming ling 	命令	c=0 d=0.0790571 t=285
-na 	那	c=1 d=0.752014 t=285
-na yang 	那樣	c=1 d=1 t=285
-ne 	呢	c=0 d=0.0737123 t=285
-nei rong 	內容	c=2 d=1.62125 t=285
-neng 	能	c=0 d=0.099005 t=285
-neng xiu fu 	能修復	c=1 d=0.995012 t=285
-ni 	你	c=11 d=6.19281 t=285
-pao qu 	跑去	c=1 d=0.782705 t=285
-pei zhi 	配置	c=1 d=0.755784 t=285
-qi shi 	其實	c=1 d=1 t=281
-qi ta 	其他	c=1 d=0.843665 t=285
-qie 	且	c=1 d=0.810584 t=285
-qing 	請	c=3 d=2.13051 t=285
-qing ni 	請你	c=3 d=2.04209 t=285
-qu 	區	c=1 d=0.946485 t=285
-qu 	去	c=0 d=0.0937067 t=285
-quan ping 	全屏	c=1 d=0.860708 t=285
-que shi 	確實	c=1 d=1 t=269
-ren wei 	認爲	c=1 d=0.909373 t=285
-rong qi 	容器	c=1 d=0.891366 t=285
-ru guo 	如果	c=1 d=0.965605 t=285
-ru he 	如何	c=1 d=0.744532 t=285
-sha xiang hua 	沙箱化	c=1 d=0.882497 t=285
-shang 	上	c=2 d=1.79913 t=285
-shi 	是	c=4 d=2.76298 t=285
-shi 	時	c=2 d=1.67788 t=285
-shi bu shi 	是不是	c=1 d=1 t=282
-shi he 	適合	c=1 d=0.843665 t=285
-shi yong 	使用	c=1 d=0.951229 t=285
-shou dao 	受到	c=1 d=0.909373 t=285
-shuo hua 	說話	c=6 d=4.68955 t=285
-ta men 	它們	c=1 d=0.995012 t=285
-ti 	提	c=1 d=0.918512 t=285
-ti yan 	體驗	c=1 d=0.802519 t=285
-tiao li 	條理	c=0 d=0.0802519 t=285
-tong yi 	統一	c=1 d=0.951229 t=285
-tui song 	推送	c=1 d=0.960789 t=285
-wan quan 	完全	c=1 d=0.946485 t=285
-wei 	未	c=1 d=0.955997 t=285
-wei shen me 	爲什麼	c=2 d=1.48343 t=285
-wen dang 	文檔	c=2 d=1.76102 t=285
-wen jian 	文件	c=3 d=2.39563 t=285
-wen jian ming 	文件名	c=1 d=0.873716 t=285
-wen ti 	問題	c=3 d=2.43471 t=285
-wo 	我	c=19 d=10.8146 t=285
-wo men 	我們	c=1 d=0.97531 t=285
-wo xuan 	我選	c=1 d=1 t=265
-wo xuan 	斡旋	c=1 d=1 t=264
-wu 	無	c=0 d=0.0802519 t=285
-wu fa 	無法	c=2 d=1.94099 t=285
-wu tiao li 	無條理	c=1 d=0.806541 t=285
-xi tong 	系統	c=2 d=1.4984 t=285
-xian zai 	現在	c=3 d=2.03626 t=285
-xian zhi 	限制	c=6 d=3.98008 t=285
-xiao 	小	c=0 d=0.0923116 t=285
-xiao jian yi 	小建議	c=1 d=0.927743 t=285
-xie zhu 	協助	c=1 d=0.726149 t=285
-xiu fu 	修復	c=1 d=0.802178 t=285
-xuan zi 	選字	c=1 d=0.88692 t=285
-ye 	也	c=1 d=0.878095 t=285
-yi ban 	一半	c=1 d=0.778801 t=285
-yi ge 	一個	c=1 d=0.923116 t=285
-yi ju 	依據	c=1 d=0.960789 t=285
-yi qi 	一起	c=1 d=0.869358 t=285
-yi xia 	一下	c=1 d=0.847894 t=285
-ying wen 	英文	c=1 d=0.965605 t=285
-yong fa 	用法	c=1 d=1 t=280
-you 	有	c=2 d=1.67264 t=285
-you yu 	由於	c=1 d=0.88692 t=285
-yun xing 	運行	c=1 d=0.873716 t=285
-zai 	在	c=6 d=4.21333 t=285
-ze 	則	c=1 d=0.97531 t=285
-zhe 	這	c=1 d=1 t=276
-zhe ge 	這個	c=7 d=4.18075 t=285
-zhe xie 	這些	c=1 d=0.767206 t=285
-zhe yang 	這樣	c=1 d=0.767206 t=285
-zhe zhong 	這種	c=2 d=1.77035 t=285
-zheng chang 	正常	c=3 d=2.53607 t=285
-zheng que 	正確	c=1 d=0.826959 t=285
-zhi neng 	只能	c=1 d=0.869358 t=285
-zhong 	中	c=4 d=2.92946 t=285
-zhong duan 	終端	c=2 d=1.4187 t=285
-zhong guo 	中國	c=1 d=0.900325 t=285
-zhong wen 	中文	c=1 d=0.960789 t=285
-zu zhi 	組織	c=1 d=0.794534 t=285
-zuo 	做	c=1 d=0.955997 t=285
+a 	啊	c=1 d=0.806541 t=297
+an quan 	安全	c=0 d=0.0980199 t=297
+an quan de 	安全地	c=1 d=0.985112 t=297
+ba 	吧	c=1 d=0.774916 t=297
+ban fa 	辦法	c=1 d=0.814647 t=297
+bang wo 	幫我	c=3 d=2.03413 t=297
+bao cuo 	報錯	c=1 d=0.951229 t=297
+bu 	不	c=0 d=0.0965605 t=297
+bu kai qi 	不開啓	c=1 d=0.970446 t=297
+bu ke xue 	不科學	c=1 d=0.882497 t=297
+bu xi huan 	不喜歡	c=1 d=0.767206 t=297
+bu xing 	不行	c=1 d=1 t=297
+cang ku 	倉庫	c=2 d=1.70323 t=297
+chang shi 	嘗試	c=1 d=0.763379 t=297
+chong qi 	重啓	c=1 d=0.960789 t=297
+chong xin 	重新	c=1 d=0.748264 t=297
+chu 	出	c=1 d=0.99005 t=297
+chu cuo 	出錯	c=1 d=0.778801 t=297
+chuang kou 	窗口	c=1 d=0.856415 t=297
+cuo wu 	錯誤	c=1 d=0.985112 t=297
+da 	打	c=0 d=0.0790571 t=297
+da lu 	大陸	c=1 d=0.904837 t=297
+da ming ling 	打命令	c=1 d=0.794534 t=297
+da zhi shang 	大致上	c=1 d=0.900325 t=297
+dan 	但	c=3 d=2.68955 t=297
+dan shi 	但是	c=1 d=0.774916 t=297
+dang 	當	c=1 d=0.923116 t=297
+dao 	到	c=1 d=0.774916 t=297
+de 	地	c=0 d=0.0980199 t=297
+de 	的	c=18 d=10.8143 t=297
+dou 	都	c=1 d=0.995012 t=297
+dui hua 	對話	c=2 d=1.83795 t=297
+fang an 	方案	c=2 d=1.72402 t=297
+gai dong 	改動	c=2 d=1.48282 t=297
+gai jin 	改進	c=1 d=0.895834 t=297
+gan shen me 	幹什麼	c=1 d=0.744532 t=297
+gan shou 	感受	c=0 d=0.0737123 t=297
+gan shou ge bie ne 	感受個別呢	c=1 d=0.740818 t=297
+ge bie 	個別	c=0 d=0.0737123 t=297
+gen mu lu 	根目錄	c=1 d=0.937067 t=297
+geng hao 	更好	c=1 d=0.913931 t=297
+gong zuo 	工作	c=0 d=0.0937067 t=297
+gong zuo qu 	工作去	c=1 d=0.941765 t=297
+gou jian 	構建	c=2 d=1.74636 t=297
+guo 	過	c=0 d=0.0847894 t=297
+hao duo 	好多	c=1 d=0.913931 t=297
+he 	和	c=3 d=2.25767 t=297
+hen duo 	很多	c=1 d=0.814647 t=297
+hen qi guai 	很奇怪	c=1 d=0.882497 t=297
+hen yi han 	很遺憾	c=1 d=0.946485 t=297
+hou 	後	c=1 d=0.965605 t=297
+huan jing 	環境	c=2 d=1.56538 t=297
+hun luan 	混亂	c=1 d=0.798516 t=297
+hun za 	混雜	c=1 d=0.860708 t=297
+jia zai 	加載	c=1 d=0.752014 t=297
+jian cha 	檢查	c=3 d=2.53184 t=297
+jian yi 	建議	c=0 d=0.0923116 t=297
+jie chu 	解除	c=2 d=1.51357 t=297
+jiu 	就	c=2 d=1.72839 t=297
+jiu xiang 	就像	c=1 d=0.985112 t=297
+jue de 	覺得	c=1 d=0.904837 t=297
+kai fa 	開發	c=1 d=0.771052 t=297
+kai guan 	開關	c=1 d=0.99005 t=297
+kai qi 	開啓	c=2 d=1.73012 t=297
+kan bu dao 	看不到	c=1 d=0.873716 t=297
+kan dao 	看到	c=6 d=4.64289 t=297
+kan kan 	看看	c=1 d=1 t=297
+ke yi 	可以	c=12 d=6.8588 t=297
+kuang 	框	c=1 d=0.891366 t=297
+le 	了	c=7 d=5.36478 t=297
+li 	裏	c=2 d=1.51019 t=297
+lu you 	路由	c=1 d=0.980199 t=297
+ma 	嗎	c=13 d=7.36463 t=297
+mei wen ti 	沒問題	c=1 d=0.913931 t=297
+mei yu dao 	沒遇到	c=0 d=0.0847894 t=297
+mei yu dao guo 	沒遇到過	c=1 d=0.852144 t=297
+ming ling 	命令	c=0 d=0.0790571 t=297
+na 	那	c=1 d=0.752014 t=297
+na yang 	那樣	c=1 d=1 t=297
+ne 	呢	c=0 d=0.0737123 t=297
+nei rong 	內容	c=2 d=1.62125 t=297
+neng 	能	c=0 d=0.099005 t=297
+neng xiu fu 	能修復	c=1 d=0.995012 t=297
+ni 	你	c=11 d=6.19281 t=297
+pao qu 	跑去	c=1 d=0.782705 t=297
+pei zhi 	配置	c=1 d=0.755784 t=297
+qi shi 	其實	c=1 d=0.980199 t=297
+qi ta 	其他	c=1 d=0.843665 t=297
+qie 	且	c=1 d=0.810584 t=297
+qing 	請	c=3 d=2.13051 t=297
+qing ni 	請你	c=3 d=2.04209 t=297
+qu 	區	c=1 d=0.946485 t=297
+qu 	去	c=0 d=0.0937067 t=297
+quan ping 	全屏	c=1 d=0.860708 t=297
+que shi 	確實	c=1 d=0.923116 t=297
+ren wei 	認爲	c=1 d=0.909373 t=297
+rong qi 	容器	c=1 d=0.891366 t=297
+ru guo 	如果	c=1 d=0.965605 t=297
+ru he 	如何	c=1 d=0.744532 t=297
+sha xiang hua 	沙箱化	c=1 d=0.882497 t=297
+shang 	上	c=2 d=1.79913 t=297
+shi 	是	c=4 d=2.76298 t=297
+shi 	時	c=2 d=1.67788 t=297
+shi bu shi 	是不是	c=1 d=0.985112 t=297
+shi he 	適合	c=1 d=0.843665 t=297
+shi yong 	使用	c=1 d=0.951229 t=297
+shou dao 	受到	c=1 d=0.909373 t=297
+shuo hua 	說話	c=6 d=4.68955 t=297
+ta men 	它們	c=1 d=0.995012 t=297
+ti 	提	c=1 d=0.918512 t=297
+ti yan 	體驗	c=1 d=0.802519 t=297
+tiao li 	條理	c=0 d=0.0802519 t=297
+tong yi 	統一	c=1 d=0.951229 t=297
+tui song 	推送	c=1 d=0.960789 t=297
+wan quan 	完全	c=1 d=0.946485 t=297
+wei 	未	c=1 d=0.955997 t=297
+wei shen me 	爲什麼	c=2 d=1.48343 t=297
+wen dang 	文檔	c=2 d=1.76102 t=297
+wen jian 	文件	c=3 d=2.39563 t=297
+wen jian ming 	文件名	c=1 d=0.873716 t=297
+wen ti 	問題	c=3 d=2.43471 t=297
+wo 	我	c=20 d=11.1408 t=297
+wo men 	我們	c=1 d=0.97531 t=297
+wo xuan 	我選	c=1 d=0.904837 t=297
+wo xuan 	斡旋	c=1 d=0.900325 t=297
+wu 	無	c=0 d=0.0802519 t=297
+wu fa 	無法	c=3 d=2.80327 t=297
+wu lun 	無論	c=1 d=0.985112 t=297
+wu tiao li 	無條理	c=1 d=0.806541 t=297
+xi tong 	系統	c=2 d=1.4984 t=297
+xian zai 	現在	c=3 d=2.03626 t=297
+xian zhi 	限制	c=6 d=3.98008 t=297
+xiao 	小	c=0 d=0.0923116 t=297
+xiao jian yi 	小建議	c=1 d=0.927743 t=297
+xie zhu 	協助	c=1 d=0.726149 t=297
+xiu fu 	修復	c=1 d=0.802178 t=297
+xuan zi 	選字	c=1 d=0.88692 t=297
+ye 	也	c=1 d=0.878095 t=297
+yi ban 	一半	c=1 d=0.778801 t=297
+yi ge 	一個	c=1 d=0.923116 t=297
+yi ju 	依據	c=1 d=0.960789 t=297
+yi qi 	一起	c=1 d=0.869358 t=297
+yi xia 	一下	c=1 d=0.847894 t=297
+ying wen 	英文	c=1 d=0.965605 t=297
+yong fa 	用法	c=1 d=0.97531 t=297
+you 	又	c=1 d=0.970446 t=297
+you 	有	c=2 d=1.67264 t=297
+you yu 	由於	c=1 d=0.88692 t=297
+yun xing 	運行	c=1 d=0.873716 t=297
+zai 	在	c=7 d=4.9192 t=297
+ze 	則	c=1 d=0.97531 t=297
+zhe 	這	c=1 d=0.955997 t=297
+zhe ge 	這個	c=7 d=4.18075 t=297
+zhe xie 	這些	c=1 d=0.767206 t=297
+zhe yang 	這樣	c=1 d=0.767206 t=297
+zhe zhong 	這種	c=2 d=1.77035 t=297
+zheng chang 	正常	c=3 d=2.53607 t=297
+zheng que 	正確	c=1 d=0.826959 t=297
+zhi neng 	只能	c=1 d=0.869358 t=297
+zhong 	中	c=4 d=2.92946 t=297
+zhong duan 	終端	c=2 d=1.4187 t=297
+zhong guo 	中國	c=1 d=0.900325 t=297
+zhong wen 	中文	c=1 d=0.960789 t=297
+zu zhi 	組織	c=1 d=0.794534 t=297
+zuo 	做	c=1 d=0.955997 t=297

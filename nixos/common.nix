@@ -133,6 +133,14 @@
         Hostname ssh.github.com
         Port 443
         User git
+        UpdateHostKeys no
+  '';
+
+  # Ensure ~/.ssh directory has correct ownership (sops-nix creates it as root)
+  system.activationScripts.fixSshDirOwnership = ''
+    if [ -d /home/${username}/.ssh ]; then
+      chown ${username}:users /home/${username}/.ssh
+    fi
   '';
 
   system.stateVersion = "24.11";
