@@ -144,6 +144,8 @@
     slurp # Wayland region selector
     satty # Screenshot annotation editor (arrows, text, blur)
     xclip # X11 clipboard bridge (for XWayland apps like WeChat)
+    jq # JSON processor (used by screenshot keybind to get active monitor)
+    nwg-displays # GUI monitor layout tool (like Windows display settings)
     ]
     ++ [
       inputs.swww.packages.${pkgs.stdenv.hostPlatform.system}.swww

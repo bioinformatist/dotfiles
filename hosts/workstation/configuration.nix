@@ -85,10 +85,16 @@
         # Physical machine daily-use paths
         "Downloads"
         "Documents"
-        ".mozilla"   # Firefox profile (if used)
+        ".mozilla" # Firefox profile (if used)
       ];
+      # known_hosts is a symlink → /persist (cross-filesystem), so SSH cannot
+      # atomically update it (link() fails). We suppress the harmless warning
+      # via UpdateHostKeys=no in programs.ssh.extraConfig.
+      # NOTE: Do NOT persist .ssh as a directory — the bind mount would hide
+      # the id_ed25519 symlink that sops-nix creates on tmpfs.
       files = [
-        ".ssh/known_hosts" # SSH host fingerprint cache
+        ".ssh/known_hosts"
+        ".config/hypr/monitors.conf" # nwg-displays monitor layout (persists across reboots)
       ];
     };
   };
