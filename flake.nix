@@ -85,7 +85,7 @@
             hostDir = "vm-test";
             isVM = true;
           };
-          workstation = mkHost {
+          homePC = mkHost {
             hostDir = "workstation";
             isVM = false;
           };
@@ -107,7 +107,7 @@
         in
         {
           "ysun@vm-test" = mkHome;
-          "ysun@workstation" = mkHome;
+          "ysun@homePC" = mkHome;
         };
     };
 }

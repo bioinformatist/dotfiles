@@ -91,6 +91,9 @@
       ];
     }
   ];
+  # Prevent sudo from inheriting $HOME, which causes root-owned files
+  # in ~/.cache/nix/ and breaks user-level nix commands (e.g. nix shell).
+  security.sudo.extraConfig = "Defaults always_set_home";
 
   nixpkgs.config.allowUnfree = true;
 
