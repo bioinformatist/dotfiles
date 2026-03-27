@@ -40,6 +40,79 @@
   sops.secrets."clash-subscription-url" = {
     owner = "ysun";
   };
+  # ZeroClaw secrets — fill via: sudo SOPS_AGE_KEY_FILE=... sops set secrets/secrets.yaml
+  sops.secrets."zeroclaw-telegram-token" = {
+    owner = "ysun";
+  };
+
+  sops.secrets."zeroclaw-user-context" = {
+    owner = "ysun";
+  };
+  # ZeroClaw USER.md — private personal context rendered from sops secret.
+  # Edit via: sops secrets/secrets.yaml → zeroclaw-user-context key.
+  # Contains personal info (interests, schedule, preferences) that should
+  # not appear in plaintext on the public dotfiles repo.
+  sops.templates."zeroclaw-user" = {
+    owner = "ysun";
+    path = "/home/ysun/.zeroclaw/workspace/USER.md";
+    content = ''
+      ${config.sops.placeholder."zeroclaw-user-context"}
+    '';
+  };
+  # ZeroClaw config.toml — rendered from template with secret injection.
+  # The template is placed at a sops-managed path, then symlinked to
+  # ~/.zeroclaw/config.toml by the home-manager activation below.
+  sops.templates."zeroclaw-config" = {
+    owner = "ysun";
+    path = "/home/ysun/.zeroclaw/config.toml";
+    content = ''
+      # --- Self-hosted vLLM only (Qwen3-30B-A3B on 2x3090 GPU server) ---
+      # No cloud APIs. Zero cost, zero rate limits, full data privacy.
+      default_provider = "custom:http://192.168.0.116:8080/v1"
+      default_model = "qwen3-30b-a3b"
+      api_key = "no-key-needed"
+
+      # --- Agent behavior ---
+      [agent]
+      max_tool_iterations = 10
+      tool_dispatcher = "auto"
+      compact_context = true
+
+      [agent.thinking]
+      default_level = "off"
+
+      # --- Reliability ---
+      [reliability]
+      provider_retries = 1
+
+      [autonomy]
+      level = "supervised"
+      workspace_only = false
+      allowed_roots = ["~/github.com"]
+      allowed_commands = ["git", "nix", "nixos-rebuild", "systemctl"]
+
+      [memory]
+      backend = "sqlite"
+      auto_save = true
+
+      # --- Web search: self-hosted SearXNG (replaces DuckDuckGo IA API) ---
+      [web_search]
+      enabled = true
+      provider = "searxng"
+      searxng_instance_url = "http://192.168.0.116:8888"
+      max_results = 5
+
+      # --- Channel ---
+      [channels_config.telegram]
+      bot_token = "${config.sops.placeholder."zeroclaw-telegram-token"}"
+      allowed_users = ["6531282851"]
+      stream_mode = "off"
+      interrupt_on_new_message = true
+
+      [channels_config.telegram.commands]
+      native = true
+    '';
+  };
 
   # --- Home Manager ---
   home-manager.backupFileExtension = "backup";
@@ -86,6 +159,8 @@
         "Downloads"
         "Documents"
         ".mozilla" # Firefox profile (if used)
+        ".local/share/TelegramDesktop" # Telegram login session + chat cache
+        ".cargo/registry" # Cargo registry cache (speeds up rebuilds)
       ];
       # known_hosts is a symlink → /persist (cross-filesystem), so SSH cannot
       # atomically update it (link() fails). We suppress the harmless warning
@@ -95,6 +170,10 @@
       files = [
         ".ssh/known_hosts"
         ".config/hypr/monitors.conf" # nwg-displays monitor layout (persists across reboots)
+        # ZeroClaw mutable state only — config.toml is declarative (via sops.templates)
+        ".zeroclaw/active_workspace.toml" # workspace marker
+        ".zeroclaw/estop-state.json" # emergency stop state
+        ".zeroclaw/memory.sqlite" # conversation memory database
       ];
     };
   };
