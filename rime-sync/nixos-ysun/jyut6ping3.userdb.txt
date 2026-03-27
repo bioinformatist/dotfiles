@@ -1,0 +1,7 @@
+# Rime user dictionary
+#@/db_name	jyut6ping3
+#@/db_type	userdb
+#@/rime_version	1.16.1
+#@/tick	1
+#@/user_id	nixos-ysun
+mou5 co3 	冇錯	c=1 d=1 t=1
