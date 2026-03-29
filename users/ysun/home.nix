@@ -86,6 +86,7 @@
 
   programs.git = {
     enable = true;
+    signing.format = "openpgp"; # silence stateVersion < 25.05 warning
     settings = {
       user.name = "Yu Sun";
       user.email = "ysun@sctmes.com";
