@@ -15,6 +15,7 @@
     ./disko-config.nix
     ../../nixos/common.nix
     ../../nixos/desktop.nix
+    ../../nixos/nvidia.nix
   ];
 
   # --- Physical machine: Boot ---
@@ -48,10 +49,17 @@
   sops.secrets."zeroclaw-user-context" = {
     owner = "ysun";
   };
+  # systemd-tmpfiles-setup runs before sops-install-secrets, so this
+  # guarantees ~/.zeroclaw/workspace/ is ysun-owned when sops writes USER.md.
+  # Without this, sops (running as root) creates the parent dir as root,
+  # blocking home-manager's symlink creation → HM fails → Hyprland unconfigured.
+  # Ref: https://github.com/Mic92/sops-nix/issues/235 (known sops-nix limitation)
+  systemd.tmpfiles.rules = [
+    "d /home/ysun/.zeroclaw/workspace 0755 ysun users -"
+  ];
+
   # ZeroClaw USER.md — private personal context rendered from sops secret.
   # Edit via: sops secrets/secrets.yaml → zeroclaw-user-context key.
-  # Contains personal info (interests, schedule, preferences) that should
-  # not appear in plaintext on the public dotfiles repo.
   sops.templates."zeroclaw-user" = {
     owner = "ysun";
     path = "/home/ysun/.zeroclaw/workspace/USER.md";
@@ -117,6 +125,15 @@
   # --- Home Manager ---
   home-manager.backupFileExtension = "backup";
 
+  # --- Gaming ---
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+    # NixOS Steam module handles symlinking Proton-GE into Steam's runtime.
+    # Do NOT manually place in compatibilitytools.d — impermanence makes that unreliable.
+    extraCompatPackages = with pkgs; [ proton-ge-bin ];
+  };
+
   # --- Impermanence ---
   fileSystems."/persist".neededForBoot = true;
 
@@ -161,6 +178,7 @@
         ".mozilla" # Firefox profile (if used)
         ".local/share/TelegramDesktop" # Telegram login session + chat cache
         ".cargo/registry" # Cargo registry cache (speeds up rebuilds)
+        ".local/share/Steam" # Steam games, Proton prefixes, saves
       ];
       # known_hosts is a symlink → /persist (cross-filesystem), so SSH cannot
       # atomically update it (link() fails). We suppress the harmless warning
