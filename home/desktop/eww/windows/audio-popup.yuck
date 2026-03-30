@@ -1,0 +1,113 @@
+;; ═══ Audio Popup Window ═══
+;; Output device selector + volume slider
+;; Input device selector + gain slider
+
+(defpoll audio-sinks
+  :interval "5s"
+  :initial '[]'
+  `/home/ysun/.config/eww/scripts/get-audio-sinks`)
+
+(defpoll audio-sources
+  :interval "5s"
+  :initial '[]'
+  `/home/ysun/.config/eww/scripts/get-audio-sources`)
+
+(defwidget audio-popup-content []
+  (box :class "popup-panel"
+       :orientation "v"
+       :space-evenly false
+       :spacing 18
+
+    ;; ─── Header ───────────────────────────────────────────
+    (box :class "popup-header"
+         :orientation "h"
+         :space-evenly false
+         :spacing 10
+      (label :class "popup-icon" :text "󰕾")
+      (label :class "popup-title" :text "Audio"))
+
+    ;; ─── Output Volume ────────────────────────────────────
+    (label :class "popup-section-title" :text "OUTPUT" :halign "start")
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (button
+        :class {audio-status.sink_muted ? "vol-btn vol-btn-muted" : "vol-btn"}
+        :onclick "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+        (label :text {audio-status.sink_muted ? "󰖁" : "󰕾"}))
+      (scale
+        :class "vol-slider"
+        :min 0
+        :max 150
+        :value {audio-status.sink_vol}
+        :onchange "/home/ysun/.config/eww/scripts/set-vol sink {}"
+        :hexpand true)
+      (label
+        :class "vol-label"
+        :text "${audio-status.sink_vol}%"))
+
+    ;; Output device list
+    (box :class "device-list"
+         :orientation "v"
+         :space-evenly false
+         :spacing 4
+      (for sink in audio-sinks
+        (button
+          :class {sink.active ? "device-btn device-btn-active" : "device-btn"}
+          :onclick "/home/ysun/.config/eww/scripts/set-audio-device sink ${sink.id} &"
+          (box :orientation "h"
+               :space-evenly false
+               :spacing 8
+            (label :class {sink.active ? "icon-active" : "icon-inactive"}
+                   :text {sink.active ? "󰓾" : "󰓿"})
+            (label :class "device-name"
+                   :text {sink.name}
+                   :limit-width 30)))))
+
+    ;; ─── Input (Mic) ──────────────────────────────────────
+    (label :class "popup-section-title" :text "INPUT" :halign "start")
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (button
+        :class {audio-status.source_muted ? "vol-btn vol-btn-muted" : "vol-btn"}
+        :onclick "pactl set-source-mute @DEFAULT_SOURCE@ toggle"
+        (label :text {audio-status.source_muted ? "󰍭" : "󰍬"}))
+      (scale
+        :class "vol-slider"
+        :min 0
+        :max 150
+        :value {audio-status.source_vol}
+        :onchange "/home/ysun/.config/eww/scripts/set-vol source {}"
+        :hexpand true)
+      (label
+        :class "vol-label"
+        :text "${audio-status.source_vol}%"))
+
+    ;; Input device list
+    (box :class "device-list"
+         :orientation "v"
+         :space-evenly false
+         :spacing 4
+      (for source in audio-sources
+        (button
+          :class {source.active ? "device-btn device-btn-active" : "device-btn"}
+          :onclick "/home/ysun/.config/eww/scripts/set-audio-device source ${source.id} &"
+          (box :orientation "h"
+               :space-evenly false
+               :spacing 8
+            (label :class {source.active ? "icon-active" : "icon-inactive"}
+                   :text {source.active ? "󰍬" : "󰍮"})
+            (label :class "device-name"
+                   :text {source.name}
+                   :limit-width 30)))))))
+
+(defwindow audio-popup
+  :monitor 0
+  :geometry (geometry :x "-16px"
+                      :y "68px"
+                      :width "360px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :exclusive false
+  (audio-popup-content))

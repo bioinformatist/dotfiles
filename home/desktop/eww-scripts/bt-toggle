@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Bluetooth Toggle Script with Logging
+# ~/.config/eww/scripts/bt-toggle
+
+LOG_FILE="/tmp/eww-bt.log"
+echo "[$(date)] Action: $1 $2" >> "$LOG_FILE"
+
+# Find default adapter using 'show' or falling back to 'list'
+ADAPTER=$(bluetoothctl show 2>/dev/null | head -n1 | awk '{print $2}')
+if [ -z "$ADAPTER" ] || [ "$ADAPTER" = "Controller" ]; then
+    ADAPTER=$(bluetoothctl list 2>/dev/null | head -n1 | cut -d' ' -f2)
+fi
+
+case "$1" in
+  power)
+    # Check current power state
+    STATE=$(timeout 2s bluetoothctl show "$ADAPTER" 2>/dev/null | grep "Powered:" | awk '{print $2}')
+    echo "[$(date)] Adapter: $ADAPTER, Current Power: $STATE" >> "$LOG_FILE"
+    
+    if [ "$STATE" = "yes" ]; then
+      timeout 2s bluetoothctl power off >> "$LOG_FILE" 2>&1
+    else
+      timeout 2s bluetoothctl power on >> "$LOG_FILE" 2>&1
+    fi
+    ;;
+  connect)
+    # $2 is device MAC
+    echo "[$(date)] Connecting to $2..." >> "$LOG_FILE"
+    timeout 5s bluetoothctl connect "$2" >> "$LOG_FILE" 2>&1
+    ;;
+  disconnect)
+    echo "[$(date)] Disconnecting $2..." >> "$LOG_FILE"
+    timeout 2s bluetoothctl disconnect "$2" >> "$LOG_FILE" 2>&1
+    ;;
+  pair)
+    # Toggle scanning
+    SCAN_STATE=$(bluetoothctl show | grep "Scanning:" | awk '{print $2}')
+    if [ "$SCAN_STATE" = "yes" ]; then
+      bluetoothctl scan off >> "$LOG_FILE" 2>&1
+    else
+      bluetoothctl scan on >> "$LOG_FILE" 2>&1
+    fi
+    ;;
+esac

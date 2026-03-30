@@ -1,0 +1,36 @@
+;; ═══ Network Module ═══
+;; Event-driven via nmcli monitor. Shows active connection + Clash status.
+
+(deflisten net-status
+  :initial '{"eth":{"state":"disconnected","speed":""},"wifi":{"ssid":"","signal":0,"on":false},"clash":{"active":false,"tun":false}}'
+  `~/.config/eww/scripts/get-network`)
+
+(defwidget network []
+  (button
+    :class "module-btn"
+    :onclick "eww open net-popup --toggle"
+    :tooltip "Network"
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 6
+      ;; Connection icon + info
+      (label
+        :class {net-status.eth.state == "connected" ? "icon-eth" :
+                net-status.wifi.ssid != "" ? "icon-wifi" : "icon-offline"}
+        :text  {net-status.eth.state == "connected" ? "󰈀" :
+                net-status.wifi.ssid != "" ?
+                  (net-status.wifi.signal > 75 ? "󰤨" :
+                   net-status.wifi.signal > 50 ? "󰤥" :
+                   net-status.wifi.signal > 25 ? "󰤢" : "󰤟") :
+                "󰤭"})
+      ;; Speed or SSID label
+      (label
+        :class "module-value"
+        :visible {net-status.eth.state == "connected" || net-status.wifi.ssid != ""}
+        :text  {net-status.eth.state == "connected" ?
+                "${net-status.eth.speed}" :
+                "${net-status.wifi.ssid}"})
+      ;; Clash VPN indicator
+      (label
+        :class {net-status.clash.active ? "icon-clash-on" : "icon-hidden"}
+        :text "󱣻"))))

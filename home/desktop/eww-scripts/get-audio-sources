@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# ═══ List Audio Sources (Input Devices) ═══
+# Returns JSON array of input devices with id, name, active status.
+# Excludes monitor sources (loopback captures) and GPU HDMI sources.
+
+DEFAULT_SOURCE=$(pactl get-default-source 2>/dev/null | tr -d '[:space:]')
+
+# pactl list sources short format: ID  NAME  DRIVER  SAMPLE_SPEC  STATE
+pactl list sources short 2>/dev/null | while IFS=$'\t' read -r id name driver sample state; do
+  # Skip monitor sources and GPU audio inputs
+  if echo "$name" | grep -iq "\.monitor\|hdmi\|DisplayPort\|dp\b"; then
+    continue
+  fi
+
+  ACTIVE=$([ "$name" = "$DEFAULT_SOURCE" ] && echo true || echo false)
+
+  # Get human-readable description
+  DESC=$(pactl list sources 2>/dev/null | awk -v target="$name" '
+    /^Source #/ { in_src=0 }
+    /^\tName: / { if ($2 == target) in_src=1 }
+    in_src && /^\tDescription: / { $1=""; print substr($0,2); exit }
+  ')
+  [ -z "$DESC" ] && DESC="$name"
+  DESC=$(echo "$DESC" | xargs)
+
+  jq -n --arg id "$id" --arg name "$name" --arg label "$DESC" --argjson active "$ACTIVE" \
+    '{id: $id, name: $label, active: $active}'
+done | jq -s '.'

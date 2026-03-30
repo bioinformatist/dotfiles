@@ -2,2119 +2,2243 @@
 #@/db_name	luna_pinyin
 #@/db_type	userdb
 #@/rime_version	1.16.1
-#@/tick	7187
+#@/tick	7856
 #@/user_id	nixos-ysun
-a 	啊	c=15 d=3.52033 t=7187
-a 	阿	c=1 d=0.726149 t=7187
-a li 	阿里	c=0 d=0.0786628 t=7187
-a li yun 	阿里雲	c=1 d=0.790571 t=7187
-ai 	唉	c=2 d=1.33071 t=7187
-ai nin 	愛您	c=1 d=0.379083 t=7187
-an 	按	c=4 d=2.61952 t=7187
-an an 	按按	c=1 d=0.913931 t=7187
-an hei 	暗黑	c=0 d=0.067032 t=7187
-an hei po huai shen 	暗黑破壞神	c=1 d=0.67368 t=7187
-an mo 	按摩	c=1 d=0.873889 t=7187
-an niu 	按鈕	c=1 d=0.873716 t=7187
-an quan 	安全	c=0 d=0.218013 t=7187
-an quan de 	安全地	c=1 d=0.985112 t=7187
-an quan dian 	安全點	c=1 d=0.985112 t=7187
-an quan dui qi 	安全對齊	c=1 d=0.865022 t=7187
-an quan gan 	安全感	c=1 d=0.57695 t=7187
-an zhao 	按照	c=3 d=1.37569 t=7187
-an zhuang 	安裝	c=11 d=6.36985 t=7187
-an zhuang ba 	安裝吧	c=1 d=0.904837 t=7187
-ba 	吧	c=46 d=8.62136 t=7187
-ba 	把	c=13 d=3.91668 t=7187
-ba ta 	把它	c=1 d=0.718924 t=7187
-bai 	白	c=0 d=0.0873716 t=7187
-bai lian 	百鍊	c=1 d=1 t=7187
-bai song 	白送	c=1 d=0.869358 t=7187
-bai tian 	白天	c=1 d=0.873716 t=7187
-ban 	版	c=1 d=0.980199 t=7187
-ban 	辦	c=0 d=0.0970446 t=7187
-ban ben 	版本	c=3 d=2.62594 t=7187
-ban dao 	搬到	c=1 d=0.755784 t=7187
-ban dao 	辦到	c=0 d=0.0774916 t=7187
-ban fa 	辦法	c=3 d=2.18007 t=7187
-ban lai 	搬來	c=1 d=0.637628 t=7187
-ban xiao shi 	半小時	c=1 d=0.985112 t=7187
-bang 	幫	c=1 d=0.878095 t=7187
-bang wo 	幫我	c=15 d=4.49325 t=7187
-bao 	煲	c=1 d=0.519442 t=7187
-bao cun 	保存	c=1 d=0.965605 t=7187
-bao cuo 	報錯	c=15 d=6.82361 t=7187
-bao dao 	報道	c=1 d=0.946485 t=7187
-bao fa 	爆發	c=1 d=0.102284 t=7187
-bao han 	包含	c=2 d=1.19025 t=7187
-bao jiang 	爆漿	c=1 d=0.631284 t=7187
-bao kuo 	包括	c=2 d=0.957762 t=7187
-bao li 	暴力	c=0 d=0.0637628 t=7187
-bao liu 	保留	c=5 d=2.28406 t=7187
-bao qian 	抱歉	c=1 d=0.927743 t=7187
-bao xian 	保險	c=2 d=1.41067 t=7187
-bao zi 	包子	c=0 d=0.0955997 t=7187
-bei 	唄	c=1 d=0.540641 t=7187
-bei 	背	c=1 d=0.621885 t=7187
-bei 	被	c=6 d=2.91183 t=7187
-bei jing 	北京	c=2 d=1.27008 t=7187
-bei jing 	背景	c=1 d=0.794534 t=7187
-bei ni 	被你	c=1 d=0.88692 t=7187
-bei ren 	被人	c=1 d=0.540641 t=7187
-ben 	本	c=1 d=0.275221 t=7187
-ben cang ku 	本倉庫	c=1 d=0.995012 t=7187
-ben di 	本地	c=4 d=2.10383 t=7187
-ben di hua 	本地化	c=1 d=0.609571 t=7187
-ben ji 	本機	c=1 d=0.594521 t=7187
-ben lai 	本來	c=1 d=0.970446 t=7187
-ben shen 	本身	c=2 d=1.26768 t=7187
-beng le 	崩了	c=3 d=2.6401 t=7187
-bi 	必	c=1 d=0.97531 t=7187
-bi 	比	c=2 d=1.0465 t=7187
-bi jiao 	比較	c=1 d=0.918512 t=7187
-bi jiao hao 	比較好	c=2 d=1.38543 t=7187
-bi qi 	比起	c=1 d=0.941765 t=7187
-bi ru 	比如	c=9 d=2.7271 t=7187
-bi xu 	必須	c=1 d=0.995012 t=7187
-bi yao 	必要	c=2 d=1.87114 t=7187
-bi yao shi 	必要時	c=1 d=0.718924 t=7187
-bi zhi 	壁紙	c=3 d=2.35943 t=7187
-bian 	編	c=0 d=0.0878095 t=7187
-bian de 	變得	c=1 d=0.585669 t=7187
-bian hua 	變化	c=2 d=1.47498 t=7187
-bian ji 	編輯	c=1 d=0.726149 t=7187
-bian ji qi 	編輯器	c=1 d=1 t=7187
-bian jin qu 	編進去	c=1 d=0.882497 t=7187
-bian wei 	變爲	c=1 d=0.980199 t=7187
-bian xie 	編寫	c=1 d=0.559898 t=7187
-bian yi 	編譯	c=1 d=0.937067 t=7187
-bian yu 	便於	c=1 d=0.891366 t=7187
-biao da 	表達	c=2 d=1.58479 t=7187
-biao de 	標的	c=1 d=0.323033 t=7187
-biao pu 	標普	c=1 d=0.209088 t=7187
-biao qing 	表情	c=1 d=0.99005 t=7187
-biao xian 	表現	c=3 d=1.75635 t=7187
-biao zhu 	標註	c=2 d=1.14385 t=7187
-biao zhun 	標準	c=1 d=0.960789 t=7187
-bie 	別	c=1 d=0.733447 t=7187
-bie ren 	別人	c=1 d=0.860708 t=7187
-bing 	並	c=7 d=2.63212 t=7187
-bing bian 	病變	c=1 d=0.88692 t=7187
-bing bu hui 	並不會	c=1 d=0.852144 t=7187
-bing bu man yi 	並不滿意	c=1 d=0.878095 t=7187
-bing bu shi 	並不是	c=1 d=0.131336 t=7187
-bing bu zou xiao 	並步驟笑	c=1 d=0.970446 t=7187
-bing huang ma luan 	兵荒馬亂	c=1 d=0.65377 t=7187
-bing qie 	並且	c=1 d=0.99005 t=7187
-bing wei 	並未	c=2 d=1.30099 t=7187
-bo cai 	菠菜	c=2 d=1.51945 t=7187
-bo ji 	脖幾	c=1 d=0.628135 t=7187
-bu 	不	c=11 d=4.40726 t=7187
-bu bi 	不必	c=1 d=0.142274 t=7187
-bu chu 	不出	c=1 d=0.822835 t=7187
-bu dao 	不到	c=0 d=0.0690674 t=7187
-bu de yi 	不得已	c=1 d=0.814647 t=7187
-bu di dao 	不地道	c=1 d=0.878095 t=7187
-bu ding 	不定	c=1 d=0.927743 t=7187
-bu dong 	不懂	c=1 d=0.657047 t=7187
-bu dui 	不對	c=4 d=1.44523 t=7187
-bu dui jin 	不對勁	c=1 d=0.579842 t=7187
-bu fen 	部分	c=1 d=0.951229 t=7187
-bu fu 	不服	c=1 d=0.737123 t=7187
-bu fu he 	不符合	c=2 d=1.22032 t=7187
-bu gao 	不搞	c=1 d=0.891366 t=7187
-bu gou 	不夠	c=1 d=1.04757 t=7187
-bu gou di dao 	不夠地道	c=1 d=0.860708 t=7187
-bu gou yong 	不夠用	c=1 d=1 t=7187
-bu guo 	不過	c=1 d=0.438235 t=7187
-bu guo qu 	不過去	c=1 d=0.737123 t=7187
-bu he li 	不合理	c=1 d=0.615697 t=7187
-bu he ni 	不和你	c=1 d=0.603506 t=7187
-bu he tang 	不喝湯	c=1 d=0.67032 t=7187
-bu hui 	不會	c=2 d=1.3525 t=7187
-bu ji yu 	不急於	c=1 d=0.97531 t=7187
-bu jin jin 	不僅僅	c=1 d=0.657047 t=7187
-bu jiu 	不久	c=1 d=0.918512 t=7187
-bu kai qi 	不開啓	c=1 d=0.970446 t=7187
-bu ke 	不可	c=0 d=0.0217621 t=7187
-bu ke xue 	不科學	c=1 d=0.882497 t=7187
-bu ke yi 	不可以	c=1 d=0.600496 t=7187
-bu ke yu ce 	不可預測	c=2 d=0.45922 t=7187
-bu kui shi 	不愧是	c=1 d=0.985112 t=7187
-bu le 	不了	c=2 d=1.7337 t=7187
-bu liao jie 	不瞭解	c=1 d=0.71177 t=7187
-bu man yi 	不滿意	c=0 d=0.0873716 t=7187
-bu mian fei 	不免費	c=1 d=0.852144 t=7187
-bu neng 	不能	c=3 d=2.00617 t=7187
-bu qing chu 	不清楚	c=1 d=0.865022 t=7187
-bu qu 	不去	c=3 d=2.51346 t=7187
-bu que ding 	不確定	c=3 d=1.32447 t=7187
-bu ran 	不然	c=1 d=0.847894 t=7187
-bu ren tong 	不認同	c=1 d=0.759572 t=7187
-bu ru 	不如	c=6 d=3.88385 t=7187
-bu sheng xiao 	不生效	c=3 d=1.45212 t=7187
-bu shi 	不是	c=24 d=3.69088 t=7187
-bu shi he 	不適合	c=1 d=0.918512 t=7187
-bu shu 	部署	c=3 d=1.65685 t=7187
-bu shu fu 	不舒服	c=1 d=0.631284 t=7187
-bu tong 	不同	c=3 d=1.53184 t=7187
-bu wei kong 	不爲空	c=1 d=0.852144 t=7187
-bu xi huan 	不喜歡	c=2 d=1.51454 t=7187
-bu xi wang 	不希望	c=1 d=0.918512 t=7187
-bu xiang 	不像	c=5 d=2.5835 t=7187
-bu xiang 	不想	c=1 d=0.852144 t=7187
-bu xiang xin 	不相信	c=1 d=0.66365 t=7187
-bu xiao xin 	不小心	c=1 d=0.965605 t=7187
-bu xin 	不信	c=2 d=1.38712 t=7187
-bu xing 	不行	c=12 d=3.72434 t=7187
-bu xu yao 	不需要	c=1 d=0.83527 t=7187
-bu xun chang 	不尋常	c=1 d=0.634448 t=7187
-bu yao 	不要	c=2 d=1.70023 t=7187
-bu yi yang 	不一樣	c=2 d=1.36059 t=7187
-bu yong 	不用	c=5 d=2.38839 t=7187
-bu yong bai bu yong 	不用白不用	c=2 d=1.68222 t=7187
-bu zai 	不再	c=2 d=1.20067 t=7187
-bu zhi chi 	不支持	c=1 d=0.960789 t=7187
-bu zhi dao 	不知道	c=9 d=3.43328 t=7187
-bu zhong yao 	不重要	c=1 d=0.203926 t=7187
-bu zou 	步驟	c=0 d=0.0839457 t=7187
-bu zou xiao 	步驟笑	c=1 d=0.899079 t=7187
-bu zuo 	不做	c=1 d=0.951229 t=7187
-ca chu 	擦除	c=1 d=0.414783 t=7187
-cai 	才	c=5 d=1.86264 t=7187
-cai 	猜	c=1 d=0.126186 t=7187
-cai dui 	纔對	c=1 d=0.909373 t=7187
-cai neng 	才能	c=1 d=0.909373 t=7187
-cai piao 	彩票	c=3 d=0.258711 t=7187
-cai yong 	採用	c=3 d=1.86502 t=7187
-can kao 	參考	c=7 d=3.01134 t=7187
-can shu 	參數	c=3 d=0.918512 t=7187
-can yue 	參閱	c=1 d=0.960789 t=7187
-cang ku 	倉庫	c=5 d=2.93894 t=7187
-cang wei 	倉位	c=1 d=0.219808 t=7187
-cao 	草	c=1 d=0.532592 t=7187
-cao bi 	肏屄	c=2 d=0.807371 t=7187
-cao zuo 	操作	c=3 d=2.64596 t=7187
-ce lve 	策略	c=7 d=3.92384 t=7187
-ce shi 	測試	c=3 d=2.17734 t=7187
-cha bu duo 	差不多	c=2 d=0.446201 t=7187
-cha dan 	插單	c=1 d=0.118837 t=7187
-cha dian 	差點	c=0 d=0.0985112 t=7187
-cha dian yi si 	差點意思	c=1 d=0.99005 t=7187
-cha jian 	插件	c=1 d=0.839457 t=7187
-cha shang 	插上	c=1 d=0.524663 t=7187
-cha yue 	查閱	c=2 d=1.52504 t=7187
-cha zhao 	查找	c=1 d=0.97531 t=7187
-chan pin 	產品	c=0 d=0.0985112 t=7187
-chan sheng 	產生	c=2 d=0.772317 t=7187
-chang jing 	場景	c=1 d=0.67032 t=7187
-chang nian 	長年	c=0 d=0.0843665 t=7187
-chang nian xian zhi 	長年閒置	c=1 d=0.847894 t=7187
-chang qi 	長期	c=1 d=0.951229 t=7187
-chang shang 	廠商	c=1 d=0.782705 t=7187
-chang shi 	嘗試	c=8 d=3.95059 t=7187
-chang shi qian 	嘗試前	c=1 d=0.923116 t=7187
-chao sheng 	超聲	c=1 d=0.865022 t=7187
-che di 	徹底	c=1 d=0.65377 t=7187
-cheng 	成	c=1 d=0.737123 t=7187
-cheng ben 	成本	c=0 d=0.0970446 t=7187
-cheng di 	呈遞	c=1 d=0.88692 t=7187
-cheng du 	程度	c=1 d=0.83527 t=7187
-cheng gong 	成功	c=2 d=1.80419 t=7187
-cheng qing 	澄清	c=1 d=1 t=7187
-cheng ren 	承認	c=1 d=0.416862 t=7187
-cheng shu 	成熟	c=1 d=0.794534 t=7187
-cheng xu 	程序	c=1 d=0.782705 t=7187
-cheng ya 	承壓	c=1 d=0.559898 t=7187
-chi 	喫	c=2 d=1.79661 t=7187
-chi bo cai 	喫菠菜	c=1 d=0.83527 t=7187
-chi cang 	持倉	c=0 d=0.0970446 t=7187
-chi cang cheng ben 	持倉成本	c=1 d=0.97531 t=7187
-chi de 	喫得	c=0 d=0.0774916 t=7187
-chi de shao 	喫得少	c=1 d=0.778801 t=7187
-chi jiu 	持久	c=0 d=0.0955997 t=7187
-chi jiu hua 	持久化	c=1 d=0.960789 t=7187
-chi le 	遲了	c=0 d=0.0965605 t=7187
-chong die 	重疊	c=1 d=0.70822 t=7187
-chong ding xiang 	重定向	c=2 d=1.62314 t=7187
-chong gou 	重構	c=1 d=0.97531 t=7187
-chong man 	充滿	c=1 d=0.0858632 t=7187
-chong qi 	重啓	c=11 d=5.37592 t=7187
-chong qi dian nao 	重啓電腦	c=1 d=0.798516 t=7187
-chong qi hou 	重啓後	c=2 d=1.72223 t=7187
-chong shi 	充實	c=1 d=0.726149 t=7187
-chong shi 	重試	c=4 d=2.33109 t=7187
-chong tu 	衝突	c=2 d=1.67306 t=7187
-chong xian 	重現	c=1 d=0.826959 t=7187
-chong xin 	重新	c=3 d=2.02185 t=7187
-chong xin gou jian 	重新構建	c=2 d=1.56497 t=7187
-chong zhi 	充值	c=2 d=1.39547 t=7187
-chong zhi 	重製	c=0 d=0.067368 t=7187
-chong zhi ban 	重製版	c=1 d=0.677057 t=7187
-chong zi 	蟲子	c=1 d=0.625002 t=7187
-chong zu 	充足	c=2 d=1.34576 t=7187
-chu 	出	c=5 d=2.35213 t=7187
-chu ci 	除此	c=1 d=0.519442 t=7187
-chu cuo 	出錯	c=8 d=3.64337 t=7187
-chu cuo xin xi 	出錯信息	c=1 d=0.704688 t=7187
-chu fa 	出發	c=1 d=0.873716 t=7187
-chu fa 	觸發	c=1 d=0.913931 t=7187
-chu fei 	除非	c=1 d=0.965605 t=7187
-chu lai 	出來	c=2 d=0.984118 t=7187
-chu le 	出了	c=0 d=0.0715338 t=7187
-chu le 	除了	c=2 d=1.30927 t=7187
-chu le dian 	出了點	c=1 d=0.718924 t=7187
-chu li 	處理	c=2 d=1.63785 t=7187
-chu shi 	出事	c=2 d=1.91727 t=7187
-chu xian 	出現	c=4 d=2.34646 t=7187
-chuang kou 	窗口	c=2 d=1.19128 t=7187
-chuang shang 	牀上	c=1 d=0.283654 t=7187
-ci 	次	c=0 d=0.0847894 t=7187
-ci 	此	c=2 d=1.5914 t=7187
-ci shu 	次數	c=1 d=0.932394 t=7187
-ci yao 	次要	c=1 d=0.755784 t=7187
-cong 	從	c=5 d=2.6064 t=7187
-cu cheng 	促成	c=1 d=0.113042 t=7187
-cun chu 	存儲	c=0 d=0.0865022 t=7187
-cun chu fang an 	存儲方案	c=1 d=0.869358 t=7187
-cuo 	錯	c=1 d=0.509156 t=7187
-cuo shou 	搓手	c=0 d=0.0436049 t=7187
-cuo shou shou 	搓手手	c=1 d=0.438235 t=7187
-cuo wu 	錯誤	c=6 d=3.40982 t=7187
-da 	大	c=0 d=0.0900325 t=7187
-da 	打	c=1 d=0.152712 t=7187
-da bao 	打包	c=1 d=0.302704 t=7187
-da cheng 	大成	c=0 d=0.0292293 t=7187
-da dan 	大膽	c=0 d=0.0985112 t=7187
-da duan 	打斷	c=1 d=0.878095 t=7187
-da gai 	大概	c=3 d=1.42236 t=7187
-da guo qu 	打過去	c=1 d=0.225373 t=7187
-da jia 	大家	c=4 d=1.60025 t=7187
-da kai 	打開	c=3 d=1.86924 t=7187
-da lu 	大陸	c=1 d=0.904837 t=7187
-da ming ling 	打命令	c=1 d=0.794534 t=7187
-da mo xing 	大模型	c=3 d=1.51775 t=7187
-da mo xing 	打模型	c=1 d=0.900325 t=7187
-da ti shang 	大體上	c=1 d=0.895834 t=7187
-da xiao 	大小	c=1 d=0.923116 t=7187
-da zai 	搭載	c=1 d=0.802519 t=7187
-da zhi shang 	大致上	c=1 d=0.900325 t=7187
-da zhong 	大衆	c=0 d=0.0923116 t=7187
-da zhong dian ping 	大衆點評	c=1 d=0.927743 t=7187
-da zong 	大宗	c=0 d=0.0683861 t=7187
-da zong shang pin 	大宗商品	c=2 d=1.51839 t=7187
-dai 	帶	c=1 d=0.891366 t=7187
-dai hui jia 	帶回家	c=1 d=0.491644 t=7187
-dai li 	代理	c=5 d=3.2339 t=7187
-dai you 	帶有	c=1 d=0.995012 t=7187
-dan 	但	c=58 d=6.39721 t=7187
-dan 	單	c=2 d=0.195812 t=7187
-dan lu 	丹爐	c=2 d=1.56837 t=7187
-dan shi 	但是	c=5 d=2.93046 t=7187
-dan xin 	擔心	c=1 d=0.923116 t=7187
-dang 	當	c=4 d=1.9831 t=7187
-dang di 	當地	c=1 d=0.882497 t=7187
-dang qian 	當前	c=1 d=0.909373 t=7187
-dang ran 	當然	c=2 d=0.860474 t=7187
-dang wo 	當我	c=1 d=0.83527 t=7187
-dao 	到	c=17 d=3.15495 t=7187
-dao di 	到底	c=2 d=1.18828 t=7187
-dao li 	道理	c=1 d=0.913931 t=7187
-dao shi hou 	到時候	c=1 d=0.909373 t=7187
-dao zhi 	導致	c=2 d=1.32604 t=7187
-de 	地	c=2 d=1.68788 t=7187
-de 	的	c=470 d=22.9589 t=7187
-de dao 	得到	c=1 d=0.806541 t=7187
-deng 	等	c=2 d=1.14774 t=7187
-deng che 	等車	c=1 d=0.458406 t=7187
-deng deng 	等等	c=14 d=2.50049 t=7187
-deng lu 	登錄	c=1 d=0.960789 t=7187
-di 	低	c=1 d=0.423162 t=7187
-di 	弟	c=2 d=1.45232 t=7187
-di dao 	地道	c=3 d=1.73631 t=7187
-di dian 	低點	c=1 d=0.379083 t=7187
-di fang 	地方	c=2 d=0.794794 t=7187
-di pin 	低頻	c=1 d=0.923116 t=7187
-di yi tiao 	第一條	c=1 d=0.965605 t=7187
-dian 	點	c=7 d=2.25299 t=7187
-dian cuo 	點錯	c=1 d=0.970446 t=7187
-dian ji 	點擊	c=2 d=1.34488 t=7187
-dian li 	電力	c=1 d=0.66365 t=7187
-dian nao 	電腦	c=3 d=1.17589 t=7187
-dian ping 	點評	c=0 d=0.0923116 t=7187
-dian wei 	點位	c=2 d=1.08722 t=7187
-dian zi shu 	電子書	c=1 d=0.479505 t=7187
-diao 	調	c=1 d=0.995012 t=7187
-diao yan 	調研	c=5 d=2.33543 t=7187
-diao yong 	調用	c=8 d=2.87825 t=7187
-diao yong lian 	調用鏈	c=1 d=0.398519 t=7187
-die dai 	迭代	c=1 d=0.818731 t=7187
-ding 	丁	c=0 d=0.0985112 t=7187
-ding 	定	c=0 d=0.0207008 t=7187
-ding 	頂	c=1 d=0.618783 t=7187
-ding bu 	頂部	c=1 d=1 t=7165
-ding da dan 	丁大膽	c=1 d=0.99005 t=7187
-ding pan 	盯盤	c=1 d=0.985112 t=7187
-ding pan 	頂盤	c=1 d=0.980199 t=7187
-ding tou le 	定投了	c=1 d=0.208045 t=7187
-ding wei 	定位	c=1 d=0.878095 t=7187
-ding zhi 	定製	c=1 d=0.574072 t=7187
-ding zhi hua 	定製化	c=0 d=0.0818731 t=7187
-diu 	丟	c=1 d=0.467666 t=7187
-diu shi 	丟失	c=2 d=1.3832 t=7187
-dong xi 	東西	c=4 d=2.07053 t=7187
-dou 	都	c=23 d=4.92443 t=7187
-dou bao 	豆包	c=3 d=2.14346 t=7187
-dou hui 	都會	c=1 d=0.470011 t=7187
-dou li 	兜裏	c=1 d=0.826959 t=7187
-dou neng 	都能	c=1 d=0.923116 t=7187
-dou shi 	都是	c=8 d=2.26041 t=7187
-dou you 	都有	c=0 d=0.0878095 t=7187
-du 	讀	c=1 d=0.755784 t=7187
-du 	賭	c=1 d=0.127454 t=7187
-du guo 	渡過	c=1 d=0.286505 t=7187
-du li 	獨立	c=1 d=0.763379 t=7187
-du wan 	讀完	c=1 d=0.15259 t=7187
-duan 	斷	c=3 d=1.72532 t=7187
-duan dian xu chuan 	斷點續傳	c=1 d=0.806541 t=7187
-duan lie 	斷裂	c=1 d=0.400517 t=7187
-duan pian 	斷片	c=1 d=0.603506 t=7187
-dui 	對	c=15 d=4.04058 t=7187
-dui bi 	對比	c=10 d=2.78004 t=7187
-dui chong ji jin 	對衝基金	c=1 d=0.571209 t=7187
-dui hua 	對話	c=3 d=1.83795 t=7187
-dui hua kuang 	對話框	c=1 d=0.909373 t=7187
-dui hua nei rong 	對話內容	c=1 d=0.774916 t=7187
-dui qi 	對齊	c=0 d=0.0860708 t=7187
-dui wo 	對我	c=3 d=1.43466 t=7187
-dui xian 	兌現	c=3 d=1.46042 t=7187
-dui ying 	對應	c=2 d=1.71035 t=7187
-dui yu 	對於	c=4 d=1.9684 t=7187
-dui zhao 	對照	c=1 d=0.70822 t=7187
-duo 	多	c=7 d=2.58379 t=7187
-duo chi 	多喫	c=1 d=0.740818 t=7187
-duo ci 	多次	c=1 d=0.873716 t=7187
-duo xiang 	多想	c=1 d=0.680451 t=7187
-duo zhong 	多種	c=1 d=0.852144 t=7187
-e du 	額度	c=4 d=1.92705 t=7187
-e wai 	額外	c=1 d=0.737123 t=7187
-en 	嗯	c=3 d=1.99244 t=7187
-en 	恩	c=1 d=0.628135 t=7187
-er 	二	c=1 d=0.900325 t=7187
-er 	而	c=4 d=1.425 t=7187
-er ji 	耳機	c=1 d=1 t=7187
-er qie 	而且	c=7 d=2.12858 t=7187
-er shi 	而是	c=1 d=1 t=7061
-er ti 	而提	c=0 d=0.0865022 t=7187
-er yan 	而言	c=2 d=1.5846 t=7187
-er zhe 	二者	c=2 d=1.17403 t=7187
-er zi 	兒子	c=1 d=0.856415 t=7187
-fa 	發	c=2 d=0.985112 t=7187
-fa bu 	發佈	c=1 d=1 t=7078
-fa gei 	發給	c=1 d=0.932394 t=7187
-fa hao shi ling 	發號施令	c=1 d=0.83527 t=7187
-fa jue 	發掘	c=1 d=0.865022 t=7187
-fa jue wen ti 	發掘問題	c=1 d=0.869358 t=7187
-fa lv shang 	法律上	c=1 d=0.66365 t=7187
-fa xian 	發現	c=2 d=1.22821 t=7187
-fa xian zou 	發現走	c=1 d=0.790571 t=7187
-fan bing 	犯病	c=3 d=1.85976 t=7187
-fan chu lai 	翻出來	c=1 d=0.292293 t=7187
-fan cuo 	犯錯	c=1 d=0.726149 t=7187
-fan er 	反而	c=2 d=1.12678 t=7187
-fan fu 	反覆	c=4 d=2.36293 t=7187
-fan hui 	返回	c=1 d=0.790571 t=7187
-fan shi 	範式	c=3 d=1.10102 t=7187
-fan si 	反思	c=1 d=0.865022 t=7187
-fan ying 	反映	c=3 d=2.2354 t=7187
-fan zheng 	反正	c=1 d=0.946485 t=7187
-fang 	放	c=1 d=0.729789 t=7187
-fang an 	方案	c=15 d=3.60806 t=7187
-fang bian 	方便	c=1 d=0.970446 t=7187
-fang fa 	方法	c=3 d=1.46964 t=7187
-fang hao 	放好	c=2 d=1.90752 t=7187
-fang mian 	方面	c=3 d=1.57058 t=7187
-fang qi 	放棄	c=2 d=1.38901 t=7187
-fang shi 	方式	c=6 d=3.73113 t=7187
-fang shi yi 	方式一	c=1 d=0.687289 t=7187
-fang wen 	訪問	c=1 d=0.869358 t=7187
-fang xiang 	方向	c=2 d=0.695181 t=7187
-fang zai 	放在	c=2 d=1.17993 t=7187
-fei chang 	非常	c=2 d=0.543704 t=7187
-fei si 	肥四	c=1 d=0.895834 t=7187
-fen 	粉	c=0 d=0.0474734 t=7187
-fen gong 	份工	c=1 d=0.126818 t=7187
-fen xi 	分析	c=7 d=3.1581 t=7187
-fen xi xia 	分析下	c=1 d=0.995012 t=7187
-fen xiang 	分享	c=2 d=0.927743 t=7187
-fen zhi 	分支	c=1 d=0.918512 t=7187
-fen zhong 	分鐘	c=2 d=1.44511 t=7187
-fen zu 	分組	c=2 d=1.4905 t=7187
-feng 	風	c=0 d=0.1 t=7186
-feng fu 	豐富	c=2 d=1.4634 t=7187
-feng ge 	風格	c=1 d=1 t=7180
-feng kuang 	瘋狂	c=1 d=0.597501 t=7187
-feng xian 	風險	c=1 d=0.231003 t=7187
-feng xian zi chan 	風險資產	c=1 d=0.557106 t=7187
-fu 	富	c=1 d=0.798516 t=7187
-fu 	負	c=1 d=0.189191 t=7187
-fu fei 	付費	c=1 d=0.860708 t=7187
-fu he 	符合	c=3 d=1.97847 t=7187
-fu he 	複合	c=2 d=1.6246 t=7187
-fu le 	服了	c=1 d=0.895834 t=7187
-fu pan 	覆盤	c=1 d=0.15259 t=7187
-fu tu 	富途	c=2 d=0.988129 t=7187
-fu wu 	服務	c=3 d=1.68145 t=7187
-fu wu qi 	服務器	c=2 d=1.4418 t=7187
-fu yong 	復用	c=1 d=0.763379 t=7187
-fu za 	複雜	c=7 d=2.31878 t=7187
-fu zai 	負載	c=1 d=0.717852 t=7187
-fu zhi 	複製	c=1 d=0.918512 t=7187
-fu zhu 	輔助	c=1 d=0.321422 t=7187
-ga ga 	嘎嘎	c=0 d=0.0839457 t=7187
-ga ga meng 	嘎嘎猛	c=1 d=0.843665 t=7187
-gai 	改	c=6 d=2.68399 t=7187
-gai 	該	c=3 d=1.4729 t=7187
-gai dong 	改動	c=5 d=3.0722 t=7187
-gai hao 	改好	c=1 d=0.744532 t=7187
-gai jin 	改進	c=1 d=0.895834 t=7187
-gai lv 	概率	c=1 d=0.733447 t=7187
-gai nian 	概念	c=1 d=0.704688 t=7187
-gai shan 	改善	c=1 d=0.771052 t=7187
-gai shuo 	該說	c=1 d=0.865022 t=7187
-gai wei 	改爲	c=1 d=0.941765 t=7187
-gan bu le 	幹不了	c=0 d=0.0878095 t=7187
-gan bu le huo 	幹不了活	c=1 d=0.882497 t=7187
-gan chu lai 	趕出來	c=1 d=0.429557 t=7187
-gan cui 	乾脆	c=1 d=0.985112 t=7187
-gan hui lai 	趕回來	c=1 d=0.557106 t=7187
-gan jin 	趕緊	c=1 d=0.839457 t=7187
-gan jue 	感覺	c=3 d=1.326 t=7187
-gan ma 	幹嘛	c=1 d=0.927743 t=7187
-gan shen me 	幹什麼	c=1 d=0.744532 t=7187
-gan shou 	感受	c=0 d=0.0737123 t=7187
-gan shou ge bie ne 	感受個別呢	c=1 d=0.740818 t=7187
-gan xie 	感謝	c=1 d=0.634448 t=7187
-gang 	剛	c=1 d=0.726149 t=7187
-gang gang 	剛剛	c=10 d=4.32731 t=7187
-gang hou 	剛後	c=1 d=0.138069 t=7187
-gang ru 	剛入	c=1 d=0.278037 t=7187
-gang tie 	鋼鐵	c=0 d=0.0995012 t=7187
-gang tie xia 	鋼鐵俠	c=1 d=1 t=7187
-gang xu 	剛需	c=1 d=0.83527 t=7187
-gao cuo 	搞錯	c=1 d=0.826959 t=7187
-gao dian 	搞點	c=1 d=0.802519 t=7187
-gao dian 	高點	c=1 d=0.900325 t=7187
-gao du 	高度	c=2 d=1.33183 t=7187
-gao fan 	搞飯	c=1 d=0.537944 t=7187
-gao guo 	搞過	c=1 d=0.960789 t=7187
-gao shui 	高水	c=1 d=0.941765 t=7187
-gao su 	告訴	c=3 d=1.85005 t=7187
-gao yi 	高一	c=1 d=0.634448 t=7187
-ge 	個	c=12 d=2.58805 t=7187
-ge 	鴿	c=1 d=0.369723 t=7187
-ge bie 	個別	c=0 d=0.0737123 t=7187
-ge ge 	各個	c=1 d=0.778801 t=7187
-ge gu 	個股	c=1 d=0.806541 t=7187
-ge lei 	各類	c=0 d=0.0199888 t=7187
-ge lei zi chan 	各類資產	c=1 d=0.20089 t=7187
-ge ren 	個人	c=1 d=0.960789 t=7187
-ge zhong 	各種	c=0 d=0.0941765 t=7187
-ge zhong fang shi 	各種方式	c=1 d=0.946485 t=7187
-gei 	給	c=4 d=2.1242 t=7187
-gei chu 	給出	c=1 d=0.767206 t=7187
-gei ni 	給你	c=4 d=2.94087 t=7187
-gei wo 	給我	c=4 d=2.08551 t=7187
-gen ben 	根本	c=3 d=2.64531 t=7187
-gen mu lu 	根目錄	c=1 d=0.937067 t=7187
-gen yuan 	根源	c=2 d=1.2749 t=7187
-geng 	更	c=17 d=4.36538 t=7187
-geng cha 	更差	c=1 d=0.932394 t=7187
-geng da 	更大	c=1 d=1 t=7055
-geng di 	更低	c=1 d=1 t=7144
-geng di 	耕地	c=1 d=1 t=7143
-geng hao 	更好	c=8 d=3.51773 t=7187
-geng jia 	更加	c=1 d=0.951229 t=7187
-geng wei 	更爲	c=1 d=0.822835 t=7187
-geng xiang 	更像	c=1 d=0.856415 t=7187
-geng xin 	更新	c=7 d=3.89707 t=7187
-geng xin ban ben 	更新版本	c=1 d=0.790571 t=7187
-geng yan zhong 	更嚴重	c=1 d=0.878095 t=7187
-gong 	供	c=1 d=0.995012 t=7187
-gong bu 	工步	c=6 d=3.78088 t=7187
-gong can kao 	供參考	c=1 d=0.955997 t=7187
-gong cheng 	工程	c=0 d=0.161012 t=7187
-gong cheng shang 	工程上	c=2 d=1.07377 t=7187
-gong ji 	共計	c=1 d=0.657047 t=7187
-gong ju 	工具	c=11 d=4.79942 t=7187
-gong ju lian 	工具連	c=1 d=0.522046 t=7187
-gong neng 	功能	c=5 d=2.91673 t=7187
-gong si 	公司	c=2 d=1.36255 t=7187
-gong wang 	公網	c=2 d=0.935909 t=7187
-gong zuo 	工作	c=0 d=0.0937067 t=7187
-gong zuo qu 	工作去	c=1 d=0.941765 t=7187
-gou jian 	構建	c=7 d=3.91969 t=7187
-gou jian cheng gong 	構建成功	c=1 d=0.995012 t=7187
-gou mai 	購買	c=1 d=0.467666 t=7187
-gu piao 	股票	c=2 d=0.694197 t=7187
-gu shi 	股市	c=4 d=1.39759 t=7187
-gua 	掛	c=1 d=0.794534 t=7187
-guai yi 	怪異	c=2 d=1.29361 t=7187
-guan bi 	關閉	c=1 d=0.955997 t=7187
-guan fang 	官方	c=3 d=1.98324 t=7187
-guan li 	管理	c=5 d=2.47422 t=7187
-guan li qi 	管理器	c=1 d=0.609571 t=7187
-guan lian 	關聯	c=1 d=0.985112 t=7187
-guan xi 	關係	c=1 d=1 t=7135
-guan yu 	關於	c=2 d=1.36754 t=7187
-guan zhu 	關注	c=0 d=0.0865022 t=7187
-guang dong hua 	廣東話	c=1 d=0.748264 t=7187
-guang shou hao ping 	廣受好評	c=1 d=0.995012 t=7187
-guang tu 	廣圖	c=1 d=0.798516 t=7187
-gui 	硅	c=0 d=0.0913931 t=7187
-gui 	鬼	c=1 d=0.870995 t=7187
-gui dong xi 	鬼東西	c=1 d=0.965605 t=7187
-gui gen jie di 	歸根結底	c=1 d=0.960789 t=7187
-gui ji liu dong 	硅基流動	c=1 d=0.918512 t=7187
-gui ze 	規則	c=4 d=3.10429 t=7187
-guo 	過	c=4 d=2.37994 t=7187
-guo chan 	國產	c=2 d=1.31796 t=7187
-guo chang 	過長	c=1 d=0.677057 t=7187
-guo cheng 	過程	c=1 d=0.737123 t=7187
-guo fu lun 	國富論	c=3 d=0.800522 t=7187
-guo nei 	國內	c=5 d=2.69649 t=7187
-guo qu 	過去	c=2 d=1.41719 t=7187
-guo ran 	果然	c=2 d=1.64196 t=7187
-ha ha 	哈哈	c=2 d=1.348 t=7187
-ha ha ha 	哈哈哈	c=4 d=2.09262 t=7187
-hai 	還	c=14 d=4.02826 t=7187
-hai bu cuo 	還不錯	c=1 d=0.826959 t=7187
-hai bu shi 	還不是	c=1 d=0.65377 t=7187
-hai hui 	還會	c=1 d=0.14808 t=7187
-hai mei 	還沒	c=1 d=1.01465 t=7187
-hai mei hui jia 	還沒回家	c=1 d=0.394554 t=7187
-hai mei jie hun 	還沒結婚	c=1 d=0.900325 t=7187
-hai mei shui xing 	還沒睡醒	c=1 d=0.423162 t=7187
-hai shi 	還是	c=31 d=8.75165 t=7187
-hai shi yong 	還實用	c=1 d=0.852144 t=7187
-hai shou dao 	還受到	c=1 d=0.873716 t=7187
-hai xiang 	還想	c=1 d=0.97531 t=7187
-hai you 	還有	c=9 d=3.06883 t=7187
-hai zai 	還在	c=4 d=2.34516 t=7187
-hai zi 	孩子	c=1 d=0.904837 t=7187
-han shu 	函數	c=0 d=0.0565525 t=7187
-hang 	吭	c=5 d=2.84327 t=7187
-hao 	好	c=19 d=3.65697 t=7187
-hao 	薅	c=1 d=0.833861 t=7187
-hao ba 	好吧	c=1 d=0.865022 t=7187
-hao bu liao 	好不了	c=1 d=1 t=7187
-hao cheng ji 	好成績	c=1 d=0.882497 t=7187
-hao du 	好嘟	c=1 d=0.856415 t=7187
-hao duo 	好多	c=2 d=1.41114 t=7187
-hao hao hao 	好好好	c=1 d=0.501576 t=7187
-hao hen 	好狠	c=1 d=0.755784 t=7187
-hao la 	好啦	c=1 d=0.923116 t=7187
-hao lei 	好累	c=1 d=0.843665 t=7187
-hao qi 	好奇	c=1 d=0.909373 t=7187
-hao qi lai 	好起來	c=1 d=0.904837 t=7187
-hao shi 	好事	c=1 d=0.878095 t=7187
-hao wu yi wen 	毫無疑問	c=1 d=0.637628 t=7187
-hao xiang 	好像	c=8 d=3.10907 t=7187
-hao xie 	好些	c=1 d=1 t=7187
-hao yang mao 	薅羊毛	c=1 d=0.88692 t=7187
-he 	和	c=67 d=6.98585 t=7187
-he dong 	荷東	c=1 d=0.647265 t=7187
-he gui 	合規	c=1 d=0.606531 t=7187
-he li 	合理	c=1 d=0.778801 t=7187
-he ni 	和你	c=2 d=1.10436 t=7187
-he shi 	何時	c=1 d=0.477114 t=7187
-he shui 	喝水	c=1 d=0.264477 t=7187
-he ta 	和他	c=1 d=0.748264 t=7187
-he tang 	喝湯	c=0 d=0.0666977 t=7187
-he yue 	合約	c=2 d=0.965605 t=7187
-hei 	黑	c=0 d=0.0748264 t=7187
-hei lv 	黑綠	c=2 d=1.99501 t=7185
-hei qiao ke li 	黑巧克力	c=1 d=0.752014 t=7187
-hen 	很	c=4 d=1.94864 t=7187
-hen cha 	很差	c=1 d=0.603506 t=7187
-hen chang jian 	很常見	c=1 d=0.913931 t=7187
-hen duo 	很多	c=9 d=2.66645 t=7187
-hen duo ren 	很多人	c=2 d=1.48443 t=7187
-hen guai yi 	很怪異	c=1 d=0.970446 t=7187
-hen hao 	很好	c=2 d=1.14253 t=7187
-hen jiu 	很久	c=1 d=0.83527 t=7187
-hen li hai 	很厲害	c=1 d=0.814647 t=7187
-hen li jie 	很理解	c=1 d=0.869358 t=7187
-hen man 	很慢	c=2 d=1.2736 t=7187
-hen mei you 	很沒有	c=1 d=0.574072 t=7187
-hen nan 	很難	c=1 d=0.414783 t=7187
-hen qi guai 	很奇怪	c=1 d=0.882497 t=7187
-hen shuang 	很爽	c=1 d=0.740818 t=7187
-hen yi han 	很遺憾	c=3 d=1.87166 t=7187
-hen you 	很有	c=1 d=0.865022 t=7187
-hen you yi yi 	很有意義	c=1 d=1 t=7122
-hen you yong 	很有用	c=1 d=0.891366 t=7187
-hen zhong yao 	很重要	c=1 d=0.151072 t=7187
-heng 	哼	c=2 d=1.00306 t=7187
-hong guan 	宏觀	c=5 d=1.34964 t=7187
-hong guan jing ji xue 	宏觀經濟學	c=1 d=0.194952 t=7187
-hong ye 	紅葉	c=1 d=1 t=7187
-hou 	後	c=23 d=6.55285 t=7187
-hou mian 	後面	c=6 d=1.62257 t=7187
-hou qi 	後期	c=1 d=0.722527 t=7187
-hou xu 	後續	c=2 d=1.52247 t=7187
-hou zhe 	後者	c=1 d=0.927743 t=7187
-hu chu 	呼出	c=1 d=0.818731 t=7187
-hua 	化	c=1 d=0.57695 t=7187
-hua 	畫	c=2 d=1.01027 t=7187
-hua 	話	c=2 d=0.919976 t=7187
-hua ti 	話題	c=1 d=0.603506 t=7187
-huai yi 	懷疑	c=1 d=0.951229 t=7187
-huan 	換	c=2 d=1.64416 t=7187
-huan hui 	換回	c=1 d=0.683861 t=7187
-huan jing 	環境	c=6 d=2.57683 t=7187
-huan le 	換了	c=1 d=0.810584 t=7187
-huan le 	歡樂	c=1 d=0.806541 t=7187
-huan ying 	歡迎	c=2 d=1.72586 t=7187
-huang huang 	黃黃	c=1 d=0.509156 t=7187
-huang se 	黃色	c=1 d=0.895834 t=7187
-hui 	回	c=1 d=0.895834 t=7187
-hui 	會	c=22 d=3.92503 t=7187
-hui bao 	回報	c=1 d=0.970446 t=7187
-hui bao 	彙報	c=1 d=0.97531 t=7187
-hui bu hui 	會不會	c=6 d=1.97061 t=7187
-hui da 	回答	c=4 d=2.19052 t=7187
-hui dao 	回到	c=1 d=0.612626 t=7187
-hui fu 	回覆	c=10 d=3.72787 t=7187
-hui fu 	恢復	c=2 d=1.27582 t=7187
-hui gu 	回顧	c=1 d=0.562705 t=7187
-hui gun 	回滾	c=3 d=2.13331 t=7187
-hui jia 	回家	c=0 d=0.0392586 t=7187
-hui qu 	回去	c=5 d=1.63672 t=7187
-hui su 	回溯	c=2 d=1.65444 t=7187
-hui tui 	回退	c=1 d=0.913931 t=7187
-hui zong 	彙總	c=1 d=0.946485 t=7187
-hun he 	混合	c=2 d=1.27885 t=7187
-hun luan 	混亂	c=1 d=0.798516 t=7187
-hun za 	混雜	c=1 d=0.860708 t=7187
-huo 	或	c=1 d=0.786628 t=7187
-huo 	活	c=0 d=0.0878095 t=7187
-huo bi zheng ce 	貨幣政策	c=1 d=0.19593 t=7187
-huo qu 	獲取	c=1 d=0.946203 t=7187
-huo qu bu dao 	獲取不到	c=1 d=0.516851 t=7187
-huo qu dao 	獲取到	c=1 d=0.900325 t=7187
-huo shan 	火山	c=2 d=1.67703 t=7187
-huo yue 	活躍	c=1 d=0.965605 t=7187
-huo zhe 	或者	c=15 d=3.77771 t=7187
-ji 	基	c=0 d=0.0913931 t=7187
-ji 	幾	c=1 d=0.847894 t=7187
-ji 	既	c=1 d=0.97531 t=7187
-ji 	機	c=0 d=0.115694 t=7187
-ji ben 	基本	c=5 d=1.21259 t=7187
-ji ben shang 	基本上	c=1 d=0.167797 t=7187
-ji bie 	級別	c=2 d=1.37569 t=7187
-ji bu fen 	幾部分	c=1 d=0.748264 t=7187
-ji bu zhu 	記不住	c=1 d=0.932394 t=7187
-ji chu 	基礎	c=1 d=0.433874 t=7187
-ji ci 	幾次	c=1 d=0.390628 t=7187
-ji da lei 	幾大類	c=1 d=0.163654 t=7187
-ji de 	記得	c=3 d=1.72542 t=7187
-ji dian 	幾點	c=0 d=0.099005 t=7187
-ji dian shui de ya 	幾點睡得呀	c=1 d=0.995012 t=7187
-ji fei 	計費	c=1 d=0.786628 t=7187
-ji ge 	幾個	c=1 d=0.83527 t=7187
-ji ge yue 	幾個月	c=2 d=0.697676 t=7187
-ji hao 	極好	c=1 d=0.600496 t=7187
-ji hua 	計劃	c=9 d=3.52517 t=7187
-ji ke 	即可	c=1 d=0.99005 t=7187
-ji ke 	極客	c=0 d=0.1 t=7186
-ji ke feng 	極客風	c=1 d=1 t=7187
-ji kuai 	極快	c=1 d=0.496585 t=7187
-ji lv 	紀律	c=0 d=0.0225373 t=7187
-ji qi 	機器	c=1 d=1.02799 t=7187
-ji qiao 	技巧	c=2 d=0.563437 t=7187
-ji ran 	既然	c=5 d=2.4389 t=7187
-ji shao 	極少	c=1 d=0.994763 t=7187
-ji shao cheng duo 	積少成多	c=1 d=0.486752 t=7187
-ji shao jian 	極少見	c=1 d=0.856415 t=7187
-ji shi 	及時	c=1 d=0.891366 t=7187
-ji shi 	幾十	c=1 d=0.0808629 t=7187
-ji shu mian 	技術面	c=2 d=0.989454 t=7187
-ji suan 	計算	c=1 d=0.856415 t=7187
-ji xu 	繼續	c=9 d=3.49879 t=7187
-ji yi 	記憶	c=1 d=0.97531 t=7187
-ji yu 	基於	c=2 d=1.45226 t=7187
-ji zai 	記在	c=1 d=0.970446 t=7187
-ji zhi 	極致	c=1 d=0.701173 t=7187
-ji zhong yu 	集中於	c=1 d=0.718924 t=7187
-ji zhu 	記住	c=2 d=0.996422 t=7187
-jia 	加	c=2 d=1.32917 t=7187
-jia ge 	價格	c=4 d=2.44113 t=7187
-jia ge di 	價格低	c=1 d=0.882497 t=7187
-jia gou 	架構	c=0 d=0.099005 t=7187
-jia hao 	加好	c=1 d=0.782705 t=7187
-jia ru 	加入	c=1 d=0.529935 t=7187
-jia shang 	加上	c=3 d=2.5969 t=7187
-jia she 	假設	c=1 d=0.726149 t=7187
-jia she 	架設	c=1 d=0.729789 t=7187
-jia su 	加速	c=1 d=1.06652 t=7187
-jia xi 	加息	c=0 d=0.0203926 t=7187
-jia xi jiang xi 	加息降息	c=1 d=0.204948 t=7187
-jia you 	加油	c=1 d=0.970446 t=7187
-jia zai 	加載	c=4 d=2.4413 t=7187
-jian 	見	c=0 d=0.0852144 t=7187
-jian 	鍵	c=1 d=0.980199 t=7187
-jian bian 	簡便	c=0 d=0.0677057 t=7187
-jian cha 	檢查	c=6 d=3.12781 t=7187
-jian cha xia 	檢查下	c=1 d=0.612626 t=7187
-jian chi 	堅持	c=1 d=0.923116 t=7187
-jian dan 	簡單	c=2 d=0.798516 t=7187
-jian fu 	減負	c=1 d=0.733447 t=7187
-jian li 	建立	c=1 d=0.147342 t=7187
-jian pan 	鍵盤	c=1 d=0.918512 t=7187
-jian ren 	兼任	c=1 d=0.690734 t=7187
-jian rong 	兼容	c=2 d=1.45226 t=7187
-jian shi guo 	見識過	c=1 d=0.70822 t=7187
-jian suo 	檢索	c=7 d=4.00909 t=7187
-jian xin 	堅信	c=1 d=0.918512 t=7187
-jian yao 	簡要	c=1 d=0.980199 t=7187
-jian yi 	建議	c=11 d=3.61141 t=7187
-jian zhi 	簡直	c=1 d=0.860708 t=7187
-jiang 	將	c=2 d=1.59604 t=7187
-jiang 	講	c=4 d=2.0032 t=7187
-jiang dao di 	將到底	c=1 d=0.375311 t=7187
-jiang di 	降低	c=1 d=0.970446 t=7187
-jiang ji 	降級	c=1 d=0.843665 t=7187
-jiang lai 	將來	c=1 d=0.927743 t=7187
-jiang xi 	降息	c=0 d=0.0203926 t=7187
-jiao 	叫	c=4 d=2.42334 t=7187
-jiao ben 	腳本	c=2 d=1.4821 t=7187
-jiao hao 	較好	c=1 d=0.786628 t=7187
-jiao ke shu 	教科書	c=1 d=0.154896 t=7187
-jiao qiang xian 	交強險	c=1 d=0.683861 t=7187
-jiao ta 	叫他	c=1 d=0.951229 t=7187
-jiao wo 	教我	c=1 d=0.937067 t=7187
-jiao yi 	交易	c=13 d=1.89776 t=7187
-jiao yi fang mian 	交易方面	c=1 d=0.33454 t=7187
-jiao yi ji lv 	交易紀律	c=1 d=0.226502 t=7187
-jiao yi luo ji 	交易邏輯	c=1 d=0.145876 t=7187
-jiao yi nan zuo 	交易難做	c=2 d=1.34091 t=7187
-jiao yi suo 	交易所	c=2 d=0.267246 t=7187
-jiao yi yuan 	交易員	c=1 d=0.138069 t=7187
-jie 	借	c=1 d=0.913931 t=7187
-jie chu 	解除	c=2 d=1.51357 t=7187
-jie dian 	節點	c=5 d=2.07743 t=7187
-jie duan 	階段	c=1 d=0.146607 t=7187
-jie duan xing 	階段性	c=1 d=0.377192 t=7187
-jie fa 	揭發	c=1 d=0.895834 t=7187
-jie fa 	解法	c=5 d=2.41999 t=7187
-jie gou 	結構	c=1 d=0.878095 t=7187
-jie guo 	結果	c=8 d=3.14271 t=7187
-jie he 	結合	c=1 d=0.748264 t=7187
-jie hun 	結婚	c=0 d=0.0895834 t=7187
-jie jue 	解決	c=15 d=5.47503 t=7187
-jie lun 	結論	c=1 d=0.57695 t=7187
-jie mian 	界面	c=1 d=0.995012 t=7187
-jie qu 	截取	c=1 d=0.904837 t=7187
-jie ru 	接入	c=2 d=1.58528 t=7187
-jie ru dian 	接入點	c=2 d=0.965605 t=7187
-jie shao 	介紹	c=2 d=1.77174 t=7187
-jie shi 	解釋	c=2 d=1.29699 t=7187
-jie shou 	接受	c=1 d=0.927743 t=7187
-jie shu 	結束	c=1 d=0.752014 t=7187
-jie tu 	截圖	c=1 d=0.99005 t=7187
-jie xia lai 	接下來	c=3 d=1.68842 t=7187
-jie ya 	解壓	c=1 d=0.822835 t=7187
-jin bu 	進步	c=1 d=0.810584 t=7187
-jin gong can kao 	僅供參考	c=1 d=0.472367 t=7187
-jin guan 	儘管	c=4 d=1.79667 t=7187
-jin ji 	緊急	c=1 d=0.514274 t=7187
-jin jia 	金價	c=1 d=0.358796 t=7187
-jin liang 	儘量	c=2 d=1.12128 t=7187
-jin liang 	近兩	c=0 d=0.0847894 t=7187
-jin liang ci 	近兩次	c=1 d=0.852144 t=7187
-jin qu 	進去	c=1 d=0.745853 t=7187
-jin wan 	今晚	c=7 d=1.86415 t=7187
-jin yin 	金銀	c=1 d=0.802519 t=7187
-jin yong 	禁用	c=1 d=0.995012 t=7187
-jing 	淨	c=1 d=0.188247 t=7187
-jing dong mai 	頸動脈	c=1 d=0.856415 t=7187
-jing ji 	經濟	c=2 d=0.995012 t=7187
-jing jian 	精簡	c=1 d=1.04757 t=7187
-jing shen 	精神	c=2 d=1.70391 t=7187
-jing tong 	精通	c=1 d=0.332871 t=7187
-jing xiang 	鏡像	c=4 d=2.50414 t=7187
-jing xiang yuan 	鏡像源	c=1 d=0.965605 t=7187
-jing yan 	經驗	c=1 d=0.798516 t=7187
-jing zhun 	精準	c=1 d=0.951229 t=7187
-jiu 	久	c=1 d=0.878095 t=7187
-jiu 	就	c=73 d=8.35329 t=7187
-jiu ba 	酒吧	c=1 d=0.532592 t=7187
-jiu cuo 	糾錯	c=6 d=3.13212 t=7187
-jiu jia su 	就加速	c=1 d=0.965605 t=7187
-jiu jing 	究竟	c=2 d=1.14352 t=7187
-jiu le 	久了	c=0 d=0.0371577 t=7187
-jiu pian 	糾偏	c=1 d=0.755784 t=7187
-jiu shi 	就是	c=2 d=1.05092 t=7187
-jiu suan 	就算	c=1 d=0.831104 t=7187
-jiu xiang 	就像	c=2 d=1.53242 t=7187
-jiu xiang 	就向	c=0 d=0.1 t=7126
-jiu xiang yao 	就向要	c=1 d=1 t=7127
-jiu zheng 	糾正	c=2 d=1.49072 t=7187
-ju ge li zi 	舉個例子	c=1 d=0.339596 t=7187
-ju lie 	劇烈	c=0 d=0.0171187 t=7187
-ju lie bian hua 	劇烈變化	c=1 d=0.172045 t=7187
-ju ran 	居然	c=2 d=1.05709 t=7187
-ju ti 	具體	c=10 d=2.86882 t=7187
-ju xian xing 	侷限性	c=1 d=0.429557 t=7187
-ju yi fan san 	舉一反三	c=1 d=0.501576 t=7187
-ju yu wang 	局域網	c=2 d=0.960737 t=7187
-ju zhen 	矩陣	c=1 d=0.923116 t=7187
-jue da duo shu ren 	絕大多數人	c=1 d=0.123687 t=7187
-jue de 	覺得	c=13 d=3.93984 t=7187
-jue ding 	決定	c=3 d=1.67305 t=7187
-jue dui 	絕對	c=2 d=0.869744 t=7187
-ka 	卡	c=1 d=0.860708 t=7187
-ka de 	卡得	c=1 d=0.763379 t=7187
-ka si 	卡死	c=2 d=1.11774 t=7187
-ka zai 	卡在	c=1 d=0.70822 t=7187
-ka zai na 	卡在那	c=1 d=0.847894 t=7187
-kai 	開	c=3 d=1.04176 t=7187
-kai cang 	開倉	c=2 d=0.941765 t=7187
-kai en 	凱恩	c=2 d=1.60864 t=7187
-kai fa 	開發	c=4 d=1.39823 t=7187
-kai guan 	開關	c=2 d=1.36843 t=7187
-kai ji 	開機	c=1 d=0.408608 t=7187
-kai pan 	開盤	c=1 d=0.133989 t=7187
-kai qi 	開啓	c=4 d=2.48966 t=7187
-kai shi 	開始	c=3 d=1.43399 t=7187
-kai tong 	開通	c=1 d=0.960789 t=7187
-kai tou 	開頭	c=2 d=0.806541 t=7187
-kai xiao 	開銷	c=1 d=1 t=7141
-kai yuan 	開源	c=1 d=0.606531 t=7187
-kan 	看	c=5 d=2.26899 t=7187
-kan bu dao 	看不到	c=2 d=1.36609 t=7187
-kan bu dong 	看不懂	c=1 d=0.33454 t=7187
-kan dao 	看到	c=12 d=4.79078 t=7187
-kan de 	看的	c=1 d=0.447088 t=7187
-kan die 	看跌	c=0 d=0.0697676 t=7187
-kan die qi quan 	看跌期權	c=1 d=0.701173 t=7187
-kan dong 	看懂	c=1 d=0.733447 t=7187
-kan guo 	看過	c=1 d=0.941765 t=7187
-kan hao 	看好	c=1 d=0.774916 t=7187
-kan kan 	看看	c=17 d=4.17944 t=7187
-kan lai 	看來	c=3 d=1.68567 t=7187
-kan qi lai 	看起來	c=9 d=4.19468 t=7187
-kan qing chu 	看清楚	c=1 d=0.995012 t=7187
-kan wan 	看完	c=3 d=1.08565 t=7187
-kan xi 	看戲	c=1 d=0.67032 t=7187
-kao 	考	c=1 d=0.839457 t=7187
-kao 	靠	c=1 d=0.895834 t=7187
-kao lv 	考慮	c=1 d=0.100761 t=7187
-kao shi 	考試	c=2 d=1.04609 t=7187
-ke 	可	c=2 d=0.832344 t=7187
-ke ai 	可愛	c=0 d=0.0798516 t=7187
-ke ding zhi hua 	可定製化	c=1 d=0.822835 t=7187
-ke gong 	可供	c=0 d=0.083527 t=7187
-ke gong xuan ze 	可供選擇	c=1 d=0.839457 t=7187
-ke kuo zhan xing 	可擴展性	c=1 d=0.955997 t=7187
-ke neng 	可能	c=5 d=1.4203 t=7187
-ke wan xing 	可玩性	c=1 d=0.865022 t=7187
-ke xi 	可惜	c=1 d=0.442639 t=7187
-ke xing 	可行	c=1 d=0.891366 t=7187
-ke xing xing 	可行性	c=1 d=0.774916 t=7187
-ke xuan 	可選	c=1 d=0.860708 t=7187
-ke xue 	科學	c=1 d=0.56836 t=7187
-ke yi 	可以	c=76 d=8.79562 t=7187
-ke yong 	可用	c=4 d=2.45974 t=7187
-ke yong yu 	可用於	c=1 d=0.588605 t=7187
-ke zhuan zhai 	可轉債	c=1 d=0.582748 t=7187
-ken ding 	肯定	c=4 d=2.0172 t=7187
-keng 	坑	c=1 d=0.891366 t=7187
-kong 	空	c=2 d=0.965605 t=7187
-kong bai 	空白	c=1 d=0.932394 t=7187
-kong cang 	空倉	c=1 d=0.666977 t=7187
-kong jian 	空間	c=1 d=0.913931 t=7187
-kong zhi 	控制	c=2 d=0.755784 t=7187
-kou yu 	口語	c=1 d=0.852144 t=7187
-ku ku yin qian 	庫庫印錢	c=1 d=0.818731 t=7187
-kuai 	塊	c=3 d=0.577177 t=7187
-kuai 	快	c=4 d=1.20492 t=7187
-kuai jie 	快捷	c=2 d=1.47567 t=7187
-kuai jie jian 	快捷鍵	c=6 d=3.35203 t=7187
-kuang 	框	c=1 d=0.891366 t=7187
-kuo zhao 	擴招	c=1 d=0.873716 t=7187
-la 	啦	c=8 d=1.23146 t=7187
-la 	拉	c=1 d=0.852144 t=7187
-la 	辣	c=1 d=0.690734 t=7187
-la ji 	垃圾	c=2 d=1.62028 t=7187
-lai 	來	c=8 d=2.62382 t=7187
-lai le 	來了	c=0 d=0.0771052 t=7187
-lai shuo 	來說	c=1 d=0.514274 t=7187
-lai yong 	來用	c=1 d=0.778801 t=7187
-lan de 	懶得	c=0 d=0.0400517 t=7187
-lan de fa 	懶得發	c=1 d=0.402524 t=7187
-lan ya 	藍牙	c=4 d=1.99366 t=7187
-lang fei 	浪費	c=2 d=1.60425 t=7187
-lang fei diao 	浪費掉	c=1 d=0.941765 t=7187
-lao po 	老婆	c=5 d=1.49729 t=7187
-lao yang zi 	老樣子	c=1 d=1 t=7187
-le 	了	c=207 d=19.7352 t=7187
-le qu 	樂趣	c=1 d=1 t=7187
-lei si 	類似	c=4 d=2.44424 t=7187
-lei xing 	類型	c=0 d=0.0163654 t=7187
-lei zhui 	累贅	c=1 d=0.927743 t=7187
-leng 	冷	c=0 d=0.0637628 t=7187
-leng bao li 	冷暴力	c=1 d=0.640824 t=7187
-li 	裏	c=17 d=4.90412 t=7187
-li hai 	厲害	c=1 d=0.273898 t=7187
-li jie 	理解	c=4 d=2.01932 t=7187
-li lun shang 	理論上	c=5 d=2.20934 t=7187
-li mian 	裏面	c=5 d=2.11905 t=7187
-li ying 	理應	c=1 d=0.891366 t=7187
-li yong 	利用	c=1 d=0.449329 t=7187
-li zi 	例子	c=1 d=0.882497 t=7187
-lian 	連	c=1 d=0.805497 t=7187
-lian 	鏈	c=0 d=0.131482 t=7187
-lian jie 	連接	c=1 d=0.66365 t=7187
-lian jie 	鏈接	c=2 d=1.62102 t=7187
-lian xiang 	聯想	c=1 d=0.763379 t=7187
-liang fang mian 	兩方面	c=1 d=0.923116 t=7187
-liang ge 	兩個	c=5 d=2.46627 t=7187
-liang hua 	量化	c=0 d=0.0970446 t=7187
-liang hua ban 	量化辦	c=1 d=0.97531 t=7187
-liang jian shi 	兩件事	c=1 d=0.722527 t=7187
-liang zhang 	兩張	c=0 d=0.0860708 t=7187
-liang zhang ka 	兩張卡	c=1 d=0.865022 t=7187
-liang zhong 	兩種	c=2 d=1.62215 t=7187
-liao 	聊	c=1 d=0.606531 t=7187
-liao bu qi 	了不起	c=1 d=0.882497 t=7187
-liao jie 	瞭解	c=4 d=0.96595 t=7187
-liao tian 	聊天	c=1 d=0.852144 t=7187
-lie du 	烈度	c=1 d=0.752014 t=7187
-lin shi 	臨時	c=4 d=2.42184 t=7187
-ling huo 	靈活	c=1 d=0.546074 t=7187
-ling wai 	另外	c=19 d=4.44437 t=7187
-ling wo 	令我	c=0 d=0.0680451 t=7187
-liu chang 	流暢	c=1 d=0.900325 t=7187
-liu dong 	流動	c=0 d=0.0913931 t=7187
-liu dong xing 	流動性	c=1 d=0.202909 t=7187
-liu kong 	留空	c=1 d=0.960789 t=7187
-liu lan qi 	瀏覽器	c=1 d=0.97531 t=7187
-liu shi 	流逝	c=1 d=0.103312 t=7187
-liu yi 	留意	c=1 d=0.755784 t=7187
-liu yi dao 	留意到	c=1 d=0.83527 t=7187
-liu zai 	留在	c=1 d=0.941765 t=7187
-liu zhe 	留着	c=1 d=0.909373 t=7187
-lo 	咯	c=1 d=0.438235 t=7187
-lou le 	漏了	c=1 d=1 t=7105
-lou xia 	樓下	c=1 d=0.527292 t=7187
-lu xian 	路線	c=2 d=1.38952 t=7187
-lu you 	路由	c=12 d=4.09423 t=7187
-lun liu 	輪流	c=1 d=0.597501 t=7187
-lun wen 	論文	c=1 d=0.927743 t=7187
-lun zi 	輪子	c=1 d=1 t=7065
-luo ji 	邏輯	c=7 d=1.62245 t=7187
-luo ji lian 	邏輯鏈	c=2 d=0.860708 t=7187
-luo shi 	落實	c=1 d=0.847894 t=7187
-luo si 	螺螄	c=0 d=0.0474734 t=7187
-luo si fen 	螺螄粉	c=1 d=0.477114 t=7187
-lv 	鋁	c=1 d=0.798516 t=7187
-lv shi 	律師	c=1 d=0.843665 t=7187
-ma 	嗎	c=79 d=9.60177 t=7187
-ma 	嘛	c=4 d=2.33112 t=7187
-ma le 	麻了	c=1 d=0.774916 t=7187
-ma mu 	麻木	c=1 d=0.895834 t=7187
-ma pi 	馬屁	c=1 d=0.540641 t=7187
-mai 	買	c=1 d=0.0902655 t=7187
-mai che 	買車	c=1 d=0.67032 t=7187
-mai ke feng 	麥克風	c=1 d=1 t=7187
-mai ru 	買入	c=1 d=0.57695 t=7187
-man 	蠻	c=0 d=0.0371577 t=7187
-man jiu le 	蠻久了	c=1 d=0.373439 t=7187
-man yi 	滿意	c=1 d=0.554327 t=7187
-mang 	忙	c=0 d=0.0136014 t=7187
-mang yi hui 	忙一會	c=1 d=0.136695 t=7187
-mao bing 	毛病	c=1 d=1 t=7187
-mao dun 	矛盾	c=1 d=0.814647 t=7187
-mao hao 	冒號	c=1 d=0.97531 t=7187
-mei 	沒	c=4 d=1.85208 t=7187
-mei 	美	c=0 d=0.0557106 t=7187
-mei ban fa 	沒辦法	c=1 d=0.960789 t=7187
-mei bi yao 	沒必要	c=1 d=0.527292 t=7187
-mei ci 	每次	c=5 d=1.49345 t=7187
-mei cuo 	沒錯	c=2 d=1.1773 t=7187
-mei fan ying 	沒反應	c=1 d=0.985112 t=7187
-mei gan 	美感	c=1 d=1 t=7173
-mei ge 	每個	c=1 d=0.687289 t=7187
-mei gu 	美股	c=1 d=0.794534 t=7187
-mei guan xi 	沒關係	c=1 d=0.183599 t=7187
-mei jin 	美金	c=1 d=0.66034 t=7187
-mei kan dao 	沒看到	c=1 d=0.810584 t=7187
-mei li you 	沒理由	c=1 d=0.955997 t=7187
-mei pao wan 	沒跑完	c=1 d=0.941765 t=7187
-mei qu 	沒趣	c=1 d=0.985112 t=7187
-mei sha 	沒啥	c=1 d=0.444858 t=7187
-mei sheng xiao 	沒生效	c=1 d=0.694197 t=7187
-mei shi 	沒事	c=1 d=0.980199 t=7187
-mei si le 	美死了	c=1 d=0.559898 t=7187
-mei suo wei 	沒所謂	c=1 d=0.634448 t=7187
-mei tian 	每天	c=1 d=0.856415 t=7187
-mei tian jia 	沒添加	c=1 d=0.66365 t=7187
-mei wen ti 	沒問題	c=4 d=2.36905 t=7187
-mei yong 	沒用	c=3 d=2.46787 t=7187
-mei yong guo 	沒用過	c=1 d=0.995012 t=7187
-mei you 	沒有	c=28 d=6.25509 t=7187
-mei yu dao 	沒遇到	c=0 d=0.0847894 t=7187
-mei yu dao guo 	沒遇到過	c=1 d=0.852144 t=7187
-mei zhu yi 	沒主意	c=1 d=0.891366 t=7187
-men 	們	c=3 d=1.39475 t=7187
-men kou 	門口	c=1 d=0.535261 t=7187
-meng 	猛	c=0 d=0.0839457 t=7187
-mi 	米	c=1 d=0.647265 t=7187
-mi ma 	密碼	c=1 d=0.748264 t=7187
-mian ban 	面板	c=1 d=1 t=7158
-mian fei 	免費	c=17 d=5.81557 t=7187
-min jian 	民間	c=0 d=0.0591555 t=7187
-min jian zhi hui 	民間智慧	c=3 d=1.78808 t=7187
-ming bai 	明白	c=1 d=0.980199 t=7187
-ming ling 	命令	c=8 d=3.26678 t=7187
-ming ming 	命名	c=1 d=0.927743 t=7187
-ming ming 	明明	c=4 d=2.33408 t=7187
-ming tian 	明天	c=3 d=1.41059 t=7187
-ming wen 	明文	c=1 d=0.687289 t=7187
-ming xian 	明顯	c=2 d=1.66254 t=7187
-ming zi 	名字	c=1 d=0.774916 t=7187
-mo 	磨	c=3 d=0.730281 t=7187
-mo dao 	磨刀	c=1 d=0.17552 t=7187
-mo he qi 	磨合期	c=1 d=0.290835 t=7187
-mo ren 	默認	c=3 d=2.27047 t=7187
-mo shi 	模式	c=4 d=2.14031 t=7187
-mo xing 	模型	c=46 d=7.04498 t=7187
-mou ge 	某個	c=1 d=0.774916 t=7187
-mu qian 	目前	c=4 d=1.69236 t=7187
-mu yu 	母語	c=1 d=0.965605 t=7187
-na 	那	c=15 d=3.41734 t=7187
-na bian 	那邊	c=1 d=0.718924 t=7187
-na dao 	拿到	c=1 d=0.878095 t=7187
-na ge 	哪個	c=11 d=3.37585 t=7187
-na ge 	那個	c=19 d=6.42699 t=7187
-na li 	哪裏	c=3 d=2.50185 t=7187
-na me 	那麼	c=2 d=0.496585 t=7187
-na me duo 	那麼多	c=1 d=0.937067 t=7187
-na qu 	拿去	c=0 d=0.0980199 t=7187
-na qu zuo 	拿去做	c=1 d=0.985112 t=7187
-na tai 	那臺	c=0 d=0.0794534 t=7187
-na tai ji 	那臺機	c=1 d=0.798516 t=7187
-na tiao 	那條	c=2 d=1.77883 t=7187
-na xie 	哪些	c=2 d=1.53801 t=7187
-na xie 	那些	c=3 d=1.08134 t=7187
-na yang 	那樣	c=2 d=1.74648 t=7187
-na you 	那又	c=0 d=0.0308819 t=7187
-na you que shi 	那又確實	c=1 d=0.310367 t=7187
-na zhong 	哪種	c=1 d=0.900325 t=7187
-na zhong 	那種	c=2 d=1.46452 t=7187
-nai 	奶	c=1 d=0.650509 t=7187
-nan dao 	難道	c=1 d=0.519442 t=7187
-nan mian 	難免	c=1 d=0.282239 t=7187
-nan shou 	難受	c=1 d=0.895834 t=7187
-nan zuo 	難做	c=1 d=0.753244 t=7187
-nao xue guan 	腦血管	c=1 d=0.882497 t=7187
-ne 	呢	c=3 d=2.04843 t=7187
-ne 	訥	c=3 d=2.36949 t=7187
-nei 	內	c=2 d=0.680345 t=7187
-nei he 	內核	c=3 d=2.29502 t=7187
-nei rong 	內容	c=4 d=2.55269 t=7187
-neng 	能	c=9 d=3.66978 t=7187
-neng ban dao ma 	能辦到嗎	c=1 d=0.778801 t=7187
-neng bu neng 	能不能	c=3 d=1.5901 t=7187
-neng dao 	能到	c=1 d=0.995012 t=7187
-neng gou 	能夠	c=1 d=0.932394 t=7187
-neng li 	能力	c=7 d=2.61144 t=7187
-neng piao ze piao 	能嫖則嫖	c=1 d=0.67032 t=7187
-neng xiu fu 	能修復	c=1 d=0.995012 t=7187
-ni 	你	c=230 d=15.3242 t=7187
-ni ding 	擬定	c=1 d=0.951229 t=7187
-ni kan 	你看	c=1 d=0.341298 t=7187
-ni men 	你們	c=2 d=0.450651 t=7187
-ni shi shi 	你試試	c=1 d=0.790571 t=7187
-ni xiang 	逆向	c=0 d=0.0740818 t=7187
-ni xiang gong cheng 	逆向工程	c=1 d=0.744532 t=7187
-ni you 	你又	c=0 d=0.0559898 t=7187
-ni you wang le 	你又忘了	c=1 d=0.562705 t=7187
-nian 	年	c=2 d=0.640824 t=7187
-nian hu 	黏糊	c=1 d=0.970446 t=7187
-niao 	鳥	c=1 d=0.697676 t=7187
-nie 	捏	c=1 d=0.499074 t=7187
-niu shi 	牛市	c=1 d=0.71177 t=7187
-nong 	弄	c=4 d=2.30451 t=7187
-nong jing 	濃精	c=1 d=0.985112 t=7187
-nu li 	努力	c=1 d=0.895834 t=7187
-o 	哦	c=0 d=0.0425283 t=7187
-o 	噢	c=2 d=0.945262 t=7187
-o lou 	哦漏	c=1 d=0.453845 t=7187
-o pen chu 	哦噴出	c=1 d=0.427415 t=7187
-o ye 	噢耶	c=1 d=0.831104 t=7187
-ou er 	偶爾	c=3 d=1.00725 t=7187
-pa qu 	怕去	c=1 d=0.927743 t=7187
-pa qu 	爬取	c=2 d=1.29229 t=7187
-pai 	拍	c=1 d=0.548812 t=7187
-pai 	牌	c=1 d=0.847894 t=7187
-pai chu 	排除	c=1 d=0.798516 t=7187
-pai dui 	排隊	c=1 d=0.463013 t=7187
-pai zhao 	拍照	c=1 d=0.341298 t=7187
-pan duan 	判斷	c=1 d=0.923116 t=7187
-pao 	跑	c=6 d=2.26045 t=7187
-pao man 	跑滿	c=1 d=0.869358 t=7187
-pao qi lai 	跑起來	c=1 d=0.904837 t=7187
-pao qu 	跑去	c=1 d=0.782705 t=7187
-pao wan 	跑完	c=0 d=0.0937067 t=7187
-pao wu xian 	拋物線	c=1 d=0.733447 t=7187
-pei he 	配合	c=1 d=0.99005 t=7187
-pei se 	配色	c=1 d=1 t=7177
-pei zhi 	配置	c=16 d=5.24109 t=7187
-pen chu 	噴出	c=0 d=0.0425283 t=7187
-peng you 	朋友	c=1 d=0.150318 t=7187
-pian fu 	篇幅	c=1 d=0.985112 t=7187
-pian hao 	偏好	c=1 d=0.66365 t=7187
-pian yi 	便宜	c=1 d=0.729789 t=7187
-pian zi 	騙子	c=1 d=0.752014 t=7187
-ping gu 	評估	c=4 d=1.83345 t=7187
-ping mu 	屏幕	c=4 d=2.44191 t=7187
-po 	破	c=1 d=0.904837 t=7187
-po huai 	破壞	c=0 d=0.067032 t=7187
-pou xi 	剖析	c=1 d=0.246597 t=7187
-pu 	噗	c=2 d=1.10646 t=7187
-qi bu shi 	豈不是	c=1 d=0.755784 t=7187
-qi ci 	其次	c=1 d=0.937067 t=7187
-qi dong 	啓動	c=8 d=3.97506 t=7187
-qi dong qi 	啓動器	c=2 d=1.23557 t=7187
-qi dong qi 	起動器	c=1 d=0.904837 t=7187
-qi guai 	奇怪	c=2 d=1.46009 t=7187
-qi huo 	期貨	c=6 d=2.06065 t=7187
-qi jian 	期間	c=1 d=0.843665 t=7187
-qi jian 	起見	c=1 d=0.847894 t=7187
-qi lai 	起來	c=1 d=0.324652 t=7187
-qi quan 	期權	c=4 d=1.39992 t=7187
-qi quan 	齊全	c=1 d=0.23457 t=7187
-qi shi 	其實	c=33 d=5.45726 t=7187
-qi si 	氣死	c=1 d=0.88692 t=7187
-qi ta 	其他	c=10 d=3.43515 t=7187
-qian 	前	c=3 d=1.94826 t=7187
-qian 	錢	c=2 d=0.800215 t=7187
-qian fei 	欠費	c=1 d=0.923116 t=7187
-qian liang ge 	前兩個	c=2 d=1.19183 t=7187
-qian mian 	前面	c=9 d=3.80129 t=7187
-qian ti 	前提	c=3 d=1.38529 t=7187
-qian wan 	千萬	c=1 d=0.543351 t=7187
-qian zhen zi 	前陣子	c=2 d=1.10136 t=7187
-qiao 	敲	c=1 d=0.418952 t=7187
-qiao 	橋	c=0 d=0.071177 t=7187
-qiao ke li 	巧克力	c=0 d=0.0748264 t=7187
-qie 	且	c=5 d=2.62905 t=7187
-qie 	切	c=0 d=0.0873716 t=7187
-qie huan 	切換	c=6 d=3.15067 t=7187
-qie hui qu 	切回去	c=1 d=0.878095 t=7187
-qin zi 	親自	c=2 d=1.37242 t=7187
-qin zi xie 	親自寫	c=1 d=0.516851 t=7187
-qing 	請	c=76 d=10.3829 t=7187
-qing chu 	清除	c=2 d=1.49505 t=7187
-qing kuang 	情況	c=9 d=4.21546 t=7187
-qing liang ji 	輕量級	c=0 d=0.0680451 t=7187
-qing ni 	請你	c=19 d=4.79369 t=7187
-qing qiu 	請求	c=1 d=0.865022 t=7187
-qing xi 	清晰	c=1 d=0.458406 t=7187
-qing xiang 	傾向	c=3 d=1.51402 t=7187
-qing xiang yu 	傾向於	c=1 d=0.755784 t=7187
-qu 	區	c=1 d=0.946485 t=7187
-qu 	去	c=26 d=5.02097 t=7187
-qu bie 	區別	c=3 d=1.60637 t=7187
-qu bu cheng 	去不成	c=1 d=0.380983 t=7187
-qu dao 	去到	c=1 d=0.826959 t=7187
-qu diao 	去掉	c=2 d=1.76125 t=7187
-qu dong 	驅動	c=7 d=3.79741 t=7187
-qu dong he 	驅動和	c=1 d=0.937067 t=7187
-qu na 	去那	c=0 d=0.0909373 t=7187
-qu nian 	去年	c=1 d=0.279431 t=7187
-qu xiao 	取消	c=2 d=1.7474 t=7187
-quan bu 	全部	c=1 d=0.895834 t=7187
-quan dou 	全都	c=1 d=0.927743 t=7187
-quan jia 	全家	c=2 d=1.19254 t=7187
-quan ju 	全局	c=0 d=0.0980199 t=7187
-quan ju gui ze 	全局規則	c=1 d=0.985112 t=7187
-quan kao 	全靠	c=1 d=0.125556 t=7187
-quan neng 	全能	c=1 d=0.891366 t=7187
-quan ping 	全屏	c=1 d=0.860708 t=7187
-quan xi tong 	全系統	c=1 d=0.980199 t=7187
-quan xin 	全新	c=1 d=0.882497 t=7187
-quan zhi 	全職	c=0 d=0.0865022 t=7187
-quan zhi tai tai 	全職太太	c=1 d=0.869358 t=7187
-que 	卻	c=1 d=0.752014 t=7187
-que 	確	c=1 d=0.941765 t=7187
-que ding 	確定	c=4 d=2.00627 t=7187
-que ren 	確認	c=14 d=5.30075 t=7187
-que shao 	缺少	c=2 d=1.33431 t=7187
-que shi 	確實	c=11 d=3.35841 t=7187
-qun li 	羣裏	c=1 d=0.923116 t=7187
-ran 	然	c=1 d=0.955997 t=7187
-ran hou 	然後	c=12 d=2.8083 t=7187
-rang 	讓	c=9 d=2.42278 t=7187
-rang ta 	讓它	c=1 d=0.634448 t=7187
-rao guo 	繞過	c=1 d=0.951229 t=7187
-re men 	熱門	c=1 d=0.70822 t=7187
-ren 	人	c=1 d=0.977492 t=7187
-ren gong zhi neng 	人工智能	c=1 d=0.65377 t=7187
-ren he 	任何	c=4 d=2.58693 t=7187
-ren jia 	人家	c=1 d=0.802519 t=7187
-ren shi 	認識	c=2 d=0.463013 t=7187
-ren tong 	認同	c=2 d=0.853068 t=7187
-ren wei 	認爲	c=16 d=3.06022 t=7187
-ren wu 	任務	c=4 d=1.46754 t=7187
-ren xin 	人心	c=1 d=0.506617 t=7187
-ren yi 	任意	c=1 d=0.88692 t=7187
-ren zai 	人在	c=1 d=0.715338 t=7187
-ren zhen 	認真	c=1 d=0.726149 t=7187
-ren zhi 	認知	c=2 d=0.856302 t=7187
-ri chang 	日常	c=2 d=1.4191 t=7187
-ri zhi 	日誌	c=7 d=3.26334 t=7187
-ri zi 	日子	c=1 d=0.873716 t=7187
-rong qi 	容器	c=4 d=2.46375 t=7187
-rong yu 	冗餘	c=2 d=1.05 t=7187
-ru 	入	c=1 d=0.690734 t=7187
-ru ci 	如此	c=3 d=1.51775 t=7187
-ru guo 	如果	c=25 d=5.27599 t=7187
-ru he 	如何	c=11 d=3.61793 t=7187
-ru he zuo 	如何做	c=1 d=0.715338 t=7187
-ru men 	入門	c=1 d=0.150318 t=7187
-ru shi 	入市	c=1 d=0.180866 t=7187
-ru tu 	如圖	c=2 d=1.48977 t=7187
-ru wei 	入味	c=0 d=0.0431711 t=7187
-ru xia 	如下	c=2 d=0.943195 t=7187
-ruan jian 	軟件	c=2 d=1.35689 t=7187
-run se 	潤色	c=1 d=0.571209 t=7187
-ruo 	弱	c=1 d=0.980199 t=7187
-ruo 	若	c=1 d=0.900325 t=7187
-san 	三	c=1 d=0.882497 t=7187
-san ceng 	三層	c=0 d=0.099005 t=7187
-san ceng jia gou 	三層架構	c=1 d=0.995012 t=7187
-sao dan 	掃單	c=1 d=0.254107 t=7187
-sha 	啥	c=1 d=0.938429 t=7187
-sha diao 	殺掉	c=2 d=1.28414 t=7187
-sha dou you 	啥都有	c=1 d=0.882497 t=7187
-sha xiang hua 	沙箱化	c=1 d=0.882497 t=7187
-shan 	扇	c=0 d=0.0256661 t=7187
-shan chu 	刪除	c=1 d=0.932394 t=7187
-shan diao 	刪掉	c=2 d=1.38821 t=7187
-shan guo qu 	扇過去	c=1 d=0.257947 t=7187
-shan le 	刪了	c=1 d=0.722527 t=7187
-shan yong 	善用	c=1 d=0.913931 t=7187
-shang 	上	c=25 d=4.83417 t=7187
-shang ci 	上次	c=3 d=1.7871 t=7187
-shang lai 	上來	c=1 d=0.491644 t=7187
-shang mian 	上面	c=3 d=1.38714 t=7187
-shang pin 	商品	c=0 d=0.0683861 t=7187
-shang wang 	上網	c=1 d=0.603506 t=7187
-shang xia wen 	上下文	c=1 d=0.67368 t=7187
-shao 	少	c=0 d=0.0774916 t=7187
-she ding 	設定	c=1 d=0.904837 t=7187
-she fa 	設法	c=1 d=0.909373 t=7187
-she ji 	涉及	c=1 d=0.869358 t=7187
-she ji 	設計	c=5 d=2.11553 t=7187
-she ji hao 	設計好	c=1 d=0.71177 t=7187
-she qu 	社區	c=10 d=3.62161 t=7187
-she zhi 	設置	c=15 d=4.31616 t=7187
-she zu 	涉足	c=1 d=0.826959 t=7187
-shen 	神	c=0 d=0.067032 t=7187
-shen cha 	審查	c=1 d=0.822835 t=7187
-shen du 	深度	c=1 d=0.733447 t=7187
-shen gong 	神功	c=0 d=0.0292293 t=7187
-shen gong da cheng 	神功大成	c=1 d=0.293758 t=7187
-shen he 	審覈	c=1 d=0.782705 t=7187
-shen me 	什麼	c=17 d=4.14553 t=7187
-shen ru 	深入	c=1 d=0.647265 t=7187
-shen yue 	審閱	c=1 d=0.814647 t=7187
-shen zhi 	甚至	c=4 d=1.09839 t=7187
-sheng chan 	生產	c=0 d=0.0588605 t=7187
-sheng chan huan jing 	生產環境	c=1 d=0.591555 t=7187
-sheng ji 	升級	c=1 d=0.882497 t=7187
-sheng ka 	聲卡	c=2 d=1.40627 t=7187
-sheng ming 	聲明	c=0 d=0.0980199 t=7187
-sheng ming shi 	聲明式	c=4 d=2.5208 t=7187
-sheng ming shi an zhuang 	聲明式安裝	c=1 d=0.67032 t=7187
-sheng ren 	勝任	c=1 d=0.640824 t=7187
-sheng tai 	生態	c=2 d=1.40101 t=7187
-sheng xiao 	生效	c=2 d=1.28915 t=7187
-sheng yu 	生於	c=1 d=0.105399 t=7187
-shi 	式	c=0 d=0.0980199 t=7187
-shi 	是	c=173 d=12.5406 t=7187
-shi 	時	c=14 d=4.15839 t=7187
-shi bai 	失敗	c=1 d=0.794534 t=7187
-shi bu shi 	是不是	c=21 d=5.41855 t=7187
-shi bu shi he 	適不適合	c=1 d=0.421052 t=7187
-shi cha 	時差	c=1 d=0.909373 t=7187
-shi chang 	市場	c=6 d=1.4034 t=7187
-shi chang 	時常	c=3 d=1.63828 t=7187
-shi dang 	適當	c=3 d=1.7791 t=7187
-shi fou 	是否	c=6 d=2.53972 t=7187
-shi he 	適合	c=7 d=2.73186 t=7187
-shi hou 	事後	c=1 d=0.147342 t=7187
-shi hou 	時候	c=6 d=1.39189 t=7187
-shi ji nian lai 	十幾年來	c=1 d=0.440432 t=7187
-shi ji shang 	實際上	c=1 d=0.474734 t=7187
-shi jian 	實踐	c=3 d=1.58189 t=7187
-shi jian 	時間	c=3 d=1.39415 t=7187
-shi jie 	世界	c=0 d=0.0755784 t=7187
-shi ling 	失靈	c=1 d=0.802519 t=7187
-shi pai 	石牌	c=0 d=0.071177 t=7187
-shi pai qiao 	石牌橋	c=1 d=0.715338 t=7187
-shi pei 	適配	c=1 d=0.71177 t=7187
-shi qian 	事前	c=1 d=0.782705 t=7187
-shi qing 	事情	c=2 d=0.895834 t=7187
-shi shi 	實施	c=5 d=2.39557 t=7187
-shi shi 	實時	c=2 d=1.45458 t=7187
-shi shi 	試試	c=9 d=3.66375 t=7187
-shi shi ba 	試試吧	c=2 d=1.74082 t=7187
-shi shi hou 	是時候	c=1 d=0.88692 t=7187
-shi shi kan 	試試看	c=1 d=0.970446 t=7187
-shi shi shang 	事實上	c=1 d=0.900325 t=7187
-shi wang 	失望	c=0 d=0.0680451 t=7187
-shi wu 	失誤	c=1 d=0.562705 t=7187
-shi xian 	實現	c=2 d=1.19183 t=7187
-shi yan 	實驗	c=5 d=2.6741 t=7187
-shi yan zhong 	實驗中	c=1 d=0.88692 t=7187
-shi ying 	適應	c=1 d=0.726149 t=7187
-shi yong 	使用	c=9 d=3.53198 t=7187
-shi yong 	實用	c=1 d=0.666977 t=7187
-shi zhe 	試着	c=1 d=0.946485 t=7187
-shi zhong 	始終	c=2 d=1.22876 t=7187
-shou 	手	c=1 d=0.594521 t=7187
-shou dao 	受到	c=3 d=1.34989 t=7187
-shou dao 	收到	c=2 d=1.22926 t=7187
-shou dong 	手動	c=2 d=1.44903 t=7187
-shou fei 	收費	c=2 d=1.49505 t=7187
-shou gao 	手稿	c=1 d=0.289384 t=7187
-shou ji 	手機	c=1 d=0.474734 t=7187
-shou mang jiao luan 	手忙腳亂	c=1 d=0.283654 t=7187
-shou tou shang 	手頭上	c=1 d=0.755784 t=7187
-shou xian 	受限	c=1 d=0.56836 t=7187
-shou xian 	首先	c=1 d=0.904837 t=7187
-shou yi 	收益	c=1 d=0.250324 t=7187
-shu 	數	c=1 d=0.551563 t=7187
-shu 	書	c=3 d=0.806541 t=7187
-shu chu 	輸出	c=5 d=2.9794 t=7187
-shu ju 	數據	c=3 d=2.26327 t=7187
-shu ju ku 	數據庫	c=1 d=0.856415 t=7187
-shu li 	書裏	c=1 d=0.878095 t=7187
-shu lian 	熟練	c=1 d=0.995012 t=7187
-shu qian 	數錢	c=1 d=0.860708 t=7187
-shu ru 	輸入	c=1 d=0.927743 t=7187
-shu ru fa 	輸入法	c=1 d=0.980199 t=7187
-shu xue 	數學	c=1 d=0.628135 t=7187
-shu yu 	屬於	c=1 d=0.677057 t=7187
-shuang 	爽	c=1 d=0.937067 t=7187
-shui 	誰	c=2 d=1.49633 t=7187
-shui de 	睡得	c=0 d=0.099005 t=7187
-shui jiao 	睡覺	c=1 d=0.865022 t=7187
-shui xing 	睡醒	c=0 d=0.0421052 t=7187
-shun bian 	順便	c=1 d=1 t=7187
-shuo 	說	c=26 d=4.43628 t=7187
-shuo dao 	說道	c=1 d=0.551563 t=7187
-shuo de 	說得	c=2 d=1.33669 t=7187
-shuo de 	說的	c=1 d=0.960789 t=7187
-shuo de dui 	說得對	c=1 d=0.594521 t=7187
-shuo dui 	說對	c=1 d=0.970446 t=7187
-shuo guo 	說過	c=2 d=1.17062 t=7187
-shuo hua 	說話	c=6 d=4.68955 t=7187
-shuo lai 	說來	c=1 d=0.937067 t=7187
-shuo ming 	說明	c=2 d=1.70908 t=7187
-shuo xia 	說下	c=1 d=0.794534 t=7187
-si ceng 	四層	c=0 d=0.0694197 t=7187
-si ceng xiu fu 	四層修復	c=1 d=0.697676 t=7187
-si hu 	似乎	c=8 d=3.23998 t=7187
-si kao 	思考	c=7 d=4.02202 t=7187
-si le 	死了	c=0 d=0.0557106 t=7187
-si lu 	思路	c=1 d=0.313486 t=7187
-si mao tiao 	死貓跳	c=1 d=0.348192 t=7187
-si xun 	死訊	c=0 d=0.0869358 t=7187
-si xun he 	死訊和	c=1 d=0.873716 t=7187
-si yu 	死於	c=1 d=0.105928 t=7187
-sou 	搜	c=1 d=0.161218 t=7187
-sou suo 	搜索	c=4 d=2.06352 t=7187
-su cheng 	速成	c=1 d=0.180866 t=7187
-su du 	速度	c=1 d=0.918512 t=7187
-su su 	速速	c=1 d=0.396531 t=7187
-suan 	算	c=1 d=0.810584 t=7187
-suan bu suan 	算不算	c=1 d=0.970446 t=7187
-suan fa 	算法	c=1 d=0.256661 t=7187
-suan hao 	算好	c=1 d=0.109154 t=7187
-sui 	歲	c=1 d=0.847894 t=7187
-sui pian 	碎片	c=0 d=0.0449329 t=7187
-sui pian shi jian 	碎片時間	c=1 d=0.451581 t=7187
-sui ran 	雖然	c=5 d=1.99396 t=7187
-sui shi 	隨時	c=1 d=0.618783 t=7187
-sun yu 	孫瑜	c=4 d=2.10983 t=7187
-suo liao 	所料	c=1 d=0.831104 t=7187
-suo wei 	所謂	c=1 d=0.731725 t=7187
-suo xu 	所需	c=1 d=0.97531 t=7187
-suo yi 	所以	c=7 d=2.65915 t=7187
-suo you 	所有	c=10 d=4.07379 t=7187
-suo yu 	梭魚	c=1 d=0.843665 t=7187
-suo zai 	所在	c=1 d=0.680451 t=7187
-ta 	他	c=2 d=0.83527 t=7187
-ta 	她	c=1 d=0.843665 t=7187
-ta 	它	c=37 d=6.53085 t=7187
-ta hui 	他會	c=1 d=0.932394 t=7187
-ta men 	它們	c=5 d=2.05063 t=7187
-ta yong you 	它擁有	c=1 d=0.818731 t=7187
-tai 	太	c=3 d=2.12132 t=7187
-tai du 	態度	c=1 d=0.923116 t=7187
-tai fu za 	太複雜	c=1 d=0.733447 t=7187
-tai ji ben 	太基本	c=1 d=0.157237 t=7187
-tai ling wo shi wang 	太令我失望	c=1 d=0.683861 t=7187
-tai mang 	太忙	c=1 d=0.382893 t=7187
-tai shen 	太深	c=1 d=0.606531 t=7187
-tai tai 	太太	c=0 d=0.0865022 t=7187
-tan dao 	談到	c=1 d=0.980199 t=7187
-tan shou 	攤手	c=1 d=0.644036 t=7187
-tan tao 	探討	c=1 d=0.650509 t=7187
-tang 	湯	c=1 d=0.522046 t=7187
-tao bi 	逃避	c=1 d=0.722527 t=7187
-tao can 	套餐	c=5 d=1.70643 t=7187
-tao chu 	掏出	c=1 d=0.472367 t=7187
-tao lun 	討論	c=2 d=1.51944 t=7187
-tao sang 	濤桑	c=1 d=0.704688 t=7187
-te shu 	特殊	c=1 d=0.140858 t=7187
-te xing 	特性	c=1 d=0.927743 t=7187
-te zheng 	特徵	c=5 d=2.59364 t=7187
-ti 	提	c=2 d=1.02854 t=7187
-ti chu 	提出	c=2 d=1.31017 t=7187
-ti dao 	提到	c=1 d=0.733447 t=7187
-ti gong 	提供	c=6 d=2.59127 t=7187
-ti ji 	提及	c=1 d=0.818731 t=7187
-ti qu 	提取	c=1 d=0.615697 t=7187
-ti sheng 	提升	c=2 d=0.715338 t=7187
-ti shi 	提示	c=4 d=1.87679 t=7187
-ti xing 	提醒	c=2 d=1.57581 t=7187
-ti yan 	體驗	c=2 d=1.38159 t=7187
-tian 	天	c=1 d=0.831104 t=7187
-tian jia 	添加	c=3 d=1.82003 t=7187
-tian qi 	天氣	c=2 d=1.2933 t=7187
-tian shang 	填上	c=1 d=0.985112 t=7187
-tian xie 	填寫	c=1 d=0.951229 t=7187
-tiao li 	條理	c=0 d=0.0802519 t=7187
-tiao pi 	調皮	c=1 d=0.421052 t=7187
-tiao shi 	調試	c=1 d=0.733447 t=7187
-tiao zheng 	調整	c=1 d=0.22313 t=7187
-tie chu lai 	貼出來	c=1 d=0.254107 t=7187
-tie tie 	貼貼	c=1 d=0.970446 t=7187
-ting 	挺	c=1 d=0.980199 t=7187
-ting hao 	挺好	c=1 d=0.701173 t=7187
-ting xia lai 	停下來	c=1 d=0.386741 t=7187
-tong 	銅	c=1 d=0.790571 t=7187
-tong dian 	痛點	c=1 d=0.88692 t=7187
-tong guo 	通過	c=7 d=2.90356 t=7187
-tong shi 	同事	c=4 d=0.931626 t=7187
-tong shi 	同時	c=1 d=0.594521 t=7187
-tong xiang 	同鄉	c=1 d=0.860708 t=7187
-tong yang 	同樣	c=1 d=1 t=7121
-tong yang de 	同樣地	c=1 d=0.946485 t=7187
-tong yi 	同一	c=1 d=0.449329 t=7187
-tong yi 	同意	c=3 d=1.71938 t=7187
-tong yi 	統一	c=1 d=0.951229 t=7187
-tong zhi 	通知	c=1 d=0.763379 t=7187
-tong zhi ni 	通知你	c=1 d=1 t=7083
-tou le 	投了	c=0 d=0.0207008 t=7187
-tou xian 	頭銜	c=1 d=0.666977 t=7187
-tou zi 	投資	c=2 d=0.949122 t=7187
-tu 	凸	c=0 d=0.111985 t=7187
-tu 	圖	c=3 d=1.35187 t=7187
-tu han shu 	凸函數	c=1 d=0.56836 t=7187
-tu jing 	途徑	c=1 d=0.582748 t=7187
-tu le 	塗了	c=0 d=0.097531 t=7187
-tu le yi ceng 	塗了一層	c=1 d=0.980199 t=7187
-tu shu guan 	圖書館	c=1 d=0.909373 t=7187
-tu xian 	凸顯	c=1 d=0.701173 t=7187
-tu you hua 	凸優化	c=1 d=0.557106 t=7187
-tui 	退	c=1 d=0.951229 t=7187
-tui hui lai 	退回來	c=1 d=0.191092 t=7187
-tui jian 	推薦	c=7 d=2.4122 t=7187
-tui li 	推理	c=0 d=0.133651 t=7187
-tui li lian 	推理鏈	c=1 d=0.740818 t=7187
-tui li neng li 	推理能力	c=1 d=0.882497 t=7187
-tui song 	推送	c=2 d=1.32683 t=7187
-tuo dong 	拖動	c=1 d=0.970446 t=7187
-wa 	娃	c=1 d=0.451581 t=7187
-wa da 	瓦達	c=1 d=0.995012 t=7187
-wai 	外	c=1 d=0.612626 t=7187
-wan 	完	c=1 d=0.932394 t=7187
-wan 	玩	c=1 d=0.67465 t=7187
-wan an 	晚安	c=1 d=0.625002 t=7187
-wan cheng 	完成	c=1 d=0.729789 t=7187
-wan le 	完了	c=0 d=0.0951229 t=7187
-wan quan 	完全	c=11 d=2.17383 t=7187
-wan yi 	玩意	c=2 d=1.12244 t=7187
-wan yi 	萬一	c=2 d=1.5612 t=7187
-wan yi xia 	玩一下	c=1 d=0.08291 t=7187
-wang 	網	c=1 d=0.909373 t=7187
-wang huang 	網黃	c=1 d=0.615697 t=7187
-wang le 	忘了	c=1 d=0.942433 t=7187
-wang luo 	網絡	c=3 d=1.59468 t=7187
-wang luo shang 	網絡上	c=1 d=0.474734 t=7187
-wang zhan 	網站	c=2 d=1.40678 t=7187
-wei 	未	c=1 d=0.955997 t=7187
-wei 	爲	c=13 d=4.41616 t=7187
-wei bei 	違背	c=1 d=0.965605 t=7187
-wei chi 	維持	c=1 d=0.965605 t=7187
-wei guan 	微觀	c=1 d=0.245367 t=7187
-wei kong 	爲空	c=0 d=0.0847894 t=7187
-wei lai 	未來	c=1 d=0.700785 t=7187
-wei lai yi lai 	未來已來	c=1 d=0.856415 t=7187
-wei nan 	爲難	c=1 d=0.527292 t=7187
-wei ni 	爲你	c=1 d=0.814647 t=7187
-wei ni er ti 	爲你而提	c=1 d=0.869358 t=7187
-wei rao 	圍繞	c=1 d=0.927743 t=7187
-wei shen me 	爲什麼	c=22 d=5.70347 t=7187
-wei wei 	薇薇	c=1 d=0.937067 t=7187
-wei wo 	爲我	c=1 d=0.932394 t=7187
-wei xin 	微信	c=5 d=3.30159 t=7187
-wei zhi 	位置	c=5 d=2.47205 t=7187
-wei zhi 	爲止	c=1 d=0.985112 t=7187
-wen 	問	c=5 d=2.36651 t=7187
-wen dang 	文檔	c=17 d=6.92308 t=7187
-wen dang li 	文檔裏	c=1 d=0.631284 t=7187
-wen ding 	穩定	c=2 d=1.41095 t=7187
-wen he 	溫和	c=0 d=0.0882497 t=7187
-wen he zuo duo 	溫和做多	c=1 d=0.88692 t=7187
-wen jian 	文件	c=14 d=5.44585 t=7187
-wen jian ming 	文件名	c=1 d=0.873716 t=7187
-wen ti 	問題	c=45 d=9.65488 t=7187
-wen xia 	問下	c=3 d=1.59912 t=7187
-wen you 	溫油	c=1 d=0.70822 t=7187
-wo 	我	c=304 d=18.0748 t=7187
-wo cao 	我操	c=2 d=0.628394 t=7187
-wo cao 	臥槽	c=2 d=0.973035 t=7187
-wo cao le 	我操了	c=1 d=0.524663 t=7187
-wo hen ni 	我恨你	c=1 d=0.755784 t=7187
-wo kan 	我看	c=1 d=0.97531 t=7187
-wo men 	我們	c=59 d=6.96162 t=7187
-wo qu 	我去	c=1 d=0.683861 t=7187
-wo xiang 	我想	c=1 d=0.582748 t=7187
-wo xuan 	我選	c=2 d=1.63562 t=7187
-wo xuan 	斡旋	c=1 d=0.900325 t=7187
-wo you 	我有	c=1 d=0.985112 t=7187
-wo zai 	我在	c=1 d=0.57695 t=7187
-wu 	無	c=1 d=0.69704 t=7187
-wu cha 	誤差	c=1 d=0.392586 t=7187
-wu fa 	無法	c=5 d=2.85857 t=7187
-wu fan 	午飯	c=2 d=0.506617 t=7187
-wu guan 	無關	c=1 d=0.860708 t=7187
-wu lun 	無論	c=1 d=0.985112 t=7187
-wu lun ru he 	無論如何	c=1 d=0.852144 t=7187
-wu tiao li 	無條理	c=1 d=0.806541 t=7187
-xi 	系	c=1 d=0.786628 t=7187
-xi bu 	西部	c=0 d=0.0755784 t=7187
-xi bu shi jie 	西部世界	c=1 d=0.759572 t=7187
-xi guan 	習慣	c=1 d=0.45612 t=7187
-xi huan 	喜歡	c=1 d=0.486752 t=7187
-xi jie 	細節	c=1 d=0.755784 t=7187
-xi le 	洗了	c=1 d=0.582748 t=7187
-xi tong 	系統	c=9 d=3.8429 t=7187
-xi wang 	希望	c=13 d=4.47158 t=7187
-xi zao 	洗澡	c=1 d=0.390628 t=7187
-xia 	下	c=9 d=4.53506 t=7187
-xia 	俠	c=0 d=0.0995012 t=7187
-xia ci 	下次	c=1 d=0.559898 t=7187
-xia ci 	瑕疵	c=2 d=0.999743 t=7187
-xia de 	嚇得	c=1 d=0.831104 t=7187
-xia lai 	下來	c=1 d=0.918512 t=7187
-xia shang 	下上	c=1 d=0.802519 t=7187
-xia wu 	下午	c=1 d=0.913931 t=7187
-xia zai 	下載	c=8 d=4.78597 t=7187
-xia zai wan le 	下載完了	c=1 d=0.955997 t=7187
-xian 	先	c=32 d=4.43992 t=7187
-xian ba 	先把	c=1 d=0.677057 t=7187
-xian cun 	顯存	c=1 d=0.97531 t=7187
-xian ka 	顯卡	c=5 d=2.56232 t=7187
-xian shi 	顯示	c=6 d=3.36609 t=7187
-xian su 	限速	c=2 d=1.55841 t=7187
-xian suo 	線索	c=1 d=0.826959 t=7187
-xian zai 	現在	c=30 d=5.80053 t=7187
-xian zai chi le 	現在遲了	c=1 d=0.970446 t=7187
-xian zhi 	閒置	c=0 d=0.0843665 t=7187
-xian zhi 	限制	c=34 d=7.34955 t=7187
-xiang 	像	c=8 d=2.54718 t=7187
-xiang 	向	c=3 d=1.73444 t=7187
-xiang 	想	c=17 d=3.94047 t=7187
-xiang 	香	c=1 d=0.683861 t=7187
-xiang dao 	想到	c=1 d=0.726149 t=7187
-xiang fa 	想法	c=2 d=1.40116 t=7187
-xiang guan 	相關	c=1 d=0.733447 t=7187
-xiang liang 	向量	c=1 d=0.847894 t=7187
-xiang mu 	項目	c=2 d=1.31647 t=7187
-xiang qing 	詳情	c=1 d=0.839457 t=7187
-xiang qu 	想去	c=1 d=0.647265 t=7187
-xiang shou 	享受	c=1 d=0.980199 t=7187
-xiang tong 	相通	c=1 d=0.519442 t=7187
-xiang xi 	詳細	c=7 d=2.40758 t=7187
-xiang xin 	相信	c=1 d=0.571209 t=7187
-xiang yao 	想要	c=1 d=0.778318 t=7187
-xiang yi xiang 	想一想	c=1 d=0.38868 t=7187
-xiang ying 	相應	c=1 d=0.802519 t=7187
-xiang ying 	響應	c=1 d=0.806541 t=7187
-xiang zai 	想在	c=1 d=0.687289 t=7187
-xiao 	小	c=0 d=0.0923116 t=7187
-xiao 	笑	c=3 d=1.85039 t=7187
-xiao guo 	效果	c=11 d=3.15737 t=7187
-xiao hai 	小孩	c=1 d=0.433874 t=7187
-xiao hao 	消耗	c=2 d=1.16356 t=7187
-xiao jian yi 	小建議	c=1 d=0.927743 t=7187
-xiao ma 	小馬	c=1 d=0.995012 t=7187
-xiao qi 	小氣	c=0 d=0.0955997 t=7187
-xiao qi bao zi 	小氣包子	c=1 d=0.960789 t=7187
-xiao shi 	小時	c=1 d=0.995012 t=7187
-xiao shi hou 	小時候	c=1 d=0.951229 t=7187
-xiao si 	笑死	c=1 d=0.995012 t=7187
-xiao wen ti 	小問題	c=1 d=0.353455 t=7187
-xiao xi 	消息	c=3 d=2.21156 t=7187
-xiao xi mian 	消息面	c=1 d=0.97531 t=7187
-xiao yin wa 	小淫娃	c=1 d=0.557106 t=7187
-xie 	些	c=2 d=1.51872 t=7187
-xie 	寫	c=3 d=1.24847 t=7187
-xie cuo 	寫錯	c=1 d=0.701173 t=7187
-xie dao 	寫到	c=1 d=0.985112 t=7187
-xie ge 	寫個	c=1 d=0.97531 t=7187
-xie lu 	泄露	c=1 d=0.782705 t=7187
-xie shang 	協商	c=1 d=0.895834 t=7187
-xie shang 	寫上	c=1 d=0.900325 t=7187
-xie xia lai 	寫下來	c=1 d=0.146607 t=7187
-xie zhu 	協助	c=1 d=0.726149 t=7187
-xie zuo 	協作	c=1 d=0.50409 t=7187
-xie zuo 	寫作	c=1 d=0.544016 t=7187
-xie zuo kai fa 	寫作開發	c=1 d=0.501576 t=7187
-xin ban 	新版	c=2 d=1.31703 t=7187
-xin dian tu 	心電圖	c=2 d=1.87954 t=7187
-xin geng 	心梗	c=1 d=0.900325 t=7187
-xin ku 	辛苦	c=1 d=0.790571 t=7187
-xin li 	心理	c=1 d=0.532592 t=7187
-xin li xue 	心理學	c=1 d=0.337902 t=7187
-xin ren 	新人	c=1 d=0.178173 t=7187
-xin xi 	信息	c=5 d=2.42995 t=7187
-xin zeng 	新增	c=1 d=0.88692 t=7187
-xing 	性	c=1 d=0.980199 t=7187
-xing 	行	c=3 d=1.76955 t=7187
-xing cheng 	形成	c=1 d=0.763379 t=7187
-xing fu 	性福	c=1 d=0.666977 t=7187
-xing ge 	性格	c=1 d=0.562705 t=7187
-xing jia bi 	性價比	c=1 d=0.621885 t=7187
-xing neng 	性能	c=2 d=1.21799 t=7187
-xing wei 	行爲	c=5 d=2.33309 t=7187
-xing zhi 	興致	c=1 d=0.960789 t=7187
-xing zhi suo zhi 	興之所至	c=1 d=0.0792617 t=7187
-xiu fu 	修復	c=7 d=3.26003 t=7187
-xiu zheng 	修正	c=1 d=0.932394 t=7187
-xu bu xu yao 	需不需要	c=2 d=1.30466 t=7187
-xu qiu 	需求	c=4 d=2.06436 t=7187
-xu yao 	需要	c=11 d=4.45725 t=7187
-xuan 	選	c=2 d=1.50928 t=7187
-xuan chuan 	宣傳	c=1 d=0.99005 t=7187
-xuan xia 	選下	c=1 d=0.852144 t=7187
-xuan yao 	炫耀	c=1 d=0.941765 t=7187
-xuan ze 	選擇	c=3 d=2.30969 t=7187
-xuan zi 	選字	c=1 d=0.88692 t=7187
-xue 	學	c=4 d=2.74091 t=7187
-xue dao 	學到	c=1 d=0.97531 t=7187
-xue xi 	學習	c=2 d=0.979947 t=7187
-xue xue 	學學	c=1 d=0.810584 t=7187
-xun huan 	循環	c=1 d=0.878095 t=7187
-xun zhao 	尋找	c=1 d=0.529935 t=7187
-ya 	呀	c=1 d=0.94267 t=7187
-yan 	醃	c=0 d=0.0431711 t=7187
-yan jin 	嚴謹	c=1 d=0.565525 t=7187
-yan jiu 	研究	c=1 d=0.88692 t=7187
-yan ru wei xian 	醃入味先	c=1 d=0.433874 t=7187
-yan sheng pin 	衍生品	c=1 d=0.217621 t=7187
-yan zheng 	驗證	c=1 d=0.860708 t=7187
-yan zhong 	嚴重	c=0 d=0.0873716 t=7187
-yang ban 	樣板	c=1 d=0.794534 t=7187
-yang mao 	羊毛	c=1 d=0.82619 t=7187
-yao 	要	c=19 d=3.89373 t=7187
-yao bu 	要不	c=1 d=0.88692 t=7187
-yao chi 	要喫	c=1 d=0.474734 t=7187
-yao jin 	要緊	c=1 d=0.70822 t=7187
-yao me 	要麼	c=2 d=0.797198 t=7187
-yao ming 	要命	c=1 d=0.814647 t=7187
-yao qiu 	要求	c=3 d=1.09515 t=7187
-yao shi 	耀石	c=1 d=0.228779 t=7187
-yao zhi dao 	要知道	c=1 d=0.628135 t=7187
-yao zuo 	要做	c=1 d=0.995012 t=7187
-ye 	也	c=33 d=5.28804 t=7187
-ye 	嘢	c=1 d=0.410656 t=7187
-ye 	耶	c=1 d=0.402524 t=7187
-ye 	頁	c=0 d=0.0680451 t=7187
-ye hui 	也會	c=2 d=1.03797 t=7187
-ye ke neng 	也可能	c=1 d=0.690734 t=7187
-ye shi 	也是	c=1 d=0.847894 t=7187
-ye xin 	野心	c=1 d=1 t=7057
-ye xu 	也許	c=7 d=2.21468 t=7187
-ye yao 	也要	c=1 d=0.136014 t=7187
-ye yong 	也用	c=1 d=0.865022 t=7187
-ye you 	也有	c=1 d=0.582748 t=7187
-ye you xu yao 	也有需要	c=1 d=0.364219 t=7187
-ye yu 	業餘	c=1 d=0.171187 t=7187
-yi 	一	c=2 d=1.31037 t=7187
-yi 	以	c=1 d=0.83527 t=7187
-yi 	已	c=0 d=0.0852144 t=7187
-yi ba zhang 	一巴掌	c=2 d=0.48091 t=7187
-yi ban 	一半	c=1 d=0.778801 t=7187
-yi ban 	一般	c=3 d=1.61988 t=7187
-yi bian 	一邊	c=1 d=0.585669 t=7187
-yi bian yu 	以便於	c=1 d=0.628135 t=7187
-yi bo 	一波	c=1 d=0.70822 t=7187
-yi bu fen 	一部分	c=2 d=1.46335 t=7187
-yi ceng 	一層	c=0 d=0.142017 t=7187
-yi chang 	異常	c=2 d=1.75411 t=7187
-yi chu 	移除	c=3 d=2.06187 t=7187
-yi ci 	一次	c=1 d=0.559898 t=7187
-yi cong xing 	依從性	c=1 d=0.99005 t=7187
-yi dian 	一點	c=3 d=1.64831 t=7187
-yi ding 	一定	c=3 d=1.56159 t=7187
-yi dong bu dong 	一動不動	c=1 d=0.767206 t=7187
-yi fen 	一份	c=1 d=0.826959 t=7187
-yi ge 	一個	c=38 d=5.40016 t=7187
-yi ge yue 	一個月	c=1 d=0.371577 t=7187
-yi hou 	以後	c=1 d=0.23457 t=7187
-yi hui 	一會	c=2 d=0.731189 t=7187
-yi huo 	亦或	c=0 d=0.0856415 t=7187
-yi huo shi 	亦或是	c=3 d=1.69687 t=7187
-yi ji 	以及	c=11 d=3.75618 t=7187
-yi jing 	已經	c=14 d=3.57556 t=7187
-yi jiu 	依舊	c=7 d=2.43143 t=7187
-yi ju 	依據	c=2 d=1.28456 t=7187
-yi lai 	依賴	c=2 d=1.63986 t=7187
-yi luo kuang 	一籮筐	c=1 d=0.873716 t=7187
-yi min 	移民	c=1 d=0.900325 t=7187
-yi mu liao ran 	一目瞭然	c=1 d=0.873716 t=7187
-yi nei 	以內	c=1 d=0.396531 t=7187
-yi nian 	一年	c=1 d=0.186374 t=7187
-yi pian 	一篇	c=1 d=0.97531 t=7187
-yi qi 	一起	c=1 d=0.869358 t=7187
-yi qian 	以前	c=1 d=0.701173 t=7187
-yi qie 	一切	c=3 d=1.35328 t=7187
-yi ran 	依然	c=1 d=0.600496 t=7187
-yi shi 	一試	c=1 d=0.909373 t=7187
-yi si 	意思	c=0 d=0.0985112 t=7187
-yi tai 	一臺	c=1 d=0.771052 t=7187
-yi tao 	一套	c=1 d=0.755784 t=7187
-yi tian 	一天	c=2 d=1.45094 t=7187
-yi wan shang 	一晚上	c=1 d=0.865022 t=7187
-yi wei 	以爲	c=1 d=0.408608 t=7187
-yi wen 	疑問	c=2 d=1.37427 t=7187
-yi xi lie 	一系列	c=1 d=1 t=7091
-yi xia 	一下	c=28 d=6.80049 t=7187
-yi xia 	以下	c=2 d=1.19838 t=7187
-yi xie 	一些	c=3 d=1.6977 t=7187
-yi yang 	一樣	c=5 d=2.31056 t=7187
-yi you 	已有	c=2 d=1.25616 t=7187
-yi zhang 	一張	c=1 d=0.0804596 t=7187
-yi zhi 	一直	c=5 d=2.1757 t=7187
-yi zhi 	一致	c=1 d=0.307279 t=7187
-yi zhi 	已知	c=5 d=2.27543 t=7187
-yi zhi yu 	以致於	c=1 d=0.927743 t=7187
-yi zhong 	一種	c=1 d=0.955997 t=7187
-yin 	印	c=2 d=0.927553 t=7187
-yin ci 	因此	c=1 d=0.843665 t=7187
-yin die 	陰跌	c=1 d=0.57695 t=7187
-yin hun bu san 	陰魂不散	c=1 d=0.771052 t=7187
-yin ru 	引入	c=3 d=1.81425 t=7187
-yin su 	因素	c=1 d=0.511709 t=7187
-yin wa 	淫娃	c=0 d=0.0554327 t=7187
-yin wei 	因爲	c=13 d=4.25561 t=7187
-ying fu 	應付	c=1 d=0.748264 t=7187
-ying gai 	應該	c=22 d=5.62745 t=7187
-ying jian 	硬件	c=1 d=0.960789 t=7187
-ying lai 	迎來	c=1 d=0.704688 t=7187
-ying she 	映射	c=1 d=0.467666 t=7187
-ying wei 	應爲	c=1 d=0.852144 t=7187
-ying wei da 	英偉達	c=1 d=0.923116 t=7187
-ying wen 	英文	c=6 d=2.48951 t=7187
-ying xiang 	影響	c=2 d=0.865022 t=7187
-ying yong 	應用	c=4 d=1.44656 t=7187
-ying yu 	英語	c=1 d=0.847894 t=7187
-yo xi 	喲西	c=2 d=1.56196 t=7187
-yong 	用	c=45 d=6.01338 t=7187
-yong cuo 	用錯	c=1 d=0.909373 t=7187
-yong fa 	用法	c=4 d=1.73786 t=7187
-yong hu 	用戶	c=1 d=0.65377 t=7187
-yong jiu 	永久	c=1 d=0.771052 t=7187
-yong qi lai 	用起來	c=1 d=0.814647 t=7187
-yong tu 	用途	c=2 d=1.16605 t=7187
-yong yi 	用意	c=1 d=0.99005 t=7187
-yong you 	擁有	c=0 d=0.0814647 t=7187
-yong yuan 	永遠	c=1 d=0.527292 t=7187
-you 	又	c=18 d=5.89293 t=7187
-you 	有	c=46 d=8.43061 t=7187
-you 	由	c=1 d=0.965605 t=7187
-you ban fa 	有辦法	c=3 d=1.86248 t=7187
-you bi yao 	有必要	c=2 d=1.37472 t=7187
-you chu 	又出	c=0 d=0.0771052 t=7187
-you chu lai le 	又出來了	c=1 d=0.774916 t=7187
-you dian 	有點	c=1 d=0.995012 t=7187
-you fu zai 	有負載	c=1 d=0.644036 t=7187
-you ge 	有個	c=4 d=1.76845 t=7187
-you guan 	有關	c=3 d=1.73156 t=7187
-you guan zhu 	有關注	c=1 d=0.869358 t=7187
-you gui 	有鬼	c=1 d=0.467666 t=7187
-you hua 	優化	c=1 d=0.598784 t=7187
-you ke neng 	有可能	c=1 d=0.644036 t=7187
-you kong 	有空	c=2 d=1.15618 t=7187
-you mei you 	有沒有	c=7 d=3.14288 t=7187
-you mo 	幽默	c=1 d=0.597501 t=7187
-you ren 	有人	c=4 d=1.44223 t=7187
-you se jin shu 	有色金屬	c=1 d=0.786628 t=7187
-you shen me 	有什麼	c=1 d=0.778801 t=7187
-you shi 	又是	c=1 d=0.166127 t=7187
-you wen ti 	有問題	c=2 d=0.848714 t=7187
-you wu 	有無	c=5 d=2.75981 t=7187
-you xian 	優先	c=2 d=1.05291 t=7187
-you xian 	有線	c=1 d=1 t=7116
-you xian ji 	優先級	c=2 d=1.40028 t=7187
-you xie 	有些	c=3 d=1.83574 t=7187
-you xin xin 	有信心	c=1 d=0.591555 t=7187
-you xiu 	優秀	c=1 d=0.535261 t=7187
-you xu yao 	有需要	c=1 d=0.625002 t=7187
-you yi yi 	有意義	c=1 d=0.965605 t=7187
-you yong 	有用	c=2 d=1.55133 t=7187
-you yu 	由於	c=2 d=1.42133 t=7187
-yu 	於	c=2 d=0.755784 t=7187
-yu 	與	c=0 d=0.0748264 t=7187
-yu a 	於啊	c=1 d=0.985112 t=7187
-yu ce 	預測	c=3 d=0.947856 t=7187
-yu dao 	遇到	c=1 d=0.826959 t=7187
-yu dao guo 	遇到過	c=1 d=0.704688 t=7187
-yu fa 	語法	c=2 d=1.15461 t=7187
-yu qi 	預期	c=1 d=0.814647 t=7187
-yu yan 	語言	c=2 d=1.29792 t=7187
-yu yi 	語義	c=3 d=2.24821 t=7187
-yuan 	元	c=1 d=0.927743 t=7187
-yuan 	源	c=0 d=0.0960789 t=7187
-yuan gu 	緣故	c=2 d=1.52231 t=7187
-yuan sheng 	原生	c=1 d=0.847894 t=7187
-yuan yin 	原因	c=6 d=3.66645 t=7187
-yuan ze 	原則	c=4 d=1.94186 t=7187
-yue 	月	c=2 d=0.582025 t=7187
-yue 	約	c=1 d=0.409206 t=7187
-yue bu dao 	約不到	c=3 d=1.07901 t=7187
-yue du 	閱讀	c=1 d=0.995012 t=7187
-yue duo 	越多	c=1 d=0.722527 t=7187
-yue gao 	越高	c=1 d=0.740818 t=7187
-yue shu 	約束	c=1 d=0.67032 t=7187
-yue zhi an mian 	月之暗麪	c=1 d=0.860708 t=7187
-yun 	雲	c=4 d=2.69007 t=7187
-yun duan 	雲端	c=2 d=1.37234 t=7187
-yun xing 	運行	c=5 d=2.58219 t=7187
-yun xing huan jing 	運行環境	c=1 d=0.690734 t=7187
-za 	咋	c=1 d=0.891366 t=7187
-zai 	再	c=14 d=2.86159 t=7187
-zai 	在	c=90 d=9.54435 t=7187
-zai huan 	再換	c=1 d=0.932394 t=7187
-zai jia 	再加	c=1 d=0.847894 t=7187
-zai qu 	再去	c=2 d=1.07676 t=7187
-zai yi 	在意	c=1 d=0.187308 t=7187
-zan cheng 	贊成	c=2 d=1.93605 t=7187
-zan lia 	咱倆	c=1 d=0.895834 t=7187
-zan shi 	暫時	c=4 d=2.19734 t=7187
-zao 	造	c=1 d=1 t=7071
-zao dian 	早點	c=2 d=0.713434 t=7187
-zao fan 	早飯	c=1 d=0.937067 t=7187
-zao jiu 	早就	c=1 d=0.932394 t=7187
-zao shang 	早上	c=1 d=0.416862 t=7187
-ze 	則	c=3 d=2.1059 t=7187
-zen me 	怎麼	c=3 d=1.82318 t=7187
-zen me hui shi 	怎麼回事	c=1 d=0.737123 t=7187
-zen me kan 	怎麼看	c=2 d=0.946485 t=7187
-zen yang 	怎樣	c=3 d=1.87132 t=7187
-zeng jia 	增加	c=1 d=0.856415 t=7187
-zeng jin 	贈金	c=1 d=0.755784 t=7187
-zeng qiang 	增強	c=1 d=0.882497 t=7187
-zhan qian 	戰前	c=1 d=0.369723 t=7187
-zhan shi 	展示	c=1 d=0.680451 t=7187
-zhan shi 	戰事	c=1 d=0.740818 t=7187
-zhan wang 	戰網	c=4 d=2.68049 t=7187
-zhang 	張	c=2 d=0.810584 t=7187
-zhang hao 	帳號	c=1 d=0.946485 t=7187
-zhang hu 	賬戶	c=1 d=0.960789 t=7187
-zhao 	找	c=1 d=0.704688 t=7187
-zhao bu dao 	找不到	c=2 d=1.65879 t=7187
-zhao gu 	照顧	c=1 d=0.755784 t=7187
-zhao zhao 	找找	c=2 d=1.78062 t=7187
-zhe 	者	c=1 d=0.680451 t=7187
-zhe 	這	c=31 d=5.38647 t=7187
-zhe ban 	這般	c=1 d=0.822835 t=7187
-zhe cai 	這纔	c=1 d=0.946485 t=7187
-zhe ci 	這次	c=14 d=4.34792 t=7187
-zhe duan 	這段	c=1 d=0.634448 t=7187
-zhe fang mian 	這方面	c=1 d=0.421052 t=7187
-zhe ge 	這個	c=56 d=8.88148 t=7187
-zhe jian shi 	這件事	c=1 d=0.965605 t=7187
-zhe kuan 	這款	c=1 d=0.238115 t=7187
-zhe lei 	這類	c=1 d=0.839457 t=7187
-zhe lei ren 	這類人	c=1 d=0.132655 t=7187
-zhe li 	這裏	c=4 d=1.74633 t=7187
-zhe liang tian 	這兩天	c=1 d=0.298197 t=7187
-zhe me 	這麼	c=1 d=1.02986 t=7187
-zhe me ke ai 	這麼可愛	c=1 d=0.802519 t=7187
-zhe tai 	這臺	c=3 d=1.67896 t=7187
-zhe tai ji 	這臺機	c=1 d=0.83527 t=7187
-zhe tai ji qi 	這臺機器	c=1 d=0.960789 t=7187
-zhe tiao 	這條	c=1 d=0.704688 t=7187
-zhe wan yi 	這玩意	c=1 d=0.941765 t=7187
-zhe xie 	這些	c=10 d=3.35858 t=7187
-zhe yang 	這樣	c=18 d=4.35966 t=7187
-zhe yi ceng 	這一層	c=1 d=0.856415 t=7187
-zhe yi dian 	這一點	c=1 d=0.951229 t=7187
-zhe zhong 	這種	c=12 d=3.16013 t=7187
-zhen 	真	c=1 d=0.810584 t=7187
-zhen de 	真的	c=4 d=1.9364 t=7187
-zhen dui 	針對	c=1 d=0.918512 t=7187
-zhen hao 	真好	c=1 d=0.524663 t=7187
-zheng chang 	正常	c=11 d=4.07816 t=7187
-zheng gu 	正股	c=1 d=0.603506 t=7187
-zheng he 	整合	c=2 d=1.01685 t=7187
-zheng jing 	正經	c=0 d=0.0806541 t=7187
-zheng jing an mo 	正經按摩	c=1 d=0.810584 t=7187
-zheng ju 	證據	c=1 d=0.960789 t=7187
-zheng li 	整理	c=0 d=0.0299692 t=7187
-zheng li xia 	整理下	c=1 d=0.301194 t=7187
-zheng ming 	證明	c=2 d=1.46209 t=7187
-zheng qu 	爭取	c=1 d=0.88692 t=7187
-zheng que 	正確	c=4 d=1.87478 t=7187
-zheng shi 	正式	c=1 d=0.831104 t=7187
-zheng shi 	證實	c=1 d=0.980199 t=7187
-zheng shi ban 	正式版	c=1 d=0.965605 t=7187
-zheng suo wei 	正所謂	c=1 d=0.10383 t=7187
-zheng zai 	正在	c=3 d=1.73201 t=7187
-zhi 	只	c=8 d=2.59821 t=7187
-zhi 	指	c=3 d=1.68836 t=7187
-zhi chi 	支持	c=8 d=3.63069 t=7187
-zhi chu 	指出	c=2 d=1.55421 t=7187
-zhi dao 	知道	c=4 d=1.39207 t=7187
-zhi de 	值得	c=1 d=0.904837 t=7187
-zhi ding 	制定	c=1 d=0.453845 t=7187
-zhi ding 	制訂	c=2 d=1.32441 t=7187
-zhi hou 	之後	c=2 d=1.28685 t=7187
-zhi hui 	智慧	c=2 d=1.28524 t=7187
-zhi jian 	之間	c=2 d=1.13869 t=7187
-zhi jie 	直接	c=4 d=1.42877 t=7187
-zhi lei 	之類	c=1 d=0.748264 t=7187
-zhi liang 	質量	c=1 d=0.847894 t=7187
-zhi ling 	指令	c=3 d=2.04944 t=7187
-zhi neng 	只能	c=5 d=1.96222 t=7187
-zhi pu 	智譜	c=1 d=1 t=7187
-zhi qian 	之前	c=13 d=4.5377 t=7187
-zhi shi 	只是	c=2 d=1.04292 t=7187
-zhi shi 	知識	c=3 d=1.12755 t=7187
-zhi shu 	指數	c=1 d=0.814647 t=7187
-zhi wai 	之外	c=1 d=0.522046 t=7187
-zhi xiang yao 	只想要	c=1 d=0.67368 t=7187
-zhi xing 	執行	c=4 d=2.28054 t=7187
-zhi yao 	只要	c=1 d=0.965605 t=7187
-zhi yin 	指引	c=1 d=0.99005 t=7187
-zhi ying 	止盈	c=2 d=0.227262 t=7187
-zhi yong 	只用	c=1 d=0.900325 t=7187
-zhi you 	只有	c=1 d=0.169483 t=7187
-zhi yu 	至於	c=7 d=3.75424 t=7187
-zhi yue 	制約	c=1 d=0.516851 t=7187
-zhi zhuo 	執着	c=0 d=0.0748264 t=7187
-zhi zhuo yu 	執着與	c=1 d=0.752014 t=7187
-zhong 	中	c=18 d=4.06198 t=7187
-zhong 	種	c=1 d=0.737123 t=7187
-zhong duan 	中斷	c=1 d=0.818731 t=7187
-zhong duan 	終端	c=7 d=2.37414 t=7187
-zhong guo 	中國	c=1 d=0.900325 t=7187
-zhong tu 	中途	c=1 d=0.715338 t=7187
-zhong wen 	中文	c=4 d=3.20985 t=7187
-zhong wu 	中午	c=1 d=0.548812 t=7187
-zhong xing 	中性	c=1 d=0.609571 t=7187
-zhong yao 	重要	c=1 d=0.97531 t=7187
-zhong ying wen 	中英文	c=1 d=0.733447 t=7187
-zhou xiang 	周詳	c=1 d=0.458406 t=7187
-zhu 	住	c=1 d=0.865022 t=7187
-zhu dong 	主動	c=1 d=0.856415 t=7187
-zhu fan 	煮飯	c=1 d=0.418952 t=7187
-zhu ming 	註明	c=1 d=0.970446 t=7187
-zhu shi 	註釋	c=2 d=1.76607 t=7187
-zhu shou 	助手	c=3 d=1.27272 t=7187
-zhu wan 	煮完	c=1 d=0.50409 t=7187
-zhu yao 	主要	c=3 d=1.56314 t=7187
-zhu ye 	主業	c=1 d=0.131994 t=7187
-zhu yi 	注意	c=2 d=1.51572 t=7187
-zhu zi 	注資	c=1 d=0.891366 t=7187
-zhua jin 	抓緊	c=1 d=0.554327 t=7187
-zhuan 	賺	c=1 d=0.606531 t=7187
-zhuan er 	轉而	c=1 d=0.431711 t=7187
-zhuan jia 	專家	c=1 d=0.657047 t=7187
-zhuan men 	專門	c=1 d=0.951229 t=7187
-zhuan qian 	賺錢	c=4 d=1.04832 t=7187
-zhuan ye 	專業	c=1 d=0.136695 t=7187
-zhuang 	裝	c=1 d=0.869358 t=7187
-zhuang tai 	狀態	c=1 d=0.91952 t=7187
-zhuang tai ye 	狀態頁	c=1 d=0.683861 t=7187
-zhui qiu 	追求	c=1 d=0.697676 t=7187
-zhun bei 	準備	c=4 d=1.16684 t=7187
-zhuo mian 	桌面	c=1 d=0.694197 t=7187
-zi 	子	c=1 d=1 t=7187
-zi chan 	資產	c=1 d=0.198781 t=7187
-zi chan guan li 	資產管理	c=1 d=0.127454 t=7187
-zi chan lei xing 	資產類型	c=1 d=0.164474 t=7187
-zi dong 	自動	c=1 d=0.88692 t=7187
-zi ji 	自己	c=12 d=3.23534 t=7187
-zi ti 	字體	c=1 d=0.895834 t=7187
-zi xi 	仔細	c=10 d=2.71148 t=7187
-zi xing 	自行	c=1 d=0.941765 t=7187
-zi yong 	自用	c=1 d=0.737123 t=7187
-zong 	總	c=0 d=0.0909373 t=7187
-zong bu neng 	總不能	c=1 d=0.946485 t=7187
-zong he 	綜合	c=1 d=0.771052 t=7187
-zong jiao 	宗教	c=0 d=0.0985112 t=7187
-zong jiao chan pin 	宗教產品	c=1 d=0.99005 t=7187
-zong jie 	總結	c=1 d=0.481909 t=7187
-zong qu na 	總去那	c=1 d=0.913931 t=7187
-zong shi 	總是	c=2 d=1.43247 t=7187
-zong zhi 	總之	c=1 d=0.965605 t=7187
-zou 	走	c=1 d=0.904837 t=7187
-zou shi 	走勢	c=1 d=0.304221 t=7187
-zou xiao 	奏效	c=2 d=1.79078 t=7187
-zu gou 	足夠	c=6 d=1.43037 t=7187
-zu he 	組合	c=1 d=0.740818 t=7187
-zu zhi 	組織	c=3 d=1.62879 t=7187
-zu zhi 	阻止	c=1 d=0.913931 t=7187
-zui 	最	c=2 d=1.92923 t=7187
-zui da zhi 	最大值	c=1 d=0.694197 t=7187
-zui gao 	最高	c=1 d=0.873716 t=7187
-zui hao 	最好	c=7 d=2.97255 t=7187
-zui he shi 	最合適	c=1 d=0.818731 t=7187
-zui hou 	最後	c=6 d=1.77121 t=7187
-zui jia 	最佳	c=2 d=1.42937 t=7187
-zui jia jie fa 	最佳解法	c=1 d=0.826959 t=7187
-zui jian bian 	最簡便	c=1 d=0.680451 t=7187
-zui jin 	最近	c=3 d=1.52834 t=7187
-zui jing jian 	最精簡	c=1 d=0.677057 t=7187
-zui qing liang ji 	最輕量級	c=1 d=0.683861 t=7187
-zui xia mian 	最下面	c=1 d=0.904837 t=7187
-zui xin 	最新	c=5 d=2.53711 t=7187
-zui xin ban 	最新版	c=1 d=0.628135 t=7187
-zun xun 	遵循	c=1 d=0.666977 t=7187
-zuo 	做	c=17 d=3.79798 t=7187
-zuo ba 	做吧	c=1 d=1 t=7187
-zuo che 	坐車	c=1 d=0.460704 t=7187
-zuo chu 	做出	c=2 d=1.30215 t=7187
-zuo dao 	做到	c=1 d=1 t=7161
-zuo duo 	做多	c=1 d=0.946485 t=7187
-zuo fa 	做法	c=1 d=0.965605 t=7187
-zuo ge 	做個	c=1 d=0.621885 t=7187
-zuo kong 	做空	c=2 d=0.628653 t=7187
-zuo ren 	做人	c=1 d=0.97531 t=7187
-zuo shen me 	做什麼	c=1 d=0.142987 t=7187
-zuo tian 	昨天	c=3 d=1.96676 t=7187
-zuo wan 	昨晚	c=2 d=1.4701 t=7187
-zuo wei 	作爲	c=4 d=2.51856 t=7187
+a 	啊	c=18 d=4.21854 t=7856
+a 	阿	c=1 d=0.726149 t=7856
+a li 	阿里	c=0 d=0.0786628 t=7856
+a li yun 	阿里雲	c=1 d=0.790571 t=7856
+ai 	唉	c=2 d=1.33071 t=7856
+ai nin 	愛您	c=1 d=0.379083 t=7856
+an 	按	c=4 d=2.61952 t=7856
+an an 	按按	c=1 d=0.913931 t=7856
+an hei 	暗黑	c=0 d=0.067032 t=7856
+an hei po huai shen 	暗黑破壞神	c=1 d=0.67368 t=7856
+an mo 	按摩	c=1 d=0.873889 t=7856
+an niu 	按鈕	c=1 d=0.873716 t=7856
+an quan 	安全	c=0 d=0.218013 t=7856
+an quan de 	安全地	c=1 d=0.985112 t=7856
+an quan dian 	安全點	c=1 d=0.985112 t=7856
+an quan dui qi 	安全對齊	c=1 d=0.865022 t=7856
+an quan gan 	安全感	c=1 d=0.57695 t=7856
+an zhao 	按照	c=4 d=1.96239 t=7856
+an zhuang 	安裝	c=11 d=6.36985 t=7856
+an zhuang ba 	安裝吧	c=1 d=0.904837 t=7856
+ba 	吧	c=49 d=8.62655 t=7856
+ba 	把	c=15 d=3.91668 t=7856
+ba ta 	把它	c=2 d=1.45917 t=7856
+bai 	白	c=0 d=0.0873716 t=7856
+bai lian 	百鍊	c=1 d=1 t=7856
+bai song 	白送	c=1 d=0.869358 t=7856
+bai tian 	白天	c=1 d=0.873716 t=7856
+ban 	版	c=1 d=0.980199 t=7856
+ban 	辦	c=0 d=0.0970446 t=7856
+ban ben 	版本	c=5 d=3.83342 t=7856
+ban dao 	搬到	c=1 d=0.755784 t=7856
+ban dao 	辦到	c=0 d=0.0774916 t=7856
+ban fa 	辦法	c=3 d=2.18007 t=7856
+ban lai 	搬來	c=1 d=0.637628 t=7856
+ban xiao shi 	半小時	c=1 d=0.985112 t=7856
+bang 	幫	c=2 d=1.26656 t=7856
+bang wo 	幫我	c=16 d=4.49325 t=7856
+bao 	煲	c=1 d=0.519442 t=7856
+bao cun 	保存	c=1 d=0.965605 t=7856
+bao cuo 	報錯	c=16 d=7.26259 t=7856
+bao dao 	報道	c=1 d=0.946485 t=7856
+bao fa 	爆發	c=1 d=0.102284 t=7856
+bao han 	包含	c=2 d=1.19025 t=7856
+bao jiang 	爆漿	c=1 d=0.631284 t=7856
+bao kuo 	包括	c=3 d=1.5992 t=7856
+bao li 	暴力	c=0 d=0.0637628 t=7856
+bao liu 	保留	c=5 d=2.28406 t=7856
+bao qian 	抱歉	c=1 d=0.927743 t=7856
+bao xian 	保險	c=2 d=1.41067 t=7856
+bao zi 	包子	c=0 d=0.0955997 t=7856
+bei 	唄	c=1 d=0.540641 t=7856
+bei 	背	c=1 d=0.621885 t=7856
+bei 	被	c=6 d=2.91183 t=7856
+bei jing 	北京	c=2 d=1.27008 t=7856
+bei jing 	背景	c=1 d=0.794534 t=7856
+bei ni 	被你	c=2 d=1.56196 t=7856
+bei ren 	被人	c=1 d=0.540641 t=7856
+ben 	本	c=1 d=0.275221 t=7856
+ben cang ku 	本倉庫	c=1 d=0.995012 t=7856
+ben di 	本地	c=4 d=2.10383 t=7856
+ben di hua 	本地化	c=1 d=0.609571 t=7856
+ben ji 	本機	c=1 d=0.594521 t=7856
+ben lai 	本來	c=1 d=0.970446 t=7856
+ben shen 	本身	c=2 d=1.26768 t=7856
+beng le 	崩了	c=3 d=2.6401 t=7856
+bi 	必	c=1 d=0.97531 t=7856
+bi 	比	c=2 d=1.0465 t=7856
+bi jiao 	比較	c=1 d=0.918512 t=7856
+bi jiao hao 	比較好	c=2 d=1.38543 t=7856
+bi qi 	比起	c=1 d=0.941765 t=7856
+bi ru 	比如	c=9 d=2.7271 t=7856
+bi xu 	必須	c=1 d=0.995012 t=7856
+bi yao 	必要	c=2 d=1.87114 t=7856
+bi yao shi 	必要時	c=1 d=0.718924 t=7856
+bi zhi 	壁紙	c=3 d=2.35943 t=7856
+bian 	編	c=0 d=0.0878095 t=7856
+bian 	變	c=1 d=0.882497 t=7856
+bian de 	變得	c=1 d=0.585669 t=7856
+bian hua 	變化	c=2 d=1.47498 t=7856
+bian ji 	編輯	c=1 d=0.726149 t=7856
+bian ji qi 	編輯器	c=1 d=1 t=7856
+bian jin qu 	編進去	c=1 d=0.882497 t=7856
+bian wei 	變爲	c=1 d=0.980199 t=7856
+bian xie 	編寫	c=1 d=0.559898 t=7856
+bian yi 	編譯	c=1 d=0.937067 t=7856
+bian yu 	便於	c=1 d=0.891366 t=7856
+bian yuan 	邊緣	c=1 d=0.909373 t=7856
+biao da 	表達	c=2 d=1.58479 t=7856
+biao de 	標的	c=1 d=0.323033 t=7856
+biao pu 	標普	c=1 d=0.209088 t=7856
+biao qing 	表情	c=1 d=0.99005 t=7856
+biao shi 	表示	c=1 d=0.951229 t=7856
+biao xian 	表現	c=3 d=1.75635 t=7856
+biao zhu 	標註	c=2 d=1.14385 t=7856
+biao zhun 	標準	c=1 d=0.960789 t=7856
+bie 	別	c=1 d=0.733447 t=7856
+bie ren 	別人	c=1 d=0.860708 t=7856
+bie ti 	別提	c=1 d=0.822835 t=7856
+bing 	並	c=8 d=3.10024 t=7856
+bing bian 	病變	c=1 d=0.88692 t=7856
+bing bu hui 	並不會	c=1 d=0.852144 t=7856
+bing bu man yi 	並不滿意	c=1 d=0.878095 t=7856
+bing bu nan 	並不難	c=1 d=0.932394 t=7856
+bing bu shi 	並不是	c=1 d=0.131336 t=7856
+bing bu zou xiao 	並步驟笑	c=1 d=0.970446 t=7856
+bing huang ma luan 	兵荒馬亂	c=1 d=0.65377 t=7856
+bing qie 	並且	c=1 d=0.99005 t=7856
+bing qing zhu yi 	並請注意	c=1 d=0.923116 t=7856
+bing wei 	並未	c=2 d=1.30099 t=7856
+bo cai 	菠菜	c=2 d=1.51945 t=7856
+bo fang 	播放	c=1 d=1 t=7847
+bo ji 	脖幾	c=1 d=0.628135 t=7856
+bu 	不	c=11 d=4.40726 t=7856
+bu bi 	不必	c=1 d=0.142274 t=7856
+bu chong 	補充	c=1 d=0.683861 t=7856
+bu chu 	不出	c=1 d=0.822835 t=7856
+bu chu lai 	不出來	c=1 d=0.814647 t=7856
+bu dao 	不到	c=0 d=0.0690674 t=7856
+bu de yi 	不得已	c=1 d=0.814647 t=7856
+bu di dao 	不地道	c=1 d=0.878095 t=7856
+bu ding 	不定	c=1 d=0.927743 t=7856
+bu dong 	不懂	c=1 d=0.657047 t=7856
+bu dui 	不對	c=4 d=1.44523 t=7856
+bu dui jin 	不對勁	c=1 d=0.579842 t=7856
+bu fen 	部分	c=1 d=0.951229 t=7856
+bu fu 	不服	c=1 d=0.737123 t=7856
+bu fu he 	不符合	c=2 d=1.22032 t=7856
+bu gao 	不搞	c=1 d=0.891366 t=7856
+bu gou 	不夠	c=3 d=2.38452 t=7856
+bu gou di dao 	不夠地道	c=1 d=0.860708 t=7856
+bu gou yong 	不夠用	c=1 d=1 t=7856
+bu guo 	不過	c=1 d=0.438235 t=7856
+bu guo qu 	不過去	c=1 d=0.737123 t=7856
+bu he li 	不合理	c=1 d=0.615697 t=7856
+bu he ni 	不和你	c=1 d=0.603506 t=7856
+bu he tang 	不喝湯	c=1 d=0.67032 t=7856
+bu hui 	不會	c=5 d=3.49479 t=7856
+bu hui lai 	不回來	c=0 d=0.0588605 t=7856
+bu hui lai 	補回來	c=0 d=0.0585669 t=7856
+bu ji 	不及	c=0 d=0.0878095 t=7856
+bu ji yu 	不急於	c=1 d=0.97531 t=7856
+bu ji yu qi 	不及預期	c=1 d=0.882497 t=7856
+bu jin jin 	不僅僅	c=1 d=0.657047 t=7856
+bu jiu 	不久	c=1 d=0.918512 t=7856
+bu kai qi 	不開啓	c=1 d=0.970446 t=7856
+bu ke 	不可	c=0 d=0.0217621 t=7856
+bu ke xue 	不科學	c=1 d=0.882497 t=7856
+bu ke yi 	不可以	c=1 d=0.600496 t=7856
+bu ke yu ce 	不可預測	c=2 d=0.45922 t=7856
+bu kui shi 	不愧是	c=1 d=0.985112 t=7856
+bu le 	不了	c=2 d=1.7337 t=7856
+bu liao jie 	不瞭解	c=1 d=0.71177 t=7856
+bu man yi 	不滿意	c=0 d=0.0873716 t=7856
+bu mian fei 	不免費	c=1 d=0.852144 t=7856
+bu neng 	不能	c=3 d=2.00617 t=7856
+bu qi 	不起	c=0 d=0.0923116 t=7856
+bu qi yong 	不起用	c=1 d=0.927743 t=7856
+bu qing chu 	不清楚	c=1 d=0.865022 t=7856
+bu qu 	不去	c=3 d=2.51346 t=7856
+bu que ding 	不確定	c=3 d=1.32447 t=7856
+bu ran 	不然	c=1 d=0.847894 t=7856
+bu ren tong 	不認同	c=1 d=0.759572 t=7856
+bu ru 	不如	c=7 d=4.3713 t=7856
+bu sheng xiao 	不生效	c=5 d=3.16736 t=7856
+bu shi 	不是	c=26 d=4.85665 t=7856
+bu shi he 	不適合	c=1 d=0.918512 t=7856
+bu shu 	部署	c=3 d=1.65685 t=7856
+bu shu fu 	不舒服	c=1 d=0.631284 t=7856
+bu tong 	不同	c=3 d=1.53184 t=7856
+bu wan zheng 	不完整	c=1 d=1 t=7856
+bu wei kong 	不爲空	c=1 d=0.852144 t=7856
+bu xi huan 	不喜歡	c=3 d=2.2551 t=7856
+bu xi wang 	不希望	c=1 d=0.918512 t=7856
+bu xiang 	不像	c=5 d=2.5835 t=7856
+bu xiang 	不想	c=1 d=0.852144 t=7856
+bu xiang xin 	不相信	c=1 d=0.66365 t=7856
+bu xiao xin 	不小心	c=1 d=0.965605 t=7856
+bu xin 	不信	c=2 d=1.38712 t=7856
+bu xing 	不行	c=17 d=6.78353 t=7856
+bu xu yao 	不需要	c=3 d=2.21225 t=7856
+bu xun chang 	不尋常	c=1 d=0.634448 t=7856
+bu yao 	不要	c=3 d=2.46575 t=7856
+bu yi yang 	不一樣	c=2 d=1.36059 t=7856
+bu yong 	不用	c=5 d=2.38839 t=7856
+bu yong bai bu yong 	不用白不用	c=2 d=1.68222 t=7856
+bu zai 	不再	c=2 d=1.20067 t=7856
+bu zhi chi 	不支持	c=1 d=0.960789 t=7856
+bu zhi dao 	不知道	c=9 d=3.43328 t=7856
+bu zhong yao 	不重要	c=1 d=0.203926 t=7856
+bu zou 	步驟	c=0 d=0.0839457 t=7856
+bu zou xiao 	不奏效	c=1 d=0.67032 t=7856
+bu zou xiao 	步驟笑	c=1 d=0.899079 t=7856
+bu zuo 	不做	c=1 d=0.951229 t=7856
+ca chu 	擦除	c=1 d=0.414783 t=7856
+cai 	才	c=5 d=1.86264 t=7856
+cai 	猜	c=1 d=0.126186 t=7856
+cai dui 	纔對	c=1 d=0.909373 t=7856
+cai neng 	才能	c=1 d=0.909373 t=7856
+cai piao 	彩票	c=3 d=0.258711 t=7856
+cai yong 	採用	c=3 d=1.86502 t=7856
+can kao 	參考	c=7 d=3.01134 t=7856
+can shu 	參數	c=4 d=1.85143 t=7856
+can yue 	參閱	c=1 d=0.960789 t=7856
+cang ku 	倉庫	c=5 d=2.93894 t=7856
+cang wei 	倉位	c=1 d=0.219808 t=7856
+cao 	草	c=1 d=0.532592 t=7856
+cao bi 	肏屄	c=2 d=0.807371 t=7856
+cao zuo 	操作	c=4 d=3.19819 t=7856
+ce lve 	策略	c=7 d=3.92384 t=7856
+ce shi 	測試	c=3 d=2.17734 t=7856
+cha bu duo 	差不多	c=2 d=0.446201 t=7856
+cha dan 	插單	c=1 d=0.118837 t=7856
+cha dian 	差點	c=0 d=0.0985112 t=7856
+cha dian yi si 	差點意思	c=1 d=0.99005 t=7856
+cha jian 	插件	c=1 d=0.839457 t=7856
+cha shang 	插上	c=1 d=0.524663 t=7856
+cha yue 	查閱	c=2 d=1.52504 t=7856
+cha zhao 	查找	c=1 d=0.97531 t=7856
+chan pin 	產品	c=0 d=0.0985112 t=7856
+chan sheng 	產生	c=2 d=0.772317 t=7856
+chang jing 	場景	c=1 d=0.67032 t=7856
+chang nian 	長年	c=0 d=0.0843665 t=7856
+chang nian xian zhi 	長年閒置	c=1 d=0.847894 t=7856
+chang qi 	長期	c=1 d=0.951229 t=7856
+chang shang 	廠商	c=1 d=0.782705 t=7856
+chang shi 	嘗試	c=10 d=3.95059 t=7856
+chang shi qian 	嘗試前	c=1 d=0.923116 t=7856
+chao sheng 	超聲	c=1 d=0.865022 t=7856
+che di 	徹底	c=1 d=0.65377 t=7856
+cheng 	成	c=1 d=0.737123 t=7856
+cheng ben 	成本	c=0 d=0.0970446 t=7856
+cheng di 	呈遞	c=1 d=0.88692 t=7856
+cheng du 	程度	c=1 d=0.83527 t=7856
+cheng gong 	成功	c=2 d=1.80419 t=7856
+cheng qing 	澄清	c=1 d=1 t=7856
+cheng ren 	承認	c=1 d=0.416862 t=7856
+cheng shu 	成熟	c=1 d=0.794534 t=7856
+cheng xu 	程序	c=1 d=0.782705 t=7856
+cheng ya 	承壓	c=1 d=0.559898 t=7856
+chi 	喫	c=2 d=1.79661 t=7856
+chi bo cai 	喫菠菜	c=1 d=0.83527 t=7856
+chi cang 	持倉	c=0 d=0.0970446 t=7856
+chi cang cheng ben 	持倉成本	c=1 d=0.97531 t=7856
+chi cun 	尺寸	c=1 d=0.970446 t=7856
+chi de 	喫得	c=0 d=0.0774916 t=7856
+chi de shao 	喫得少	c=1 d=0.778801 t=7856
+chi jiu 	持久	c=0 d=0.0955997 t=7856
+chi jiu hua 	持久化	c=1 d=0.960789 t=7856
+chi le 	遲了	c=0 d=0.0965605 t=7856
+chong die 	重疊	c=1 d=0.70822 t=7856
+chong ding xiang 	重定向	c=2 d=1.62314 t=7856
+chong fu 	重複	c=1 d=0.960789 t=7856
+chong gou 	重構	c=1 d=0.97531 t=7856
+chong man 	充滿	c=1 d=0.0858632 t=7856
+chong qi 	重啓	c=11 d=5.37592 t=7856
+chong qi dian nao 	重啓電腦	c=1 d=0.798516 t=7856
+chong qi hou 	重啓後	c=2 d=1.72223 t=7856
+chong shi 	充實	c=1 d=0.726149 t=7856
+chong shi 	重試	c=4 d=2.33109 t=7856
+chong tu 	衝突	c=2 d=1.67306 t=7856
+chong xian 	重現	c=1 d=0.826959 t=7856
+chong xin 	重新	c=3 d=2.02185 t=7856
+chong xin gou jian 	重新構建	c=2 d=1.56497 t=7856
+chong zhi 	充值	c=2 d=1.39547 t=7856
+chong zhi 	重製	c=0 d=0.067368 t=7856
+chong zhi ban 	重製版	c=1 d=0.677057 t=7856
+chong zi 	蟲子	c=1 d=0.625002 t=7856
+chong zu 	充足	c=2 d=1.34576 t=7856
+chu 	出	c=6 d=2.35213 t=7856
+chu ci 	除此	c=1 d=0.519442 t=7856
+chu cuo 	出錯	c=8 d=3.64337 t=7856
+chu cuo xin xi 	出錯信息	c=1 d=0.704688 t=7856
+chu fa 	出發	c=1 d=0.873716 t=7856
+chu fa 	觸發	c=1 d=0.913931 t=7856
+chu fei 	除非	c=1 d=0.965605 t=7856
+chu lai 	出來	c=2 d=0.984118 t=7856
+chu le 	出了	c=0 d=0.0715338 t=7856
+chu le 	除了	c=2 d=1.30927 t=7856
+chu le dian 	出了點	c=1 d=0.718924 t=7856
+chu li 	處理	c=2 d=1.63785 t=7856
+chu shi 	出事	c=2 d=1.91727 t=7856
+chu xian 	出現	c=5 d=3.13906 t=7856
+chuang jian 	創建	c=1 d=0.970446 t=7856
+chuang kou 	窗口	c=2 d=1.19128 t=7856
+chuang shang 	牀上	c=1 d=0.283654 t=7856
+ci 	次	c=0 d=0.0847894 t=7856
+ci 	此	c=2 d=1.5914 t=7856
+ci shu 	次數	c=1 d=0.932394 t=7856
+ci yao 	次要	c=1 d=0.755784 t=7856
+cong 	從	c=8 d=3.4658 t=7856
+cong lai 	從來	c=1 d=0.923116 t=7856
+cu cheng 	促成	c=1 d=0.113042 t=7856
+cun chu 	存儲	c=0 d=0.0865022 t=7856
+cun chu fang an 	存儲方案	c=1 d=0.869358 t=7856
+cuo 	錯	c=1 d=0.509156 t=7856
+cuo shou 	搓手	c=0 d=0.0436049 t=7856
+cuo shou shou 	搓手手	c=1 d=0.438235 t=7856
+cuo wu 	錯誤	c=6 d=3.40982 t=7856
+da 	大	c=0 d=0.0900325 t=7856
+da 	打	c=1 d=0.152712 t=7856
+da bao 	打包	c=1 d=0.302704 t=7856
+da cheng 	大成	c=0 d=0.0292293 t=7856
+da dan 	大膽	c=0 d=0.0985112 t=7856
+da duan 	打斷	c=1 d=0.878095 t=7856
+da dui 	大堆	c=1 d=0.955997 t=7856
+da gai 	大概	c=3 d=1.42236 t=7856
+da guo qu 	打過去	c=1 d=0.225373 t=7856
+da jia 	大家	c=4 d=1.60025 t=7856
+da kai 	打開	c=3 d=1.86924 t=7856
+da lu 	大陸	c=2 d=1.80927 t=7856
+da ming ling 	打命令	c=1 d=0.794534 t=7856
+da mo xing 	大模型	c=3 d=1.51775 t=7856
+da mo xing 	打模型	c=1 d=0.900325 t=7856
+da ti shang 	大體上	c=1 d=0.895834 t=7856
+da xiao 	大小	c=1 d=0.923116 t=7856
+da zai 	搭載	c=1 d=0.802519 t=7856
+da zhi shang 	大致上	c=1 d=0.900325 t=7856
+da zhong 	大衆	c=0 d=0.0923116 t=7856
+da zhong dian ping 	大衆點評	c=1 d=0.927743 t=7856
+da zong 	大宗	c=0 d=0.0683861 t=7856
+da zong shang pin 	大宗商品	c=2 d=1.51839 t=7856
+dai 	帶	c=1 d=0.891366 t=7856
+dai hui jia 	帶回家	c=1 d=0.491644 t=7856
+dai li 	代理	c=6 d=3.96175 t=7856
+dai shang 	帶上	c=0 d=0.0932394 t=7856
+dai you 	帶有	c=1 d=0.995012 t=7856
+dan 	但	c=65 d=6.39721 t=7856
+dan 	單	c=2 d=0.195812 t=7856
+dan lu 	丹爐	c=2 d=1.56837 t=7856
+dan shi 	但是	c=5 d=2.93046 t=7856
+dan xin 	擔心	c=1 d=0.923116 t=7856
+dang 	當	c=4 d=1.9831 t=7856
+dang di 	當地	c=1 d=0.882497 t=7856
+dang qian 	當前	c=1 d=0.909373 t=7856
+dang ran 	當然	c=3 d=1.59531 t=7856
+dang wo 	當我	c=1 d=0.83527 t=7856
+dao 	到	c=17 d=3.15495 t=7856
+dao di 	到底	c=2 d=1.18828 t=7856
+dao li 	道理	c=1 d=0.913931 t=7856
+dao shi hou 	到時候	c=1 d=0.909373 t=7856
+dao zhi 	導致	c=4 d=2.2553 t=7856
+de 	地	c=2 d=1.68788 t=7856
+de 	的	c=510 d=24.7149 t=7856
+de dao 	得到	c=1 d=0.806541 t=7856
+deng 	等	c=3 d=1.30627 t=7856
+deng che 	等車	c=1 d=0.458406 t=7856
+deng deng 	等等	c=16 d=2.76327 t=7856
+deng lu 	登錄	c=1 d=0.960789 t=7856
+di 	低	c=1 d=0.423162 t=7856
+di 	弟	c=2 d=1.45232 t=7856
+di dao 	地道	c=3 d=1.73631 t=7856
+di dian 	低點	c=1 d=0.379083 t=7856
+di fang 	地方	c=2 d=0.794794 t=7856
+di pin 	低頻	c=1 d=0.923116 t=7856
+di yi tiao 	第一條	c=1 d=0.965605 t=7856
+dian 	點	c=9 d=3.729 t=7856
+dian cuo 	點錯	c=1 d=0.970446 t=7856
+dian ji 	點擊	c=3 d=1.56662 t=7856
+dian li 	電力	c=1 d=0.66365 t=7856
+dian nao 	電腦	c=3 d=1.17589 t=7856
+dian ping 	點評	c=0 d=0.0923116 t=7856
+dian wei 	點位	c=2 d=1.08722 t=7856
+dian zi shu 	電子書	c=1 d=0.479505 t=7856
+diao 	掉	c=1 d=0.891366 t=7856
+diao 	調	c=2 d=1.65412 t=7856
+diao yan 	調研	c=5 d=2.33543 t=7856
+diao yong 	調用	c=9 d=3.62741 t=7856
+diao yong lian 	調用鏈	c=1 d=0.398519 t=7856
+die dai 	迭代	c=1 d=0.818731 t=7856
+ding 	丁	c=0 d=0.0985112 t=7856
+ding 	定	c=0 d=0.0207008 t=7856
+ding 	頂	c=1 d=0.618783 t=7856
+ding bu 	頂部	c=1 d=0.895834 t=7856
+ding da dan 	丁大膽	c=1 d=0.99005 t=7856
+ding pan 	盯盤	c=1 d=0.985112 t=7856
+ding pan 	頂盤	c=1 d=0.980199 t=7856
+ding tou le 	定投了	c=1 d=0.208045 t=7856
+ding wei 	定位	c=1 d=0.878095 t=7856
+ding zhi 	定製	c=1 d=0.574072 t=7856
+ding zhi hua 	定製化	c=0 d=0.0818731 t=7856
+diu 	丟	c=1 d=0.467666 t=7856
+diu shi 	丟失	c=2 d=1.3832 t=7856
+dong tai 	動態	c=0 d=0.099005 t=7856
+dong tai shi pei 	動態適配	c=1 d=0.995012 t=7856
+dong xi 	東西	c=4 d=2.07053 t=7856
+dou 	都	c=26 d=4.92443 t=7856
+dou bao 	豆包	c=3 d=2.14346 t=7856
+dou hui 	都會	c=1 d=0.470011 t=7856
+dou li 	兜裏	c=1 d=0.826959 t=7856
+dou neng 	都能	c=1 d=0.923116 t=7856
+dou shi 	都是	c=8 d=2.26041 t=7856
+dou you 	都有	c=0 d=0.0878095 t=7856
+du 	讀	c=1 d=0.755784 t=7856
+du 	賭	c=1 d=0.127454 t=7856
+du guo 	渡過	c=1 d=0.286505 t=7856
+du li 	獨立	c=1 d=0.763379 t=7856
+du wan 	讀完	c=1 d=0.15259 t=7856
+duan 	斷	c=3 d=1.72532 t=7856
+duan dian xu chuan 	斷點續傳	c=1 d=0.806541 t=7856
+duan le 	斷了	c=0 d=0.0951229 t=7856
+duan lie 	斷裂	c=1 d=0.400517 t=7856
+duan pian 	斷片	c=1 d=0.603506 t=7856
+dui 	對	c=15 d=4.04058 t=7856
+dui bi 	對比	c=10 d=2.78004 t=7856
+dui chong ji jin 	對衝基金	c=1 d=0.571209 t=7856
+dui hua 	對話	c=5 d=2.4712 t=7856
+dui hua kuang 	對話框	c=1 d=0.909373 t=7856
+dui hua nei rong 	對話內容	c=1 d=0.774916 t=7856
+dui qi 	對齊	c=0 d=0.0860708 t=7856
+dui wo 	對我	c=3 d=1.43466 t=7856
+dui xian 	兌現	c=3 d=1.46042 t=7856
+dui ying 	對應	c=2 d=1.71035 t=7856
+dui yu 	對於	c=4 d=1.9684 t=7856
+dui zhao 	對照	c=1 d=0.70822 t=7856
+duo 	多	c=7 d=2.58379 t=7856
+duo chi 	多喫	c=1 d=0.740818 t=7856
+duo ci 	多次	c=1 d=0.873716 t=7856
+duo xiang 	多想	c=1 d=0.680451 t=7856
+duo zhong 	多種	c=1 d=0.852144 t=7856
+e du 	額度	c=5 d=2.4047 t=7856
+e wai 	額外	c=1 d=0.737123 t=7856
+en 	嗯	c=3 d=1.99244 t=7856
+en 	恩	c=1 d=0.628135 t=7856
+er 	二	c=1 d=0.900325 t=7856
+er 	而	c=4 d=1.425 t=7856
+er ji 	耳機	c=2 d=1.88362 t=7856
+er qie 	而且	c=7 d=2.12858 t=7856
+er shi 	而是	c=1 d=0.532592 t=7856
+er ti 	而提	c=0 d=0.0865022 t=7856
+er yan 	而言	c=2 d=1.5846 t=7856
+er zhe 	二者	c=2 d=1.17403 t=7856
+er zi 	兒子	c=1 d=0.856415 t=7856
+fa 	發	c=2 d=0.985112 t=7856
+fa bu 	發佈	c=1 d=0.579842 t=7856
+fa gei 	發給	c=1 d=0.932394 t=7856
+fa guang 	發光	c=2 d=1.67589 t=7856
+fa hao shi ling 	發號施令	c=1 d=0.83527 t=7856
+fa jue 	發掘	c=1 d=0.865022 t=7856
+fa jue wen ti 	發掘問題	c=1 d=0.869358 t=7856
+fa lv shang 	法律上	c=1 d=0.66365 t=7856
+fa xian 	發現	c=2 d=1.22821 t=7856
+fa xian zou 	發現走	c=1 d=0.790571 t=7856
+fan bing 	犯病	c=4 d=2.39354 t=7856
+fan chu lai 	翻出來	c=1 d=0.292293 t=7856
+fan cuo 	犯錯	c=1 d=0.726149 t=7856
+fan er 	反而	c=2 d=1.12678 t=7856
+fan fu 	反覆	c=5 d=2.76434 t=7856
+fan hui 	返回	c=2 d=1.72979 t=7856
+fan shi 	範式	c=3 d=1.10102 t=7856
+fan si 	反思	c=1 d=0.865022 t=7856
+fan ying 	反映	c=3 d=2.2354 t=7856
+fan zheng 	反正	c=1 d=0.946485 t=7856
+fang 	放	c=1 d=0.729789 t=7856
+fang an 	方案	c=15 d=3.60806 t=7856
+fang bian 	方便	c=1 d=0.970446 t=7856
+fang fa 	方法	c=3 d=1.46964 t=7856
+fang hao 	放好	c=2 d=1.90752 t=7856
+fang mian 	方面	c=3 d=1.57058 t=7856
+fang qi 	放棄	c=2 d=1.38901 t=7856
+fang shi 	方式	c=6 d=3.73113 t=7856
+fang shi yi 	方式一	c=1 d=0.687289 t=7856
+fang wen 	訪問	c=1 d=0.869358 t=7856
+fang xiang 	方向	c=2 d=0.695181 t=7856
+fang zai 	放在	c=3 d=1.53326 t=7856
+fei chang 	非常	c=2 d=0.543704 t=7856
+fei si 	肥四	c=1 d=0.895834 t=7856
+fen 	粉	c=0 d=0.0474734 t=7856
+fen bian lv 	分辨率	c=1 d=0.99005 t=7856
+fen bie 	分別	c=1 d=0.946485 t=7856
+fen gong 	份工	c=1 d=0.126818 t=7856
+fen xi 	分析	c=7 d=3.1581 t=7856
+fen xi xia 	分析下	c=1 d=0.995012 t=7856
+fen xiang 	分享	c=2 d=0.927743 t=7856
+fen zhi 	分支	c=1 d=0.918512 t=7856
+fen zhong 	分鐘	c=2 d=1.44511 t=7856
+fen zu 	分組	c=2 d=1.4905 t=7856
+feng 	風	c=0 d=0.0995012 t=7856
+feng fu 	豐富	c=2 d=1.4634 t=7856
+feng ge 	風格	c=1 d=0.965605 t=7856
+feng kuang 	瘋狂	c=1 d=0.597501 t=7856
+feng xian 	風險	c=1 d=0.231003 t=7856
+feng xian zi chan 	風險資產	c=1 d=0.557106 t=7856
+fu 	富	c=1 d=0.798516 t=7856
+fu 	負	c=1 d=0.189191 t=7856
+fu fei 	付費	c=1 d=0.860708 t=7856
+fu he 	符合	c=3 d=1.97847 t=7856
+fu he 	複合	c=2 d=1.6246 t=7856
+fu he 	複覈	c=1 d=0.873716 t=7856
+fu le 	服了	c=1 d=0.895834 t=7856
+fu pan 	覆盤	c=1 d=0.15259 t=7856
+fu tu 	富途	c=2 d=0.988129 t=7856
+fu wu 	服務	c=3 d=1.68145 t=7856
+fu wu qi 	服務器	c=2 d=1.4418 t=7856
+fu xie 	覆寫	c=1 d=0.882497 t=7856
+fu yong 	復用	c=1 d=0.763379 t=7856
+fu za 	複雜	c=7 d=2.31878 t=7856
+fu zai 	負載	c=1 d=0.717852 t=7856
+fu zhi 	複製	c=1 d=0.918512 t=7856
+fu zhu 	輔助	c=1 d=0.321422 t=7856
+ga ga 	嘎嘎	c=0 d=0.0839457 t=7856
+ga ga meng 	嘎嘎猛	c=1 d=0.843665 t=7856
+gai 	改	c=6 d=2.68399 t=7856
+gai 	該	c=3 d=1.4729 t=7856
+gai dong 	改動	c=5 d=3.0722 t=7856
+gai hao 	改好	c=1 d=0.744532 t=7856
+gai jin 	改進	c=1 d=0.895834 t=7856
+gai lv 	概率	c=1 d=0.733447 t=7856
+gai nian 	概念	c=1 d=0.704688 t=7856
+gai shan 	改善	c=2 d=1.59527 t=7856
+gai shuo 	該說	c=1 d=0.865022 t=7856
+gai wei 	改爲	c=1 d=0.941765 t=7856
+gan bu le 	幹不了	c=0 d=0.0878095 t=7856
+gan bu le huo 	幹不了活	c=1 d=0.882497 t=7856
+gan chu lai 	趕出來	c=1 d=0.429557 t=7856
+gan cui 	乾脆	c=1 d=0.985112 t=7856
+gan hui lai 	趕回來	c=1 d=0.557106 t=7856
+gan jin 	趕緊	c=1 d=0.839457 t=7856
+gan jue 	感覺	c=3 d=1.326 t=7856
+gan ma 	幹嘛	c=1 d=0.927743 t=7856
+gan shen me 	幹什麼	c=1 d=0.744532 t=7856
+gan shou 	感受	c=0 d=0.0737123 t=7856
+gan shou ge bie ne 	感受個別呢	c=1 d=0.740818 t=7856
+gan xie 	感謝	c=1 d=0.634448 t=7856
+gang 	剛	c=2 d=1.41736 t=7856
+gang gang 	剛剛	c=13 d=4.69445 t=7856
+gang hou 	剛後	c=1 d=0.138069 t=7856
+gang ru 	剛入	c=1 d=0.278037 t=7856
+gang tie 	鋼鐵	c=0 d=0.0995012 t=7856
+gang tie xia 	鋼鐵俠	c=1 d=1 t=7856
+gang xu 	剛需	c=1 d=0.83527 t=7856
+gao cuo 	搞錯	c=1 d=0.826959 t=7856
+gao dian 	搞點	c=1 d=0.802519 t=7856
+gao dian 	高點	c=1 d=0.900325 t=7856
+gao du 	高度	c=3 d=1.69269 t=7856
+gao fan 	搞飯	c=1 d=0.537944 t=7856
+gao guo 	搞過	c=1 d=0.960789 t=7856
+gao shui 	高水	c=1 d=0.941765 t=7856
+gao su 	告訴	c=3 d=1.85005 t=7856
+gao yi 	高一	c=1 d=0.634448 t=7856
+ge 	個	c=12 d=2.58805 t=7856
+ge 	鴿	c=1 d=0.369723 t=7856
+ge bie 	個別	c=0 d=0.0737123 t=7856
+ge ge 	各個	c=1 d=0.778801 t=7856
+ge gu 	個股	c=1 d=0.806541 t=7856
+ge lei 	各類	c=0 d=0.0199888 t=7856
+ge lei zi chan 	各類資產	c=1 d=0.20089 t=7856
+ge ren 	個人	c=1 d=0.960789 t=7856
+ge zhong 	各種	c=0 d=0.0941765 t=7856
+ge zhong fang shi 	各種方式	c=1 d=0.946485 t=7856
+gei 	給	c=4 d=2.1242 t=7856
+gei chu 	給出	c=1 d=0.767206 t=7856
+gei ni 	給你	c=6 d=3.79245 t=7856
+gei wo 	給我	c=5 d=2.53115 t=7856
+gen ben 	根本	c=5 d=2.94125 t=7856
+gen ju 	根據	c=1 d=0.980199 t=7856
+gen mu lu 	根目錄	c=1 d=0.937067 t=7856
+gen yuan 	根源	c=2 d=1.2749 t=7856
+geng 	更	c=19 d=4.36538 t=7856
+geng cha 	更差	c=1 d=0.932394 t=7856
+geng da 	更大	c=1 d=0.516851 t=7856
+geng di 	更低	c=1 d=0.806541 t=7856
+geng di 	耕地	c=1 d=0.802519 t=7856
+geng duo 	更多	c=1 d=0.687289 t=7856
+geng hao 	更好	c=8 d=3.51773 t=7856
+geng jia 	更加	c=1 d=0.951229 t=7856
+geng wei 	更爲	c=2 d=1.24254 t=7856
+geng xiang 	更像	c=1 d=0.856415 t=7856
+geng xin 	更新	c=8 d=4.34636 t=7856
+geng xin ban ben 	更新版本	c=1 d=0.790571 t=7856
+geng yan zhong 	更嚴重	c=1 d=0.878095 t=7856
+gong 	供	c=1 d=0.995012 t=7856
+gong bu 	工步	c=6 d=3.78088 t=7856
+gong can kao 	供參考	c=1 d=0.955997 t=7856
+gong cheng 	工程	c=0 d=0.161012 t=7856
+gong cheng shang 	工程上	c=2 d=1.07377 t=7856
+gong ji 	共計	c=1 d=0.657047 t=7856
+gong ju 	工具	c=11 d=4.79942 t=7856
+gong ju lian 	工具連	c=1 d=0.522046 t=7856
+gong neng 	功能	c=8 d=3.32554 t=7856
+gong si 	公司	c=2 d=1.36255 t=7856
+gong wang 	公網	c=2 d=0.935909 t=7856
+gong zuo 	工作	c=0 d=0.0937067 t=7856
+gong zuo qu 	工作去	c=1 d=0.941765 t=7856
+gou jian 	構建	c=8 d=4.59034 t=7856
+gou jian cheng gong 	構建成功	c=1 d=0.995012 t=7856
+gou mai 	購買	c=1 d=0.467666 t=7856
+gu piao 	股票	c=2 d=0.694197 t=7856
+gu shi 	股市	c=4 d=1.39759 t=7856
+gua 	掛	c=1 d=0.794534 t=7856
+guai 	怪	c=1 d=0.951229 t=7856
+guai yi 	怪異	c=2 d=1.29361 t=7856
+guan bi 	關閉	c=1 d=0.955997 t=7856
+guan fang 	官方	c=3 d=1.98324 t=7856
+guan jian dian 	關鍵點	c=1 d=0.980199 t=7856
+guan li 	管理	c=5 d=2.47422 t=7856
+guan li qi 	管理器	c=1 d=0.609571 t=7856
+guan lian 	關聯	c=1 d=0.985112 t=7856
+guan xi 	關係	c=1 d=0.771052 t=7856
+guan yu 	關於	c=2 d=1.36754 t=7856
+guan zhu 	關注	c=0 d=0.0865022 t=7856
+guang dong hua 	廣東話	c=1 d=0.748264 t=7856
+guang shou hao ping 	廣受好評	c=1 d=0.995012 t=7856
+guang tu 	廣圖	c=1 d=0.798516 t=7856
+gui 	硅	c=0 d=0.0913931 t=7856
+gui 	鬼	c=1 d=0.870995 t=7856
+gui dong xi 	鬼東西	c=1 d=0.965605 t=7856
+gui gen jie di 	歸根結底	c=1 d=0.960789 t=7856
+gui ji liu dong 	硅基流動	c=1 d=0.918512 t=7856
+gui ze 	規則	c=4 d=3.10429 t=7856
+guo 	過	c=4 d=2.37994 t=7856
+guo chan 	國產	c=2 d=1.31796 t=7856
+guo chang 	過長	c=1 d=0.677057 t=7856
+guo cheng 	過程	c=1 d=0.737123 t=7856
+guo fu lun 	國富論	c=3 d=0.800522 t=7856
+guo nei 	國內	c=5 d=2.69649 t=7856
+guo qu 	過去	c=3 d=1.5645 t=7856
+guo ran 	果然	c=2 d=1.64196 t=7856
+ha ha 	哈哈	c=2 d=1.348 t=7856
+ha ha ha 	哈哈哈	c=4 d=2.09262 t=7856
+hai 	還	c=16 d=4.15877 t=7856
+hai bu cuo 	還不錯	c=1 d=0.826959 t=7856
+hai bu shi 	還不是	c=1 d=0.65377 t=7856
+hai hui 	還會	c=1 d=0.14808 t=7856
+hai mei 	還沒	c=1 d=1.01465 t=7856
+hai mei hui jia 	還沒回家	c=1 d=0.394554 t=7856
+hai mei jie hun 	還沒結婚	c=1 d=0.900325 t=7856
+hai mei shui xing 	還沒睡醒	c=1 d=0.423162 t=7856
+hai shi 	還是	c=37 d=9.31889 t=7856
+hai shi yong 	還實用	c=1 d=0.852144 t=7856
+hai shou dao 	還受到	c=1 d=0.873716 t=7856
+hai xiang 	還想	c=1 d=0.97531 t=7856
+hai you 	還有	c=9 d=3.06883 t=7856
+hai zai 	還在	c=4 d=2.34516 t=7856
+hai zi 	孩子	c=1 d=0.904837 t=7856
+han shu 	函數	c=0 d=0.0565525 t=7856
+hang 	吭	c=5 d=2.84327 t=7856
+hao 	好	c=23 d=4.42215 t=7856
+hao 	薅	c=1 d=0.833861 t=7856
+hao ba 	好吧	c=1 d=0.865022 t=7856
+hao bu liao 	好不了	c=1 d=1 t=7856
+hao cheng ji 	好成績	c=1 d=0.882497 t=7856
+hao du 	好嘟	c=1 d=0.856415 t=7856
+hao duo 	好多	c=2 d=1.41114 t=7856
+hao hao hao 	好好好	c=1 d=0.501576 t=7856
+hao hen 	好狠	c=1 d=0.755784 t=7856
+hao la 	好啦	c=1 d=0.923116 t=7856
+hao lei 	好累	c=1 d=0.843665 t=7856
+hao qi 	好奇	c=1 d=0.909373 t=7856
+hao qi lai 	好起來	c=1 d=0.904837 t=7856
+hao shi 	好事	c=1 d=0.878095 t=7856
+hao wu yi wen 	毫無疑問	c=1 d=0.637628 t=7856
+hao xiang 	好像	c=10 d=3.72732 t=7856
+hao xie 	好些	c=1 d=1 t=7856
+hao yang mao 	薅羊毛	c=1 d=0.88692 t=7856
+he 	和	c=70 d=8.37613 t=7856
+he dong 	荷東	c=1 d=0.647265 t=7856
+he gui 	合規	c=1 d=0.606531 t=7856
+he li 	合理	c=1 d=0.778801 t=7856
+he ni 	和你	c=2 d=1.10436 t=7856
+he shi 	何時	c=1 d=0.477114 t=7856
+he shui 	喝水	c=1 d=0.264477 t=7856
+he ta 	和他	c=1 d=0.748264 t=7856
+he tang 	喝湯	c=0 d=0.0666977 t=7856
+he yue 	合約	c=2 d=0.965605 t=7856
+hei 	黑	c=0 d=0.0748264 t=7856
+hei lv 	黑綠	c=2 d=1.97516 t=7856
+hei qiao ke li 	黑巧克力	c=1 d=0.752014 t=7856
+hen 	很	c=5 d=1.94864 t=7856
+hen cha 	很差	c=1 d=0.603506 t=7856
+hen chang jian 	很常見	c=1 d=0.913931 t=7856
+hen duo 	很多	c=10 d=3.11462 t=7856
+hen duo ren 	很多人	c=2 d=1.48443 t=7856
+hen guai yi 	很怪異	c=1 d=0.970446 t=7856
+hen hao 	很好	c=2 d=1.14253 t=7856
+hen jiu 	很久	c=1 d=0.83527 t=7856
+hen li hai 	很厲害	c=1 d=0.814647 t=7856
+hen li jie 	很理解	c=1 d=0.869358 t=7856
+hen man 	很慢	c=2 d=1.2736 t=7856
+hen mei you 	很沒有	c=1 d=0.574072 t=7856
+hen nan 	很難	c=2 d=1.24678 t=7856
+hen qi guai 	很奇怪	c=1 d=0.882497 t=7856
+hen shuang 	很爽	c=1 d=0.740818 t=7856
+hen xi 	很細	c=1 d=0.995012 t=7856
+hen yan zhong 	很嚴重	c=1 d=0.831104 t=7856
+hen yi han 	很遺憾	c=3 d=1.87166 t=7856
+hen you 	很有	c=1 d=0.865022 t=7856
+hen you yi yi 	很有意義	c=1 d=0.722527 t=7856
+hen you yong 	很有用	c=1 d=0.891366 t=7856
+hen zhong yao 	很重要	c=1 d=0.151072 t=7856
+heng 	哼	c=2 d=1.00306 t=7856
+hong guan 	宏觀	c=5 d=1.34964 t=7856
+hong guan jing ji xue 	宏觀經濟學	c=1 d=0.194952 t=7856
+hong ye 	紅葉	c=1 d=1 t=7856
+hou 	後	c=26 d=6.55285 t=7856
+hou mian 	後面	c=6 d=1.62257 t=7856
+hou qi 	後期	c=1 d=0.722527 t=7856
+hou xu 	後續	c=2 d=1.52247 t=7856
+hou zhe 	後者	c=1 d=0.927743 t=7856
+hu chu 	呼出	c=1 d=0.818731 t=7856
+hua 	化	c=1 d=0.57695 t=7856
+hua 	畫	c=2 d=1.01027 t=7856
+hua 	話	c=2 d=0.919976 t=7856
+hua ti 	話題	c=1 d=0.603506 t=7856
+huai yi 	懷疑	c=2 d=1.47207 t=7856
+huan 	換	c=2 d=1.64416 t=7856
+huan hui 	換回	c=1 d=0.683861 t=7856
+huan jing 	環境	c=7 d=2.57683 t=7856
+huan le 	換了	c=1 d=0.810584 t=7856
+huan le 	歡樂	c=1 d=0.806541 t=7856
+huan man 	緩慢	c=0 d=0.0891366 t=7856
+huan ying 	歡迎	c=2 d=1.72586 t=7856
+huang huang 	黃黃	c=1 d=0.509156 t=7856
+huang se 	黃色	c=1 d=0.895834 t=7856
+hui 	回	c=1 d=0.895834 t=7856
+hui 	會	c=25 d=4.15878 t=7856
+hui bao 	回報	c=1 d=0.970446 t=7856
+hui bao 	彙報	c=1 d=0.97531 t=7856
+hui bu hui 	會不會	c=6 d=1.97061 t=7856
+hui da 	回答	c=4 d=2.19052 t=7856
+hui dao 	回到	c=1 d=0.612626 t=7856
+hui fu 	回覆	c=10 d=3.72787 t=7856
+hui fu 	恢復	c=3 d=1.48154 t=7856
+hui gu 	回顧	c=1 d=0.562705 t=7856
+hui gun 	回滾	c=3 d=2.13331 t=7856
+hui hua 	會話	c=5 d=2.62164 t=7856
+hui jia 	回家	c=0 d=0.0392586 t=7856
+hui qu 	回去	c=5 d=1.63672 t=7856
+hui su 	回溯	c=2 d=1.65444 t=7856
+hui tui 	回退	c=1 d=0.913931 t=7856
+hui xian 	回顯	c=1 d=0.951229 t=7856
+hui zong 	彙總	c=1 d=0.946485 t=7856
+hun he 	混合	c=2 d=1.27885 t=7856
+hun luan 	混亂	c=1 d=0.798516 t=7856
+hun za 	混雜	c=1 d=0.860708 t=7856
+huo 	或	c=1 d=0.786628 t=7856
+huo 	活	c=0 d=0.0878095 t=7856
+huo bi zheng ce 	貨幣政策	c=1 d=0.19593 t=7856
+huo qu 	獲取	c=1 d=0.946203 t=7856
+huo qu bu dao 	獲取不到	c=1 d=0.516851 t=7856
+huo qu dao 	獲取到	c=1 d=0.900325 t=7856
+huo shan 	火山	c=2 d=1.67703 t=7856
+huo yue 	活躍	c=1 d=0.965605 t=7856
+huo zhe 	或者	c=15 d=3.77771 t=7856
+ji 	基	c=0 d=0.0913931 t=7856
+ji 	幾	c=2 d=1.57765 t=7856
+ji 	既	c=1 d=0.97531 t=7856
+ji 	機	c=0 d=0.115694 t=7856
+ji ben 	基本	c=5 d=1.21259 t=7856
+ji ben shang 	基本上	c=2 d=0.811034 t=7856
+ji bie 	級別	c=2 d=1.37569 t=7856
+ji bu fen 	幾部分	c=1 d=0.748264 t=7856
+ji bu zhu 	記不住	c=1 d=0.932394 t=7856
+ji cheng 	集成	c=1 d=1 t=7854
+ji chu 	基礎	c=1 d=0.433874 t=7856
+ji ci 	幾次	c=1 d=0.390628 t=7856
+ji da lei 	幾大類	c=1 d=0.163654 t=7856
+ji de 	記得	c=4 d=1.7807 t=7856
+ji dian 	幾點	c=0 d=0.099005 t=7856
+ji dian shui de ya 	幾點睡得呀	c=1 d=0.995012 t=7856
+ji fei 	計費	c=1 d=0.786628 t=7856
+ji ge 	幾個	c=3 d=2.39112 t=7856
+ji ge yue 	幾個月	c=2 d=0.697676 t=7856
+ji hao 	極好	c=1 d=0.600496 t=7856
+ji hua 	計劃	c=9 d=3.52517 t=7856
+ji ke 	即可	c=2 d=1.92312 t=7856
+ji ke 	極客	c=0 d=0.0995012 t=7856
+ji ke feng 	極客風	c=1 d=1 t=7856
+ji kuai 	極快	c=1 d=0.496585 t=7856
+ji lv 	紀律	c=0 d=0.0225373 t=7856
+ji qi 	機器	c=1 d=1.02799 t=7856
+ji qiao 	技巧	c=2 d=0.563437 t=7856
+ji ran 	既然	c=5 d=2.4389 t=7856
+ji shao 	極少	c=1 d=0.994763 t=7856
+ji shao cheng duo 	積少成多	c=1 d=0.486752 t=7856
+ji shao jian 	極少見	c=1 d=0.856415 t=7856
+ji shi 	及時	c=1 d=0.891366 t=7856
+ji shi 	幾十	c=1 d=0.0808629 t=7856
+ji shu mian 	技術面	c=2 d=0.989454 t=7856
+ji suan 	計算	c=2 d=1.52536 t=7856
+ji xu 	繼續	c=13 d=4.15705 t=7856
+ji yi 	記憶	c=1 d=0.97531 t=7856
+ji yu 	基於	c=2 d=1.45226 t=7856
+ji zai 	記在	c=1 d=0.970446 t=7856
+ji zhi 	極致	c=1 d=0.701173 t=7856
+ji zhong yu 	集中於	c=1 d=0.718924 t=7856
+ji zhu 	記住	c=2 d=0.996422 t=7856
+jia 	加	c=2 d=1.32917 t=7856
+jia 	家	c=0 d=0.083527 t=7856
+jia cu 	加粗	c=1 d=0.891366 t=7856
+jia ge 	價格	c=4 d=2.44113 t=7856
+jia ge di 	價格低	c=1 d=0.882497 t=7856
+jia gou 	架構	c=0 d=0.099005 t=7856
+jia hao 	加好	c=1 d=0.782705 t=7856
+jia mu lu 	家目錄	c=1 d=0.839457 t=7856
+jia ru 	加入	c=4 d=2.34276 t=7856
+jia shang 	加上	c=4 d=3.11621 t=7856
+jia she 	假設	c=1 d=0.726149 t=7856
+jia she 	架設	c=1 d=0.729789 t=7856
+jia su 	加速	c=1 d=1.06652 t=7856
+jia xi 	加息	c=0 d=0.0203926 t=7856
+jia xi jiang xi 	加息降息	c=1 d=0.204948 t=7856
+jia you 	加油	c=1 d=0.970446 t=7856
+jia zai 	加載	c=6 d=2.89557 t=7856
+jian 	見	c=1 d=1.06272 t=7856
+jian 	鍵	c=1 d=0.980199 t=7856
+jian bian 	簡便	c=0 d=0.0677057 t=7856
+jian cha 	檢查	c=6 d=3.12781 t=7856
+jian cha xia 	檢查下	c=1 d=0.612626 t=7856
+jian chi 	堅持	c=1 d=0.923116 t=7856
+jian dan 	簡單	c=2 d=0.798516 t=7856
+jian fu 	減負	c=1 d=0.733447 t=7856
+jian li 	建立	c=1 d=0.147342 t=7856
+jian pan 	鍵盤	c=1 d=0.918512 t=7856
+jian ren 	兼任	c=1 d=0.690734 t=7856
+jian rong 	兼容	c=2 d=1.45226 t=7856
+jian shi guo 	見識過	c=1 d=0.70822 t=7856
+jian suo 	檢索	c=7 d=4.00909 t=7856
+jian xin 	堅信	c=1 d=0.918512 t=7856
+jian yao 	簡要	c=1 d=0.980199 t=7856
+jian yi 	建議	c=11 d=3.61141 t=7856
+jian zhi 	簡直	c=1 d=0.860708 t=7856
+jiang 	將	c=2 d=1.59604 t=7856
+jiang 	講	c=4 d=2.0032 t=7856
+jiang dao di 	將到底	c=1 d=0.375311 t=7856
+jiang di 	降低	c=1 d=0.970446 t=7856
+jiang ji 	降級	c=1 d=0.843665 t=7856
+jiang lai 	將來	c=1 d=0.927743 t=7856
+jiang xi 	降息	c=0 d=0.0203926 t=7856
+jiao 	叫	c=4 d=2.42334 t=7856
+jiao ben 	腳本	c=5 d=3.58388 t=7856
+jiao hao 	較好	c=1 d=0.786628 t=7856
+jiao ke shu 	教科書	c=1 d=0.154896 t=7856
+jiao qiang xian 	交強險	c=1 d=0.683861 t=7856
+jiao ta 	叫他	c=1 d=0.951229 t=7856
+jiao wo 	教我	c=1 d=0.937067 t=7856
+jiao yi 	交易	c=13 d=1.89776 t=7856
+jiao yi fang mian 	交易方面	c=1 d=0.33454 t=7856
+jiao yi ji lv 	交易紀律	c=1 d=0.226502 t=7856
+jiao yi luo ji 	交易邏輯	c=1 d=0.145876 t=7856
+jiao yi nan zuo 	交易難做	c=2 d=1.34091 t=7856
+jiao yi suo 	交易所	c=2 d=0.267246 t=7856
+jiao yi yuan 	交易員	c=1 d=0.138069 t=7856
+jie 	借	c=1 d=0.913931 t=7856
+jie chu 	解除	c=2 d=1.51357 t=7856
+jie dian 	節點	c=5 d=2.07743 t=7856
+jie duan 	階段	c=1 d=0.146607 t=7856
+jie duan xing 	階段性	c=1 d=0.377192 t=7856
+jie fa 	揭發	c=1 d=0.895834 t=7856
+jie fa 	解法	c=5 d=2.41999 t=7856
+jie gou 	結構	c=1 d=0.878095 t=7856
+jie guo 	結果	c=9 d=3.32809 t=7856
+jie he 	結合	c=1 d=0.748264 t=7856
+jie hun 	結婚	c=0 d=0.0895834 t=7856
+jie jue 	解決	c=17 d=5.47503 t=7856
+jie lun 	結論	c=1 d=0.57695 t=7856
+jie mian 	界面	c=1 d=0.995012 t=7856
+jie qu 	截取	c=1 d=0.904837 t=7856
+jie ru 	接入	c=2 d=1.58528 t=7856
+jie ru dian 	接入點	c=2 d=0.965605 t=7856
+jie shao 	介紹	c=2 d=1.77174 t=7856
+jie shi 	解釋	c=2 d=1.29699 t=7856
+jie shou 	接受	c=1 d=0.927743 t=7856
+jie shu 	結束	c=1 d=0.752014 t=7856
+jie tu 	截圖	c=3 d=2.68955 t=7856
+jie xia lai 	接下來	c=4 d=2.29909 t=7856
+jie ya 	解壓	c=1 d=0.822835 t=7856
+jin bu 	進步	c=1 d=0.810584 t=7856
+jin gong can kao 	僅供參考	c=1 d=0.472367 t=7856
+jin guan 	儘管	c=4 d=1.79667 t=7856
+jin ji 	緊急	c=1 d=0.514274 t=7856
+jin jia 	金價	c=1 d=0.358796 t=7856
+jin liang 	儘量	c=2 d=1.12128 t=7856
+jin liang 	近兩	c=0 d=0.0847894 t=7856
+jin liang ci 	近兩次	c=1 d=0.852144 t=7856
+jin qu 	進去	c=1 d=0.745853 t=7856
+jin wan 	今晚	c=7 d=1.86415 t=7856
+jin yin 	金銀	c=1 d=0.802519 t=7856
+jin yong 	禁用	c=1 d=0.995012 t=7856
+jing 	淨	c=1 d=0.188247 t=7856
+jing dong mai 	頸動脈	c=1 d=0.856415 t=7856
+jing ji 	經濟	c=2 d=0.995012 t=7856
+jing jian 	精簡	c=1 d=1.04757 t=7856
+jing shen 	精神	c=2 d=1.70391 t=7856
+jing tong 	精通	c=1 d=0.332871 t=7856
+jing xiang 	鏡像	c=4 d=2.50414 t=7856
+jing xiang yuan 	鏡像源	c=1 d=0.965605 t=7856
+jing yan 	經驗	c=1 d=0.798516 t=7856
+jing zhun 	精準	c=1 d=0.951229 t=7856
+jiu 	久	c=1 d=0.878095 t=7856
+jiu 	就	c=80 d=8.39 t=7856
+jiu ba 	酒吧	c=1 d=0.532592 t=7856
+jiu cuo 	糾錯	c=6 d=3.13212 t=7856
+jiu jia su 	就加速	c=1 d=0.965605 t=7856
+jiu jing 	究竟	c=2 d=1.14352 t=7856
+jiu le 	久了	c=0 d=0.0371577 t=7856
+jiu pian 	糾偏	c=1 d=0.755784 t=7856
+jiu shi 	就是	c=2 d=1.05092 t=7856
+jiu suan 	就算	c=1 d=0.831104 t=7856
+jiu xiang 	就像	c=2 d=1.53242 t=7856
+jiu xiang 	就向	c=0 d=0.0737123 t=7856
+jiu xiang yao 	就向要	c=1 d=0.740818 t=7856
+jiu zheng 	糾正	c=2 d=1.49072 t=7856
+ju ge li zi 	舉個例子	c=1 d=0.339596 t=7856
+ju lie 	劇烈	c=0 d=0.0171187 t=7856
+ju lie bian hua 	劇烈變化	c=1 d=0.172045 t=7856
+ju ran 	居然	c=2 d=1.05709 t=7856
+ju ti 	具體	c=11 d=2.86882 t=7856
+ju xian xing 	侷限性	c=1 d=0.429557 t=7856
+ju yi fan san 	舉一反三	c=1 d=0.501576 t=7856
+ju yu wang 	局域網	c=2 d=0.960737 t=7856
+ju zhen 	矩陣	c=1 d=0.923116 t=7856
+jue da duo shu ren 	絕大多數人	c=1 d=0.123687 t=7856
+jue de 	覺得	c=15 d=4.40591 t=7856
+jue ding 	決定	c=3 d=1.67305 t=7856
+jue dui 	絕對	c=2 d=0.869744 t=7856
+ka 	卡	c=1 d=0.860708 t=7856
+ka de 	卡得	c=1 d=0.763379 t=7856
+ka si 	卡死	c=6 d=3.93415 t=7856
+ka zai 	卡在	c=1 d=0.70822 t=7856
+ka zai na 	卡在那	c=1 d=0.847894 t=7856
+kai 	開	c=3 d=1.04176 t=7856
+kai cang 	開倉	c=2 d=0.941765 t=7856
+kai en 	凱恩	c=2 d=1.60864 t=7856
+kai fa 	開發	c=5 d=2.1834 t=7856
+kai guan 	開關	c=6 d=2.90766 t=7856
+kai ji 	開機	c=1 d=0.408608 t=7856
+kai pan 	開盤	c=1 d=0.133989 t=7856
+kai qi 	開啓	c=4 d=2.48966 t=7856
+kai shi 	開始	c=5 d=2.20595 t=7856
+kai tong 	開通	c=1 d=0.960789 t=7856
+kai tou 	開頭	c=2 d=0.806541 t=7856
+kai xiao 	開銷	c=1 d=0.794534 t=7856
+kai yuan 	開源	c=1 d=0.606531 t=7856
+kan 	看	c=5 d=2.26899 t=7856
+kan bu dao 	看不到	c=2 d=1.36609 t=7856
+kan bu dong 	看不懂	c=1 d=0.33454 t=7856
+kan bu qing 	看不清	c=1 d=1 t=7856
+kan dao 	看到	c=13 d=4.79078 t=7856
+kan de 	看的	c=1 d=0.447088 t=7856
+kan die 	看跌	c=0 d=0.0697676 t=7856
+kan die qi quan 	看跌期權	c=1 d=0.701173 t=7856
+kan dong 	看懂	c=1 d=0.733447 t=7856
+kan guo 	看過	c=1 d=0.941765 t=7856
+kan hao 	看好	c=1 d=0.774916 t=7856
+kan kan 	看看	c=17 d=4.17944 t=7856
+kan lai 	看來	c=3 d=1.68567 t=7856
+kan qi lai 	看起來	c=12 d=5.38378 t=7856
+kan qing 	看清	c=1 d=0.904837 t=7856
+kan qing chu 	看清楚	c=1 d=0.995012 t=7856
+kan wan 	看完	c=3 d=1.08565 t=7856
+kan xi 	看戲	c=1 d=0.67032 t=7856
+kao 	考	c=1 d=0.839457 t=7856
+kao 	靠	c=1 d=0.895834 t=7856
+kao lv 	考慮	c=1 d=0.100761 t=7856
+kao shi 	考試	c=2 d=1.04609 t=7856
+ke 	可	c=2 d=0.832344 t=7856
+ke ai 	可愛	c=0 d=0.0798516 t=7856
+ke ding zhi hua 	可定製化	c=1 d=0.822835 t=7856
+ke gong 	可供	c=0 d=0.083527 t=7856
+ke gong xuan ze 	可供選擇	c=1 d=0.839457 t=7856
+ke kuo zhan xing 	可擴展性	c=1 d=0.955997 t=7856
+ke neng 	可能	c=5 d=1.4203 t=7856
+ke wan xing 	可玩性	c=1 d=0.865022 t=7856
+ke xi 	可惜	c=1 d=0.442639 t=7856
+ke xing 	可行	c=1 d=0.891366 t=7856
+ke xing xing 	可行性	c=1 d=0.774916 t=7856
+ke xuan 	可選	c=2 d=1.78763 t=7856
+ke xue 	科學	c=1 d=0.56836 t=7856
+ke yi 	可以	c=86 d=9.27836 t=7856
+ke yong 	可用	c=4 d=2.45974 t=7856
+ke yong yu 	可用於	c=1 d=0.588605 t=7856
+ke zhuan zhai 	可轉債	c=1 d=0.582748 t=7856
+ken ding 	肯定	c=4 d=2.0172 t=7856
+keng 	坑	c=1 d=0.891366 t=7856
+kong 	空	c=2 d=0.965605 t=7856
+kong bai 	空白	c=1 d=0.932394 t=7856
+kong cang 	空倉	c=1 d=0.666977 t=7856
+kong jian 	空間	c=1 d=0.913931 t=7856
+kong zhi 	控制	c=2 d=0.755784 t=7856
+kou yu 	口語	c=1 d=0.852144 t=7856
+ku ku yin qian 	庫庫印錢	c=1 d=0.818731 t=7856
+kua zhang 	誇張	c=1 d=0.927743 t=7856
+kuai 	塊	c=3 d=0.577177 t=7856
+kuai 	快	c=4 d=1.20492 t=7856
+kuai jie 	快捷	c=2 d=1.47567 t=7856
+kuai jie jian 	快捷鍵	c=6 d=3.35203 t=7856
+kuang 	框	c=1 d=0.891366 t=7856
+kuo zhao 	擴招	c=1 d=0.873716 t=7856
+la 	啦	c=8 d=1.23146 t=7856
+la 	拉	c=1 d=0.852144 t=7856
+la 	辣	c=1 d=0.690734 t=7856
+la ji 	垃圾	c=2 d=1.62028 t=7856
+lai 	來	c=8 d=2.62382 t=7856
+lai lai hui hui 	來來回回	c=1 d=0.878095 t=7856
+lai le 	來了	c=0 d=0.0771052 t=7856
+lai shuo 	來說	c=1 d=0.514274 t=7856
+lai yong 	來用	c=1 d=0.778801 t=7856
+lan de 	懶得	c=0 d=0.0400517 t=7856
+lan de fa 	懶得發	c=1 d=0.402524 t=7856
+lan ya 	藍牙	c=11 d=4.52062 t=7856
+lang fei 	浪費	c=2 d=1.60425 t=7856
+lang fei diao 	浪費掉	c=1 d=0.941765 t=7856
+lao po 	老婆	c=5 d=1.49729 t=7856
+lao yang zi 	老樣子	c=1 d=1 t=7856
+le 	了	c=228 d=20.09 t=7856
+le qu 	樂趣	c=1 d=1 t=7856
+lei si 	類似	c=4 d=2.44424 t=7856
+lei xing 	類型	c=0 d=0.0163654 t=7856
+lei zhui 	累贅	c=1 d=0.927743 t=7856
+leng 	冷	c=0 d=0.0637628 t=7856
+leng bao li 	冷暴力	c=1 d=0.640824 t=7856
+li 	裏	c=19 d=4.90412 t=7856
+li hai 	厲害	c=1 d=0.273898 t=7856
+li jie 	理解	c=4 d=2.01932 t=7856
+li lun shang 	理論上	c=5 d=2.20934 t=7856
+li mian 	裏面	c=5 d=2.11905 t=7856
+li shi 	歷史	c=1 d=0.701173 t=7856
+li ying 	理應	c=1 d=0.891366 t=7856
+li yong 	利用	c=1 d=0.449329 t=7856
+li zi 	例子	c=1 d=0.882497 t=7856
+lian 	連	c=1 d=0.805497 t=7856
+lian 	鏈	c=0 d=0.131482 t=7856
+lian jie 	連接	c=1 d=0.66365 t=7856
+lian jie 	鏈接	c=2 d=1.62102 t=7856
+lian xiang 	聯想	c=1 d=0.763379 t=7856
+liang fang mian 	兩方面	c=1 d=0.923116 t=7856
+liang ge 	兩個	c=7 d=3.22016 t=7856
+liang hua 	量化	c=0 d=0.0970446 t=7856
+liang hua ban 	量化辦	c=1 d=0.97531 t=7856
+liang jian shi 	兩件事	c=1 d=0.722527 t=7856
+liang zhang 	兩張	c=0 d=0.0860708 t=7856
+liang zhang ka 	兩張卡	c=1 d=0.865022 t=7856
+liang zhong 	兩種	c=2 d=1.62215 t=7856
+liao 	聊	c=1 d=0.606531 t=7856
+liao bu qi 	了不起	c=1 d=0.882497 t=7856
+liao jie 	瞭解	c=4 d=0.96595 t=7856
+liao tian 	聊天	c=1 d=0.852144 t=7856
+lie 	列	c=1 d=0.718924 t=7856
+lie biao 	列表	c=1 d=0.70822 t=7856
+lie du 	烈度	c=1 d=0.752014 t=7856
+lin shi 	臨時	c=4 d=2.42184 t=7856
+ling 	另	c=1 d=0.806541 t=7856
+ling huo 	靈活	c=1 d=0.546074 t=7856
+ling wai 	另外	c=19 d=4.44437 t=7856
+ling wo 	令我	c=0 d=0.0680451 t=7856
+liu chang 	流暢	c=1 d=0.900325 t=7856
+liu dong 	流動	c=0 d=0.0913931 t=7856
+liu dong xing 	流動性	c=1 d=0.202909 t=7856
+liu kong 	留空	c=1 d=0.960789 t=7856
+liu lan qi 	瀏覽器	c=1 d=0.97531 t=7856
+liu shi 	流逝	c=1 d=0.103312 t=7856
+liu yi 	留意	c=1 d=0.755784 t=7856
+liu yi dao 	留意到	c=1 d=0.83527 t=7856
+liu zai 	留在	c=1 d=0.941765 t=7856
+liu zhe 	留着	c=1 d=0.909373 t=7856
+lo 	咯	c=1 d=0.438235 t=7856
+lou le 	漏了	c=1 d=0.66365 t=7856
+lou xia 	樓下	c=1 d=0.527292 t=7856
+lu xian 	路線	c=3 d=2.19669 t=7856
+lu you 	路由	c=12 d=4.09423 t=7856
+lun liu 	輪流	c=1 d=0.597501 t=7856
+lun wen 	論文	c=1 d=0.927743 t=7856
+lun zi 	輪子	c=1 d=0.543351 t=7856
+luo ji 	邏輯	c=7 d=1.62245 t=7856
+luo ji lian 	邏輯鏈	c=2 d=0.860708 t=7856
+luo shi 	落實	c=1 d=0.847894 t=7856
+luo si 	螺螄	c=0 d=0.0474734 t=7856
+luo si fen 	螺螄粉	c=1 d=0.477114 t=7856
+lv 	鋁	c=1 d=0.798516 t=7856
+lv shi 	律師	c=1 d=0.843665 t=7856
+ma 	嗎	c=92 d=10.809 t=7856
+ma 	嘛	c=4 d=2.33112 t=7856
+ma le 	麻了	c=1 d=0.774916 t=7856
+ma mu 	麻木	c=1 d=0.895834 t=7856
+ma pi 	馬屁	c=1 d=0.540641 t=7856
+mai 	買	c=1 d=0.0902655 t=7856
+mai che 	買車	c=1 d=0.67032 t=7856
+mai ke feng 	麥克風	c=1 d=1 t=7856
+mai ru 	買入	c=1 d=0.57695 t=7856
+man 	蠻	c=0 d=0.0371577 t=7856
+man jiu le 	蠻久了	c=1 d=0.373439 t=7856
+man yi 	滿意	c=1 d=0.554327 t=7856
+mang 	忙	c=0 d=0.0136014 t=7856
+mang yi hui 	忙一會	c=1 d=0.136695 t=7856
+mao bing 	毛病	c=1 d=1 t=7856
+mao dun 	矛盾	c=1 d=0.814647 t=7856
+mao hao 	冒號	c=1 d=0.97531 t=7856
+mei 	沒	c=4 d=1.85208 t=7856
+mei 	美	c=0 d=0.0557106 t=7856
+mei ban fa 	沒辦法	c=1 d=0.960789 t=7856
+mei bi yao 	沒必要	c=1 d=0.527292 t=7856
+mei ci 	每次	c=5 d=1.49345 t=7856
+mei cuo 	沒錯	c=2 d=1.1773 t=7856
+mei fan ying 	沒反應	c=1 d=0.985112 t=7856
+mei gan 	美感	c=1 d=0.932394 t=7856
+mei ge 	每個	c=1 d=0.687289 t=7856
+mei gu 	美股	c=1 d=0.794534 t=7856
+mei guan xi 	沒關係	c=1 d=0.183599 t=7856
+mei jin 	美金	c=1 d=0.66034 t=7856
+mei kan dao 	沒看到	c=1 d=0.810584 t=7856
+mei li you 	沒理由	c=1 d=0.955997 t=7856
+mei pao wan 	沒跑完	c=1 d=0.941765 t=7856
+mei qu 	沒趣	c=1 d=0.985112 t=7856
+mei sha 	沒啥	c=1 d=0.444858 t=7856
+mei sheng xiao 	沒生效	c=1 d=0.694197 t=7856
+mei sheng yin 	沒聲音	c=1 d=1 t=7856
+mei shi 	沒事	c=1 d=0.980199 t=7856
+mei si le 	美死了	c=1 d=0.559898 t=7856
+mei suo wei 	沒所謂	c=1 d=0.634448 t=7856
+mei tian 	每天	c=1 d=0.856415 t=7856
+mei tian jia 	沒添加	c=1 d=0.66365 t=7856
+mei wen ti 	沒問題	c=5 d=2.36905 t=7856
+mei yong 	沒用	c=4 d=2.94101 t=7856
+mei yong guo 	沒用過	c=1 d=0.995012 t=7856
+mei you 	沒有	c=33 d=7.5431 t=7856
+mei yu dao 	沒遇到	c=0 d=0.0847894 t=7856
+mei yu dao guo 	沒遇到過	c=1 d=0.852144 t=7856
+mei zhu yi 	沒主意	c=1 d=0.891366 t=7856
+mei zuo yong 	沒作用	c=1 d=0.965605 t=7856
+men 	們	c=3 d=1.39475 t=7856
+men kou 	門口	c=1 d=0.535261 t=7856
+meng 	猛	c=0 d=0.0839457 t=7856
+mi 	米	c=1 d=0.647265 t=7856
+mi ma 	密碼	c=1 d=0.748264 t=7856
+mian ban 	面板	c=1 d=0.865022 t=7856
+mian fei 	免費	c=17 d=5.81557 t=7856
+min jian 	民間	c=0 d=0.0591555 t=7856
+min jian zhi hui 	民間智慧	c=3 d=1.78808 t=7856
+ming 	名	c=0 d=0.0960789 t=7856
+ming bai 	明白	c=1 d=0.980199 t=7856
+ming ling 	命令	c=10 d=4.16418 t=7856
+ming ling hang 	命令行	c=1 d=0.980199 t=7856
+ming ming 	命名	c=1 d=0.927743 t=7856
+ming ming 	明明	c=4 d=2.33408 t=7856
+ming tian 	明天	c=3 d=1.41059 t=7856
+ming wen 	明文	c=1 d=0.687289 t=7856
+ming xian 	明顯	c=2 d=1.66254 t=7856
+ming zi 	名字	c=1 d=0.774916 t=7856
+mo 	磨	c=3 d=0.730281 t=7856
+mo dao 	磨刀	c=1 d=0.17552 t=7856
+mo he qi 	磨合期	c=1 d=0.290835 t=7856
+mo kuai 	模塊	c=1 d=1 t=7856
+mo ren 	默認	c=3 d=2.27047 t=7856
+mo shi 	模式	c=4 d=2.14031 t=7856
+mo xing 	模型	c=46 d=7.04498 t=7856
+mou ge 	某個	c=2 d=1.2372 t=7856
+mu lu 	目錄	c=0 d=0.083527 t=7856
+mu qian 	目前	c=5 d=2.25304 t=7856
+mu yu 	母語	c=1 d=0.965605 t=7856
+na 	那	c=17 d=3.41734 t=7856
+na bian 	那邊	c=1 d=0.718924 t=7856
+na dao 	拿到	c=1 d=0.878095 t=7856
+na ge 	哪個	c=11 d=3.37585 t=7856
+na ge 	那個	c=21 d=6.42699 t=7856
+na li 	哪裏	c=3 d=2.50185 t=7856
+na me 	那麼	c=2 d=0.496585 t=7856
+na me duo 	那麼多	c=1 d=0.937067 t=7856
+na qu 	拿去	c=0 d=0.0980199 t=7856
+na qu zuo 	拿去做	c=1 d=0.985112 t=7856
+na tai 	那臺	c=0 d=0.0794534 t=7856
+na tai ji 	那臺機	c=1 d=0.798516 t=7856
+na tiao 	那條	c=2 d=1.77883 t=7856
+na xie 	哪些	c=2 d=1.53801 t=7856
+na xie 	那些	c=3 d=1.08134 t=7856
+na yang 	那樣	c=2 d=1.74648 t=7856
+na you 	那又	c=0 d=0.0308819 t=7856
+na you que shi 	那又確實	c=1 d=0.310367 t=7856
+na zhong 	哪種	c=1 d=0.900325 t=7856
+na zhong 	那種	c=2 d=1.46452 t=7856
+nai 	奶	c=1 d=0.650509 t=7856
+nan dao 	難道	c=1 d=0.519442 t=7856
+nan mian 	難免	c=1 d=0.282239 t=7856
+nan shou 	難受	c=1 d=0.895834 t=7856
+nan zuo 	難做	c=1 d=0.753244 t=7856
+nao xue guan 	腦血管	c=1 d=0.882497 t=7856
+ne 	呢	c=3 d=2.04843 t=7856
+ne 	訥	c=3 d=2.36949 t=7856
+nei 	內	c=2 d=0.680345 t=7856
+nei he 	內核	c=3 d=2.29502 t=7856
+nei rong 	內容	c=5 d=3.01825 t=7856
+neng 	能	c=11 d=3.98703 t=7856
+neng ban dao ma 	能辦到嗎	c=1 d=0.778801 t=7856
+neng bu neng 	能不能	c=3 d=1.5901 t=7856
+neng dao 	能到	c=1 d=0.995012 t=7856
+neng gou 	能夠	c=1 d=0.932394 t=7856
+neng li 	能力	c=8 d=2.61144 t=7856
+neng piao ze piao 	能嫖則嫖	c=1 d=0.67032 t=7856
+neng xiu fu 	能修復	c=1 d=0.995012 t=7856
+ni 	你	c=247 d=15.4584 t=7856
+ni ba 	你把	c=1 d=0.826959 t=7856
+ni ding 	擬定	c=1 d=0.951229 t=7856
+ni kan 	你看	c=1 d=0.341298 t=7856
+ni ke yi 	你可以	c=1 d=0.694197 t=7856
+ni men 	你們	c=2 d=0.450651 t=7856
+ni que ding 	你確定	c=1 d=0.88692 t=7856
+ni shi shi 	你試試	c=1 d=0.790571 t=7856
+ni xiang 	逆向	c=0 d=0.0740818 t=7856
+ni xiang gong cheng 	逆向工程	c=1 d=0.744532 t=7856
+ni you 	你又	c=0 d=0.0559898 t=7856
+ni you wang le 	你又忘了	c=1 d=0.562705 t=7856
+nian 	年	c=2 d=0.640824 t=7856
+nian hu 	黏糊	c=1 d=0.970446 t=7856
+niao 	鳥	c=1 d=0.697676 t=7856
+nie 	捏	c=1 d=0.499074 t=7856
+niu shi 	牛市	c=1 d=0.71177 t=7856
+nong 	弄	c=4 d=2.30451 t=7856
+nong jing 	濃精	c=1 d=0.985112 t=7856
+nu li 	努力	c=1 d=0.895834 t=7856
+o 	哦	c=0 d=0.0425283 t=7856
+o 	噢	c=2 d=0.945262 t=7856
+o lou 	哦漏	c=1 d=0.453845 t=7856
+o pen chu 	哦噴出	c=1 d=0.427415 t=7856
+o ye 	噢耶	c=1 d=0.831104 t=7856
+ou er 	偶爾	c=3 d=1.00725 t=7856
+pa qu 	怕去	c=1 d=0.927743 t=7856
+pa qu 	爬取	c=2 d=1.29229 t=7856
+pai 	拍	c=1 d=0.548812 t=7856
+pai 	牌	c=1 d=0.847894 t=7856
+pai cha 	排查	c=1 d=0.66365 t=7856
+pai chu 	排除	c=1 d=0.798516 t=7856
+pai dui 	排隊	c=1 d=0.463013 t=7856
+pai zhao 	拍照	c=1 d=0.341298 t=7856
+pan duan 	判斷	c=1 d=0.923116 t=7856
+pao 	跑	c=6 d=2.26045 t=7856
+pao man 	跑滿	c=1 d=0.869358 t=7856
+pao qi lai 	跑起來	c=1 d=0.904837 t=7856
+pao qu 	跑去	c=1 d=0.782705 t=7856
+pao wan 	跑完	c=0 d=0.0937067 t=7856
+pao wu xian 	拋物線	c=1 d=0.733447 t=7856
+pei dui 	配對	c=1 d=0.895834 t=7856
+pei he 	配合	c=1 d=0.99005 t=7856
+pei se 	配色	c=1 d=0.951229 t=7856
+pei zhi 	配置	c=16 d=5.24109 t=7856
+pen chu 	噴出	c=0 d=0.0425283 t=7856
+peng you 	朋友	c=1 d=0.150318 t=7856
+pian fu 	篇幅	c=1 d=0.985112 t=7856
+pian hao 	偏好	c=1 d=0.66365 t=7856
+pian yi 	便宜	c=1 d=0.729789 t=7856
+pian zi 	騙子	c=1 d=0.752014 t=7856
+ping gu 	評估	c=4 d=1.83345 t=7856
+ping mu 	屏幕	c=5 d=3.04527 t=7856
+po 	破	c=1 d=0.904837 t=7856
+po huai 	破壞	c=0 d=0.067032 t=7856
+pou xi 	剖析	c=1 d=0.246597 t=7856
+pu 	噗	c=2 d=1.10646 t=7856
+qi bu shi 	豈不是	c=1 d=0.755784 t=7856
+qi ci 	其次	c=1 d=0.937067 t=7856
+qi dong 	啓動	c=8 d=3.97506 t=7856
+qi dong qi 	啓動器	c=2 d=1.23557 t=7856
+qi dong qi 	起動器	c=1 d=0.904837 t=7856
+qi guai 	奇怪	c=2 d=1.46009 t=7856
+qi huo 	期貨	c=6 d=2.06065 t=7856
+qi jian 	期間	c=1 d=0.843665 t=7856
+qi jian 	起見	c=1 d=0.847894 t=7856
+qi lai 	起來	c=1 d=0.324652 t=7856
+qi quan 	期權	c=4 d=1.39992 t=7856
+qi quan 	齊全	c=1 d=0.23457 t=7856
+qi shi 	其實	c=33 d=5.45726 t=7856
+qi si 	氣死	c=1 d=0.88692 t=7856
+qi ta 	其他	c=11 d=3.4512 t=7856
+qian 	前	c=4 d=2.6038 t=7856
+qian 	錢	c=2 d=0.800215 t=7856
+qian fei 	欠費	c=1 d=0.923116 t=7856
+qian liang ge 	前兩個	c=2 d=1.19183 t=7856
+qian mian 	前面	c=11 d=4.08182 t=7856
+qian ti 	前提	c=3 d=1.38529 t=7856
+qian wan 	千萬	c=1 d=0.543351 t=7856
+qian zhen zi 	前陣子	c=2 d=1.10136 t=7856
+qiao 	敲	c=1 d=0.418952 t=7856
+qiao 	橋	c=0 d=0.071177 t=7856
+qiao ke li 	巧克力	c=0 d=0.0748264 t=7856
+qie 	且	c=5 d=2.62905 t=7856
+qie 	切	c=0 d=0.0873716 t=7856
+qie huan 	切換	c=7 d=3.22784 t=7856
+qie hui qu 	切回去	c=1 d=0.878095 t=7856
+qin zi 	親自	c=2 d=1.37242 t=7856
+qin zi xie 	親自寫	c=1 d=0.516851 t=7856
+qing 	請	c=81 d=10.5024 t=7856
+qing chu 	清除	c=2 d=1.49505 t=7856
+qing kuang 	情況	c=9 d=4.21546 t=7856
+qing liang ji 	輕量級	c=0 d=0.0680451 t=7856
+qing ni 	請你	c=21 d=5.11709 t=7856
+qing qiu 	請求	c=1 d=0.865022 t=7856
+qing wen 	請問	c=1 d=0.97531 t=7856
+qing xi 	清晰	c=1 d=0.458406 t=7856
+qing xiang 	傾向	c=3 d=1.51402 t=7856
+qing xiang yu 	傾向於	c=1 d=0.755784 t=7856
+qing zhu yi 	請注意	c=0 d=0.0918512 t=7856
+qu 	區	c=1 d=0.946485 t=7856
+qu 	去	c=26 d=5.02097 t=7856
+qu bie 	區別	c=3 d=1.60637 t=7856
+qu bu cheng 	去不成	c=1 d=0.380983 t=7856
+qu dao 	去到	c=1 d=0.826959 t=7856
+qu diao 	去掉	c=2 d=1.76125 t=7856
+qu dong 	驅動	c=7 d=3.79741 t=7856
+qu dong he 	驅動和	c=1 d=0.937067 t=7856
+qu na 	去那	c=0 d=0.0909373 t=7856
+qu nian 	去年	c=1 d=0.279431 t=7856
+qu xiao 	取消	c=2 d=1.7474 t=7856
+quan bu 	全部	c=1 d=0.895834 t=7856
+quan dou 	全都	c=1 d=0.927743 t=7856
+quan dou you 	全都有	c=1 d=0.946485 t=7856
+quan jia 	全家	c=2 d=1.19254 t=7856
+quan ju 	全局	c=0 d=0.0980199 t=7856
+quan ju gui ze 	全局規則	c=1 d=0.985112 t=7856
+quan kao 	全靠	c=1 d=0.125556 t=7856
+quan neng 	全能	c=1 d=0.891366 t=7856
+quan ping 	全屏	c=1 d=0.860708 t=7856
+quan xi tong 	全系統	c=1 d=0.980199 t=7856
+quan xin 	全新	c=1 d=0.882497 t=7856
+quan zhi 	全職	c=0 d=0.0865022 t=7856
+quan zhi tai tai 	全職太太	c=1 d=0.869358 t=7856
+que 	卻	c=1 d=0.752014 t=7856
+que 	確	c=1 d=0.941765 t=7856
+que bao 	確保	c=1 d=0.865022 t=7856
+que ding 	確定	c=5 d=2.61865 t=7856
+que ren 	確認	c=15 d=5.30075 t=7856
+que shao 	缺少	c=3 d=2.16956 t=7856
+que shi 	確實	c=11 d=3.35841 t=7856
+qun li 	羣裏	c=1 d=0.923116 t=7856
+ran 	然	c=1 d=0.955997 t=7856
+ran hou 	然後	c=12 d=2.8083 t=7856
+rang 	讓	c=13 d=3.71911 t=7856
+rang ta 	讓它	c=1 d=0.634448 t=7856
+rao guo 	繞過	c=1 d=0.951229 t=7856
+re men 	熱門	c=1 d=0.70822 t=7856
+ren 	人	c=1 d=0.977492 t=7856
+ren gong zhi neng 	人工智能	c=1 d=0.65377 t=7856
+ren he 	任何	c=5 d=3.10727 t=7856
+ren jia 	人家	c=1 d=0.802519 t=7856
+ren shi 	認識	c=2 d=0.463013 t=7856
+ren tong 	認同	c=2 d=0.853068 t=7856
+ren wei 	認爲	c=16 d=3.06022 t=7856
+ren wu 	任務	c=4 d=1.46754 t=7856
+ren xin 	人心	c=1 d=0.506617 t=7856
+ren yi 	任意	c=1 d=0.88692 t=7856
+ren zai 	人在	c=1 d=0.715338 t=7856
+ren zhen 	認真	c=1 d=0.726149 t=7856
+ren zhi 	認知	c=2 d=0.856302 t=7856
+reng 	仍	c=1 d=0.666977 t=7856
+ri chang 	日常	c=2 d=1.4191 t=7856
+ri zhi 	日誌	c=8 d=4.0893 t=7856
+ri zi 	日子	c=1 d=0.873716 t=7856
+rong qi 	容器	c=4 d=2.46375 t=7856
+rong yu 	冗餘	c=2 d=1.05 t=7856
+ru 	入	c=1 d=0.690734 t=7856
+ru ci 	如此	c=3 d=1.51775 t=7856
+ru guo 	如果	c=25 d=5.27599 t=7856
+ru he 	如何	c=12 d=4.03443 t=7856
+ru he zuo 	如何做	c=1 d=0.715338 t=7856
+ru men 	入門	c=1 d=0.150318 t=7856
+ru shi 	入市	c=1 d=0.180866 t=7856
+ru tu 	如圖	c=3 d=2.33554 t=7856
+ru wei 	入味	c=0 d=0.0431711 t=7856
+ru xia 	如下	c=2 d=0.943195 t=7856
+ruan jian 	軟件	c=2 d=1.35689 t=7856
+run se 	潤色	c=1 d=0.571209 t=7856
+ruo 	弱	c=1 d=0.980199 t=7856
+ruo 	若	c=1 d=0.900325 t=7856
+san 	三	c=1 d=0.882497 t=7856
+san ceng 	三層	c=0 d=0.099005 t=7856
+san ceng jia gou 	三層架構	c=1 d=0.995012 t=7856
+san ge 	三個	c=1 d=0.937067 t=7856
+sao dan 	掃單	c=1 d=0.254107 t=7856
+sha 	啥	c=1 d=0.938429 t=7856
+sha diao 	殺掉	c=2 d=1.28414 t=7856
+sha dou you 	啥都有	c=1 d=0.882497 t=7856
+sha xiang hua 	沙箱化	c=1 d=0.882497 t=7856
+shan 	扇	c=0 d=0.0256661 t=7856
+shan chu 	刪除	c=1 d=0.932394 t=7856
+shan diao 	刪掉	c=2 d=1.38821 t=7856
+shan guo qu 	扇過去	c=1 d=0.257947 t=7856
+shan le 	刪了	c=1 d=0.722527 t=7856
+shan yong 	善用	c=1 d=0.913931 t=7856
+shang 	上	c=30 d=5.53603 t=7856
+shang ci 	上次	c=4 d=1.7871 t=7856
+shang lai 	上來	c=1 d=0.491644 t=7856
+shang mian 	上面	c=3 d=1.38714 t=7856
+shang pin 	商品	c=0 d=0.0683861 t=7856
+shang wang 	上網	c=1 d=0.603506 t=7856
+shang xia wen 	上下文	c=1 d=0.67368 t=7856
+shao 	少	c=1 d=0.78666 t=7856
+she bei 	設備	c=1 d=1.04154 t=7856
+she bei ming 	設備名	c=1 d=0.965605 t=7856
+she ding 	設定	c=1 d=0.904837 t=7856
+she fa 	設法	c=1 d=0.909373 t=7856
+she ji 	涉及	c=1 d=0.869358 t=7856
+she ji 	設計	c=6 d=2.6364 t=7856
+she ji hao 	設計好	c=1 d=0.71177 t=7856
+she qu 	社區	c=10 d=3.62161 t=7856
+she zhi 	設置	c=16 d=4.49655 t=7856
+she zu 	涉足	c=1 d=0.826959 t=7856
+shen 	神	c=0 d=0.067032 t=7856
+shen cha 	審查	c=1 d=0.822835 t=7856
+shen du 	深度	c=1 d=0.733447 t=7856
+shen gong 	神功	c=0 d=0.0292293 t=7856
+shen gong da cheng 	神功大成	c=1 d=0.293758 t=7856
+shen he 	審覈	c=1 d=0.782705 t=7856
+shen me 	什麼	c=20 d=4.77988 t=7856
+shen ru 	深入	c=1 d=0.647265 t=7856
+shen shi 	審視	c=1 d=0.951229 t=7856
+shen yue 	審閱	c=1 d=0.814647 t=7856
+shen zhi 	甚至	c=5 d=1.63749 t=7856
+sheng chan 	生產	c=0 d=0.0588605 t=7856
+sheng chan huan jing 	生產環境	c=1 d=0.591555 t=7856
+sheng ji 	升級	c=1 d=0.882497 t=7856
+sheng ka 	聲卡	c=3 d=2.3112 t=7856
+sheng ming 	聲明	c=0 d=0.0980199 t=7856
+sheng ming shi 	聲明式	c=4 d=2.5208 t=7856
+sheng ming shi an zhuang 	聲明式安裝	c=1 d=0.67032 t=7856
+sheng ren 	勝任	c=1 d=0.640824 t=7856
+sheng tai 	生態	c=2 d=1.40101 t=7856
+sheng xiao 	生效	c=3 d=2.02065 t=7856
+sheng yin 	聲音	c=1 d=1 t=7848
+sheng yu 	生於	c=1 d=0.105399 t=7856
+shi 	式	c=0 d=0.0980199 t=7856
+shi 	是	c=186 d=13.5095 t=7856
+shi 	時	c=15 d=4.25698 t=7856
+shi bai 	失敗	c=1 d=0.794534 t=7856
+shi bu shi 	是不是	c=21 d=5.41855 t=7856
+shi bu shi he 	適不適合	c=1 d=0.421052 t=7856
+shi cha 	時差	c=1 d=0.909373 t=7856
+shi chang 	市場	c=6 d=1.4034 t=7856
+shi chang 	時常	c=3 d=1.63828 t=7856
+shi dang 	適當	c=3 d=1.7791 t=7856
+shi fou 	是否	c=6 d=2.53972 t=7856
+shi he 	適合	c=7 d=2.73186 t=7856
+shi hou 	事後	c=1 d=0.147342 t=7856
+shi hou 	時候	c=6 d=1.39189 t=7856
+shi ji 	實際	c=1 d=0.965605 t=7856
+shi ji nian lai 	十幾年來	c=1 d=0.440432 t=7856
+shi ji shang 	實際上	c=1 d=0.474734 t=7856
+shi jian 	實踐	c=3 d=1.58189 t=7856
+shi jian 	時間	c=3 d=1.39415 t=7856
+shi jie 	世界	c=0 d=0.0755784 t=7856
+shi ling 	失靈	c=1 d=0.802519 t=7856
+shi pai 	石牌	c=0 d=0.071177 t=7856
+shi pai qiao 	石牌橋	c=1 d=0.715338 t=7856
+shi pei 	適配	c=1 d=0.71177 t=7856
+shi qian 	事前	c=1 d=0.782705 t=7856
+shi qing 	事情	c=2 d=0.895834 t=7856
+shi shi 	實施	c=6 d=3.07222 t=7856
+shi shi 	實時	c=2 d=1.45458 t=7856
+shi shi 	試試	c=9 d=3.66375 t=7856
+shi shi ba 	試試吧	c=2 d=1.74082 t=7856
+shi shi hou 	是時候	c=1 d=0.88692 t=7856
+shi shi kan 	試試看	c=1 d=0.970446 t=7856
+shi shi shang 	事實上	c=1 d=0.900325 t=7856
+shi wang 	失望	c=0 d=0.0680451 t=7856
+shi wu 	失誤	c=1 d=0.562705 t=7856
+shi xian 	實現	c=4 d=1.88853 t=7856
+shi yan 	實驗	c=5 d=2.6741 t=7856
+shi yan zhong 	實驗中	c=1 d=0.88692 t=7856
+shi ying 	適應	c=1 d=0.726149 t=7856
+shi yong 	使用	c=9 d=3.53198 t=7856
+shi yong 	實用	c=1 d=0.666977 t=7856
+shi zhe 	試着	c=1 d=0.946485 t=7856
+shi zhong 	始終	c=2 d=1.22876 t=7856
+shou 	手	c=1 d=0.594521 t=7856
+shou dao 	受到	c=3 d=1.34989 t=7856
+shou dao 	收到	c=2 d=1.22926 t=7856
+shou dong 	手動	c=2 d=1.44903 t=7856
+shou fei 	收費	c=2 d=1.49505 t=7856
+shou gao 	手稿	c=1 d=0.289384 t=7856
+shou ji 	手機	c=1 d=0.474734 t=7856
+shou mang jiao luan 	手忙腳亂	c=1 d=0.283654 t=7856
+shou tou shang 	手頭上	c=1 d=0.755784 t=7856
+shou xian 	受限	c=1 d=0.56836 t=7856
+shou xian 	首先	c=2 d=1.65019 t=7856
+shou yi 	收益	c=1 d=0.250324 t=7856
+shu 	數	c=1 d=0.551563 t=7856
+shu 	書	c=3 d=0.806541 t=7856
+shu chu 	輸出	c=9 d=5.31914 t=7856
+shu hu 	疏忽	c=1 d=0.909373 t=7856
+shu ju 	數據	c=3 d=2.26327 t=7856
+shu ju ku 	數據庫	c=1 d=0.856415 t=7856
+shu li 	書裏	c=1 d=0.878095 t=7856
+shu lian 	熟練	c=1 d=0.995012 t=7856
+shu qian 	數錢	c=1 d=0.860708 t=7856
+shu ru 	輸入	c=4 d=3.42751 t=7856
+shu ru fa 	輸入法	c=1 d=0.980199 t=7856
+shu ru she bei 	輸入設備	c=1 d=0.869358 t=7856
+shu xue 	數學	c=1 d=0.628135 t=7856
+shu yu 	屬於	c=1 d=0.677057 t=7856
+shuang 	爽	c=1 d=0.937067 t=7856
+shui 	誰	c=2 d=1.49633 t=7856
+shui de 	睡得	c=0 d=0.099005 t=7856
+shui jiao 	睡覺	c=1 d=0.865022 t=7856
+shui xing 	睡醒	c=0 d=0.0421052 t=7856
+shun bian 	順便	c=1 d=1 t=7856
+shuo 	說	c=27 d=4.43628 t=7856
+shuo dao 	說道	c=1 d=0.551563 t=7856
+shuo de 	說得	c=2 d=1.33669 t=7856
+shuo de 	說的	c=1 d=0.960789 t=7856
+shuo de dui 	說得對	c=1 d=0.594521 t=7856
+shuo dui 	說對	c=1 d=0.970446 t=7856
+shuo guo 	說過	c=2 d=1.17062 t=7856
+shuo hua 	說話	c=7 d=4.68955 t=7856
+shuo lai 	說來	c=1 d=0.937067 t=7856
+shuo ming 	說明	c=2 d=1.70908 t=7856
+shuo xia 	說下	c=1 d=0.794534 t=7856
+si ceng 	四層	c=0 d=0.0694197 t=7856
+si ceng xiu fu 	四層修復	c=1 d=0.697676 t=7856
+si hu 	似乎	c=9 d=3.99624 t=7856
+si kao 	思考	c=7 d=4.02202 t=7856
+si le 	死了	c=0 d=0.0557106 t=7856
+si lu 	思路	c=1 d=0.313486 t=7856
+si mao tiao 	死貓跳	c=1 d=0.348192 t=7856
+si xun 	死訊	c=0 d=0.0869358 t=7856
+si xun he 	死訊和	c=1 d=0.873716 t=7856
+si yu 	死於	c=1 d=0.105928 t=7856
+sou 	搜	c=1 d=0.161218 t=7856
+sou suo 	搜索	c=4 d=2.06352 t=7856
+su cheng 	速成	c=1 d=0.180866 t=7856
+su du 	速度	c=1 d=0.918512 t=7856
+su su 	速速	c=1 d=0.396531 t=7856
+suan 	算	c=1 d=0.810584 t=7856
+suan bu suan 	算不算	c=1 d=0.970446 t=7856
+suan fa 	算法	c=1 d=0.256661 t=7856
+suan hao 	算好	c=1 d=0.109154 t=7856
+sui 	歲	c=1 d=0.847894 t=7856
+sui pian 	碎片	c=0 d=0.0449329 t=7856
+sui pian shi jian 	碎片時間	c=1 d=0.451581 t=7856
+sui ran 	雖然	c=5 d=1.99396 t=7856
+sui shi 	隨時	c=1 d=0.618783 t=7856
+sun yu 	孫瑜	c=4 d=2.10983 t=7856
+suo liao 	所料	c=1 d=0.831104 t=7856
+suo wei 	所謂	c=1 d=0.731725 t=7856
+suo xu 	所需	c=1 d=0.97531 t=7856
+suo yi 	所以	c=8 d=3.40325 t=7856
+suo you 	所有	c=11 d=4.3834 t=7856
+suo yu 	梭魚	c=1 d=0.843665 t=7856
+suo zai 	所在	c=1 d=0.680451 t=7856
+ta 	他	c=2 d=0.83527 t=7856
+ta 	她	c=1 d=0.843665 t=7856
+ta 	它	c=38 d=6.53085 t=7856
+ta hui 	他會	c=1 d=0.932394 t=7856
+ta men 	它們	c=5 d=2.05063 t=7856
+ta yong you 	它擁有	c=1 d=0.818731 t=7856
+tai 	太	c=3 d=2.12132 t=7856
+tai du 	態度	c=1 d=0.923116 t=7856
+tai fu za 	太複雜	c=1 d=0.733447 t=7856
+tai ji ben 	太基本	c=1 d=0.157237 t=7856
+tai ling wo shi wang 	太令我失望	c=1 d=0.683861 t=7856
+tai mang 	太忙	c=1 d=0.382893 t=7856
+tai shen 	太深	c=1 d=0.606531 t=7856
+tai tai 	太太	c=0 d=0.0865022 t=7856
+tai xi 	太細	c=1 d=0.882497 t=7856
+tai xiao 	太小	c=1 d=0.891366 t=7856
+tan dao 	談到	c=1 d=0.980199 t=7856
+tan shou 	攤手	c=1 d=0.644036 t=7856
+tan tao 	探討	c=1 d=0.650509 t=7856
+tang 	湯	c=1 d=0.522046 t=7856
+tao bi 	逃避	c=1 d=0.722527 t=7856
+tao can 	套餐	c=5 d=1.70643 t=7856
+tao chu 	掏出	c=1 d=0.472367 t=7856
+tao lun 	討論	c=3 d=2.03008 t=7856
+tao sang 	濤桑	c=1 d=0.704688 t=7856
+te shu 	特殊	c=1 d=0.140858 t=7856
+te xing 	特性	c=1 d=0.927743 t=7856
+te zheng 	特徵	c=5 d=2.59364 t=7856
+ti 	提	c=2 d=1.02854 t=7856
+ti chu 	提出	c=2 d=1.31017 t=7856
+ti dao 	提到	c=1 d=0.733447 t=7856
+ti gong 	提供	c=6 d=2.59127 t=7856
+ti ji 	提及	c=1 d=0.818731 t=7856
+ti qu 	提取	c=1 d=0.615697 t=7856
+ti sheng 	提升	c=2 d=0.715338 t=7856
+ti shi 	提示	c=4 d=1.87679 t=7856
+ti xing 	提醒	c=2 d=1.57581 t=7856
+ti yan 	體驗	c=2 d=1.38159 t=7856
+tian 	天	c=1 d=0.831104 t=7856
+tian jia 	添加	c=5 d=3.34661 t=7856
+tian qi 	天氣	c=2 d=1.2933 t=7856
+tian shang 	填上	c=1 d=0.985112 t=7856
+tian xie 	填寫	c=1 d=0.951229 t=7856
+tiao jie 	調節	c=2 d=1.81151 t=7856
+tiao li 	條理	c=0 d=0.0802519 t=7856
+tiao pi 	調皮	c=1 d=0.421052 t=7856
+tiao shi 	調試	c=1 d=0.733447 t=7856
+tiao zheng 	調整	c=1 d=0.22313 t=7856
+tie chu lai 	貼出來	c=1 d=0.254107 t=7856
+tie tie 	貼貼	c=1 d=0.970446 t=7856
+ting 	挺	c=1 d=0.980199 t=7856
+ting hao 	挺好	c=2 d=1.52533 t=7856
+ting xia lai 	停下來	c=1 d=0.386741 t=7856
+tong 	銅	c=1 d=0.790571 t=7856
+tong dian 	痛點	c=1 d=0.88692 t=7856
+tong guo 	通過	c=7 d=2.90356 t=7856
+tong shi 	同事	c=4 d=0.931626 t=7856
+tong shi 	同時	c=1 d=0.594521 t=7856
+tong xiang 	同鄉	c=1 d=0.860708 t=7856
+tong yang 	同樣	c=1 d=0.718924 t=7856
+tong yang de 	同樣地	c=1 d=0.946485 t=7856
+tong yi 	同一	c=1 d=0.449329 t=7856
+tong yi 	同意	c=3 d=1.71938 t=7856
+tong yi 	統一	c=1 d=0.951229 t=7856
+tong zhi 	通知	c=1 d=0.763379 t=7856
+tong zhi ni 	通知你	c=1 d=0.594521 t=7856
+tou le 	投了	c=0 d=0.0207008 t=7856
+tou xian 	頭銜	c=1 d=0.666977 t=7856
+tou zi 	投資	c=2 d=0.949122 t=7856
+tu 	凸	c=0 d=0.111985 t=7856
+tu 	圖	c=3 d=1.35187 t=7856
+tu biao 	圖標	c=2 d=1.86488 t=7856
+tu han shu 	凸函數	c=1 d=0.56836 t=7856
+tu jing 	途徑	c=1 d=0.582748 t=7856
+tu le 	塗了	c=0 d=0.097531 t=7856
+tu le yi ceng 	塗了一層	c=1 d=0.980199 t=7856
+tu shu guan 	圖書館	c=1 d=0.909373 t=7856
+tu xian 	凸顯	c=1 d=0.701173 t=7856
+tu you hua 	凸優化	c=1 d=0.557106 t=7856
+tui 	退	c=1 d=0.951229 t=7856
+tui chu 	退出	c=4 d=2.27626 t=7856
+tui hui lai 	退回來	c=1 d=0.191092 t=7856
+tui jian 	推薦	c=7 d=2.4122 t=7856
+tui li 	推理	c=0 d=0.133651 t=7856
+tui li lian 	推理鏈	c=1 d=0.740818 t=7856
+tui li neng li 	推理能力	c=1 d=0.882497 t=7856
+tui song 	推送	c=2 d=1.32683 t=7856
+tuo dong 	拖動	c=1 d=0.970446 t=7856
+wa 	娃	c=1 d=0.451581 t=7856
+wa da 	瓦達	c=1 d=0.995012 t=7856
+wai 	外	c=1 d=0.612626 t=7856
+wai guan 	外觀	c=1 d=0.852144 t=7856
+wan 	完	c=1 d=0.932394 t=7856
+wan 	玩	c=1 d=0.67465 t=7856
+wan an 	晚安	c=1 d=0.625002 t=7856
+wan cheng 	完成	c=1 d=0.729789 t=7856
+wan le 	完了	c=0 d=0.0951229 t=7856
+wan quan 	完全	c=11 d=2.17383 t=7856
+wan yi 	玩意	c=2 d=1.12244 t=7856
+wan yi 	萬一	c=2 d=1.5612 t=7856
+wan yi xia 	玩一下	c=1 d=0.08291 t=7856
+wang 	網	c=1 d=0.909373 t=7856
+wang duan le 	網斷了	c=1 d=0.955997 t=7856
+wang huang 	網黃	c=1 d=0.615697 t=7856
+wang le 	忘了	c=2 d=1.158 t=7856
+wang luo 	網絡	c=3 d=1.59468 t=7856
+wang luo shang 	網絡上	c=1 d=0.474734 t=7856
+wang zhan 	網站	c=2 d=1.40678 t=7856
+wei 	未	c=1 d=0.955997 t=7856
+wei 	爲	c=13 d=4.41616 t=7856
+wei bei 	違背	c=1 d=0.965605 t=7856
+wei chi 	維持	c=1 d=0.965605 t=7856
+wei guan 	微觀	c=1 d=0.245367 t=7856
+wei kong 	爲空	c=0 d=0.0847894 t=7856
+wei lai 	未來	c=1 d=0.700785 t=7856
+wei lai yi lai 	未來已來	c=1 d=0.856415 t=7856
+wei nan 	爲難	c=1 d=0.527292 t=7856
+wei ni 	爲你	c=1 d=0.814647 t=7856
+wei ni er ti 	爲你而提	c=1 d=0.869358 t=7856
+wei rao 	圍繞	c=1 d=0.927743 t=7856
+wei shen me 	爲什麼	c=23 d=5.70347 t=7856
+wei wan cheng 	未完成	c=1 d=0.913931 t=7856
+wei wei 	薇薇	c=1 d=0.937067 t=7856
+wei wo 	爲我	c=1 d=0.932394 t=7856
+wei xin 	微信	c=6 d=3.74397 t=7856
+wei zhi 	位置	c=5 d=2.47205 t=7856
+wei zhi 	爲止	c=1 d=0.985112 t=7856
+wen 	問	c=5 d=2.36651 t=7856
+wen dang 	文檔	c=17 d=6.92308 t=7856
+wen dang li 	文檔裏	c=1 d=0.631284 t=7856
+wen ding 	穩定	c=2 d=1.41095 t=7856
+wen he 	溫和	c=0 d=0.0882497 t=7856
+wen he zuo duo 	溫和做多	c=1 d=0.88692 t=7856
+wen jian 	文件	c=14 d=5.44585 t=7856
+wen jian ming 	文件名	c=1 d=0.873716 t=7856
+wen ti 	問題	c=52 d=10.1596 t=7856
+wen xia 	問下	c=3 d=1.59912 t=7856
+wen you 	溫油	c=1 d=0.70822 t=7856
+wo 	我	c=323 d=18.0748 t=7856
+wo cao 	我操	c=2 d=0.628394 t=7856
+wo cao 	臥槽	c=2 d=0.973035 t=7856
+wo cao le 	我操了	c=1 d=0.524663 t=7856
+wo hen ni 	我恨你	c=1 d=0.755784 t=7856
+wo kan 	我看	c=1 d=0.97531 t=7856
+wo men 	我們	c=68 d=7.16438 t=7856
+wo qu 	我去	c=1 d=0.683861 t=7856
+wo xiang 	我想	c=1 d=0.582748 t=7856
+wo xuan 	我選	c=2 d=1.63562 t=7856
+wo xuan 	斡旋	c=1 d=0.900325 t=7856
+wo you 	我有	c=1 d=0.985112 t=7856
+wo zai 	我在	c=1 d=0.57695 t=7856
+wu 	無	c=1 d=0.69704 t=7856
+wu cha 	誤差	c=1 d=0.392586 t=7856
+wu fa 	無法	c=9 d=3.36135 t=7856
+wu fan 	午飯	c=2 d=0.506617 t=7856
+wu guan 	無關	c=1 d=0.860708 t=7856
+wu lun 	無論	c=1 d=0.985112 t=7856
+wu lun ru he 	無論如何	c=1 d=0.852144 t=7856
+wu tiao li 	無條理	c=1 d=0.806541 t=7856
+wu xiao 	無效	c=1 d=0.913931 t=7856
+xi 	系	c=1 d=0.786628 t=7856
+xi bu 	西部	c=0 d=0.0755784 t=7856
+xi bu shi jie 	西部世界	c=1 d=0.759572 t=7856
+xi guan 	習慣	c=1 d=0.45612 t=7856
+xi huan 	喜歡	c=1 d=0.486752 t=7856
+xi jie 	細節	c=2 d=1.14129 t=7856
+xi le 	洗了	c=1 d=0.582748 t=7856
+xi tong 	系統	c=9 d=3.8429 t=7856
+xi wang 	希望	c=13 d=4.47158 t=7856
+xi xi ha ha 	嘻嘻哈哈	c=1 d=0.847894 t=7856
+xi zao 	洗澡	c=1 d=0.390628 t=7856
+xia 	下	c=11 d=4.91611 t=7856
+xia 	俠	c=0 d=0.0995012 t=7856
+xia ci 	下次	c=1 d=0.559898 t=7856
+xia ci 	瑕疵	c=2 d=0.999743 t=7856
+xia de 	嚇得	c=1 d=0.831104 t=7856
+xia lai 	下來	c=1 d=0.918512 t=7856
+xia shang 	下上	c=1 d=0.802519 t=7856
+xia wu 	下午	c=1 d=0.913931 t=7856
+xia yi bu 	下一步	c=1 d=0.778801 t=7856
+xia zai 	下載	c=8 d=4.78597 t=7856
+xia zai wan le 	下載完了	c=1 d=0.955997 t=7856
+xian 	先	c=34 d=4.83068 t=7856
+xian ba 	先把	c=1 d=0.677057 t=7856
+xian cun 	顯存	c=1 d=0.97531 t=7856
+xian ka 	顯卡	c=5 d=2.56232 t=7856
+xian shi 	顯示	c=7 d=3.63801 t=7856
+xian su 	限速	c=2 d=1.55841 t=7856
+xian suo 	線索	c=1 d=0.826959 t=7856
+xian tiao 	線條	c=1 d=0.878095 t=7856
+xian zai 	現在	c=33 d=6.24093 t=7856
+xian zai chi le 	現在遲了	c=1 d=0.970446 t=7856
+xian zhi 	閒置	c=0 d=0.0843665 t=7856
+xian zhi 	限制	c=37 d=7.44195 t=7856
+xiang 	像	c=8 d=2.54718 t=7856
+xiang 	向	c=3 d=1.73444 t=7856
+xiang 	想	c=18 d=3.94047 t=7856
+xiang 	香	c=1 d=0.683861 t=7856
+xiang dao 	想到	c=1 d=0.726149 t=7856
+xiang fa 	想法	c=2 d=1.40116 t=7856
+xiang guan 	相關	c=1 d=0.733447 t=7856
+xiang liang 	向量	c=1 d=0.847894 t=7856
+xiang mu 	項目	c=3 d=2.13694 t=7856
+xiang qing 	詳情	c=1 d=0.839457 t=7856
+xiang qu 	想去	c=1 d=0.647265 t=7856
+xiang shou 	享受	c=1 d=0.980199 t=7856
+xiang tong 	相通	c=1 d=0.519442 t=7856
+xiang xi 	詳細	c=8 d=2.82681 t=7856
+xiang xin 	相信	c=1 d=0.571209 t=7856
+xiang yao 	想要	c=1 d=0.778318 t=7856
+xiang yi xiang 	想一想	c=1 d=0.38868 t=7856
+xiang ying 	相應	c=1 d=0.802519 t=7856
+xiang ying 	響應	c=1 d=0.806541 t=7856
+xiang ying huan man 	響應緩慢	c=1 d=0.895834 t=7856
+xiang zai 	想在	c=1 d=0.687289 t=7856
+xiao 	小	c=0 d=0.0923116 t=7856
+xiao 	笑	c=3 d=1.85039 t=7856
+xiao guo 	效果	c=14 d=4.84037 t=7856
+xiao hai 	小孩	c=1 d=0.433874 t=7856
+xiao hao 	消耗	c=2 d=1.16356 t=7856
+xiao jian yi 	小建議	c=1 d=0.927743 t=7856
+xiao ma 	小馬	c=1 d=0.995012 t=7856
+xiao qi 	小氣	c=0 d=0.0955997 t=7856
+xiao qi bao zi 	小氣包子	c=1 d=0.960789 t=7856
+xiao shi 	小時	c=1 d=0.995012 t=7856
+xiao shi hou 	小時候	c=1 d=0.951229 t=7856
+xiao si 	笑死	c=1 d=0.995012 t=7856
+xiao wen ti 	小問題	c=1 d=0.353455 t=7856
+xiao xi 	消息	c=3 d=2.21156 t=7856
+xiao xi mian 	消息面	c=1 d=0.97531 t=7856
+xiao yin wa 	小淫娃	c=1 d=0.557106 t=7856
+xie 	些	c=2 d=1.51872 t=7856
+xie 	寫	c=3 d=1.24847 t=7856
+xie cuo 	寫錯	c=1 d=0.701173 t=7856
+xie dao 	寫到	c=1 d=0.985112 t=7856
+xie ge 	寫個	c=1 d=0.97531 t=7856
+xie lu 	泄露	c=1 d=0.782705 t=7856
+xie shang 	協商	c=1 d=0.895834 t=7856
+xie shang 	寫上	c=1 d=0.900325 t=7856
+xie xia lai 	寫下來	c=1 d=0.146607 t=7856
+xie zhu 	協助	c=1 d=0.726149 t=7856
+xie zuo 	協作	c=1 d=0.50409 t=7856
+xie zuo 	寫作	c=1 d=0.544016 t=7856
+xie zuo kai fa 	寫作開發	c=1 d=0.501576 t=7856
+xin 	新	c=0 d=0.088692 t=7856
+xin ban 	新版	c=2 d=1.31703 t=7856
+xin dian tu 	心電圖	c=2 d=1.87954 t=7856
+xin geng 	心梗	c=1 d=0.900325 t=7856
+xin ku 	辛苦	c=1 d=0.790571 t=7856
+xin li 	心理	c=1 d=0.532592 t=7856
+xin li xue 	心理學	c=1 d=0.337902 t=7856
+xin ren 	新人	c=1 d=0.178173 t=7856
+xin she bei 	新設備	c=1 d=0.891366 t=7856
+xin xi 	信息	c=5 d=2.42995 t=7856
+xin zeng 	新增	c=2 d=1.78062 t=7856
+xing 	性	c=1 d=0.980199 t=7856
+xing 	行	c=4 d=2.41244 t=7856
+xing cheng 	形成	c=1 d=0.763379 t=7856
+xing fu 	性福	c=1 d=0.666977 t=7856
+xing ge 	性格	c=1 d=0.562705 t=7856
+xing jia bi 	性價比	c=1 d=0.621885 t=7856
+xing neng 	性能	c=2 d=1.21799 t=7856
+xing wei 	行爲	c=5 d=2.33309 t=7856
+xing zhi 	興致	c=1 d=0.960789 t=7856
+xing zhi suo zhi 	興之所至	c=1 d=0.0792617 t=7856
+xiu fu 	修復	c=8 d=3.26003 t=7856
+xiu zheng 	修正	c=1 d=0.932394 t=7856
+xu bu xu yao 	需不需要	c=2 d=1.30466 t=7856
+xu qiu 	需求	c=6 d=3.44076 t=7856
+xu yao 	需要	c=13 d=4.6344 t=7856
+xuan 	選	c=2 d=1.50928 t=7856
+xuan chuan 	宣傳	c=1 d=0.99005 t=7856
+xuan xia 	選下	c=1 d=0.852144 t=7856
+xuan yao 	炫耀	c=1 d=0.941765 t=7856
+xuan ze 	選擇	c=4 d=2.8047 t=7856
+xuan zi 	選字	c=1 d=0.88692 t=7856
+xue 	學	c=4 d=2.74091 t=7856
+xue dao 	學到	c=1 d=0.97531 t=7856
+xue xi 	學習	c=2 d=0.979947 t=7856
+xue xue 	學學	c=1 d=0.810584 t=7856
+xun huan 	循環	c=1 d=0.878095 t=7856
+xun zhao 	尋找	c=1 d=0.529935 t=7856
+ya 	呀	c=1 d=0.94267 t=7856
+yan 	醃	c=0 d=0.0431711 t=7856
+yan jin 	嚴謹	c=1 d=0.565525 t=7856
+yan jiu 	研究	c=1 d=0.88692 t=7856
+yan ru wei xian 	醃入味先	c=1 d=0.433874 t=7856
+yan sheng pin 	衍生品	c=1 d=0.217621 t=7856
+yan zheng 	驗證	c=1 d=0.860708 t=7856
+yan zhong 	嚴重	c=1 d=0.811261 t=7856
+yang ban 	樣板	c=1 d=0.794534 t=7856
+yang mao 	羊毛	c=1 d=0.82619 t=7856
+yao 	要	c=21 d=4.26848 t=7856
+yao bu 	要不	c=1 d=0.88692 t=7856
+yao chi 	要喫	c=1 d=0.474734 t=7856
+yao dai shang 	要帶上	c=1 d=0.937067 t=7856
+yao jin 	要緊	c=1 d=0.70822 t=7856
+yao me 	要麼	c=2 d=0.797198 t=7856
+yao ming 	要命	c=1 d=0.814647 t=7856
+yao qiu 	要求	c=3 d=1.09515 t=7856
+yao shi 	耀石	c=1 d=0.228779 t=7856
+yao zhi dao 	要知道	c=1 d=0.628135 t=7856
+yao zuo 	要做	c=1 d=0.995012 t=7856
+ye 	也	c=38 d=6.99572 t=7856
+ye 	嘢	c=1 d=0.410656 t=7856
+ye 	耶	c=1 d=0.402524 t=7856
+ye 	頁	c=0 d=0.0680451 t=7856
+ye hui 	也會	c=2 d=1.03797 t=7856
+ye ke neng 	也可能	c=1 d=0.690734 t=7856
+ye shi 	也是	c=1 d=0.847894 t=7856
+ye xin 	野心	c=1 d=0.522046 t=7856
+ye xu 	也許	c=7 d=2.21468 t=7856
+ye yao 	也要	c=1 d=0.136014 t=7856
+ye yong 	也用	c=1 d=0.865022 t=7856
+ye you 	也有	c=1 d=0.582748 t=7856
+ye you xu yao 	也有需要	c=1 d=0.364219 t=7856
+ye yu 	業餘	c=1 d=0.171187 t=7856
+yi 	一	c=2 d=1.31037 t=7856
+yi 	以	c=1 d=0.83527 t=7856
+yi 	已	c=0 d=0.0852144 t=7856
+yi ba zhang 	一巴掌	c=2 d=0.48091 t=7856
+yi ban 	一半	c=1 d=0.778801 t=7856
+yi ban 	一般	c=3 d=1.61988 t=7856
+yi bian 	一邊	c=1 d=0.585669 t=7856
+yi bian yu 	以便於	c=1 d=0.628135 t=7856
+yi bo 	一波	c=1 d=0.70822 t=7856
+yi bu fen 	一部分	c=2 d=1.46335 t=7856
+yi ceng 	一層	c=0 d=0.142017 t=7856
+yi chang 	異常	c=4 d=2.3016 t=7856
+yi chu 	移除	c=3 d=2.06187 t=7856
+yi ci 	一次	c=2 d=1.35022 t=7856
+yi cong xing 	依從性	c=1 d=0.99005 t=7856
+yi dian 	一點	c=3 d=1.64831 t=7856
+yi ding 	一定	c=3 d=1.56159 t=7856
+yi dong bu dong 	一動不動	c=1 d=0.767206 t=7856
+yi fen 	一份	c=1 d=0.826959 t=7856
+yi ge 	一個	c=42 d=5.40016 t=7856
+yi ge yue 	一個月	c=1 d=0.371577 t=7856
+yi han 	遺憾	c=1 d=0.565525 t=7856
+yi hou 	以後	c=1 d=0.23457 t=7856
+yi hui 	一會	c=2 d=0.731189 t=7856
+yi huo 	亦或	c=0 d=0.0856415 t=7856
+yi huo shi 	亦或是	c=3 d=1.69687 t=7856
+yi ji 	以及	c=15 d=4.70491 t=7856
+yi jing 	已經	c=14 d=3.57556 t=7856
+yi jiu 	依舊	c=11 d=5.43539 t=7856
+yi ju 	依據	c=2 d=1.28456 t=7856
+yi lai 	依賴	c=2 d=1.63986 t=7856
+yi luo kuang 	一籮筐	c=1 d=0.873716 t=7856
+yi min 	移民	c=1 d=0.900325 t=7856
+yi mu liao ran 	一目瞭然	c=1 d=0.873716 t=7856
+yi nei 	以內	c=1 d=0.396531 t=7856
+yi nian 	一年	c=1 d=0.186374 t=7856
+yi pian 	一篇	c=1 d=0.97531 t=7856
+yi qi 	一起	c=2 d=1.58631 t=7856
+yi qian 	以前	c=2 d=1.05882 t=7856
+yi qie 	一切	c=3 d=1.35328 t=7856
+yi ran 	依然	c=1 d=0.600496 t=7856
+yi shi 	一試	c=1 d=0.909373 t=7856
+yi si 	意思	c=0 d=0.0985112 t=7856
+yi tai 	一臺	c=1 d=0.771052 t=7856
+yi tao 	一套	c=1 d=0.755784 t=7856
+yi tian 	一天	c=2 d=1.45094 t=7856
+yi wan shang 	一晚上	c=1 d=0.865022 t=7856
+yi wei 	以爲	c=1 d=0.408608 t=7856
+yi wen 	疑問	c=2 d=1.37427 t=7856
+yi xi lie 	一系列	c=1 d=0.618783 t=7856
+yi xia 	一下	c=28 d=6.80049 t=7856
+yi xia 	以下	c=2 d=1.19838 t=7856
+yi xie 	一些	c=4 d=2.38303 t=7856
+yi yang 	一樣	c=5 d=2.31056 t=7856
+yi you 	已有	c=2 d=1.25616 t=7856
+yi zhang 	一張	c=1 d=0.0804596 t=7856
+yi zhi 	一直	c=8 d=4.04137 t=7856
+yi zhi 	一致	c=1 d=0.307279 t=7856
+yi zhi 	已知	c=8 d=4.08662 t=7856
+yi zhi yu 	以致於	c=1 d=0.927743 t=7856
+yi zhong 	一種	c=1 d=0.955997 t=7856
+yin 	印	c=2 d=0.927553 t=7856
+yin ci 	因此	c=1 d=0.843665 t=7856
+yin die 	陰跌	c=1 d=0.57695 t=7856
+yin hun bu san 	陰魂不散	c=1 d=0.771052 t=7856
+yin liang 	音量	c=2 d=1.59354 t=7856
+yin ru 	引入	c=3 d=1.81425 t=7856
+yin su 	因素	c=1 d=0.511709 t=7856
+yin wa 	淫娃	c=0 d=0.0554327 t=7856
+yin wei 	因爲	c=13 d=4.25561 t=7856
+ying fu 	應付	c=1 d=0.748264 t=7856
+ying gai 	應該	c=23 d=6.2272 t=7856
+ying jian 	硬件	c=1 d=0.960789 t=7856
+ying lai 	迎來	c=1 d=0.704688 t=7856
+ying she 	映射	c=1 d=0.467666 t=7856
+ying wei 	應爲	c=1 d=0.852144 t=7856
+ying wei da 	英偉達	c=1 d=0.923116 t=7856
+ying wen 	英文	c=6 d=2.48951 t=7856
+ying xiang 	影響	c=2 d=0.865022 t=7856
+ying yong 	應用	c=4 d=1.44656 t=7856
+ying yu 	英語	c=1 d=0.847894 t=7856
+yo xi 	喲西	c=2 d=1.56196 t=7856
+yong 	用	c=47 d=6.9878 t=7856
+yong cuo 	用錯	c=2 d=1.72103 t=7856
+yong fa 	用法	c=4 d=1.73786 t=7856
+yong hu 	用戶	c=3 d=1.93756 t=7856
+yong hu zu 	用戶組	c=5 d=3.38979 t=7856
+yong jiu 	永久	c=1 d=0.771052 t=7856
+yong qi lai 	用起來	c=1 d=0.814647 t=7856
+yong tu 	用途	c=2 d=1.16605 t=7856
+yong wan 	用完	c=1 d=0.831104 t=7856
+yong yi 	用意	c=1 d=0.99005 t=7856
+yong you 	擁有	c=0 d=0.0814647 t=7856
+yong yuan 	永遠	c=1 d=0.527292 t=7856
+you 	又	c=18 d=5.89293 t=7856
+you 	有	c=50 d=10.0333 t=7856
+you 	由	c=1 d=0.965605 t=7856
+you ban fa 	有辦法	c=3 d=1.86248 t=7856
+you bi yao 	有必要	c=3 d=2.20324 t=7856
+you chu 	又出	c=0 d=0.0771052 t=7856
+you chu lai le 	又出來了	c=1 d=0.774916 t=7856
+you dian 	有點	c=1 d=0.995012 t=7856
+you fu zai 	有負載	c=1 d=0.644036 t=7856
+you ge 	有個	c=4 d=1.76845 t=7856
+you guan 	有關	c=3 d=1.73156 t=7856
+you guan zhu 	有關注	c=1 d=0.869358 t=7856
+you gui 	有鬼	c=1 d=0.467666 t=7856
+you hua 	優化	c=1 d=0.598784 t=7856
+you ke neng 	有可能	c=1 d=0.644036 t=7856
+you kong 	有空	c=2 d=1.15618 t=7856
+you mei you 	有沒有	c=7 d=3.14288 t=7856
+you mo 	幽默	c=1 d=0.597501 t=7856
+you ren 	有人	c=4 d=1.44223 t=7856
+you se jin shu 	有色金屬	c=1 d=0.786628 t=7856
+you shen me 	有什麼	c=1 d=0.778801 t=7856
+you shi 	又是	c=1 d=0.166127 t=7856
+you wen ti 	有問題	c=2 d=0.848714 t=7856
+you wu 	有無	c=5 d=2.75981 t=7856
+you xian 	優先	c=2 d=1.05291 t=7856
+you xian 	有線	c=1 d=0.701173 t=7856
+you xian ji 	優先級	c=2 d=1.40028 t=7856
+you xie 	有些	c=3 d=1.83574 t=7856
+you xin xin 	有信心	c=1 d=0.591555 t=7856
+you xiu 	優秀	c=1 d=0.535261 t=7856
+you xu yao 	有需要	c=1 d=0.625002 t=7856
+you yi yi 	有意義	c=1 d=0.965605 t=7856
+you yong 	有用	c=2 d=1.55133 t=7856
+you yu 	由於	c=2 d=1.42133 t=7856
+yu 	於	c=2 d=0.755784 t=7856
+yu 	與	c=0 d=0.0748264 t=7856
+yu a 	於啊	c=1 d=0.985112 t=7856
+yu ce 	預測	c=3 d=0.947856 t=7856
+yu dao 	遇到	c=1 d=0.826959 t=7856
+yu dao guo 	遇到過	c=1 d=0.704688 t=7856
+yu fa 	語法	c=3 d=1.94668 t=7856
+yu qi 	預期	c=1 d=0.814647 t=7856
+yu yan 	語言	c=2 d=1.29792 t=7856
+yu yi 	語義	c=3 d=2.24821 t=7856
+yuan 	元	c=1 d=0.927743 t=7856
+yuan 	源	c=0 d=0.0960789 t=7856
+yuan gu 	緣故	c=2 d=1.52231 t=7856
+yuan lai 	原來	c=1 d=0.856415 t=7856
+yuan sheng 	原生	c=1 d=0.847894 t=7856
+yuan yin 	原因	c=7 d=3.66645 t=7856
+yuan ze 	原則	c=4 d=1.94186 t=7856
+yue 	月	c=2 d=0.582025 t=7856
+yue 	約	c=1 d=0.409206 t=7856
+yue bu dao 	約不到	c=3 d=1.07901 t=7856
+yue du 	閱讀	c=1 d=0.995012 t=7856
+yue duo 	越多	c=1 d=0.722527 t=7856
+yue gao 	越高	c=1 d=0.740818 t=7856
+yue shu 	約束	c=1 d=0.67032 t=7856
+yue zhi an mian 	月之暗麪	c=1 d=0.860708 t=7856
+yun 	雲	c=4 d=2.69007 t=7856
+yun duan 	雲端	c=2 d=1.37234 t=7856
+yun xing 	運行	c=5 d=2.58219 t=7856
+yun xing huan jing 	運行環境	c=1 d=0.690734 t=7856
+za 	咋	c=1 d=0.891366 t=7856
+zai 	再	c=17 d=4.22426 t=7856
+zai 	在	c=97 d=10.8991 t=7856
+zai huan 	再換	c=1 d=0.932394 t=7856
+zai jia 	再加	c=1 d=0.847894 t=7856
+zai qu 	再去	c=2 d=1.07676 t=7856
+zai san 	再三	c=1 d=0.946485 t=7856
+zai ye 	再也	c=1 d=0.634448 t=7856
+zai yi 	在意	c=1 d=0.187308 t=7856
+zan cheng 	贊成	c=2 d=1.93605 t=7856
+zan lia 	咱倆	c=1 d=0.895834 t=7856
+zan shi 	暫時	c=5 d=2.19734 t=7856
+zao 	造	c=1 d=0.559898 t=7856
+zao dian 	早點	c=2 d=0.713434 t=7856
+zao fan 	早飯	c=1 d=0.937067 t=7856
+zao jiu 	早就	c=1 d=0.932394 t=7856
+zao shang 	早上	c=1 d=0.416862 t=7856
+ze 	則	c=4 d=2.1059 t=7856
+zen me 	怎麼	c=5 d=2.81342 t=7856
+zen me hui shi 	怎麼回事	c=1 d=0.737123 t=7856
+zen me kan 	怎麼看	c=2 d=0.946485 t=7856
+zen yang 	怎樣	c=3 d=1.87132 t=7856
+zeng jia 	增加	c=1 d=0.856415 t=7856
+zeng jin 	贈金	c=1 d=0.755784 t=7856
+zeng qiang 	增強	c=1 d=0.882497 t=7856
+zhan qian 	戰前	c=1 d=0.369723 t=7856
+zhan shi 	展示	c=1 d=0.680451 t=7856
+zhan shi 	戰事	c=1 d=0.740818 t=7856
+zhan wang 	戰網	c=4 d=2.68049 t=7856
+zhan yong 	佔用	c=0 d=0.0995012 t=7856
+zhan yong qing kuang 	佔用情況	c=1 d=1 t=7856
+zhang 	張	c=2 d=0.810584 t=7856
+zhang hao 	帳號	c=1 d=0.946485 t=7856
+zhang hu 	賬戶	c=1 d=0.960789 t=7856
+zhao 	找	c=1 d=0.704688 t=7856
+zhao bu dao 	找不到	c=2 d=1.65879 t=7856
+zhao bu hui lai 	找不回來	c=1 d=0.591555 t=7856
+zhao gu 	照顧	c=1 d=0.755784 t=7856
+zhao zhao 	找找	c=2 d=1.78062 t=7856
+zhe 	者	c=1 d=0.680451 t=7856
+zhe 	這	c=32 d=5.38647 t=7856
+zhe ban 	這般	c=1 d=0.822835 t=7856
+zhe bu fen 	這部分	c=1 d=0.847894 t=7856
+zhe cai 	這纔	c=1 d=0.946485 t=7856
+zhe ci 	這次	c=14 d=4.34792 t=7856
+zhe duan 	這段	c=1 d=0.634448 t=7856
+zhe fang mian 	這方面	c=2 d=1.2258 t=7856
+zhe ge 	這個	c=57 d=8.88148 t=7856
+zhe jian shi 	這件事	c=1 d=0.965605 t=7856
+zhe kuai 	這塊	c=1 d=0.923116 t=7856
+zhe kuan 	這款	c=1 d=0.238115 t=7856
+zhe lei 	這類	c=1 d=0.839457 t=7856
+zhe lei ren 	這類人	c=1 d=0.132655 t=7856
+zhe li 	這裏	c=7 d=2.99431 t=7856
+zhe liang tian 	這兩天	c=1 d=0.298197 t=7856
+zhe me 	這麼	c=1 d=1.02986 t=7856
+zhe me ke ai 	這麼可愛	c=1 d=0.802519 t=7856
+zhe tai 	這臺	c=3 d=1.67896 t=7856
+zhe tai ji 	這臺機	c=1 d=0.83527 t=7856
+zhe tai ji qi 	這臺機器	c=1 d=0.960789 t=7856
+zhe tiao 	這條	c=1 d=0.704688 t=7856
+zhe wan yi 	這玩意	c=1 d=0.941765 t=7856
+zhe xie 	這些	c=10 d=3.35858 t=7856
+zhe yang 	這樣	c=18 d=4.35966 t=7856
+zhe yang zuo 	這樣做	c=1 d=0.882497 t=7856
+zhe yi ceng 	這一層	c=1 d=0.856415 t=7856
+zhe yi dian 	這一點	c=1 d=0.951229 t=7856
+zhe zhong 	這種	c=12 d=3.16013 t=7856
+zhen 	真	c=1 d=0.810584 t=7856
+zhen de 	真的	c=5 d=2.69398 t=7856
+zhen duan 	診斷	c=1 d=0.927743 t=7856
+zhen dui 	針對	c=1 d=0.918512 t=7856
+zhen hao 	真好	c=1 d=0.524663 t=7856
+zheng chang 	正常	c=12 d=4.07816 t=7856
+zheng gu 	正股	c=1 d=0.603506 t=7856
+zheng he 	整合	c=2 d=1.01685 t=7856
+zheng jing 	正經	c=0 d=0.0806541 t=7856
+zheng jing an mo 	正經按摩	c=1 d=0.810584 t=7856
+zheng ju 	證據	c=1 d=0.960789 t=7856
+zheng li 	整理	c=0 d=0.0299692 t=7856
+zheng li xia 	整理下	c=1 d=0.301194 t=7856
+zheng ming 	證明	c=2 d=1.46209 t=7856
+zheng qu 	爭取	c=1 d=0.88692 t=7856
+zheng que 	正確	c=4 d=1.87478 t=7856
+zheng shi 	正式	c=1 d=0.831104 t=7856
+zheng shi 	證實	c=1 d=0.980199 t=7856
+zheng shi ban 	正式版	c=1 d=0.965605 t=7856
+zheng suo wei 	正所謂	c=1 d=0.10383 t=7856
+zheng ti 	整體	c=1 d=0.873716 t=7856
+zheng zai 	正在	c=3 d=1.73201 t=7856
+zhi 	只	c=8 d=2.59821 t=7856
+zhi 	指	c=4 d=2.3147 t=7856
+zhi chi 	支持	c=8 d=3.63069 t=7856
+zhi chu 	指出	c=2 d=1.55421 t=7856
+zhi dao 	知道	c=4 d=1.39207 t=7856
+zhi de 	值得	c=1 d=0.904837 t=7856
+zhi ding 	制定	c=1 d=0.453845 t=7856
+zhi ding 	制訂	c=2 d=1.32441 t=7856
+zhi gan 	質感	c=1 d=0.923116 t=7856
+zhi guan 	直觀	c=1 d=0.97531 t=7856
+zhi hou 	之後	c=4 d=2.07436 t=7856
+zhi hui 	智慧	c=2 d=1.28524 t=7856
+zhi jian 	之間	c=2 d=1.13869 t=7856
+zhi jie 	直接	c=6 d=2.30262 t=7856
+zhi lei 	之類	c=1 d=0.748264 t=7856
+zhi liang 	質量	c=1 d=0.847894 t=7856
+zhi ling 	指令	c=3 d=2.04944 t=7856
+zhi ming 	指明	c=1 d=0.937067 t=7856
+zhi neng 	只能	c=5 d=1.96222 t=7856
+zhi pu 	智譜	c=1 d=1 t=7856
+zhi qian 	之前	c=15 d=4.5377 t=7856
+zhi shi 	只是	c=3 d=1.78942 t=7856
+zhi shi 	知識	c=4 d=1.85187 t=7856
+zhi shu 	指數	c=1 d=0.814647 t=7856
+zhi wai 	之外	c=1 d=0.522046 t=7856
+zhi xiang yao 	只想要	c=1 d=0.67368 t=7856
+zhi xing 	執行	c=7 d=4.18979 t=7856
+zhi xing cheng gong 	執行成功	c=1 d=0.878095 t=7856
+zhi yao 	只要	c=1 d=0.965605 t=7856
+zhi yin 	指引	c=2 d=1.88957 t=7856
+zhi ying 	止盈	c=2 d=0.227262 t=7856
+zhi yong 	只用	c=1 d=0.900325 t=7856
+zhi you 	只有	c=1 d=0.169483 t=7856
+zhi yu 	至於	c=7 d=3.75424 t=7856
+zhi yue 	制約	c=1 d=0.516851 t=7856
+zhi zhuo 	執着	c=0 d=0.0748264 t=7856
+zhi zhuo yu 	執着與	c=1 d=0.752014 t=7856
+zhong 	中	c=19 d=4.77247 t=7856
+zhong 	種	c=1 d=0.737123 t=7856
+zhong duan 	中斷	c=1 d=0.818731 t=7856
+zhong duan 	終端	c=7 d=2.37414 t=7856
+zhong guo 	中國	c=2 d=1.80025 t=7856
+zhong tu 	中途	c=1 d=0.715338 t=7856
+zhong wen 	中文	c=4 d=3.20985 t=7856
+zhong wu 	中午	c=1 d=0.548812 t=7856
+zhong xing 	中性	c=1 d=0.609571 t=7856
+zhong yao 	重要	c=1 d=0.97531 t=7856
+zhong ying wen 	中英文	c=1 d=0.733447 t=7856
+zhou xiang 	周詳	c=1 d=0.458406 t=7856
+zhu 	住	c=1 d=0.865022 t=7856
+zhu ban 	主板	c=2 d=1.78103 t=7856
+zhu dong 	主動	c=1 d=0.856415 t=7856
+zhu fan 	煮飯	c=1 d=0.418952 t=7856
+zhu ge 	逐個	c=1 d=0.900325 t=7856
+zhu ming 	註明	c=1 d=0.970446 t=7856
+zhu shi 	註釋	c=2 d=1.76607 t=7856
+zhu shou 	助手	c=3 d=1.27272 t=7856
+zhu wan 	煮完	c=1 d=0.50409 t=7856
+zhu xiao 	註銷	c=1 d=0.612626 t=7856
+zhu yao 	主要	c=3 d=1.56314 t=7856
+zhu ye 	主業	c=1 d=0.131994 t=7856
+zhu yi 	注意	c=2 d=1.51572 t=7856
+zhu zi 	注資	c=1 d=0.891366 t=7856
+zhua jin 	抓緊	c=1 d=0.554327 t=7856
+zhuan 	賺	c=1 d=0.606531 t=7856
+zhuan er 	轉而	c=1 d=0.431711 t=7856
+zhuan jia 	專家	c=1 d=0.657047 t=7856
+zhuan men 	專門	c=1 d=0.951229 t=7856
+zhuan qian 	賺錢	c=4 d=1.04832 t=7856
+zhuan ye 	專業	c=1 d=0.136695 t=7856
+zhuang 	裝	c=1 d=0.869358 t=7856
+zhuang tai 	狀態	c=1 d=0.91952 t=7856
+zhuang tai ye 	狀態頁	c=1 d=0.683861 t=7856
+zhui qiu 	追求	c=1 d=0.697676 t=7856
+zhun bei 	準備	c=4 d=1.16684 t=7856
+zhuo mian 	桌面	c=2 d=1.02944 t=7856
+zi 	子	c=1 d=1 t=7856
+zi chan 	資產	c=1 d=0.198781 t=7856
+zi chan guan li 	資產管理	c=1 d=0.127454 t=7856
+zi chan lei xing 	資產類型	c=1 d=0.164474 t=7856
+zi dong 	自動	c=1 d=0.88692 t=7856
+zi fu ji 	字符集	c=1 d=0.965605 t=7856
+zi hao 	字號	c=2 d=1.85252 t=7856
+zi ji 	自己	c=12 d=3.23534 t=7856
+zi ti 	字體	c=6 d=4.24811 t=7856
+zi xi 	仔細	c=10 d=2.71148 t=7856
+zi xing 	自行	c=1 d=0.941765 t=7856
+zi yong 	自用	c=1 d=0.737123 t=7856
+zong 	總	c=0 d=0.0909373 t=7856
+zong bu neng 	總不能	c=1 d=0.946485 t=7856
+zong he 	綜合	c=1 d=0.771052 t=7856
+zong jiao 	宗教	c=0 d=0.0985112 t=7856
+zong jiao chan pin 	宗教產品	c=1 d=0.99005 t=7856
+zong jie 	總結	c=1 d=0.481909 t=7856
+zong qu na 	總去那	c=1 d=0.913931 t=7856
+zong shi 	總是	c=2 d=1.43247 t=7856
+zong zhi 	總之	c=1 d=0.965605 t=7856
+zou 	走	c=1 d=0.904837 t=7856
+zou shi 	走勢	c=1 d=0.304221 t=7856
+zou xiao 	奏效	c=2 d=1.79078 t=7856
+zu gou 	足夠	c=6 d=1.43037 t=7856
+zu he 	組合	c=1 d=0.740818 t=7856
+zu jian 	組件	c=1 d=0.965605 t=7856
+zu jian 	組建	c=1 d=0.960789 t=7856
+zu zhi 	組織	c=3 d=1.62879 t=7856
+zu zhi 	阻止	c=1 d=0.913931 t=7856
+zui 	最	c=2 d=1.92923 t=7856
+zui da zhi 	最大值	c=1 d=0.694197 t=7856
+zui gao 	最高	c=1 d=0.873716 t=7856
+zui hao 	最好	c=7 d=2.97255 t=7856
+zui hao bu hui lai 	最好補回來	c=1 d=0.588605 t=7856
+zui he shi 	最合適	c=1 d=0.818731 t=7856
+zui hou 	最後	c=7 d=2.62014 t=7856
+zui jia 	最佳	c=2 d=1.42937 t=7856
+zui jia jie fa 	最佳解法	c=1 d=0.826959 t=7856
+zui jian bian 	最簡便	c=1 d=0.680451 t=7856
+zui jin 	最近	c=3 d=1.52834 t=7856
+zui jing jian 	最精簡	c=1 d=0.677057 t=7856
+zui qing liang ji 	最輕量級	c=1 d=0.683861 t=7856
+zui xia mian 	最下面	c=1 d=0.904837 t=7856
+zui xin 	最新	c=5 d=2.53711 t=7856
+zui xin ban 	最新版	c=1 d=0.628135 t=7856
+zun xun 	遵循	c=1 d=0.666977 t=7856
+zun zhao 	遵照	c=1 d=0.970446 t=7856
+zun zhong 	尊重	c=1 d=0.856415 t=7856
+zuo 	做	c=18 d=4.08406 t=7856
+zuo ba 	做吧	c=1 d=1 t=7856
+zuo che 	坐車	c=1 d=0.460704 t=7856
+zuo chu 	做出	c=2 d=1.30215 t=7856
+zuo dao 	做到	c=1 d=0.878095 t=7856
+zuo de 	做得	c=1 d=0.918512 t=7856
+zuo duo 	做多	c=1 d=0.946485 t=7856
+zuo fa 	做法	c=1 d=0.965605 t=7856
+zuo ge 	做個	c=1 d=0.621885 t=7856
+zuo kong 	做空	c=2 d=0.628653 t=7856
+zuo ren 	做人	c=1 d=0.97531 t=7856
+zuo shen me 	做什麼	c=1 d=0.142987 t=7856
+zuo tian 	昨天	c=3 d=1.96676 t=7856
+zuo wan 	昨晚	c=2 d=1.4701 t=7856
+zuo wei 	作爲	c=4 d=2.51856 t=7856
+zuo yong 	作用	c=0 d=0.0960789 t=7856

@@ -1,0 +1,81 @@
+;; ═══ Network Popup Window ═══
+;; Shows ethernet, WiFi, and Clash VPN status.
+
+(defwidget net-popup-content []
+  (box :class "popup-panel"
+       :orientation "v"
+       :space-evenly false
+       :spacing 18
+
+    ;; ─── Header ───────────────────────────────────────────
+    (box :class "popup-header"
+         :orientation "h"
+         :space-evenly false
+         :spacing 10
+      (label :class "popup-icon" :text "󰈀")
+      (label :class "popup-title" :text "Network"))
+
+    ;; ─── Ethernet ────────────────────────────────────────
+    (box :class "popup-section net-row"
+         :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (label :class {net-status.eth.state == "connected" ? "icon-eth" : "icon-offline"}
+             :text "󰈀")
+      (box :orientation "v"
+           :space-evenly false
+           :spacing 2
+        (label :class "device-name" :text "Ethernet" :halign "start")
+        (label :class "device-mac"
+               :text {net-status.eth.state == "connected" ?
+                      "${net-status.eth.speed} — Connected" :
+                      "Disconnected"}
+               :halign "start")))
+
+    ;; ─── WiFi ────────────────────────────────────────────
+    (box :class "popup-section net-row"
+         :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (label :class {net-status.wifi.ssid != "" ? "icon-wifi" : "icon-offline"}
+             :text {net-status.wifi.signal > 75 ? "󰤨" :
+                    net-status.wifi.signal > 50 ? "󰤥" :
+                    net-status.wifi.signal > 25 ? "󰤢" : "󰤭"})
+      (box :orientation "v"
+           :space-evenly false
+           :spacing 2
+        (label :class "device-name"
+               :text {net-status.wifi.ssid != "" ? net-status.wifi.ssid : "WiFi"}
+               :halign "start")
+        (label :class "device-mac"
+               :text {net-status.wifi.ssid != "" ?
+                      "Signal: ${net-status.wifi.signal}%" :
+                      "Not Connected"}
+               :halign "start")))
+
+    ;; ─── Clash VPN ───────────────────────────────────────
+    (box :class "popup-section net-row"
+         :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (label :class {net-status.clash.active ? "icon-clash-on" : "icon-offline"}
+             :text "󱣻")
+      (box :orientation "v"
+           :space-evenly false
+           :spacing 2
+        (label :class "device-name" :text "Clash Verge" :halign "start")
+        (label :class "device-mac"
+               :text {net-status.clash.active ?
+                      (net-status.clash.tun ? "TUN Mode — Active" : "Active") :
+                      "Inactive"}
+               :halign "start")))))
+
+(defwindow net-popup
+  :monitor 0
+  :geometry (geometry :x "-16px"
+                      :y "68px"
+                      :width "300px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :exclusive false
+  (net-popup-content))

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Network Status Script (Event-driven via nmcli monitor)
+# ~/.config/eww/scripts/get-network
+
+get_network_status() {
+  # Ethernet
+  ETH_STATE=$(nmcli -t -f TYPE,STATE device 2>/dev/null | grep "^ethernet:" | \
+    head -1 | cut -d: -f2)
+  ETH_SPEED=""
+  if [ "$ETH_STATE" = "connected" ]; then
+    ETH_IFACE=$(nmcli -t -f TYPE,DEVICE device | grep "^ethernet:" | \
+      head -1 | cut -d: -f2)
+    ETH_SPEED=$(cat "/sys/class/net/${ETH_IFACE}/speed" 2>/dev/null || echo "")
+    [ "$ETH_SPEED" = "1000" ] && ETH_SPEED="1G" || \
+    [ -n "$ETH_SPEED" ] && ETH_SPEED="${ETH_SPEED}M" || ETH_SPEED="?"
+  fi
+
+  # WiFi
+  WIFI_SSID=$(nmcli -t -f ACTIVE,SSID device wifi list --rescan no 2>/dev/null | \
+    grep "^yes:" | cut -d: -f2)
+  WIFI_SIGNAL=$(nmcli -t -f ACTIVE,SIGNAL device wifi list --rescan no 2>/dev/null | \
+    grep "^yes:" | cut -d: -f2)
+  WIFI_ON=$(nmcli radio wifi 2>/dev/null)
+
+  # Clash / VPN
+  CLASH_ACTIVE=$(systemctl is-active clash-verge 2>/dev/null || \
+    systemctl is-active clash 2>/dev/null || echo "inactive")
+  # TUN mode detection
+  TUN_ACTIVE=$(ip link show 2>/dev/null | grep -cE "^[0-9]+: (tun|utun|clash)" 2>/dev/null || true)
+  TUN_ACTIVE=${TUN_ACTIVE:-0}
+
+  jq -cn \
+    --arg eth_state "${ETH_STATE:-disconnected}" \
+    --arg eth_speed "${ETH_SPEED:-}" \
+    --arg wifi_ssid "${WIFI_SSID:-}" \
+    --arg wifi_signal "${WIFI_SIGNAL:-0}" \
+    --arg wifi_on "${WIFI_ON:-disabled}" \
+    --arg clash "${CLASH_ACTIVE:-inactive}" \
+    --arg tun "${TUN_ACTIVE}" \
+    '{
+      eth: {state: $eth_state, speed: $eth_speed},
+      wifi: {ssid: $wifi_ssid, signal: ($wifi_signal|tonumber), on: ($wifi_on == "enabled")},
+      clash: {active: ($clash == "active"), tun: (($tun|tonumber) > 0)}
+    }'
+}
+
+# Initial state
+get_network_status
+
+# Listen for NetworkManager events
+# We use --line-buffered to ensure rapid updates in eww deflisten
+nmcli monitor 2>/dev/null | while read -r; do
+  # Small delay for NM to stabilize state after event
+  sleep 0.1
+  get_network_status
+done

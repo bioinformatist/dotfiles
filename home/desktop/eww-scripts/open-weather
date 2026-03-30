@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# ═══ Open Weather in Chrome ═══
+# Opens yr.no forecast page for the cached location.
+
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/eww"
+LOCATION_CACHE="$CACHE_DIR/weather_location.json"
+
+if [ -f "$LOCATION_CACHE" ]; then
+  LAT=$(jq -r '.lat' "$LOCATION_CACHE")
+  LON=$(jq -r '.lon' "$LOCATION_CACHE")
+  google-chrome-stable "https://www.yr.no/en/forecast/daily-table/$LAT,$LON" &
+else
+  google-chrome-stable "https://www.yr.no" &
+fi

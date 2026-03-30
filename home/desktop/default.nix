@@ -1,11 +1,121 @@
 {
+  pkgs,
+  lib,
+  ...
+}:
+let
+  # ── eww config files (yuck + scss) ─────────────────────────
+  # These are plain config files, no executable flag needed.
+  ewwConfigFiles = {
+    "eww/eww.yuck".source = ./eww/eww.yuck;
+    "eww/eww.scss".source = ./eww/eww.scss;
+    # Phase 1: modules
+    "eww/modules/workspaces.yuck".source = ./eww/modules/workspaces.yuck;
+    "eww/modules/window-title.yuck".source = ./eww/modules/window-title.yuck;
+    "eww/modules/clock.yuck".source = ./eww/modules/clock.yuck;
+    "eww/modules/weather.yuck".source = ./eww/modules/weather.yuck;
+    # Phase 2: modules
+    "eww/modules/audio.yuck".source = ./eww/modules/audio.yuck;
+    "eww/modules/bluetooth.yuck".source = ./eww/modules/bluetooth.yuck;
+    "eww/modules/network.yuck".source = ./eww/modules/network.yuck;
+    "eww/modules/sysinfo.yuck".source = ./eww/modules/sysinfo.yuck;
+    "eww/modules/notifications.yuck".source = ./eww/modules/notifications.yuck;
+    # Windows
+    "eww/windows/bar.yuck".source = ./eww/windows/bar.yuck;
+    "eww/windows/audio-popup.yuck".source = ./eww/windows/audio-popup.yuck;
+    "eww/windows/bt-popup.yuck".source = ./eww/windows/bt-popup.yuck;
+    "eww/windows/net-popup.yuck".source = ./eww/windows/net-popup.yuck;
+  };
+
+  # ── eww scripts (need executable permission) ───────────────
+  ewwScriptFiles = builtins.listToAttrs (
+    map (name: {
+      name = "eww/scripts/${name}";
+      value = {
+        source = ./eww-scripts/${name};
+        executable = true;
+      };
+    }) [
+      # Phase 1
+      "get-workspaces"
+      "get-window-title"
+      "get-weather"
+      "open-weather"
+      "open-bars"
+      # Phase 2
+      "get-volume"
+      "get-audio-sinks"
+      "get-audio-sources"
+      "set-audio-device"
+      "set-vol"
+      "get-bluetooth"
+      "bt-toggle"
+      "bt-pair"
+      "get-network"
+      "get-sysinfo"
+      "get-notifications"
+    ]
+  );
+in
+{
   imports = [
     ./anyrun
     ./hyprland
   ];
 
-  programs.eww = {
-    enable = true;
-    configDir = ./eww;
+  # ── eww bar ────────────────────────────────────────────────
+  # We do NOT use programs.eww.configDir because it conflicts
+  # with adding scripts that need executable permission.
+  # Instead, we install the eww package and manage all files
+  # via xdg.configFile individually.
+  programs.eww.enable = true;
+
+  xdg.configFile = ewwConfigFiles // ewwScriptFiles // {
+    # ── WirePlumber: force onboard Realtek ALC892 as default ──
+    # Without this, PipeWire defaults to the GPU HDMI output on boot
+    # and the Analog Stereo profile is never activated.
+    "wireplumber/wireplumber.conf.d/50-default-sink.conf".text = ''
+      wireplumber.settings = {
+        device.restore-profile = true
+      }
+
+      monitor.alsa.rules = [
+        {
+          matches = [
+            { device.name = "alsa_card.pci-0000_2b_00.3" }
+          ]
+          actions = {
+            update-props = {
+              device.profile = "output:analog-stereo+input:analog-stereo"
+              device.disabled = false
+            }
+          }
+        }
+        {
+          matches = [
+            { device.name = "alsa_card.pci-0000_29_00.1" }
+          ]
+          actions = {
+            update-props = {
+              device.profile = "off"
+            }
+          }
+        }
+      ]
+    '';
   };
+
+  # ── eww runtime dependencies ───────────────────────────────
+  home.packages = with pkgs; [
+    socat        # Hyprland IPC socket listener
+    curl         # Weather API requests
+    dbus         # dbus-monitor for Bluetooth events
+    dunst        # Notification daemon (dunstctl)
+    pulseaudio   # pactl stream for volume events
+    # jq is already in nixos/desktop.nix systemPackages
+
+    # Fonts — Nerd Font variant includes all glyph icons
+    nerd-fonts.jetbrains-mono
+    noto-fonts-cjk-sans
+  ];
 }

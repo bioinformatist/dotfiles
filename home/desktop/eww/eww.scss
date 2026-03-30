@@ -1,0 +1,402 @@
+// ═══════════════════════════════════════════════════════════════
+// Eww Bar — Matrix Theme (黑绿极客风)
+// Optimized for 1080p @ scale 1.0
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Design Tokens ───────────────────────────────────────────
+
+// Colors
+$bg-primary:     rgba(5, 5, 5, 0.94);
+$bg-secondary:   rgba(8, 16, 8, 0.95);
+$bg-hover:       rgba(0, 255, 65, 0.15);
+
+$green-bright:   #00ff41;
+$green-normal:   #00dd36;
+$green-dim:      #00aa28;
+$green-dark:     #005515;
+$green-glow:     rgba(0, 255, 65, 0.50);
+$green-glow-far: rgba(0, 255, 65, 0.20);
+
+$red-alert:      #ff2244;
+$amber-warn:     #ccaa00;
+
+// Typography — Nerd Font variant required for all glyph icons (󰕾 󰂱 󰈀 etc.)
+$font-main: "JetBrainsMono Nerd Font", "JetBrains Mono", "monospace";
+
+// ─── Global Reset ────────────────────────────────────────────
+
+* {
+  all: unset;
+  font-family: $font-main;
+  font-size: 16px;
+  font-weight: 800;
+  color: $green-normal;
+}
+
+// ─── Bar Window ──────────────────────────────────────────────
+
+.bar-inner {
+  margin: 6px 12px;
+  padding: 6px 24px;
+  background-color: $bg-primary;
+  border-radius: 14px;
+  border: 2px solid $green-glow;
+  box-shadow: 0 0 6px  $green-glow,
+              0 0 16px $green-glow-far,
+              0 0 40px rgba(0, 255, 65, 0.08),
+              inset 0 0 8px rgba(0, 255, 65, 0.06);
+}
+
+// ─── Workspaces ──────────────────────────────────────────────
+
+.workspace-entry {
+  padding: 4px 4px;
+  border-radius: 6px;
+  transition: background-color 150ms ease-in-out;
+
+  &:hover {
+    background-color: $bg-hover;
+  }
+}
+
+.workspace-dot {
+  font-size: 16px;
+  font-weight: 800;
+  min-width: 22px;
+  min-height: 22px;
+}
+
+.ws-current {
+  color: $green-bright;
+  font-weight: 800;
+  text-shadow: 0 0 6px  $green-bright,
+               0 0 14px rgba(0, 255, 65, 0.6),
+               0 0 28px rgba(0, 255, 65, 0.3);
+}
+
+.ws-active-other {
+  color: $green-dim;
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
+}
+
+.ws-occupied {
+  color: $green-normal;
+  text-shadow: 0 0 4px rgba(0, 255, 65, 0.2);
+}
+
+.ws-empty {
+  color: $green-dark;
+}
+
+// ─── Window Title ────────────────────────────────────────────
+
+.window-title {
+  color: $green-dim;
+  font-size: 14px;
+  font-weight: 700;
+  margin-left: 14px;
+}
+
+// ─── Clock ───────────────────────────────────────────────────
+
+.clock-container {
+  padding: 0px 8px;
+}
+
+.clock {
+  color: $green-bright;
+  font-size: 24px;
+  font-weight: 800;
+  text-shadow: 0 0 8px  $green-bright,
+               0 0 18px rgba(0, 255, 65, 0.5),
+               0 0 36px rgba(0, 255, 65, 0.2);
+}
+
+// ─── Weather ─────────────────────────────────────────────────
+
+.weather-container {
+  padding: 4px 10px;
+  border-radius: 8px;
+  transition: background-color 150ms ease-in-out;
+
+  &:hover {
+    background-color: $bg-hover;
+  }
+}
+
+.weather-icon {
+  font-size: 20px;
+  color: $green-normal;
+  text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+}
+
+.weather-temp {
+  font-size: 16px;
+  font-weight: 800;
+  color: $green-dim;
+}
+
+// ─── Separator ───────────────────────────────────────────────
+
+.separator {
+  color: $green-dark;
+  font-size: 16px;
+  padding: 0 4px;
+}
+
+// ─── Generic Module Button ───────────────────────────────────
+
+.module-btn {
+  border-radius: 8px;
+  padding: 4px 8px;
+  transition: background-color 150ms ease-in-out;
+
+  &:hover {
+    background-color: $bg-hover;
+  }
+}
+
+.module-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: $green-normal;
+}
+
+// ─── System Info ─────────────────────────────────────────────
+
+.sysinfo-container {
+  padding: 0 4px;
+}
+
+.sysinfo-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: $green-dark;
+  margin-right: 2px;
+  letter-spacing: 0.5px;
+}
+
+.icon-cpu, .icon-ram, .icon-gpu {
+  font-size: 16px;
+  color: $green-dim;
+}
+
+// Color thresholds applied dynamically via class override in future
+.sysval-cpu, .sysval-ram, .sysval-gpu {
+  color: $green-normal;
+}
+
+// ─── Icon States ─────────────────────────────────────────────
+
+.icon-audio   { color: $green-bright; font-size: 18px; }
+.icon-muted   { color: $red-alert;    font-size: 18px; }
+.icon-hidden  { min-width: 0; min-height: 0; font-size: 0; }
+.icon-mic-muted { color: $red-alert; margin-left: 4px; }
+
+.icon-bt-on        { color: $green-bright; font-size: 18px; }
+.icon-bt-connected { color: $green-bright; font-size: 18px; }
+.icon-bt-off       { color: $green-dark;   font-size: 18px; }
+
+.icon-eth    { color: $green-bright; font-size: 18px; }
+.icon-wifi   { color: $green-bright; font-size: 18px; }
+.icon-offline { color: $green-dark;  font-size: 18px; }
+.icon-clash-on { color: $amber-warn; font-size: 16px; }
+
+.icon-notif-active { color: $green-bright; font-size: 18px; }
+.icon-notif-idle   { color: $green-dark;   font-size: 18px; }
+
+.icon-active   { color: $green-bright; font-size: 14px; }
+.icon-inactive { color: $green-dark;   font-size: 14px; }
+
+// ─── Popup Panels ────────────────────────────────────────────
+
+.popup-panel {
+  background-color: $bg-primary;
+  border-radius: 14px;
+  border: 2px solid $green-glow;
+  box-shadow: 0 0 8px  $green-glow,
+              0 0 24px $green-glow-far,
+              0 0 48px rgba(0, 255, 65, 0.08);
+  padding: 20px;
+  min-width: 280px;
+}
+
+.popup-header {
+  border-bottom: 1px solid $green-dark;
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+}
+
+.popup-icon {
+  font-size: 22px;
+  color: $green-bright;
+  text-shadow: 0 0 8px $green-bright;
+}
+
+.popup-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: $green-bright;
+}
+
+.popup-section {
+  margin-top: 4px;
+}
+
+.popup-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: $green-dark;
+  letter-spacing: 2px;
+}
+
+// ─── Volume Slider ───────────────────────────────────────────
+
+.vol-btn {
+  font-size: 20px;
+  color: $green-bright;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 150ms ease-in-out;
+
+  &:hover { background-color: $bg-hover; }
+}
+
+.vol-btn-muted {
+  color: $red-alert;
+  text-shadow: 0 0 6px $red-alert;
+}
+
+.vol-label {
+  font-size: 14px;
+  font-weight: 800;
+  color: $green-dim;
+  min-width: 44px;
+}
+
+// GTK scale slider
+scale {
+  trough {
+    background-color: $green-dark;
+    border-radius: 4px;
+    min-height: 4px;
+  }
+  highlight {
+    background-color: $green-bright;
+    box-shadow: 0 0 6px $green-glow;
+    border-radius: 4px;
+  }
+  slider {
+    background-color: $green-bright;
+    border-radius: 50%;
+    min-width: 14px;
+    min-height: 14px;
+    box-shadow: 0 0 8px $green-glow;
+  }
+}
+
+// ─── Device Lists ────────────────────────────────────────────
+
+.device-list {
+  margin-top: 6px;
+}
+
+.device-btn {
+  padding: 8px 10px;
+  border-radius: 8px;
+  transition: background-color 150ms ease-in-out;
+
+  &:hover { background-color: $bg-hover; }
+}
+
+.device-btn-active {
+  background-color: rgba(0, 255, 65, 0.08);
+  border: 1px solid $green-dark;
+}
+
+.device-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: $green-normal;
+}
+
+.device-mac {
+  font-size: 12px;
+  font-weight: 600;
+  color: $green-dark;
+}
+
+.device-row {
+  padding: 6px 4px;
+  border-radius: 8px;
+
+  &:hover { background-color: $bg-hover; }
+}
+
+// ─── Bluetooth Controls ──────────────────────────────────────
+
+.power-btn {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+  transition: background-color 150ms ease-in-out;
+}
+
+.power-btn-on {
+  color: $green-bright;
+  border: 1px solid $green-glow;
+  background-color: rgba(0, 255, 65, 0.10);
+  text-shadow: 0 0 6px $green-bright;
+}
+
+.power-btn-off {
+  color: $green-dark;
+  border: 1px solid $green-dark;
+}
+
+.disconnect-btn {
+  color: $red-alert;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 150ms ease-in-out;
+
+  &:hover { background-color: rgba(255, 34, 68, 0.12); }
+}
+
+.scan-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: $green-dim;
+  border: 1px solid $green-dark;
+  transition: background-color 150ms ease-in-out;
+
+  &:hover { background-color: $bg-hover; }
+}
+
+.scan-btn-active {
+  color: $green-bright;
+  border-color: $green-glow;
+  background-color: rgba(0, 255, 65, 0.08);
+  text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+}
+
+// ─── Network ─────────────────────────────────────────────────
+
+.net-row {
+  padding: 6px 4px;
+  border-radius: 8px;
+
+  &:hover { background-color: $bg-hover; }
+}
+
+// ─── Misc ────────────────────────────────────────────────────
+
+.empty-hint {
+  color: $green-dark;
+  font-size: 13px;
+  padding: 4px 8px;
+}

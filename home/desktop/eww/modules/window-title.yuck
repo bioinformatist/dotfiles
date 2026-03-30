@@ -1,0 +1,13 @@
+;; ═══ Active Window Title ═══
+;; Event-driven via socat on Hyprland socket2.
+
+(deflisten active_window_title
+  :initial ""
+  "scripts/get-window-title")
+
+(defwidget window-title []
+  (label
+    :class "window-title"
+    :text "${active_window_title}"
+    :limit-width 50
+    :show-truncated true))

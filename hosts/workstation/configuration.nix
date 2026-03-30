@@ -26,6 +26,13 @@
   networking.hostName = "homePC";
   networking.networkmanager.enable = true;
 
+  # --- Physical machine: Bluetooth ---
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+    settings.General.Experimental = true; # Enable battery display etc.
+  };
+
   # --- Sops secrets (host-specific paths) ---
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
   sops.defaultSopsFormat = "yaml";

@@ -1,0 +1,24 @@
+;; ═══ Bluetooth Module ═══
+;; Event-driven via dbus-monitor on BlueZ signals.
+
+(deflisten bt-status
+  :initial '{"powered":false,"connected_devices":[],"connected_count":0}'
+  `~/.config/eww/scripts/get-bluetooth`)
+
+(defwidget bluetooth []
+  (button
+    :class "module-btn"
+    :onclick "eww open bt-popup --toggle"
+    :tooltip "Bluetooth"
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 6
+      (label
+        :class {bt-status.powered ?
+                (bt-status.connected_count > 0 ? "icon-bt-on icon-bt-connected" : "icon-bt-on") :
+                "icon-bt-off"}
+        :text  {bt-status.powered ? "󰂱" : "󰂲"})
+      (label
+        :class "module-value"
+        :visible {bt-status.connected_count > 0}
+        :text "${bt-status.connected_count}"))))

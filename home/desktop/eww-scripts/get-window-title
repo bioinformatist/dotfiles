@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ═══ Active Window Title Monitor ═══
+# Event-driven via Hyprland IPC socket2.
+# Outputs the active window title on each focus change.
+
+# Emit initial title
+hyprctl activewindow -j | jq -r '.title // ""'
+
+# Listen for window focus events
+socat -u UNIX-CONNECT:"${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock" - \
+  | while read -r line; do
+    case "$line" in
+      activewindow\>\>*|activewindowv2\>\>*)
+        hyprctl activewindow -j | jq -r '.title // ""'
+        ;;
+    esac
+  done

@@ -1,0 +1,32 @@
+;; ═══ System Resources Module ═══
+;; Shows CPU, MEM, and GPU with labels for clarity
+
+(defpoll sysinfo
+  :interval "3s"
+  :initial '{"cpu":0,"ram":{"used":0,"total":32768,"pct":0},"gpus":[]}'
+  `~/.config/eww/scripts/get-sysinfo`)
+
+(defwidget sysinfo []
+  (box :class "sysinfo-container"
+       :orientation "h"
+       :space-evenly false
+       :spacing 16
+    ;; CPU
+    (box :orientation "h" :space-evenly false :spacing 6
+      (label :class "icon-cpu" :text "")
+      (label :class "module-value sysinfo-label" :text "CPU")
+      (label :class "module-value sysval-cpu" :text "${sysinfo.cpu}%"))
+    
+    ;; MEM
+    (box :orientation "h" :space-evenly false :spacing 6
+      (label :class "icon-ram" :text "󰍛")
+      (label :class "module-value sysinfo-label" :text "MEM")
+      (label :class "module-value sysval-ram" :text "${sysinfo.ram.pct}%"))
+    
+    ;; GPU (Primary)
+    (box :orientation "h" :space-evenly false :spacing 6
+         :visible {arraylength(sysinfo.gpus) > 0}
+      (label :class "icon-gpu" :text "󰢮")
+      (label :class "module-value sysinfo-label" :text "GPU")
+      (label :class "module-value sysval-gpu"
+             :text {arraylength(sysinfo.gpus) > 0 ? "${sysinfo.gpus[0].util}%" : "0%"}))))

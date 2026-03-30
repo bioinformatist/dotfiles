@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ═══ Volume Setter ═══
+# Usage: set-vol sink|source <0-150>
+# Converts the 0-150 Eww scale value to pactl-compatible percentage.
+
+TARGET=$1
+VAL=$2
+
+echo "[$(date)] set-vol called: target=$TARGET val=$VAL" >> /tmp/eww-vol-debug.log
+
+if [ "$TARGET" = "sink" ]; then
+  pactl set-sink-volume @DEFAULT_SINK@ "${VAL}%" >> /tmp/eww-vol-debug.log 2>&1
+else
+  pactl set-source-volume @DEFAULT_SOURCE@ "${VAL}%" >> /tmp/eww-vol-debug.log 2>&1
+fi
+
+echo "[$(date)] set-vol exit code: $?" >> /tmp/eww-vol-debug.log
