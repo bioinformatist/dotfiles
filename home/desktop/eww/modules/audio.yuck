@@ -1,15 +1,15 @@
 ;; ═══ Audio Module ═══
 ;; Event-driven volume display via pactl subscribe.
-;; Clicking opens the audio popup.
+;; Clicking opens the audio popup on the correct monitor.
 
 (deflisten audio-status
   :initial '{"sink_vol":50,"sink_muted":false,"source_vol":80,"source_muted":false}'
   `~/.config/eww/scripts/get-volume`)
 
-(defwidget audio []
+(defwidget audio [monitor_id]
   (button
     :class "module-btn"
-    :onclick "eww open audio-popup --toggle"
+    :onclick "~/.config/eww/scripts/toggle-popup audio ${monitor_id}"
     :tooltip "Audio"
     (box :orientation "h"
          :space-evenly false

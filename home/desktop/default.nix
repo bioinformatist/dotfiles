@@ -54,6 +54,8 @@ let
       "get-network"
       "get-sysinfo"
       "get-notifications"
+      "close-popups"
+      "toggle-popup"
     ]
   );
 in
@@ -70,40 +72,7 @@ in
   # via xdg.configFile individually.
   programs.eww.enable = true;
 
-  xdg.configFile = ewwConfigFiles // ewwScriptFiles // {
-    # ── WirePlumber: force onboard Realtek ALC892 as default ──
-    # Without this, PipeWire defaults to the GPU HDMI output on boot
-    # and the Analog Stereo profile is never activated.
-    "wireplumber/wireplumber.conf.d/50-default-sink.conf".text = ''
-      wireplumber.settings = {
-        device.restore-profile = true
-      }
-
-      monitor.alsa.rules = [
-        {
-          matches = [
-            { device.name = "alsa_card.pci-0000_2b_00.3" }
-          ]
-          actions = {
-            update-props = {
-              device.profile = "output:analog-stereo+input:analog-stereo"
-              device.disabled = false
-            }
-          }
-        }
-        {
-          matches = [
-            { device.name = "alsa_card.pci-0000_29_00.1" }
-          ]
-          actions = {
-            update-props = {
-              device.profile = "off"
-            }
-          }
-        }
-      ]
-    '';
-  };
+  xdg.configFile = ewwConfigFiles // ewwScriptFiles;
 
   # ── eww runtime dependencies ───────────────────────────────
   home.packages = with pkgs; [

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# ═══ Eww Popup Auto-Close ═══
+# Listens to Hyprland's activewindow event via socat.
+# Closes all eww popups + closers when focus moves to any
+# non-eww window. This handles the case where the user clicks
+# on a normal application window (which is above the closer
+# layer and thus doesn't trigger the closer's eventbox).
+# Called from Hyprland exec-once.
+
+# Get Hyprland socket path
+HYPR_SOCKET="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+
+close_all_popups() {
+  for t in audio bt net; do
+    for m in 0 1 2; do
+      eww close "${t}-popup-${m}" 2>/dev/null || true
+      eww close "${t}-closer-${m}" 2>/dev/null || true
+    done
+  done
+}
+
+socat -u "UNIX-CONNECT:${HYPR_SOCKET}" - 2>/dev/null | while IFS= read -r line; do
+  # activewindow event fires when focus changes
+  # Format: activewindow>>class,title
+  if echo "$line" | grep -q "^activewindow>>"; then
+    # Extract the window class from the event
+    WIN_CLASS=$(echo "$line" | cut -d'>' -f3 | cut -d',' -f1)
+
+    # If the newly active window is NOT an eww window, close all popups
+    if [ "$WIN_CLASS" != "eww" ] && [ "$WIN_CLASS" != "" ]; then
+      # Only close if any popup is actually open
+      if eww active-windows 2>/dev/null | grep -q "popup-"; then
+        close_all_popups
+      fi
+    fi
+  fi
+done

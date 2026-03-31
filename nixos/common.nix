@@ -45,6 +45,34 @@
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+    wireplumber.extraConfig = {
+      # --- Audio routing: prefer onboard Realtek ALC892 over GPU HDMI ---
+      # On this machine (dual RTX 3090), PipeWire defaults to GPU HDMI audio
+      # on boot. This rule forces activation of the onboard analog-stereo
+      # profile for the AMD HD Audio controller (headphone jack) and disables
+      # the GPU HDMI audio output for all users on this machine.
+      "90-alsa-routing" = {
+        "monitor.alsa.rules" = [
+          {
+            matches = [{ "device.name" = "alsa_card.pci-0000_2b_00.3"; }];
+            actions = {
+              update-props = {
+                "device.profile" = "output:analog-stereo+input:analog-stereo";
+                "device.disabled" = false;
+              };
+            };
+          }
+          {
+            matches = [{ "device.name" = "alsa_card.pci-0000_29_00.1"; }];
+            actions = {
+              update-props = {
+                "device.profile" = "off";
+              };
+            };
+          }
+        ];
+      };
+    };
   };
 
   users.users.${username} = {

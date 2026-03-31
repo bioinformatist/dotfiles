@@ -1,5 +1,6 @@
 ;; ═══ Bluetooth Popup Window ═══
 ;; Power toggle, paired device list, scan & pair new devices.
+;; Per-monitor popup + closer windows for multi-monitor support.
 
 (defvar bt-scanning false)
 
@@ -75,12 +76,86 @@
              :visible {!bt-scanning}
              :text "Press Scan to discover devices"))))
 
-(defwindow bt-popup
+;; ─── Closer widget ────────────────────────────────────────
+
+(defwidget bt-closer-content [monitor_id]
+  (eventbox :onclick "~/.config/eww/scripts/toggle-popup bt ${monitor_id}"))
+
+;; ─── Per-monitor popup + closer windows ───────────────────
+;; Monitor 0
+(defwindow bt-popup-0
   :monitor 0
   :geometry (geometry :x "-16px"
-                      :y "68px"
+                      :y "4px"
                       :width "340px"
                       :anchor "top right")
   :stacking "overlay"
+  :focusable false
   :exclusive false
+  :namespace "eww-popup"
   (bt-popup-content))
+
+(defwindow bt-closer-0
+  :monitor 0
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (bt-closer-content :monitor_id 0))
+
+;; Monitor 1
+(defwindow bt-popup-1
+  :monitor 1
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "340px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (bt-popup-content))
+
+(defwindow bt-closer-1
+  :monitor 1
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (bt-closer-content :monitor_id 1))
+
+;; Monitor 2
+(defwindow bt-popup-2
+  :monitor 2
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "340px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (bt-popup-content))
+
+(defwindow bt-closer-2
+  :monitor 2
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (bt-closer-content :monitor_id 2))

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# ═══ Eww Popup Toggle ═══
+# Opens/closes a popup + its closer window pair.
+# Usage: toggle-popup <type> <monitor_id>
+#   type: audio | bt | net
+#   monitor_id: 0 | 1 | 2
+
+TYPE="${1:?Usage: toggle-popup <type> <monitor_id>}"
+MON="${2:?Usage: toggle-popup <type> <monitor_id>}"
+
+POPUP="${TYPE}-popup-${MON}"
+CLOSER="${TYPE}-closer-${MON}"
+
+# Get currently open windows (once, to avoid repeated IPC calls)
+ACTIVE=$(eww active-windows 2>/dev/null)
+
+# If this popup is already open → toggle off
+if echo "$ACTIVE" | grep -q "^${POPUP}:"; then
+  eww close "$POPUP" "$CLOSER" 2>/dev/null
+  exit 0
+fi
+
+# Close only actually-open popups & closers (avoid timeout from
+# trying to close 18 non-existent windows)
+WINDOWS_TO_CLOSE=""
+for t in audio bt net; do
+  for m in 0 1 2; do
+    echo "$ACTIVE" | grep -q "^${t}-popup-${m}:" && WINDOWS_TO_CLOSE="$WINDOWS_TO_CLOSE ${t}-popup-${m}"
+    echo "$ACTIVE" | grep -q "^${t}-closer-${m}:" && WINDOWS_TO_CLOSE="$WINDOWS_TO_CLOSE ${t}-closer-${m}"
+  done
+done
+
+if [ -n "$WINDOWS_TO_CLOSE" ]; then
+  # shellcheck disable=SC2086
+  eww close $WINDOWS_TO_CLOSE 2>/dev/null
+fi
+
+# Open closer first (bottom layer), then popup (overlay)
+eww open "$CLOSER" &
+eww open "$POPUP" &
+wait

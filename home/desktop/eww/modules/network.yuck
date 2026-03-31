@@ -1,14 +1,15 @@
 ;; ═══ Network Module ═══
 ;; Event-driven via nmcli monitor. Shows active connection + Clash status.
+;; Clicking opens the network popup on the correct monitor.
 
 (deflisten net-status
   :initial '{"eth":{"state":"disconnected","speed":""},"wifi":{"ssid":"","signal":0,"on":false},"clash":{"active":false,"tun":false}}'
   `~/.config/eww/scripts/get-network`)
 
-(defwidget network []
+(defwidget network [monitor_id]
   (button
     :class "module-btn"
-    :onclick "eww open net-popup --toggle"
+    :onclick "~/.config/eww/scripts/toggle-popup net ${monitor_id}"
     :tooltip "Network"
     (box :orientation "h"
          :space-evenly false
