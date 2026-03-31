@@ -25,6 +25,7 @@ let
     "eww/windows/audio-popup.yuck".source = ./eww/windows/audio-popup.yuck;
     "eww/windows/bt-popup.yuck".source = ./eww/windows/bt-popup.yuck;
     "eww/windows/net-popup.yuck".source = ./eww/windows/net-popup.yuck;
+    "eww/windows/weather-search.yuck".source = ./eww/windows/weather-search.yuck;
   };
 
   # ── eww scripts (need executable permission) ───────────────
@@ -56,6 +57,7 @@ let
       "get-notifications"
       "close-popups"
       "toggle-popup"
+      "search-weather"
     ]
   );
 in

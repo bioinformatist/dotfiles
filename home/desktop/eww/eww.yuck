@@ -20,3 +20,4 @@
 (include "./windows/audio-popup.yuck")
 (include "./windows/bt-popup.yuck")
 (include "./windows/net-popup.yuck")
+(include "./windows/weather-search.yuck")

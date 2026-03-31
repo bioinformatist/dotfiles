@@ -23,7 +23,7 @@ fi
 # Close only actually-open popups & closers (avoid timeout from
 # trying to close 18 non-existent windows)
 WINDOWS_TO_CLOSE=""
-for t in audio bt net; do
+for t in audio bt net weather-search; do
   for m in 0 1 2; do
     echo "$ACTIVE" | grep -q "^${t}-popup-${m}:" && WINDOWS_TO_CLOSE="$WINDOWS_TO_CLOSE ${t}-popup-${m}"
     echo "$ACTIVE" | grep -q "^${t}-closer-${m}:" && WINDOWS_TO_CLOSE="$WINDOWS_TO_CLOSE ${t}-closer-${m}"

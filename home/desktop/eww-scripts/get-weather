@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ═══ Weather Data (yr.no MET Norway API) ═══
-# Called by defpoll every 30 minutes.
-# Auto-detects location via IP on first run and caches.
+# Called by defpoll every 30 minutes, or manually by search-weather.
+# Auto-detects location via IP if no cache exists.
 # Requires: curl, jq
 
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/eww"
@@ -10,15 +10,20 @@ WEATHER_CACHE="$CACHE_DIR/weather_data.json"
 
 mkdir -p "$CACHE_DIR"
 
-# ─── Get location (cached) ───────────────────────────────────
+# ─── Get location ─────────────────────────────────────────────
+# 1. Check if cache exists (manual or previous auto-detected)
 if [ ! -f "$LOCATION_CACHE" ]; then
-  curl -sf "http://ip-api.com/json" \
-    | jq '{lat: .lat, lon: .lon, city: .city}' \
-    > "$LOCATION_CACHE" 2>/dev/null
+  # Fallback to auto-detection (only if no cache exists)
+  RESPONSE=$(curl -sf "http://ip-api.com/json")
+  if [ $? -eq 0 ] && [ -n "$RESPONSE" ]; then
+    echo "$RESPONSE" | jq '{lat: .lat, lon: .lon, city: .city}' > "$LOCATION_CACHE"
+  fi
 fi
 
+# Final check: if still no location, cannot proceed
 if [ ! -f "$LOCATION_CACHE" ]; then
-  echo '{"temp":"N/A","icon":"?","city":"Unknown","symbol":""}'
+  # Default fallback message
+  echo '{"temp":"?","icon":"☁","city":"No Loc","symbol":""}'
   exit 0
 fi
 
@@ -27,16 +32,17 @@ LON=$(jq -r '.lon' "$LOCATION_CACHE")
 CITY=$(jq -r '.city' "$LOCATION_CACHE")
 
 # ─── Fetch weather ────────────────────────────────────────────
+# yr.no API requires a unique User-Agent
 WEATHER=$(curl -sf \
-  -H "User-Agent: eww-weather/1.0 github.com/bioinformatist/dotfiles" \
+  -H "User-Agent: eww-weather/1.1 github.com/bioinformatist/dotfiles" \
   "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=$LAT&lon=$LON")
 
 if [ $? -ne 0 ] || [ -z "$WEATHER" ]; then
-  # Fallback to cached data
+  # Fallback to cached weather data if possible
   if [ -f "$WEATHER_CACHE" ]; then
     cat "$WEATHER_CACHE"
   else
-    echo '{"temp":"N/A","icon":"?","city":"Unknown","symbol":""}'
+    echo '{"temp":"?","icon":"☁","city":"'$CITY'","symbol":""}'
   fi
   exit 0
 fi
@@ -52,11 +58,8 @@ SYMBOL=$(echo "$WEATHER" | jq -r '
 
 # ─── Map yr.no symbol code to icon ───────────────────────────
 case "$SYMBOL" in
-  clearsky_day)                    ICON="☀" ;;
-  clearsky_night)                  ICON="☾" ;;
-  clearsky_polartwilight)          ICON="☀" ;;
-  fair_day|partlycloudy_day)       ICON="⛅" ;;
-  fair_night|partlycloudy_night)   ICON="☁" ;;
+  clearsky_*)                      ICON="☀" ;;
+  fair_*|partlycloudy_*)           ICON="⛅" ;;
   cloudy)                          ICON="☁" ;;
   *rain*)                          ICON="☂" ;;
   *snow*|*sleet*)                  ICON="❄" ;;

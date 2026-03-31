@@ -395,6 +395,42 @@ scale {
 
 // ─── Misc ────────────────────────────────────────────────────
 
+// ─── Weather Search ──────────────────────────────────────────
+
+.weather-search-panel {
+  min-width: 320px;
+  padding: 24px;
+}
+
+.search-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: $green-dark;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.search-input {
+  background-color: rgba(0, 255, 65, 0.05);
+  border: 1px solid $green-dim;
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: $green-bright;
+  font-size: 16px;
+  transition: border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+
+  &:focus {
+    border-color: $green-bright;
+    box-shadow: 0 0 10px $green-glow-far;
+  }
+}
+
+.search-hint {
+  font-size: 11px;
+  color: $green-dark;
+  margin-top: 8px;
+}
+
 .empty-hint {
   color: $green-dark;
   font-size: 13px;

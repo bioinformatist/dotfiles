@@ -6,11 +6,12 @@
   :initial '{"temp": "...", "icon": "☁", "city": "", "symbol": ""}'
   "scripts/get-weather")
 
-(defwidget weather []
+(defwidget weather [monitor_id]
   (eventbox
     :class "weather-container"
-    :onclick "scripts/open-weather &"
-    :tooltip "${weather_data.city}"
+    :onclick "~/.config/eww/scripts/toggle-popup weather-search ${monitor_id}"
+    :onrightclick "scripts/open-weather &"
+    :tooltip "${weather_data.city} (Left-click to search, Right-click for forecast)"
     (box :orientation "h"
          :space-evenly false
          :spacing 4

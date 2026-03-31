@@ -22,7 +22,7 @@
          :halign "center"
          :spacing 12
       (clock)
-      (weather))
+      (weather :monitor_id monitor_id))
 
     ;; ─── Right: System Modules ───
     (box :class "bar-right"

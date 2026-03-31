@@ -1,0 +1,100 @@
+;; ═══ Weather Search Window ═══
+;; Small popup with an input field to set the location.
+
+(defwidget weather-search-content [monitor_id]
+  (box :class "popup-panel weather-search-panel"
+       :orientation "v"
+       :space-evenly false
+       :spacing 12
+       :valign "center"
+       :halign "center"
+
+    (label :class "search-title" :text "SEARCH CITY")
+    (input :class "search-input"
+           :value "Type city name..."
+           :onaccept "~/.config/eww/scripts/search-weather {} &")
+    (label :class "search-hint" :text "Press Enter to search")
+))
+
+;; ─── Closer widget ────────────────────────────────────────
+(defwidget weather-search-closer-content [monitor_id]
+  (eventbox :onclick "~/.config/eww/scripts/toggle-popup weather-search ${monitor_id}"))
+
+;; ─── Per-monitor popup + closer windows ───────────────────
+;; Monitor 0
+(defwindow weather-search-popup-0
+  :monitor 0
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "240px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable "ondemand"
+  :exclusive false
+  :namespace "eww-popup"
+  (weather-search-content :monitor_id 0))
+
+(defwindow weather-search-closer-0
+  :monitor 0
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (weather-search-closer-content :monitor_id 0))
+
+;; Monitor 1
+(defwindow weather-search-popup-1
+  :monitor 1
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "240px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable "ondemand"
+  :exclusive false
+  :namespace "eww-popup"
+  (weather-search-content :monitor_id 1))
+
+(defwindow weather-search-closer-1
+  :monitor 1
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (weather-search-closer-content :monitor_id 1))
+
+;; Monitor 2
+(defwindow weather-search-popup-2
+  :monitor 2
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "240px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable "ondemand"
+  :exclusive false
+  :namespace "eww-popup"
+  (weather-search-content :monitor_id 2))
+
+(defwindow weather-search-closer-2
+  :monitor 2
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (weather-search-closer-content :monitor_id 2))
