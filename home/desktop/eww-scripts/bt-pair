@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# ═══ Bluetooth Pairing — Scan + Trust + Pair + Connect ═══
+# Usage:
+#   bt-pair scan       — output discovered devices as JSON (one per line)
+#   bt-pair stop       — stop scan
+#   bt-pair pair MAC   — trust + pair + connect a found device
+
+ACTION="$1"
+MAC="$2"
+
+case "$ACTION" in
+  scan)
+    # Start scan and stream newly discovered devices
+    bluetoothctl scan on 2>/dev/null &
+    SCAN_PID=$!
+
+    # Stream discovered devices for 30 seconds
+    timeout 30 bluetoothctl --timeout 30 scan on 2>/dev/null | \
+      grep --line-buffered "NEW\|Device" | \
+      while read -r line; do
+        FOUND_MAC=$(echo "$line" | grep -oP '([0-9A-F]{2}:){5}[0-9A-F]{2}')
+        [ -z "$FOUND_MAC" ] && continue
+        NAME=$(bluetoothctl info "$FOUND_MAC" 2>/dev/null | grep "Name:" | \
+          sed 's/.*Name: //')
+        [ -z "$NAME" ] && NAME="Unknown"
+        jq -cn --arg mac "$FOUND_MAC" --arg name "$NAME" \
+          '{mac: $mac, name: $name}'
+      done
+
+    bluetoothctl scan off 2>/dev/null
+    ;;
+
+  stop)
+    bluetoothctl scan off 2>/dev/null
+    ;;
+
+  pair)
+    bluetoothctl trust "$MAC"
+    bluetoothctl pair "$MAC"
+    bluetoothctl connect "$MAC"
+    ;;
+esac

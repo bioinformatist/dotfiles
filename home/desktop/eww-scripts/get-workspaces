@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# ═══ Workspace Monitor ═══
+# Event-driven workspace state via Hyprland IPC socket2.
+# Outputs JSON array of 10 workspaces on each state change.
+
+get_workspaces() {
+  local ws_json mon_json
+  ws_json=$(hyprctl workspaces -j)
+  mon_json=$(hyprctl monitors -j)
+
+  jq -cn --argjson ws "$ws_json" --argjson mon "$mon_json" '
+    [range(1;11) | . as $id |
+     ($ws | map(select(.id == $id)) | if length > 0 then .[0] else null end) as $w |
+     {
+       id: $id,
+       occupied: (if $w then ($w.windows > 0) else false end),
+       monitor: (if $w then $w.monitorID else -1 end),
+       active: ([$mon[].activeWorkspace.id] | any(. == $id))
+     }]'
+}
+
+# Emit initial state
+get_workspaces
+
+# Listen for relevant Hyprland events
+socat -u UNIX-CONNECT:"${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock" - \
+  | while read -r line; do
+    case "$line" in
+      workspace\>\>*|createworkspace\>\>*|destroyworkspace\>\>*|\
+      moveworkspace\>\>*|focusedmon\>\>*|\
+      openwindow\>\>*|closewindow\>\>*|movewindow\>\>*)
+        get_workspaces
+        ;;
+    esac
+  done

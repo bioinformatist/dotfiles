@@ -1,0 +1,30 @@
+;; ═══ Audio Module ═══
+;; Event-driven volume display via pactl subscribe.
+;; Clicking opens the audio popup on the correct monitor.
+
+(deflisten audio-status
+  :initial '{"sink_vol":50,"sink_muted":false,"source_vol":80,"source_muted":false}'
+  `~/.config/eww/scripts/get-volume`)
+
+(defwidget audio [monitor_id]
+  (button
+    :class "module-btn"
+    :onclick "~/.config/eww/scripts/toggle-popup audio ${monitor_id}"
+    :tooltip "Audio"
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 6
+      ;; Sink (output) icon
+      (label
+        :class {audio-status.sink_muted ? "icon-muted" : "icon-audio"}
+        :text  {audio-status.sink_muted ? "󰖁" :
+                audio-status.sink_vol > 70 ? "󰕾" :
+                audio-status.sink_vol > 30 ? "󰖀" : "󰕿"})
+      (label
+        :class "module-value"
+        :text  {audio-status.sink_muted ? "mute" :
+                "${audio-status.sink_vol}%"})
+      ;; Source (input) — show if muted
+      (label
+        :class {audio-status.source_muted ? "icon-muted icon-mic-muted" : "icon-hidden"}
+        :text  "󰍭"))))

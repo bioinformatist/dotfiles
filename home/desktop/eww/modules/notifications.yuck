@@ -1,0 +1,24 @@
+;; ═══ Notifications Module ═══
+;; Polls every 2s via dunstctl count.
+
+(defpoll notif-status
+  :interval "2s"
+  :initial '{"waiting":0,"displayed":0,"history":0,"total":0}'
+  `~/.config/eww/scripts/get-notifications`)
+
+(defwidget notifications []
+  (button
+    :class "module-btn"
+    :onclick "dunstctl history-pop"
+    :onrightclick "dunstctl close-all"
+    :tooltip "Notifications (right-click: clear all)"
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 6
+      (label
+        :class {notif-status.total > 0 ? "icon-notif-active" : "icon-notif-idle"}
+        :text  {notif-status.total > 0 ? "󰂚" : "󰂜"})
+      (label
+        :class "module-value"
+        :visible {notif-status.total > 0}
+        :text "${notif-status.total}"))))

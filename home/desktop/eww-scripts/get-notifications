@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# ═══ Notification Count ═══
+# Returns JSON with pending notification counts via dunstctl.
+
+WAITING=$(dunstctl count waiting 2>/dev/null || echo 0)
+DISPLAYED=$(dunstctl count displayed 2>/dev/null || echo 0)
+HISTORY=$(dunstctl count history 2>/dev/null || echo 0)
+
+jq -cn \
+  --argjson waiting "$WAITING" \
+  --argjson displayed "$DISPLAYED" \
+  --argjson history "$HISTORY" \
+  '{waiting: $waiting, displayed: $displayed, history: $history, total: ($waiting + $displayed)}'

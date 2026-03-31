@@ -1,0 +1,19 @@
+;; ═══ Weather (yr.no MET Norway API) ═══
+;; Polls every 30 minutes. Auto-detects location via IP.
+;; Click opens yr.no in Chrome.
+
+(defpoll weather_data :interval "1800s"
+  :initial '{"temp": "...", "icon": "☁", "city": "", "symbol": ""}'
+  "scripts/get-weather")
+
+(defwidget weather [monitor_id]
+  (eventbox
+    :class "weather-container"
+    :onclick "~/.config/eww/scripts/toggle-popup weather-search ${monitor_id}"
+    :onrightclick "scripts/open-weather &"
+    :tooltip "${weather_data.city} (Left-click to search, Right-click for forecast)"
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 4
+      (label :class "weather-icon" :text "${weather_data.icon}")
+      (label :class "weather-temp" :text "${weather_data.temp}°C"))))

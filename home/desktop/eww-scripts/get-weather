@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# ═══ Weather Data (yr.no MET Norway API) ═══
+# Called by defpoll every 30 minutes, or manually by search-weather.
+# Auto-detects location via IP if no cache exists.
+# Requires: curl, jq
+
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/eww"
+LOCATION_CACHE="$CACHE_DIR/weather_location.json"
+WEATHER_CACHE="$CACHE_DIR/weather_data.json"
+
+mkdir -p "$CACHE_DIR"
+
+# ─── Get location ─────────────────────────────────────────────
+# 1. Check if cache exists (manual or previous auto-detected)
+if [ ! -f "$LOCATION_CACHE" ]; then
+  # Fallback to auto-detection (only if no cache exists)
+  RESPONSE=$(curl -sf "http://ip-api.com/json")
+  if [ $? -eq 0 ] && [ -n "$RESPONSE" ]; then
+    echo "$RESPONSE" | jq '{lat: .lat, lon: .lon, city: .city}' > "$LOCATION_CACHE"
+  fi
+fi
+
+# Final check: if still no location, cannot proceed
+if [ ! -f "$LOCATION_CACHE" ]; then
+  # Default fallback message
+  echo '{"temp":"?","icon":"☁","city":"No Loc","symbol":""}'
+  exit 0
+fi
+
+LAT=$(jq -r '.lat' "$LOCATION_CACHE")
+LON=$(jq -r '.lon' "$LOCATION_CACHE")
+CITY=$(jq -r '.city' "$LOCATION_CACHE")
+
+# ─── Fetch weather ────────────────────────────────────────────
+# yr.no API requires a unique User-Agent
+WEATHER=$(curl -sf \
+  -H "User-Agent: eww-weather/1.1 github.com/bioinformatist/dotfiles" \
+  "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=$LAT&lon=$LON")
+
+if [ $? -ne 0 ] || [ -z "$WEATHER" ]; then
+  # Fallback to cached weather data if possible
+  if [ -f "$WEATHER_CACHE" ]; then
+    cat "$WEATHER_CACHE"
+  else
+    echo '{"temp":"?","icon":"☁","city":"'$CITY'","symbol":""}'
+  fi
+  exit 0
+fi
+
+# ─── Parse weather data ──────────────────────────────────────
+TEMP=$(echo "$WEATHER" | jq -r '
+  .properties.timeseries[0].data.instant.details.air_temperature | round')
+
+SYMBOL=$(echo "$WEATHER" | jq -r '
+  .properties.timeseries[0].data.next_1_hours.summary.symbol_code //
+  .properties.timeseries[0].data.next_6_hours.summary.symbol_code //
+  "unknown"')
+
+# ─── Map yr.no symbol code to icon ───────────────────────────
+case "$SYMBOL" in
+  clearsky_*)                      ICON="☀" ;;
+  fair_*|partlycloudy_*)           ICON="⛅" ;;
+  cloudy)                          ICON="☁" ;;
+  *rain*)                          ICON="☂" ;;
+  *snow*|*sleet*)                  ICON="❄" ;;
+  fog)                             ICON="≋" ;;
+  *thunder*)                       ICON="⚡" ;;
+  *)                               ICON="☁" ;;
+esac
+
+# ─── Output JSON ─────────────────────────────────────────────
+RESULT=$(jq -cn \
+  --arg temp "$TEMP" \
+  --arg icon "$ICON" \
+  --arg city "$CITY" \
+  --arg symbol "$SYMBOL" \
+  '{temp: $temp, icon: $icon, city: $city, symbol: $symbol}')
+
+echo "$RESULT" | tee "$WEATHER_CACHE"

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# ═══ Volume Monitor ═══
+# Event-driven via pactl subscribe (PipeWire compatible).
+# Outputs JSON with volume percentage and mute state.
+
+get_audio_status() {
+  local SINK_VOL SINK_MUTED SOURCE_VOL SOURCE_MUTED
+
+  # Use pactl for reliable sink and source info
+  local SINK_INFO SOURCE_INFO
+  SINK_INFO=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null)
+  SOURCE_INFO=$(pactl get-source-volume @DEFAULT_SOURCE@ 2>/dev/null)
+  SINK_MUTE_INFO=$(pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null)
+  SOURCE_MUTE_INFO=$(pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null)
+
+  # Extract volume percentage (first channel)
+  SINK_PCT=$(echo "$SINK_INFO" | grep -oP '\d+(?=%)' | head -1)
+  SOURCE_PCT=$(echo "$SOURCE_INFO" | grep -oP '\d+(?=%)' | head -1)
+
+  # Extract mute state
+  SINK_MUTED=$(echo "$SINK_MUTE_INFO" | grep -c "yes" || true)
+  SOURCE_MUTED=$(echo "$SOURCE_MUTE_INFO" | grep -c "yes" || true)
+
+  SINK_PCT=${SINK_PCT:-0}
+  SOURCE_PCT=${SOURCE_PCT:-0}
+
+  jq -cn \
+    --argjson sv "$SINK_PCT" \
+    --argjson sm "$SINK_MUTED" \
+    --argjson rv "$SOURCE_PCT" \
+    --argjson rm "$SOURCE_MUTED" \
+    '{sink_vol: $sv, sink_muted: ($sm > 0), source_vol: $rv, source_muted: ($rm > 0)}'
+}
+
+# Emit initial state
+get_audio_status
+
+# Listen for PipeWire/PulseAudio change events
+pactl subscribe 2>/dev/null | grep --line-buffered "Event 'change' on" | while read -r; do
+  get_audio_status
+done

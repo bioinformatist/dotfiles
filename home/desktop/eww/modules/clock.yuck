@@ -1,0 +1,16 @@
+;; ═══ Clock ═══
+;; Polls system time every second. Tooltip shows full date.
+
+(defpoll clock_time :interval "1s"
+  "date '+%H:%M'")
+
+(defpoll clock_date :interval "60s"
+  "date '+%Y-%m-%d %A'")
+
+(defwidget clock []
+  (eventbox
+    :class "clock-container"
+    :tooltip "${clock_date}"
+    (label
+      :class "clock"
+      :text "${clock_time}")))

@@ -1,0 +1,161 @@
+;; ═══ Bluetooth Popup Window ═══
+;; Power toggle, paired device list, scan & pair new devices.
+;; Per-monitor popup + closer windows for multi-monitor support.
+
+(defvar bt-scanning false)
+
+(defwidget bt-popup-content []
+  (box :class "popup-panel"
+       :orientation "v"
+       :space-evenly false
+       :spacing 18
+
+    ;; ─── Header + Power toggle ────────────────────────────
+    (box :class "popup-header"
+         :orientation "h"
+         :space-evenly false
+      (box :orientation "h"
+           :space-evenly false
+           :spacing 10
+        (label :class "popup-icon" :text "󰂱")
+        (label :class "popup-title" :text "Bluetooth"))
+      (box :hexpand true)
+      (button
+        :class {bt-status.powered ? "power-btn power-btn-on" : "power-btn power-btn-off"}
+        :onclick "~/.config/eww/scripts/bt-toggle power"
+        (label :text {bt-status.powered ? "ON" : "OFF"})))
+
+    ;; ─── Connected Devices ────────────────────────────────
+    (box :class "popup-section"
+         :orientation "v"
+         :space-evenly false
+         :spacing 6
+         :visible {bt-status.powered}
+      (label :class "popup-section-title" :text "CONNECTED" :halign "start")
+
+      (box :class {bt-status.connected_count == 0 ? "empty-hint" : "icon-hidden"}
+        (label :text "No connected devices"))
+
+      (for device in {bt-status.connected_devices}
+        (box :class "device-row"
+             :orientation "h"
+             :space-evenly false
+             :spacing 10
+          (label :class "icon-bt-connected" :text "󰂱")
+          (box :orientation "v"
+               :space-evenly false
+               :spacing 2
+               :hexpand true
+            (label :class "device-name" :text {device.name} :halign "start")
+            (label :class "device-mac"
+                   :text {device.battery != "" ? "󰁹 ${device.battery}%" : device.mac}
+                   :halign "start"))
+          (button
+            :class "disconnect-btn"
+            :onclick "~/.config/eww/scripts/bt-toggle disconnect ${device.mac}"
+            (label :text "󰅖")))))
+
+    ;; ─── Scan for New Devices ─────────────────────────────
+    (box :class "popup-section"
+         :orientation "v"
+         :space-evenly false
+         :spacing 8
+         :visible {bt-status.powered}
+      (box :orientation "h"
+           :space-evenly false
+        (label :class "popup-section-title" :text "PAIR NEW" :halign "start")
+        (box :hexpand true)
+        (button
+          :class {bt-scanning ? "scan-btn scan-btn-active" : "scan-btn"}
+          :onclick {bt-scanning ?
+                    "~/.config/eww/scripts/bt-pair stop && eww update bt-scanning=false" :
+                    "~/.config/eww/scripts/bt-pair scan & eww update bt-scanning=true"}
+          (label :text {bt-scanning ? "󰑓 Stop" : "󰂴 Scan"})))
+
+      (label :class "empty-hint"
+             :visible {!bt-scanning}
+             :text "Press Scan to discover devices"))))
+
+;; ─── Closer widget ────────────────────────────────────────
+
+(defwidget bt-closer-content [monitor_id]
+  (eventbox :onclick "~/.config/eww/scripts/toggle-popup bt ${monitor_id}"))
+
+;; ─── Per-monitor popup + closer windows ───────────────────
+;; Monitor 0
+(defwindow bt-popup-0
+  :monitor 0
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "340px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (bt-popup-content))
+
+(defwindow bt-closer-0
+  :monitor 0
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (bt-closer-content :monitor_id 0))
+
+;; Monitor 1
+(defwindow bt-popup-1
+  :monitor 1
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "340px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (bt-popup-content))
+
+(defwindow bt-closer-1
+  :monitor 1
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (bt-closer-content :monitor_id 1))
+
+;; Monitor 2
+(defwindow bt-popup-2
+  :monitor 2
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "340px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (bt-popup-content))
+
+(defwindow bt-closer-2
+  :monitor 2
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (bt-closer-content :monitor_id 2))

@@ -1,0 +1,23 @@
+;; ═══ Workspace Indicator ═══
+;; Event-driven via socat on Hyprland socket2.
+;; Shows 10 workspace dots: current(■) / occupied(▪) / empty(□)
+
+(deflisten workspaces_data
+  :initial "[]"
+  "scripts/get-workspaces")
+
+(defwidget workspaces [monitor_id]
+  (box :class "workspaces"
+       :orientation "h"
+       :space-evenly false
+       :spacing 2
+    (for ws in workspaces_data
+      (eventbox
+        :onclick "hyprctl dispatch workspace ${ws.id}"
+        :class "workspace-entry"
+        (label
+          :class "workspace-dot ${ws.active && ws.monitor == monitor_id ? 'ws-current' :
+                                  ws.active ? 'ws-active-other' :
+                                  ws.occupied ? 'ws-occupied' : 'ws-empty'}"
+          :text "${ws.active && ws.monitor == monitor_id ? '■' :
+                  ws.occupied ? '▪' : '□'}")))))

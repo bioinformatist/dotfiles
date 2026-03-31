@@ -1,0 +1,156 @@
+;; ═══ Network Popup Window ═══
+;; Shows ethernet, WiFi, and Clash VPN status.
+;; Per-monitor popup + closer windows for multi-monitor support.
+
+(defwidget net-popup-content []
+  (box :class "popup-panel"
+       :orientation "v"
+       :space-evenly false
+       :spacing 18
+
+    ;; ─── Header ───────────────────────────────────────────
+    (box :class "popup-header"
+         :orientation "h"
+         :space-evenly false
+         :spacing 10
+      (label :class "popup-icon" :text "󰈀")
+      (label :class "popup-title" :text "Network"))
+
+    ;; ─── Ethernet ────────────────────────────────────────
+    (box :class "popup-section net-row"
+         :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (label :class {net-status.eth.state == "connected" ? "icon-eth" : "icon-offline"}
+             :text "󰈀")
+      (box :orientation "v"
+           :space-evenly false
+           :spacing 2
+        (label :class "device-name" :text "Ethernet" :halign "start")
+        (label :class "device-mac"
+               :text {net-status.eth.state == "connected" ?
+                      "${net-status.eth.speed} — Connected" :
+                      "Disconnected"}
+               :halign "start")))
+
+    ;; ─── WiFi ────────────────────────────────────────────
+    (box :class "popup-section net-row"
+         :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (label :class {net-status.wifi.ssid != "" ? "icon-wifi" : "icon-offline"}
+             :text {net-status.wifi.signal > 75 ? "󰤨" :
+                    net-status.wifi.signal > 50 ? "󰤥" :
+                    net-status.wifi.signal > 25 ? "󰤢" : "󰤭"})
+      (box :orientation "v"
+           :space-evenly false
+           :spacing 2
+        (label :class "device-name"
+               :text {net-status.wifi.ssid != "" ? net-status.wifi.ssid : "WiFi"}
+               :halign "start")
+        (label :class "device-mac"
+               :text {net-status.wifi.ssid != "" ?
+                      "Signal: ${net-status.wifi.signal}%" :
+                      "Not Connected"}
+               :halign "start")))
+
+    ;; ─── Clash VPN ───────────────────────────────────────
+    (box :class "popup-section net-row"
+         :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (label :class {net-status.clash.active ? "icon-clash-on" : "icon-offline"}
+             :text "󱣻")
+      (box :orientation "v"
+           :space-evenly false
+           :spacing 2
+        (label :class "device-name" :text "Clash Verge" :halign "start")
+        (label :class "device-mac"
+               :text {net-status.clash.active ?
+                      (net-status.clash.tun ? "TUN Mode — Active" : "Active") :
+                      "Inactive"}
+               :halign "start")))))
+
+;; ─── Closer widget ────────────────────────────────────────
+
+(defwidget net-closer-content [monitor_id]
+  (eventbox :onclick "~/.config/eww/scripts/toggle-popup net ${monitor_id}"))
+
+;; ─── Per-monitor popup + closer windows ───────────────────
+;; Monitor 0
+(defwindow net-popup-0
+  :monitor 0
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "300px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (net-popup-content))
+
+(defwindow net-closer-0
+  :monitor 0
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (net-closer-content :monitor_id 0))
+
+;; Monitor 1
+(defwindow net-popup-1
+  :monitor 1
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "300px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (net-popup-content))
+
+(defwindow net-closer-1
+  :monitor 1
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (net-closer-content :monitor_id 1))
+
+;; Monitor 2
+(defwindow net-popup-2
+  :monitor 2
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "300px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (net-popup-content))
+
+(defwindow net-closer-2
+  :monitor 2
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (net-closer-content :monitor_id 2))

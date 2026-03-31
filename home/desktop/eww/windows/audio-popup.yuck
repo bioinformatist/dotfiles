@@ -1,0 +1,191 @@
+;; ═══ Audio Popup Window ═══
+;; Output device selector + volume slider
+;; Input device selector + gain slider
+;; Per-monitor popup + closer windows for multi-monitor support.
+
+(defpoll audio-sinks
+  :interval "5s"
+  :initial '[]'
+  `/home/ysun/.config/eww/scripts/get-audio-sinks`)
+
+(defpoll audio-sources
+  :interval "5s"
+  :initial '[]'
+  `/home/ysun/.config/eww/scripts/get-audio-sources`)
+
+(defwidget audio-popup-content []
+  (box :class "popup-panel"
+       :orientation "v"
+       :space-evenly false
+       :spacing 18
+
+    ;; ─── Header ───────────────────────────────────────────
+    (box :class "popup-header"
+         :orientation "h"
+         :space-evenly false
+         :spacing 10
+      (label :class "popup-icon" :text "󰕾")
+      (label :class "popup-title" :text "Audio"))
+
+    ;; ─── Output Volume ────────────────────────────────────
+    (label :class "popup-section-title" :text "OUTPUT" :halign "start")
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (button
+        :class {audio-status.sink_muted ? "vol-btn vol-btn-muted" : "vol-btn"}
+        :onclick "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+        (label :text {audio-status.sink_muted ? "󰖁" : "󰕾"}))
+      (scale
+        :class "vol-slider"
+        :min 0
+        :max 150
+        :value {audio-status.sink_vol}
+        :onchange "/home/ysun/.config/eww/scripts/set-vol sink {}"
+        :hexpand true)
+      (label
+        :class "vol-label"
+        :text "${audio-status.sink_vol}%"))
+
+    ;; Output device list
+    (box :class "device-list"
+         :orientation "v"
+         :space-evenly false
+         :spacing 4
+      (for sink in audio-sinks
+        (button
+          :class {sink.active ? "device-btn device-btn-active" : "device-btn"}
+          :onclick "/home/ysun/.config/eww/scripts/set-audio-device sink ${sink.id} &"
+          (box :orientation "h"
+               :space-evenly false
+               :spacing 8
+            (label :class {sink.active ? "icon-active" : "icon-inactive"}
+                   :text {sink.active ? "󰓾" : "󰓿"})
+            (label :class "device-name"
+                   :text {sink.name}
+                   :limit-width 30)))))
+
+    ;; ─── Input (Mic) ──────────────────────────────────────
+    (label :class "popup-section-title" :text "INPUT" :halign "start")
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (button
+        :class {audio-status.source_muted ? "vol-btn vol-btn-muted" : "vol-btn"}
+        :onclick "pactl set-source-mute @DEFAULT_SOURCE@ toggle"
+        (label :text {audio-status.source_muted ? "󰍭" : "󰍬"}))
+      (scale
+        :class "vol-slider"
+        :min 0
+        :max 150
+        :value {audio-status.source_vol}
+        :onchange "/home/ysun/.config/eww/scripts/set-vol source {}"
+        :hexpand true)
+      (label
+        :class "vol-label"
+        :text "${audio-status.source_vol}%"))
+
+    ;; Input device list
+    (box :class "device-list"
+         :orientation "v"
+         :space-evenly false
+         :spacing 4
+      (for source in audio-sources
+        (button
+          :class {source.active ? "device-btn device-btn-active" : "device-btn"}
+          :onclick "/home/ysun/.config/eww/scripts/set-audio-device source ${source.id} &"
+          (box :orientation "h"
+               :space-evenly false
+               :spacing 8
+            (label :class {source.active ? "icon-active" : "icon-inactive"}
+                   :text {source.active ? "󰍬" : "󰍮"})
+            (label :class "device-name"
+                   :text {source.name}
+                   :limit-width 30)))))))
+
+;; ─── Closer widget ────────────────────────────────────────
+;; Transparent full-screen eventbox that dismisses the popup
+;; when clicked. Placed at "bottom" layer so it does NOT block
+;; anyrun (overlay) or normal compositor windows.
+
+(defwidget audio-closer-content [monitor_id]
+  (eventbox :onclick "~/.config/eww/scripts/toggle-popup audio ${monitor_id}"))
+
+;; ─── Per-monitor popup + closer windows ───────────────────
+;; Monitor 0
+(defwindow audio-popup-0
+  :monitor 0
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "360px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (audio-popup-content))
+
+(defwindow audio-closer-0
+  :monitor 0
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (audio-closer-content :monitor_id 0))
+
+;; Monitor 1
+(defwindow audio-popup-1
+  :monitor 1
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "360px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (audio-popup-content))
+
+(defwindow audio-closer-1
+  :monitor 1
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (audio-closer-content :monitor_id 1))
+
+;; Monitor 2
+(defwindow audio-popup-2
+  :monitor 2
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "360px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (audio-popup-content))
+
+(defwindow audio-closer-2
+  :monitor 2
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (audio-closer-content :monitor_id 2))

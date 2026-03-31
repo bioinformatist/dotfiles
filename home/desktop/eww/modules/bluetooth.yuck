@@ -1,0 +1,25 @@
+;; ═══ Bluetooth Module ═══
+;; Event-driven via dbus-monitor on BlueZ signals.
+;; Clicking opens the bluetooth popup on the correct monitor.
+
+(deflisten bt-status
+  :initial '{"powered":false,"connected_devices":[],"connected_count":0}'
+  `~/.config/eww/scripts/get-bluetooth`)
+
+(defwidget bluetooth [monitor_id]
+  (button
+    :class "module-btn"
+    :onclick "~/.config/eww/scripts/toggle-popup bt ${monitor_id}"
+    :tooltip "Bluetooth"
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 6
+      (label
+        :class {bt-status.powered ?
+                (bt-status.connected_count > 0 ? "icon-bt-on icon-bt-connected" : "icon-bt-on") :
+                "icon-bt-off"}
+        :text  {bt-status.powered ? "󰂱" : "󰂲"})
+      (label
+        :class "module-value"
+        :visible {bt-status.connected_count > 0}
+        :text "${bt-status.connected_count}"))))

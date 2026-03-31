@@ -1,12 +1,23 @@
-(defwindow example
-           :monitor 0
-           :geometry (geometry :x "0%"
-                               :y "20px"
-                               :width "90%"
-                               :height "30px"
-                               :anchor "top center")
-           :stacking "fg"
-           :exclusive true
-           :focusable true
-           :namespace "fuck"
-  "example content")
+;; ═══════════════════════════════════════════════════════
+;; Eww Bar — Main Entry Point
+;; ═══════════════════════════════════════════════════════
+
+;; ─── Phase 1: Foundation ────────────────────────────────
+(include "./modules/workspaces.yuck")
+(include "./modules/window-title.yuck")
+(include "./modules/clock.yuck")
+(include "./modules/weather.yuck")
+
+;; ─── Phase 2: System Modules ───────────────────────────
+(include "./modules/audio.yuck")
+(include "./modules/bluetooth.yuck")
+(include "./modules/network.yuck")
+(include "./modules/sysinfo.yuck")
+(include "./modules/notifications.yuck")
+
+;; ─── Windows ────────────────────────────────────────────
+(include "./windows/bar.yuck")
+(include "./windows/audio-popup.yuck")
+(include "./windows/bt-popup.yuck")
+(include "./windows/net-popup.yuck")
+(include "./windows/weather-search.yuck")

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# ═══ Set Default Audio Device ═══
+# Usage: set-audio-device sink|source <numeric_pactl_id>
+
+DIRECTION="$1"
+DEVICE_ID="$2"
+
+echo "[$(date)] set-audio-device: direction=$DIRECTION id=$DEVICE_ID" >> /tmp/eww-audio-debug.log
+
+if [ "$DIRECTION" = "sink" ]; then
+  pactl set-default-sink "$DEVICE_ID" >> /tmp/eww-audio-debug.log 2>&1
+elif [ "$DIRECTION" = "source" ]; then
+  pactl set-default-source "$DEVICE_ID" >> /tmp/eww-audio-debug.log 2>&1
+fi
+
+echo "[$(date)] exit code=$?" >> /tmp/eww-audio-debug.log

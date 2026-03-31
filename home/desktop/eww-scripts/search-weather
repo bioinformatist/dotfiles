@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# ═══ Weather Geocoding Search (OSM Nominatim) ═══
+# Searches for a city name and updates the location cache.
+# Usage: search-weather "city name"
+
+set -euo pipefail
+
+QUERY="${1:?Usage: search-weather <city name>}"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/eww"
+LOCATION_CACHE="$CACHE_DIR/weather_location.json"
+
+mkdir -p "$CACHE_DIR"
+
+# ─── Search for location ─────────────────────────────────────
+# Using OpenStreetMap Nominatim API (Free, no key required)
+# We add a 1s delay if calling multiple times to respect policy, 
+# though for single user search it's usually fine.
+RESPONSE=$(curl -sfG \
+  --data-urlencode "q=$QUERY" \
+  --data-urlencode "format=json" \
+  --data-urlencode "limit=1" \
+  -H "User-Agent: eww-weather-search/1.0 github.com/bioinformatist/dotfiles" \
+  "https://nominatim.openstreetmap.org/search")
+
+if [ -z "$RESPONSE" ] || [ "$RESPONSE" == "[]" ]; then
+  notify-send "Weather Search" "No location found for: $QUERY" -i error
+  exit 1
+fi
+
+# ─── Parse and Update Cache ──────────────────────────────────
+# Extract lat, lon, and a clean city name
+# Use display_name but take the first part (usually the city)
+DATA=$(echo "$RESPONSE" | jq -r '.[0] | {
+  lat: .lat,
+  lon: .lon,
+  city: (.display_name | split(",")[0])
+}')
+
+echo "$DATA" > "$LOCATION_CACHE"
+
+# ─── Refresh eww weather data ────────────────────────────────
+# Use eww update to immediately refresh the UI
+# We call get-weather and pipe its output to eww update
+# Note: This updates the variable, but the defpoll might still run.
+# That's fine, as long as it sees the new cache.
+UPDATED_WEATHER=$(~/.config/eww/scripts/get-weather)
+eww update weather_data="$UPDATED_WEATHER"
+
+# ─── Close search window ─────────────────────────────────────
+# We close all weather-search windows/closers across all monitors
+for m in 0 1 2; do
+  eww close "weather-search-popup-${m}" 2>/dev/null || true
+  eww close "weather-search-closer-${m}" 2>/dev/null || true
+done
+
+notify-send "Weather Update" "Location set to: $(echo "$DATA" | jq -r '.city')" -i info

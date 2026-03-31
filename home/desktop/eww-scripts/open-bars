@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# ═══ Open Bars on All Monitors ═══
+# Detects connected monitors via hyprctl and opens
+# the corresponding eww bar windows.
+
+# Wait for eww daemon to be ready
+sleep 0.5
+
+NUM_MONITORS=$(hyprctl monitors -j | jq 'length')
+
+for i in $(seq 0 $((NUM_MONITORS - 1))); do
+  eww open "bar${i}" 2>/dev/null &
+done

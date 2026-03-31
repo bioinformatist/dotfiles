@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Bluetooth Status Script (Event-driven via dbus-monitor + initial poll)
+# ~/.config/eww/scripts/get-bluetooth
+
+get_bt_status() {
+  # Power state
+  ADAPTER=$(bluetoothctl list | head -n1 | cut -d' ' -f2)
+  # Default to false if no adapter found
+  if [ -z "$ADAPTER" ]; then
+    echo '{"powered":false,"connected_devices":[],"connected_count":0,"scanning":false}'
+    return
+  fi
+
+  POWERED=$(timeout 1s bluetoothctl show "$ADAPTER" 2>/dev/null | grep "Powered:" | awk '{print $2}')
+  [ "$POWERED" = "yes" ] && POWERED=true || POWERED=false
+  
+  SCANNING=$(timeout 1s bluetoothctl show "$ADAPTER" 2>/dev/null | grep "Discovering:" | awk '{print $2}')
+  [ "$SCANNING" = "yes" ] && SCANNING=true || SCANNING=false
+
+  # Connected devices + battery info
+  # We use timeout to prevent hanging if bluez is unresponsive
+  DEVICES_RAW=$(timeout 2s bluetoothctl devices Connected 2>/dev/null)
+  
+  if [ -n "$DEVICES_RAW" ]; then
+    CONNECTED_DEVICES=$(echo "$DEVICES_RAW" | while read -r _ mac name; do
+      BATTERY=$(bluetoothctl info "$mac" 2>/dev/null | grep "Battery Percentage:" | grep -oE "[0-9]+")
+      jq -n --arg mac "$mac" --arg name "$name" --arg battery "${BATTERY:-null}" \
+        '{mac: $mac, name: $name, battery: (if $battery == "null" then null else ($battery|tonumber) end)}'
+    done | jq -s '.')
+  else
+    CONNECTED_DEVICES="[]"
+  fi
+
+  COUNT=$(echo "$CONNECTED_DEVICES" | jq '. | length')
+
+  jq -n \
+    --argjson powered "$POWERED" \
+    --argjson scanning "$SCANNING" \
+    --argjson devices "$CONNECTED_DEVICES" \
+    --argjson count "${COUNT:-0}" \
+    '{powered: $powered, scanning: $scanning, connected_devices: $devices, connected_count: $count}'
+}
+
+# Initial state
+get_bt_status
+
+# Listen for DBus changes on BlueZ interface
+dbus-monitor --system \
+  "type='signal',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',arg0='org.bluez.Device1'" \
+  "type='signal',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',arg0='org.bluez.Adapter1'" \
+  2>/dev/null | \
+  grep --line-buffered -E "member='PropertiesChanged'" | \
+  while read -r; do
+    # Throttling to prevent race conditions during rapid state changes
+    sleep 0.2
+    get_bt_status
+  done

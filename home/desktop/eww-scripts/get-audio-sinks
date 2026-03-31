@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# ═══ List Audio Sinks (Output Devices) ═══
+# Returns JSON array of output devices with id, name, active status.
+# Uses pactl list sinks short for reliable one-sink-per-line output.
+
+DEFAULT_SINK=$(pactl get-default-sink 2>/dev/null | tr -d '[:space:]')
+
+# pactl list sinks short format: ID  NAME  DRIVER  SAMPLE_SPEC  STATE
+pactl list sinks short 2>/dev/null | while IFS=$'\t' read -r id name driver sample state; do
+  # Skip GPU HDMI virtual outputs (not connected speakers)
+  if echo "$name" | grep -iq "hdmi\|DisplayPort\|dp\b"; then
+    continue
+  fi
+
+  ACTIVE=$([ "$name" = "$DEFAULT_SINK" ] && echo true || echo false)
+
+  # Get human-readable description
+  DESC=$(pactl list sinks 2>/dev/null | awk -v target="$name" '
+    /^Sink #/ { in_sink=0 }
+    /^\tName: / { if ($2 == target) in_sink=1 }
+    in_sink && /^\tDescription: / { $1=""; print substr($0,2); exit }
+  ')
+  [ -z "$DESC" ] && DESC="$name"
+  DESC=$(echo "$DESC" | xargs)
+
+  jq -n --arg id "$id" --arg name "$name" --arg label "$DESC" --argjson active "$ACTIVE" \
+    '{id: $id, name: $label, active: $active}'
+done | jq -s '.'
