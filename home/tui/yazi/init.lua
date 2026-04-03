@@ -5,18 +5,18 @@ function Tab:layout()
         self._chunks =
             ui.Layout():direction(ui.Layout.HORIZONTAL):constraints(
             {
-                ui.Constraint.Ratio(MANAGER.ratio.parent, MANAGER.ratio.all),
-                ui.Constraint.Ratio(MANAGER.ratio.current, MANAGER.ratio.all),
-                ui.Constraint.Ratio(MANAGER.ratio.preview, MANAGER.ratio.all)
+                ui.Constraint.Ratio(rt.mgr.ratio.parent, rt.mgr.ratio.all),
+                ui.Constraint.Ratio(rt.mgr.ratio.current, rt.mgr.ratio.all),
+                ui.Constraint.Ratio(rt.mgr.ratio.preview, rt.mgr.ratio.all)
             }
         ):split(self._area)
     else
         self._chunks =
             ui.Layout():direction(ui.Layout.HORIZONTAL):constraints(
             {
-                ui.Constraint.Ratio(0, MANAGER.ratio.all),
-                ui.Constraint.Ratio(MANAGER.ratio.current + MANAGER.ratio.parent, MANAGER.ratio.all),
-                ui.Constraint.Ratio(0, MANAGER.ratio.all),
+                ui.Constraint.Ratio(0, rt.mgr.ratio.all),
+                ui.Constraint.Ratio(rt.mgr.ratio.current + rt.mgr.ratio.parent, rt.mgr.ratio.all),
+                ui.Constraint.Ratio(0, rt.mgr.ratio.all),
             }
         ):split(self._area)
     end

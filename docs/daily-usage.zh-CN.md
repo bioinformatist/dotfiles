@@ -33,7 +33,46 @@
 
 **系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。`workstation` 额外持久化 `/var/lib/NetworkManager`。
 
-**用户（`ysun`）**：`~/github.com`、`~/.config/sops`、`~/.config/nushell`、`~/.config/google-chrome`、`~/.local/share/io.github.clash-verge-rev.clash-verge-rev`、`~/.local/share/fcitx5`、`~/.gemini`、`~/xwechat_files`、`~/.ssh/known_hosts`。`workstation` 额外持久化 `~/Downloads`、`~/Documents`、`~/.mozilla`。
+**系统级**：
+
+| 路径 | 用途 |
+| :--- | :--- |
+| `/var/log` | 系统日志 |
+| `/var/lib/bluetooth` | 蓝牙设备配对信息 |
+| `/var/lib/nixos` | NixOS 状态（UID/GID 映射） |
+| `/var/lib/systemd/coredump` | 崩溃转储文件 |
+| `/etc/NetworkManager/system-connections` | 已保存的 Wi-Fi / VPN 配置（仅 `workstation`） |
+| `/var/lib/NetworkManager` | NetworkManager 运行时状态（仅 `workstation`） |
+| `/var/lib/sops-nix` | 用于解密 secrets 的 Age 密钥 |
+| `/var/lib/colord` | 颜色配置文件校准数据 |
+| `/etc/machine-id` | 机器唯一标识（systemd / journald 所需） |
+| `/etc/ssh/ssh_host_*` | SSH 主机密钥（避免重启后 known_hosts 警告） |
+
+**用户（`ysun`）**：
+
+| 路径 | 用途 |
+| :--- | :--- |
+| `~/github.com` | 所有源码和 dotfiles |
+| `~/.config/sops` | sops 解密所需的 Age 私钥 |
+| `~/.config/nushell` | Nushell 用户配置（env.nu、config.nu） |
+| `~/.config/google-chrome` | Chrome 配置（书签、密码、扩展） |
+| `~/.config/Antigravity` | Antigravity IDE 登录与会话状态（仅 `workstation`） |
+| `~/.config/claude` | Claude Code 凭据（`proxy.nuon`） |
+| `~/.claude` | Claude Code 记忆、对话历史、会话数据 |
+| `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge 代理配置和设置 |
+| `~/.local/share/fcitx5` | Rime 用户词典和学习数据 |
+| `~/.local/share/TelegramDesktop` | Telegram 登录会话和聊天缓存（仅 `workstation`） |
+| `~/.local/share/Steam` | Steam 游戏、Proton 前缀、存档（仅 `workstation`） |
+| `~/.cargo/registry` | Cargo 包缓存（加速 Rust 构建，仅 `workstation`） |
+| `~/.gemini` | Antigravity IDE 知识库和对话数据（仅 `workstation`） |
+| `~/xwechat_files` | 微信聊天记录和文件 |
+| `~/Downloads` | 下载目录（仅 `workstation`） |
+| `~/Documents` | 文档目录（仅 `workstation`） |
+| `~/.ssh/known_hosts` | SSH 已知主机（以文件而非目录形式持久化，详见配置注释） |
+| `~/.config/hypr/monitors.conf` | nwg-displays 写入的显示器布局 |
+| `~/.zeroclaw/active_workspace.toml` | ZeroClaw 工作区标记 |
+| `~/.zeroclaw/estop-state.json` | ZeroClaw 紧急停止状态 |
+| `~/.zeroclaw/memory.sqlite` | ZeroClaw 对话记忆数据库 |
 
 其他所有内容在重启时清除。
 
@@ -66,7 +105,7 @@
 | **[Nushell](https://www.nushell.sh/)** | `pkgs.nushell`（默认 shell） | 将数据视为结构化表格的现代 Shell |
 | **[Starship](https://starship.rs/)** | Home Manager | 极简、极速的跨 Shell 提示符 |
 | **[Helix](https://helix-editor.com/)**（`hx`） | Home Manager | 后现代模态文本编辑器（`$EDITOR` / `$VISUAL`） |
-| **[Yazi](https://yazi-rs.github.io/)** | `inputs.yazi`（flake） | 极速终端文件管理器（Rust） |
+| **[Yazi](https://yazi-rs.github.io/)** (`y`) | `inputs.yazi`（flake） | 极速终端文件管理器（Rust）。使用 `y`（而非 `yazi`）——shell 封装器在退出时会自动切换工作目录 |
 | **[Zellij](https://zellij.dev/)** | Home Manager | 终端复用器（窗格 + 标签页） |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)**（`rg`） | Home Manager | 递归正则表达式搜索工具 |
 
@@ -293,12 +332,40 @@ sudo -E nixos-rebuild test --flake $".#<host>" --option substituters "https://mi
 ## 🛠 注意事项
 
 ### 数据持久化
-本系统采用**临时根文件系统**方案。仅特定目录在重启之间保持持久化。
-- **已持久化用户路径**：`~/github.com`、`~/.config/sops`。
-- 家目录下的其他所有内容在重启时将被清除，以确保干净的状态。
+本系统采用**临时根文件系统**方案。仅特定目录在重启之间保持持久化，详见上方"持久化路径"表格。
 
 ### 软件渲染（仅 VM）
 在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染。物理机（`workstation`）不包含此设置。
+
+### Fcitx5 重启后无响应（Ctrl+Space 失效）
+
+在非正常关机或重启后，fcitx5 可能正常启动但 Wayland 前端未能正确初始化。症状：`Ctrl+Space` 无反应，`fcitx5-remote` 输出 `0`（无法连接）。
+
+修复方法——在 Hyprland 的 Wayland 上下文中重启 fcitx5：
+
+```nu
+pkill fcitx5
+hyprctl dispatch exec "fcitx5 -d --replace"
+```
+
+根本原因：在 Hyprland 进程树之外启动 fcitx5（例如从终端直接运行）会导致其缺少有效的 Wayland IM 连接。始终通过 `hyprctl dispatch exec` 重启。
+
+### Claude Code（`claude-proxy`）
+
+Claude Code 通过 `claude-proxy` Nushell wrapper 启动，该 wrapper 从 `~/.config/claude/proxy.nuon`（不被 git 追踪）读取凭据和代理配置并注入为环境变量。所有子进程（包括 MCP server）都会继承这些变量。
+
+**`proxy.nuon` 格式：**
+```nushell
+{
+  ANTHROPIC_BASE_URL: "http://<api-relay>:<port>/",
+  ANTHROPIC_AUTH_TOKEN: "sk-...",
+  ANTHROPIC_MODEL: "claude-...",
+  HTTP_PROXY: "http://<lan-proxy>:<port>",
+  HTTPS_PROXY: "http://<lan-proxy>:<port>"
+}
+```
+
+当局域网代理地址变更时，只需更新此文件中的 `HTTP_PROXY`/`HTTPS_PROXY`，无需修改任何 MCP 或 shell 配置。
 
 ### Sops 首次引导
 如果你在新机器上运行 `sops` 时找不到密钥，请在 Nushell 中运行：
