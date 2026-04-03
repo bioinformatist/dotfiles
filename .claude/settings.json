@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/ysun/github.com/bioinformatist/dotfiles/.claude/hooks/check-nix.sh",
+            "timeout": 120,
+            "statusMessage": "Running nix flake check..."
+          }
+        ]
+      }
+    ]
+  }
+}
