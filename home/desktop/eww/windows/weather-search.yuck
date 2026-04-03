@@ -11,7 +11,7 @@
 
     (label :class "search-title" :text "SEARCH CITY")
     (input :class "search-input"
-           :value "Type city name..."
+           :value ""
            :onaccept "~/.config/eww/scripts/search-weather {} &")
     (label :class "search-hint" :text "Press Enter to search")
 ))

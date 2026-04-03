@@ -1,6 +1,8 @@
 # Workstation (physical machine) host configuration.
 # Shared settings are in ../../nixos/common.nix and ../../nixos/desktop.nix.
 
+
+
 {
   inputs,
   config,
@@ -175,6 +177,8 @@
         ".config/nushell"
         ".config/google-chrome" # Chrome profile (bookmarks, passwords, extensions)
         ".config/Antigravity" # Antigravity IDE login and session state
+        ".config/claude" # Claude Code credentials and session state
+        ".claude" # Claude Code memory, history, and session data
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5" # Fcitx5/Rime user dictionary and learned words
         ".gemini" # Antigravity IDE data (conversations, knowledge base)
@@ -182,10 +186,10 @@
         # Physical machine daily-use paths
         "Downloads"
         "Documents"
-        ".mozilla" # Firefox profile (if used)
         ".local/share/TelegramDesktop" # Telegram login session + chat cache
         ".cargo/registry" # Cargo registry cache (speeds up rebuilds)
         ".local/share/Steam" # Steam games, Proton prefixes, saves
+        ".cache/eww" # Weather location cache (prevents proxy-IP mis-detection on reboot)
       ];
       # known_hosts is a symlink → /persist (cross-filesystem), so SSH cannot
       # atomically update it (link() fails). We suppress the harmless warning
