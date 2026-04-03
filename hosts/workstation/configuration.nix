@@ -198,6 +198,7 @@
       # the id_ed25519 symlink that sops-nix creates on tmpfs.
       files = [
         ".ssh/known_hosts"
+        ".claude.json" # Claude Code user preferences (theme, model, etc.)
         ".config/hypr/monitors.conf" # nwg-displays monitor layout (persists across reboots)
         # ZeroClaw mutable state only — config.toml is declarative (via sops.templates)
         ".zeroclaw/active_workspace.toml" # workspace marker
