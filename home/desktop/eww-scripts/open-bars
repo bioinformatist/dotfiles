@@ -3,6 +3,12 @@
 # Detects connected monitors via hyprctl and opens
 # the corresponding eww bar windows.
 
+# Kill any stale eww client processes holding layer-shell surfaces.
+# When the daemon is SIGKILL'd, client processes survive and keep their
+# Wayland connections open — resulting in ghost bars on the next start.
+pkill -f "eww open bar" 2>/dev/null
+sleep 0.1
+
 # Wait for eww daemon to be ready
 sleep 0.5
 

@@ -31,9 +31,46 @@ This repository supports multiple host configurations, sharing common settings v
 
 ### Persisted Paths (Impermanence)
 
-**System**: `/var/log`, `/var/lib/bluetooth`, `/var/lib/nixos`, `/var/lib/systemd/coredump`, `/etc/NetworkManager/system-connections`, `/var/lib/sops-nix`, `/var/lib/colord`, `/etc/machine-id`, SSH host keys. `workstation` additionally persists `/var/lib/NetworkManager`.
+**System**:
 
-**User (`ysun`)**: `~/github.com`, `~/.config/sops`, `~/.config/nushell`, `~/.config/google-chrome`, `~/.local/share/io.github.clash-verge-rev.clash-verge-rev`, `~/.local/share/fcitx5`, `~/.gemini`, `~/xwechat_files`, `~/.ssh/known_hosts`. `workstation` additionally persists `~/Downloads`, `~/Documents`, `~/.mozilla`.
+| Path | Purpose |
+| :--- | :--- |
+| `/var/log` | System logs |
+| `/var/lib/bluetooth` | Bluetooth device pairings |
+| `/var/lib/nixos` | NixOS state (UIDs/GIDs) |
+| `/var/lib/systemd/coredump` | Crash dumps |
+| `/etc/NetworkManager/system-connections` | Saved Wi-Fi / VPN profiles (`workstation` only) |
+| `/var/lib/NetworkManager` | NetworkManager runtime state (`workstation` only) |
+| `/var/lib/sops-nix` | Age key for secret decryption |
+| `/var/lib/colord` | Color profile calibration data |
+| `/etc/machine-id` | Stable machine identity (required by systemd / journald) |
+| `/etc/ssh/ssh_host_*` | SSH host keys (prevent known_hosts warnings after reboot) |
+
+**User (`ysun`)**:
+
+| Path | Purpose |
+| :--- | :--- |
+| `~/github.com` | All source code and dotfiles |
+| `~/.config/sops` | Age private key for sops secret decryption |
+| `~/.config/nushell` | Nushell user config (env.nu, config.nu) |
+| `~/.config/google-chrome` | Chrome profile (bookmarks, passwords, extensions) |
+| `~/.config/Antigravity` | Antigravity IDE login and session state (`workstation` only) |
+| `~/.config/claude` | Claude Code credentials (`proxy.nuon`) |
+| `~/.claude` | Claude Code memory, conversation history, session data |
+| `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge proxy profiles and settings |
+| `~/.local/share/fcitx5` | Rime user dictionary and learned words |
+| `~/.local/share/TelegramDesktop` | Telegram login session and chat cache (`workstation` only) |
+| `~/.local/share/Steam` | Steam games, Proton prefixes, save data (`workstation` only) |
+| `~/.cargo/registry` | Cargo crate cache (speeds up Rust builds) (`workstation` only) |
+| `~/.gemini` | Antigravity IDE knowledge base and conversation data (`workstation` only) |
+| `~/xwechat_files` | WeChat chat history and files |
+| `~/Downloads` | Downloads (`workstation` only) |
+| `~/Documents` | Documents (`workstation` only) |
+| `~/.ssh/known_hosts` | SSH known hosts (persisted as file, not directory — see note in config) |
+| `~/.config/hypr/monitors.conf` | Monitor layout written by nwg-displays |
+| `~/.zeroclaw/active_workspace.toml` | ZeroClaw workspace marker |
+| `~/.zeroclaw/estop-state.json` | ZeroClaw emergency stop state |
+| `~/.zeroclaw/memory.sqlite` | ZeroClaw conversation memory database |
 
 Everything else is wiped on reboot.
 
@@ -66,7 +103,7 @@ Everything else is wiped on reboot.
 | **[Nushell](https://www.nushell.sh/)** | `pkgs.nushell` (default shell) | Modern shell treating data as structured tables |
 | **[Starship](https://starship.rs/)** | Home Manager | Minimal, blazing-fast cross-shell prompt |
 | **[Helix](https://helix-editor.com/)** (`hx`) | Home Manager | Post-modern modal text editor (`$EDITOR` / `$VISUAL`) |
-| **[Yazi](https://yazi-rs.github.io/)** | `inputs.yazi` (flake) | Blazing fast terminal file manager (Rust) |
+| **[Yazi](https://yazi-rs.github.io/)** (`y`) | `inputs.yazi` (flake) | Blazing fast terminal file manager (Rust). Use `y` (not `yazi`) — the shell wrapper changes your cwd on exit |
 | **[Zellij](https://zellij.dev/)** | Home Manager | Terminal multiplexer with panes and tabs |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)** (`rg`) | Home Manager | Recursive regex search tool |
 
@@ -293,12 +330,40 @@ The subscription URL is stored encrypted in the repository via sops-nix (see [Se
 ## 🛠 Tips & Tricks
 
 ### Data Persistence
-This system uses an **ephemeral root** approach. Only specific directories are persisted between reboots.
-- **Persisted User Paths**: `~/github.com`, `~/.config/sops`.
-- Everything else in the Home directory is wiped on reboot to ensure a clean state.
+This system uses an **ephemeral root** approach. Only specific directories are persisted between reboots — see the Persisted Paths table above.
 
 ### Software Rendering (VM Only)
 In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1`. The physical machine (`workstation`) does not include this setting.
+
+### Fcitx5 Not Responding After Reboot (Ctrl+Space Broken)
+
+After an unclean shutdown or reboot, fcitx5 may start but fail to initialize its Wayland frontend properly. Symptom: `Ctrl+Space` does nothing, and `fcitx5-remote` prints `0` (unreachable).
+
+Fix — restart fcitx5 in the proper Hyprland Wayland context:
+
+```nu
+pkill fcitx5
+hyprctl dispatch exec "fcitx5 -d --replace"
+```
+
+Root cause: starting fcitx5 outside of Hyprland's process tree (e.g., from a terminal) leaves it without a valid Wayland IM connection. Always restart it via `hyprctl dispatch exec`.
+
+### Claude Code (`claude-proxy`)
+
+Claude Code is launched via the `claude-proxy` Nushell wrapper, which injects credentials and proxy settings from `~/.config/claude/proxy.nuon` (not tracked by git). All child processes — including MCP servers — inherit these variables.
+
+**`proxy.nuon` format:**
+```nushell
+{
+  ANTHROPIC_BASE_URL: "http://<api-relay>:<port>/",
+  ANTHROPIC_AUTH_TOKEN: "sk-...",
+  ANTHROPIC_MODEL: "claude-...",
+  HTTP_PROXY: "http://<lan-proxy>:<port>",
+  HTTPS_PROXY: "http://<lan-proxy>:<port>"
+}
+```
+
+When your LAN proxy address changes, update `HTTP_PROXY`/`HTTPS_PROXY` in this file. No MCP or shell config needs to change.
 
 ### Sops Bootstrapping (First Time)
 If you are on a new machine and `sops` fails to find your keys, run this in Nushell:
