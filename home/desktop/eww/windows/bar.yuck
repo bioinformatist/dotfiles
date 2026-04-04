@@ -1,6 +1,6 @@
 ;; ═══ Bar Window Definitions ═══
 ;; One defwindow per monitor (supports up to 3 monitors).
-;; The open-bars script detects connected monitors and opens
+;; The manage-bars script detects connected monitors and opens
 ;; only the relevant bar windows.
 
 (defwidget bar_widget [monitor_id]

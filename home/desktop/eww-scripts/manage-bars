@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# ═══ Event-Driven Eww Bar Manager ═══
+# Manages the full eww lifecycle: kills stale daemons, starts a fresh
+# one, opens bars on all monitors, then listens for Hyprland IPC
+# monitor events to handle hotplug. Replaces the old one-shot open-bars.
+
+# ─── Helpers ──────────────────────────────────────────
+
+open_bars() {
+  eww close-all 2>/dev/null
+  local count
+  count=$(hyprctl monitors -j | jq 'length')
+  for i in $(seq 0 $((count - 1))); do
+    eww open "bar${i}"
+  done
+}
+
+# ─── Cleanup on exit ─────────────────────────────────
+
+cleanup() { eww kill 2>/dev/null; exit 0; }
+trap cleanup TERM INT HUP
+
+# ─── Kill any existing eww daemon ────────────────────
+
+eww kill 2>/dev/null
+# Poll until the process is actually gone (max ~3 s)
+for _ in $(seq 1 30); do
+  pgrep -x eww >/dev/null 2>&1 || break
+  sleep 0.1
+done
+# Force-kill survivors
+pkill -9 -x eww 2>/dev/null || true
+
+# ─── Start daemon & wait for readiness ───────────────
+
+eww daemon
+for _ in $(seq 1 50); do
+  eww list &>/dev/null && break
+  sleep 0.1
+done
+
+# ─── Initial bar launch ──────────────────────────────
+
+open_bars
+
+# ─── Monitor event loop ──────────────────────────────
+# Hyprland socket2 emits monitoradded>>NAME / monitorremoved>>NAME.
+# Outer loop auto-reconnects if socat drops (e.g. compositor reload).
+
+SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+
+while true; do
+  socat -U - UNIX-CONNECT:"$SOCKET" 2>/dev/null |
+    while IFS= read -r event; do
+      case "$event" in
+        monitoradded*|monitorremoved*)
+          # Compositor needs a moment to finish internal reconfiguration
+          sleep 0.3
+          open_bars
+          ;;
+      esac
+    done
+  # socat disconnected — brief backoff before reconnect
+  sleep 1
+done

@@ -42,7 +42,7 @@ let
       "get-window-title"
       "get-weather"
       "open-weather"
-      "open-bars"
+      "manage-bars"
       # Phase 2
       "get-volume"
       "get-audio-sinks"
