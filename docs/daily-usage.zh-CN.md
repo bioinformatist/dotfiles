@@ -329,6 +329,62 @@ sudo -E nixos-rebuild test --flake $".#<host>" --option substituters "https://mi
 
 ---
 
+## 🎮 游戏
+
+### Battle.net 安装（Steam + Proton）
+
+Battle.net 作为**非 Steam 游戏**添加到 Steam，通过 Proton 兼容层运行。
+
+1. 下载 `Battle.net-Setup.exe`（官网检测到 Linux UA 会屏蔽下载按钮，用 `curl` 伪装 Windows UA 绕过）：
+   ```nushell
+   curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -L -o Battle.net-Setup.exe "https://www.battle.net/download/getInstallerForGame?os=win&locale=enUS&version=LIVE&gameProgram=BATTLENET_APP"
+   ```
+2. Steam → **游戏库** → 左下角**添加游戏** → **添加非 Steam 游戏**，选择下载的安装程序
+3. 右键该条目 → **属性** → **兼容性** → 勾选"强制使用特定 Steam Play 兼容工具" → 选择 **Proton-GE**
+4. 启动，完成 Battle.net 安装流程
+5. 安装完成后，将 **Battle.net.exe**（路径在前缀的 `drive_c/Program Files (x86)/Battle.net/Battle.net.exe`）重新添加为非 Steam 游戏，同样配置 Proton-GE
+6. 通过 Battle.net 安装并启动 D2R
+
+> Steam 为每个非 Steam 游戏创建独立的 Proton prefix，存储在 `~/.local/share/Steam/steamapps/compatdata/<数字ID>/`。
+
+### D2R Mod 安装
+
+**第一步：找到 D2R 所在的 Proton 前缀**
+
+```nushell
+glob "~/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files (x86)/Diablo II Resurrected"
+```
+
+记录输出路径中的数字 ID（即 `compatdata/<ID>`）。
+
+**第二步：放入 mod 文件**
+
+D2R mod 目录结构（以 `ProjectDiablo2` 为例）：
+
+```
+<D2R安装目录>/
+└── mods/
+    └── ProjectDiablo2/        ← 目录名 = mod 名
+        └── ProjectDiablo2.mpq  ← .mpq 文件名 = mod 名
+```
+
+```nushell
+let d2r = $"($env.HOME)/.local/share/Steam/steamapps/compatdata/<PREFIX_ID>/pfx/drive_c/Program Files (x86)/Diablo II Resurrected"
+mkdir $"($d2r)/mods/ProjectDiablo2"
+cp ProjectDiablo2.mpq $"($d2r)/mods/ProjectDiablo2/"
+```
+
+**第三步：设置启动参数**
+
+在 Battle.net → D2R **游戏设置 → 其他参数** 中添加：
+```
+-mod ProjectDiablo2 -txt
+```
+
+> `-mod` 指定 mod 名（与 `mods/` 下子目录名一致），`-txt` 允许 mod 覆盖文本文件（部分 mod 必需）。
+
+---
+
 ## 🛠 注意事项
 
 ### 数据持久化

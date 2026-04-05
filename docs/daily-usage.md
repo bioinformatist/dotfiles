@@ -327,6 +327,62 @@ The subscription URL is stored encrypted in the repository via sops-nix (see [Se
 
 ---
 
+## 🎮 Gaming
+
+### Battle.net Installation (Steam + Proton)
+
+Battle.net runs as a **non-Steam game** added to Steam, using the Proton compatibility layer.
+
+1. Download `Battle.net-Setup.exe` — the official site detects Linux UA and hides the download button, so use `curl` with a Windows UA to bypass it:
+   ```nushell
+   curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -L -o Battle.net-Setup.exe "https://www.battle.net/download/getInstallerForGame?os=win&locale=enUS&version=LIVE&gameProgram=BATTLENET_APP"
+   ```
+2. Steam → **Library** → bottom-left **Add a Game** → **Add a Non-Steam Game**, select the installer
+3. Right-click the entry → **Properties** → **Compatibility** → check "Force the use of a specific Steam Play compatibility tool" → select **Proton-GE**
+4. Launch and complete the Battle.net installation
+5. Once installed, add **Battle.net.exe** (at `drive_c/Program Files (x86)/Battle.net/Battle.net.exe` inside the prefix) as another non-Steam game with the same Proton-GE config
+6. Install and launch D2R through Battle.net
+
+> Steam creates a separate Proton prefix per non-Steam game at `~/.local/share/Steam/steamapps/compatdata/<numeric-ID>/`.
+
+### D2R Mod Installation
+
+**Step 1 — Find the D2R Proton prefix**
+
+```nushell
+glob "~/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files (x86)/Diablo II Resurrected"
+```
+
+Note the numeric ID in the returned path.
+
+**Step 2 — Drop in mod files**
+
+D2R mods follow a fixed directory layout (using `ProjectDiablo2` as an example):
+
+```
+<D2R install dir>/
+└── mods/
+    └── ProjectDiablo2/        ← dir name = mod name
+        └── ProjectDiablo2.mpq  ← .mpq name = mod name
+```
+
+```nushell
+let d2r = $"($env.HOME)/.local/share/Steam/steamapps/compatdata/<PREFIX_ID>/pfx/drive_c/Program Files (x86)/Diablo II Resurrected"
+mkdir $"($d2r)/mods/ProjectDiablo2"
+cp ProjectDiablo2.mpq $"($d2r)/mods/ProjectDiablo2/"
+```
+
+**Step 3 — Set launch arguments**
+
+In Battle.net → D2R **Game Settings → Additional command line arguments**:
+```
+-mod ProjectDiablo2 -txt
+```
+
+> `-mod` specifies the mod name (must match the subdirectory under `mods/`). `-txt` enables text file overrides required by some mods.
+
+---
+
 ## 🛠 Tips & Tricks
 
 ### Data Persistence
