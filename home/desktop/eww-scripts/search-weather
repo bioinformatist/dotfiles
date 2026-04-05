@@ -23,7 +23,7 @@ RESPONSE=$(curl -sfG \
   "https://nominatim.openstreetmap.org/search")
 
 if [ -z "$RESPONSE" ] || [ "$RESPONSE" == "[]" ]; then
-  notify-send "Weather Search" "No location found for: $QUERY" -i error
+  dunstify "Weather Search" "No location found for: $QUERY" -i error
   exit 1
 fi
 
@@ -53,4 +53,4 @@ for m in 0 1 2; do
   eww close "weather-search-closer-${m}" 2>/dev/null || true
 done
 
-notify-send "Weather Update" "Location set to: $(echo "$DATA" | jq -r '.city')" -i info
+dunstify "Weather Update" "Location set to: $(echo "$DATA" | jq -r '.city')" -i info

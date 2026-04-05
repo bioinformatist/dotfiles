@@ -13,6 +13,88 @@
 
   services.dunst = {
     enable = true;
+    settings = {
+      global = {
+        # ── 位置与尺寸 ──────────────────────────────────────────
+        # bottom-right 避免与顶部 eww bar 重叠
+        origin          = "bottom-right";
+        offset          = "20x20";
+        width           = "(0, 380)";
+        height          = 200;
+        gap_size        = 8;
+
+        # ── 视觉 ───────────────────────────────────────────────
+        frame_width        = 1;
+        frame_color        = "#00dd36";
+        corner_radius      = 10;
+        separator_height   = 2;
+        separator_color    = "frame";
+        padding            = 12;
+        horizontal_padding = 12;
+        text_icon_padding  = 10;
+
+        # 进度条
+        progress_bar               = true;
+        progress_bar_height        = 8;
+        progress_bar_frame_width   = 1;
+        progress_bar_min_width     = 150;
+        progress_bar_max_width     = 300;
+        progress_bar_corner_radius = 4;
+
+        # ── 字体（Pango fallback 支持 CJK）─────────────────────
+        font               = "JetBrainsMono Nerd Font 11, Noto Sans CJK SC 11";
+        markup             = "full";
+        format             = "<b>%s</b>\\n%b";
+        alignment          = "left";
+        vertical_alignment = "center";
+        line_height        = 0;
+        ellipsize          = "middle";
+
+        # ── 图标 ───────────────────────────────────────────────
+        icon_position              = "left";
+        min_icon_size              = 32;
+        max_icon_size              = 64;
+        enable_recursive_icon_lookup = true;
+
+        # ── 行为 ───────────────────────────────────────────────
+        follow               = "mouse";
+        stack_duplicates     = true;
+        hide_duplicate_count = false;
+        show_indicators      = true;
+        sticky_history       = true;
+        history_length       = 30;
+        show_age_threshold   = 60;
+
+        # ── Wayland ────────────────────────────────────────────
+        layer = "overlay";
+
+        # ── 鼠标操作 ───────────────────────────────────────────
+        mouse_left_click   = "close_current";
+        mouse_middle_click = "do_action, close_current";
+        mouse_right_click  = "close_all";
+      };
+
+      urgency_low = {
+        background  = "#050505F0";
+        foreground  = "#00aa28";
+        frame_color = "#005515";
+        timeout     = 5;
+      };
+
+      urgency_normal = {
+        background  = "#050808F0";
+        foreground  = "#00ff41";
+        frame_color = "#00dd36";
+        timeout     = 8;
+      };
+
+      urgency_critical = {
+        background  = "#1a0008F0";
+        foreground  = "#ff2244";
+        frame_color = "#ff2244";
+        timeout     = 0;
+      };
+    };
   };
 
   programs.starship = {
