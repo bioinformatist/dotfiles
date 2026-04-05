@@ -11,6 +11,17 @@
 
   xdg.enable = true;
 
+  # ── Cursor theme (unified across GTK / X11 / Wayland) ──────
+  # Fixes: resize cursor invisible on UI splitters, XWayland compatibility.
+  # home.pointerCursor also sets session-level XCURSOR_THEME/SIZE env vars.
+  home.pointerCursor = {
+    name = "Bibata-Modern-Classic";
+    package = pkgs.bibata-cursors;
+    size = 24;
+    gtk.enable = true;
+    x11.enable = true;
+  };
+
   services.dunst = {
     enable = true;
     settings = {
