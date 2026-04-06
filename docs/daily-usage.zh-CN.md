@@ -396,18 +396,18 @@ cp ProjectDiablo2.mpq $"($d2r)/mods/ProjectDiablo2/"
 ### 软件渲染（仅 VM）
 在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染。物理机（`workstation`）不包含此设置。
 
-### Fcitx5 重启后无响应（Ctrl+Space 失效）
+### Fcitx5 非正常关机后无响应（Ctrl+Space 失效）
 
-在非正常关机或重启后，fcitx5 可能正常启动但 Wayland 前端未能正确初始化。症状：`Ctrl+Space` 无反应，`fcitx5-remote` 输出 `0`（无法连接）。
+在崩溃或非正常关机后，fcitx5 可能正常启动但 Wayland 前端未能正确初始化。症状：`Ctrl+Space` 无反应，`fcitx5-remote` 输出 `0`（无法连接）。
 
-修复方法——在 Hyprland 的 Wayland 上下文中重启 fcitx5：
+修复方法——通过 Hyprland 重启 fcitx5：
 
 ```nu
 pkill fcitx5
 hyprctl dispatch exec "fcitx5 -d --replace"
 ```
 
-根本原因：在 Hyprland 进程树之外启动 fcitx5（例如从终端直接运行）会导致其缺少有效的 Wayland IM 连接。始终通过 `hyprctl dispatch exec` 重启。
+> fcitx5 通过 `hyprland.conf` 中的 `uwsm app --` 启动，确保其在 `graphical-session.target` 就绪、`zwp_input_method_v2` 协议可用后才启动。正常开机时此机制可靠；上述命令仅在非正常关机留下残余状态时需要。
 
 ### Claude Code（`claude-proxy`）
 

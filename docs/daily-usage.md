@@ -394,18 +394,18 @@ This system uses an **ephemeral root** approach. Only specific directories are p
 ### Software Rendering (VM Only)
 In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1`. The physical machine (`workstation`) does not include this setting.
 
-### Fcitx5 Not Responding After Reboot (Ctrl+Space Broken)
+### Fcitx5 Not Responding After Unclean Shutdown (Ctrl+Space Broken)
 
-After an unclean shutdown or reboot, fcitx5 may start but fail to initialize its Wayland frontend properly. Symptom: `Ctrl+Space` does nothing, and `fcitx5-remote` prints `0` (unreachable).
+After a crash or unclean shutdown, fcitx5 may start but fail to initialize its Wayland frontend properly. Symptom: `Ctrl+Space` does nothing, and `fcitx5-remote` prints `0` (unreachable).
 
-Fix — restart fcitx5 in the proper Hyprland Wayland context:
+Fix — restart fcitx5 via Hyprland:
 
 ```nu
 pkill fcitx5
 hyprctl dispatch exec "fcitx5 -d --replace"
 ```
 
-Root cause: starting fcitx5 outside of Hyprland's process tree (e.g., from a terminal) leaves it without a valid Wayland IM connection. Always restart it via `hyprctl dispatch exec`.
+> fcitx5 is started via `uwsm app --` in `hyprland.conf`, which ensures it launches only after `graphical-session.target` is reached and the `zwp_input_method_v2` protocol is ready. On a clean boot this is reliable; the above workaround is only needed after an unclean shutdown leaves stale state.
 
 ### Claude Code (`claude-proxy`)
 
