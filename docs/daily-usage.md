@@ -333,8 +333,11 @@ The subscription URL is stored encrypted in the repository via sops-nix (see [Se
 
 Battle.net runs as a **non-Steam game** added to Steam, using the Proton compatibility layer.
 
-1. Download `Battle.net-Setup.exe` — the official site detects Linux UA and hides the download button, so use `curl` with a Windows UA to bypass it:
+1. Download `Battle.net-Setup.exe` — the official site detects Linux UA and hides the download button, use `curl` to bypass:
    ```nushell
+   # China mainland (国服)
+   curl -L -o Battle.net-Setup-CN.exe "https://downloader.battlenet.com.cn/download/getInstallerForGame?os=win&gameProgram=BATTLENET_APP&version=Live"
+   # International (备用)
    curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -L -o Battle.net-Setup.exe "https://www.battle.net/download/getInstallerForGame?os=win&locale=enUS&version=LIVE&gameProgram=BATTLENET_APP"
    ```
 2. Steam → **Library** → bottom-left **Add a Game** → **Add a Non-Steam Game**, select the installer

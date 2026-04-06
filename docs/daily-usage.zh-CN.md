@@ -335,8 +335,11 @@ sudo -E nixos-rebuild test --flake $".#<host>" --option substituters "https://mi
 
 Battle.net 作为**非 Steam 游戏**添加到 Steam，通过 Proton 兼容层运行。
 
-1. 下载 `Battle.net-Setup.exe`（官网检测到 Linux UA 会屏蔽下载按钮，用 `curl` 伪装 Windows UA 绕过）：
+1. 下载 `Battle.net-Setup.exe`（官网检测到 Linux UA 会屏蔽下载按钮，用 `curl` 绕过）：
    ```nushell
+   # 国服（中国大陆）
+   curl -L -o Battle.net-Setup-CN.exe "https://downloader.battlenet.com.cn/download/getInstallerForGame?os=win&gameProgram=BATTLENET_APP&version=Live"
+   # 国际服（备用）
    curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -L -o Battle.net-Setup.exe "https://www.battle.net/download/getInstallerForGame?os=win&locale=enUS&version=LIVE&gameProgram=BATTLENET_APP"
    ```
 2. Steam → **游戏库** → 左下角**添加游戏** → **添加非 Steam 游戏**，选择下载的安装程序
