@@ -10,7 +10,7 @@
     enable = true;
 
     settings = {
-      font-family = "Maple Mono";
+      font-family = "Maple Mono NF";
       theme = "Catppuccin Mocha";
       window-decoration = false;
       gtk-titlebar = false;
