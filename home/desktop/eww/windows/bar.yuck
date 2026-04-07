@@ -1,6 +1,6 @@
 ;; ═══ Bar Window Definitions ═══
 ;; One defwindow per monitor (supports up to 3 monitors).
-;; The open-bars script detects connected monitors and opens
+;; The manage-bars script detects connected monitors and opens
 ;; only the relevant bar windows.
 
 (defwidget bar_widget [monitor_id]
@@ -15,14 +15,15 @@
       (workspaces :monitor_id monitor_id)
       (window-title))
 
-    ;; ─── Center: Clock + Weather ───
+    ;; ─── Center: Clock + Weather + Terror Zone ───
     (box :class "bar-center"
          :orientation "h"
          :space-evenly false
          :halign "center"
          :spacing 12
       (clock)
-      (weather :monitor_id monitor_id))
+      (weather :monitor_id monitor_id)
+      (terror-zone))
 
     ;; ─── Right: System Modules ───
     (box :class "bar-right"

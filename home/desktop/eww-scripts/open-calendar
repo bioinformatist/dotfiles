@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# ═══ Open Chinese Holiday Calendar in Chrome ═══
+# Opens Baidu search for 法定节假日 — shows lunar calendar + public holidays.
+
+google-chrome-stable "https://www.baidu.com/s?wd=法定节假日" &

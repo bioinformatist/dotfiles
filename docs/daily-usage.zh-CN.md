@@ -33,7 +33,46 @@
 
 **系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。`workstation` 额外持久化 `/var/lib/NetworkManager`。
 
-**用户（`ysun`）**：`~/github.com`、`~/.config/sops`、`~/.config/nushell`、`~/.config/google-chrome`、`~/.local/share/io.github.clash-verge-rev.clash-verge-rev`、`~/.local/share/fcitx5`、`~/.gemini`、`~/xwechat_files`、`~/.ssh/known_hosts`。`workstation` 额外持久化 `~/Downloads`、`~/Documents`、`~/.mozilla`。
+**系统级**：
+
+| 路径 | 用途 |
+| :--- | :--- |
+| `/var/log` | 系统日志 |
+| `/var/lib/bluetooth` | 蓝牙设备配对信息 |
+| `/var/lib/nixos` | NixOS 状态（UID/GID 映射） |
+| `/var/lib/systemd/coredump` | 崩溃转储文件 |
+| `/etc/NetworkManager/system-connections` | 已保存的 Wi-Fi / VPN 配置（仅 `workstation`） |
+| `/var/lib/NetworkManager` | NetworkManager 运行时状态（仅 `workstation`） |
+| `/var/lib/sops-nix` | 用于解密 secrets 的 Age 密钥 |
+| `/var/lib/colord` | 颜色配置文件校准数据 |
+| `/etc/machine-id` | 机器唯一标识（systemd / journald 所需） |
+| `/etc/ssh/ssh_host_*` | SSH 主机密钥（避免重启后 known_hosts 警告） |
+
+**用户（`ysun`）**：
+
+| 路径 | 用途 |
+| :--- | :--- |
+| `~/github.com` | 所有源码和 dotfiles |
+| `~/.config/sops` | sops 解密所需的 Age 私钥 |
+| `~/.config/nushell` | Nushell 用户配置（env.nu、config.nu） |
+| `~/.config/google-chrome` | Chrome 配置（书签、密码、扩展） |
+| `~/.config/Antigravity` | Antigravity IDE 登录与会话状态（仅 `workstation`） |
+| `~/.config/claude` | Claude Code 凭据（`proxy.nuon`） |
+| `~/.claude` | Claude Code 记忆、对话历史、会话数据 |
+| `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge 代理配置和设置 |
+| `~/.local/share/fcitx5` | Rime 用户词典和学习数据 |
+| `~/.local/share/TelegramDesktop` | Telegram 登录会话和聊天缓存（仅 `workstation`） |
+| `~/.local/share/Steam` | Steam 游戏、Proton 前缀、存档（仅 `workstation`） |
+| `~/.cargo/registry` | Cargo 包缓存（加速 Rust 构建，仅 `workstation`） |
+| `~/.gemini` | Antigravity IDE 知识库和对话数据（仅 `workstation`） |
+| `~/xwechat_files` | 微信聊天记录和文件 |
+| `~/Downloads` | 下载目录（仅 `workstation`） |
+| `~/Documents` | 文档目录（仅 `workstation`） |
+| `~/.ssh/known_hosts` | SSH 已知主机（以文件而非目录形式持久化，详见配置注释） |
+| `~/.config/hypr/monitors.conf` | nwg-displays 写入的显示器布局 |
+| `~/.zeroclaw/active_workspace.toml` | ZeroClaw 工作区标记 |
+| `~/.zeroclaw/estop-state.json` | ZeroClaw 紧急停止状态 |
+| `~/.zeroclaw/memory.sqlite` | ZeroClaw 对话记忆数据库 |
 
 其他所有内容在重启时清除。
 
@@ -66,7 +105,7 @@
 | **[Nushell](https://www.nushell.sh/)** | `pkgs.nushell`（默认 shell） | 将数据视为结构化表格的现代 Shell |
 | **[Starship](https://starship.rs/)** | Home Manager | 极简、极速的跨 Shell 提示符 |
 | **[Helix](https://helix-editor.com/)**（`hx`） | Home Manager | 后现代模态文本编辑器（`$EDITOR` / `$VISUAL`） |
-| **[Yazi](https://yazi-rs.github.io/)** | `inputs.yazi`（flake） | 极速终端文件管理器（Rust） |
+| **[Yazi](https://yazi-rs.github.io/)** (`y`) | `inputs.yazi`（flake） | 极速终端文件管理器（Rust）。使用 `y`（而非 `yazi`）——shell 封装器在退出时会自动切换工作目录 |
 | **[Zellij](https://zellij.dev/)** | Home Manager | 终端复用器（窗格 + 标签页） |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)**（`rg`） | Home Manager | 递归正则表达式搜索工具 |
 
@@ -290,15 +329,102 @@ sudo -E nixos-rebuild test --flake $".#<host>" --option substituters "https://mi
 
 ---
 
+## 🎮 游戏
+
+### Battle.net 安装（Steam + Proton）
+
+Battle.net 作为**非 Steam 游戏**添加到 Steam，通过 Proton 兼容层运行。
+
+1. 下载 `Battle.net-Setup.exe`（官网检测到 Linux UA 会屏蔽下载按钮，用 `curl` 绕过）：
+   ```nushell
+   # 国服（中国大陆）
+   curl -L -o Battle.net-Setup-CN.exe "https://downloader.battlenet.com.cn/download/getInstallerForGame?os=win&gameProgram=BATTLENET_APP&version=Live"
+   # 国际服（备用）
+   curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -L -o Battle.net-Setup.exe "https://www.battle.net/download/getInstallerForGame?os=win&locale=enUS&version=LIVE&gameProgram=BATTLENET_APP"
+   ```
+2. Steam → **游戏库** → 左下角**添加游戏** → **添加非 Steam 游戏**，选择下载的安装程序
+3. 右键该条目 → **属性** → **兼容性** → 勾选"强制使用特定 Steam Play 兼容工具" → 选择 **Proton-GE**
+4. 启动，完成 Battle.net 安装流程
+5. 安装完成后，将 **Battle.net.exe**（路径在前缀的 `drive_c/Program Files (x86)/Battle.net/Battle.net.exe`）重新添加为非 Steam 游戏，同样配置 Proton-GE
+6. 通过 Battle.net 安装并启动 D2R
+
+> Steam 为每个非 Steam 游戏创建独立的 Proton prefix，存储在 `~/.local/share/Steam/steamapps/compatdata/<数字ID>/`。
+
+### D2R Mod 安装
+
+**第一步：找到 D2R 所在的 Proton 前缀**
+
+```nushell
+glob "~/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files (x86)/Diablo II Resurrected"
+```
+
+记录输出路径中的数字 ID（即 `compatdata/<ID>`）。
+
+**第二步：放入 mod 文件**
+
+D2R mod 目录结构（以 `ProjectDiablo2` 为例）：
+
+```
+<D2R安装目录>/
+└── mods/
+    └── ProjectDiablo2/        ← 目录名 = mod 名
+        └── ProjectDiablo2.mpq  ← .mpq 文件名 = mod 名
+```
+
+```nushell
+let d2r = $"($env.HOME)/.local/share/Steam/steamapps/compatdata/<PREFIX_ID>/pfx/drive_c/Program Files (x86)/Diablo II Resurrected"
+mkdir $"($d2r)/mods/ProjectDiablo2"
+cp ProjectDiablo2.mpq $"($d2r)/mods/ProjectDiablo2/"
+```
+
+**第三步：设置启动参数**
+
+在 Battle.net → D2R **游戏设置 → 其他参数** 中添加：
+```
+-mod ProjectDiablo2 -txt
+```
+
+> `-mod` 指定 mod 名（与 `mods/` 下子目录名一致），`-txt` 允许 mod 覆盖文本文件（部分 mod 必需）。
+
+---
+
 ## 🛠 注意事项
 
 ### 数据持久化
-本系统采用**临时根文件系统**方案。仅特定目录在重启之间保持持久化。
-- **已持久化用户路径**：`~/github.com`、`~/.config/sops`。
-- 家目录下的其他所有内容在重启时将被清除，以确保干净的状态。
+本系统采用**临时根文件系统**方案。仅特定目录在重启之间保持持久化，详见上方"持久化路径"表格。
 
 ### 软件渲染（仅 VM）
 在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染。物理机（`workstation`）不包含此设置。
+
+### Fcitx5 非正常关机后无响应（Ctrl+Space 失效）
+
+在崩溃或非正常关机后，fcitx5 可能正常启动但 Wayland 前端未能正确初始化。症状：`Ctrl+Space` 无反应，`fcitx5-remote` 输出 `0`（无法连接）。
+
+修复方法——通过 Hyprland 重启 fcitx5：
+
+```nu
+pkill fcitx5
+hyprctl dispatch exec "fcitx5 -d --replace"
+```
+
+> fcitx5 通过 `hyprland.conf` 中的 `uwsm app --` 启动，确保其在 `graphical-session.target` 就绪、`zwp_input_method_v2` 协议可用后才启动。正常开机时此机制可靠；上述命令仅在非正常关机留下残余状态时需要。
+
+### Claude Code（`claude-proxy`）
+
+Claude Code 通过 `claude-proxy` Nushell wrapper 启动，该 wrapper 从 `~/.config/claude/proxy.nuon`（不被 git 追踪）读取凭据和代理配置并注入为环境变量。所有子进程（包括 MCP server）都会继承这些变量。
+
+**`proxy.nuon` 格式：**
+```nushell
+{
+  ANTHROPIC_BASE_URL: "http://<api-relay>:<port>/",
+  ANTHROPIC_AUTH_TOKEN: "sk-...",
+  ANTHROPIC_MODEL: "claude-...",
+  HTTP_PROXY: "http://<lan-proxy>:<port>",
+  HTTPS_PROXY: "http://<lan-proxy>:<port>"
+}
+```
+
+当局域网代理地址变更时，只需更新此文件中的 `HTTP_PROXY`/`HTTPS_PROXY`，无需修改任何 MCP 或 shell 配置。
 
 ### Sops 首次引导
 如果你在新机器上运行 `sops` 时找不到密钥，请在 Nushell 中运行：

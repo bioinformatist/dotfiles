@@ -31,9 +31,46 @@ This repository supports multiple host configurations, sharing common settings v
 
 ### Persisted Paths (Impermanence)
 
-**System**: `/var/log`, `/var/lib/bluetooth`, `/var/lib/nixos`, `/var/lib/systemd/coredump`, `/etc/NetworkManager/system-connections`, `/var/lib/sops-nix`, `/var/lib/colord`, `/etc/machine-id`, SSH host keys. `workstation` additionally persists `/var/lib/NetworkManager`.
+**System**:
 
-**User (`ysun`)**: `~/github.com`, `~/.config/sops`, `~/.config/nushell`, `~/.config/google-chrome`, `~/.local/share/io.github.clash-verge-rev.clash-verge-rev`, `~/.local/share/fcitx5`, `~/.gemini`, `~/xwechat_files`, `~/.ssh/known_hosts`. `workstation` additionally persists `~/Downloads`, `~/Documents`, `~/.mozilla`.
+| Path | Purpose |
+| :--- | :--- |
+| `/var/log` | System logs |
+| `/var/lib/bluetooth` | Bluetooth device pairings |
+| `/var/lib/nixos` | NixOS state (UIDs/GIDs) |
+| `/var/lib/systemd/coredump` | Crash dumps |
+| `/etc/NetworkManager/system-connections` | Saved Wi-Fi / VPN profiles (`workstation` only) |
+| `/var/lib/NetworkManager` | NetworkManager runtime state (`workstation` only) |
+| `/var/lib/sops-nix` | Age key for secret decryption |
+| `/var/lib/colord` | Color profile calibration data |
+| `/etc/machine-id` | Stable machine identity (required by systemd / journald) |
+| `/etc/ssh/ssh_host_*` | SSH host keys (prevent known_hosts warnings after reboot) |
+
+**User (`ysun`)**:
+
+| Path | Purpose |
+| :--- | :--- |
+| `~/github.com` | All source code and dotfiles |
+| `~/.config/sops` | Age private key for sops secret decryption |
+| `~/.config/nushell` | Nushell user config (env.nu, config.nu) |
+| `~/.config/google-chrome` | Chrome profile (bookmarks, passwords, extensions) |
+| `~/.config/Antigravity` | Antigravity IDE login and session state (`workstation` only) |
+| `~/.config/claude` | Claude Code credentials (`proxy.nuon`) |
+| `~/.claude` | Claude Code memory, conversation history, session data |
+| `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge proxy profiles and settings |
+| `~/.local/share/fcitx5` | Rime user dictionary and learned words |
+| `~/.local/share/TelegramDesktop` | Telegram login session and chat cache (`workstation` only) |
+| `~/.local/share/Steam` | Steam games, Proton prefixes, save data (`workstation` only) |
+| `~/.cargo/registry` | Cargo crate cache (speeds up Rust builds) (`workstation` only) |
+| `~/.gemini` | Antigravity IDE knowledge base and conversation data (`workstation` only) |
+| `~/xwechat_files` | WeChat chat history and files |
+| `~/Downloads` | Downloads (`workstation` only) |
+| `~/Documents` | Documents (`workstation` only) |
+| `~/.ssh/known_hosts` | SSH known hosts (persisted as file, not directory — see note in config) |
+| `~/.config/hypr/monitors.conf` | Monitor layout written by nwg-displays |
+| `~/.zeroclaw/active_workspace.toml` | ZeroClaw workspace marker |
+| `~/.zeroclaw/estop-state.json` | ZeroClaw emergency stop state |
+| `~/.zeroclaw/memory.sqlite` | ZeroClaw conversation memory database |
 
 Everything else is wiped on reboot.
 
@@ -66,7 +103,7 @@ Everything else is wiped on reboot.
 | **[Nushell](https://www.nushell.sh/)** | `pkgs.nushell` (default shell) | Modern shell treating data as structured tables |
 | **[Starship](https://starship.rs/)** | Home Manager | Minimal, blazing-fast cross-shell prompt |
 | **[Helix](https://helix-editor.com/)** (`hx`) | Home Manager | Post-modern modal text editor (`$EDITOR` / `$VISUAL`) |
-| **[Yazi](https://yazi-rs.github.io/)** | `inputs.yazi` (flake) | Blazing fast terminal file manager (Rust) |
+| **[Yazi](https://yazi-rs.github.io/)** (`y`) | `inputs.yazi` (flake) | Blazing fast terminal file manager (Rust). Use `y` (not `yazi`) — the shell wrapper changes your cwd on exit |
 | **[Zellij](https://zellij.dev/)** | Home Manager | Terminal multiplexer with panes and tabs |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)** (`rg`) | Home Manager | Recursive regex search tool |
 
@@ -290,15 +327,102 @@ The subscription URL is stored encrypted in the repository via sops-nix (see [Se
 
 ---
 
+## 🎮 Gaming
+
+### Battle.net Installation (Steam + Proton)
+
+Battle.net runs as a **non-Steam game** added to Steam, using the Proton compatibility layer.
+
+1. Download `Battle.net-Setup.exe` — the official site detects Linux UA and hides the download button, use `curl` to bypass:
+   ```nushell
+   # China mainland (国服)
+   curl -L -o Battle.net-Setup-CN.exe "https://downloader.battlenet.com.cn/download/getInstallerForGame?os=win&gameProgram=BATTLENET_APP&version=Live"
+   # International (备用)
+   curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -L -o Battle.net-Setup.exe "https://www.battle.net/download/getInstallerForGame?os=win&locale=enUS&version=LIVE&gameProgram=BATTLENET_APP"
+   ```
+2. Steam → **Library** → bottom-left **Add a Game** → **Add a Non-Steam Game**, select the installer
+3. Right-click the entry → **Properties** → **Compatibility** → check "Force the use of a specific Steam Play compatibility tool" → select **Proton-GE**
+4. Launch and complete the Battle.net installation
+5. Once installed, add **Battle.net.exe** (at `drive_c/Program Files (x86)/Battle.net/Battle.net.exe` inside the prefix) as another non-Steam game with the same Proton-GE config
+6. Install and launch D2R through Battle.net
+
+> Steam creates a separate Proton prefix per non-Steam game at `~/.local/share/Steam/steamapps/compatdata/<numeric-ID>/`.
+
+### D2R Mod Installation
+
+**Step 1 — Find the D2R Proton prefix**
+
+```nushell
+glob "~/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files (x86)/Diablo II Resurrected"
+```
+
+Note the numeric ID in the returned path.
+
+**Step 2 — Drop in mod files**
+
+D2R mods follow a fixed directory layout (using `ProjectDiablo2` as an example):
+
+```
+<D2R install dir>/
+└── mods/
+    └── ProjectDiablo2/        ← dir name = mod name
+        └── ProjectDiablo2.mpq  ← .mpq name = mod name
+```
+
+```nushell
+let d2r = $"($env.HOME)/.local/share/Steam/steamapps/compatdata/<PREFIX_ID>/pfx/drive_c/Program Files (x86)/Diablo II Resurrected"
+mkdir $"($d2r)/mods/ProjectDiablo2"
+cp ProjectDiablo2.mpq $"($d2r)/mods/ProjectDiablo2/"
+```
+
+**Step 3 — Set launch arguments**
+
+In Battle.net → D2R **Game Settings → Additional command line arguments**:
+```
+-mod ProjectDiablo2 -txt
+```
+
+> `-mod` specifies the mod name (must match the subdirectory under `mods/`). `-txt` enables text file overrides required by some mods.
+
+---
+
 ## 🛠 Tips & Tricks
 
 ### Data Persistence
-This system uses an **ephemeral root** approach. Only specific directories are persisted between reboots.
-- **Persisted User Paths**: `~/github.com`, `~/.config/sops`.
-- Everything else in the Home directory is wiped on reboot to ensure a clean state.
+This system uses an **ephemeral root** approach. Only specific directories are persisted between reboots — see the Persisted Paths table above.
 
 ### Software Rendering (VM Only)
 In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1`. The physical machine (`workstation`) does not include this setting.
+
+### Fcitx5 Not Responding After Unclean Shutdown (Ctrl+Space Broken)
+
+After a crash or unclean shutdown, fcitx5 may start but fail to initialize its Wayland frontend properly. Symptom: `Ctrl+Space` does nothing, and `fcitx5-remote` prints `0` (unreachable).
+
+Fix — restart fcitx5 via Hyprland:
+
+```nu
+pkill fcitx5
+hyprctl dispatch exec "fcitx5 -d --replace"
+```
+
+> fcitx5 is started via `uwsm app --` in `hyprland.conf`, which ensures it launches only after `graphical-session.target` is reached and the `zwp_input_method_v2` protocol is ready. On a clean boot this is reliable; the above workaround is only needed after an unclean shutdown leaves stale state.
+
+### Claude Code (`claude-proxy`)
+
+Claude Code is launched via the `claude-proxy` Nushell wrapper, which injects credentials and proxy settings from `~/.config/claude/proxy.nuon` (not tracked by git). All child processes — including MCP servers — inherit these variables.
+
+**`proxy.nuon` format:**
+```nushell
+{
+  ANTHROPIC_BASE_URL: "http://<api-relay>:<port>/",
+  ANTHROPIC_AUTH_TOKEN: "sk-...",
+  ANTHROPIC_MODEL: "claude-...",
+  HTTP_PROXY: "http://<lan-proxy>:<port>",
+  HTTPS_PROXY: "http://<lan-proxy>:<port>"
+}
+```
+
+When your LAN proxy address changes, update `HTTP_PROXY`/`HTTPS_PROXY` in this file. No MCP or shell config needs to change.
 
 ### Sops Bootstrapping (First Time)
 If you are on a new machine and `sops` fails to find your keys, run this in Nushell:

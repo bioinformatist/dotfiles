@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Toggle an app between a special workspace (hidden) and current workspace (visible).
+# Usage: toggle-special <window-class> <special-workspace-name>
+# Workaround for hyprwm/Hyprland#3503: XWayland windows in special workspace
+# cover fcitx5 popup, so we move the window to a regular workspace when visible.
+
+CLASS="$1"
+SPECIAL="$2"
+
+ADDR=$(hyprctl clients -j | jq -r ".[] | select(.class == \"$CLASS\") | .address" | head -1)
+[ -z "$ADDR" ] && exit 0
+
+WS=$(hyprctl clients -j | jq -r ".[] | select(.address == \"$ADDR\") | .workspace.name")
+
+if [ "$WS" = "special:$SPECIAL" ]; then
+  # Hidden → bring to current workspace and focus
+  CUR=$(hyprctl activeworkspace -j | jq -r '.id')
+  hyprctl --batch "dispatch movetoworkspace $CUR,address:$ADDR ; dispatch focuswindow address:$ADDR"
+else
+  # Visible → hide to special workspace
+  hyprctl dispatch movetoworkspacesilent "special:$SPECIAL,address:$ADDR"
+fi

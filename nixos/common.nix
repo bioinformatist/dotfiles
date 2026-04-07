@@ -16,11 +16,17 @@
     ];
     substituters = [
       "https://mirrors.ustc.edu.cn/nix-channels/store"
+    ];
+    extra-substituters = [
       "https://hyprland.cachix.org"
+      "https://yazi.cachix.org"
+      "https://anyrun.cachix.org"
     ];
     trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
-    extra-substituters = [ "https://yazi.cachix.org" ];
-    extra-trusted-public-keys = [ "yazi.cachix.org-1:Dcdz63NZKfvUCbDGngQDAZq6kOroIrFoyO064uvLh8k=" ];
+    extra-trusted-public-keys = [
+      "yazi.cachix.org-1:Dcdz63NZKfvUCbDGngQDAZq6kOroIrFoyO064uvLh8k="
+      "anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s="
+    ];
     download-buffer-size = 1024 * 1024 * 1024; # 1GB
   };
 
@@ -87,7 +93,8 @@
       sarasa-gothic
       noto-fonts-cjk-sans
       noto-fonts-cjk-serif
-      jetbrains-mono
+      nerd-fonts.jetbrains-mono
+      maple-mono.NF
     ];
 
     fontconfig.defaultFonts = {

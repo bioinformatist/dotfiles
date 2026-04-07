@@ -11,16 +11,7 @@ WEATHER_CACHE="$CACHE_DIR/weather_data.json"
 mkdir -p "$CACHE_DIR"
 
 # ─── Get location ─────────────────────────────────────────────
-# 1. Check if cache exists (manual or previous auto-detected)
-if [ ! -f "$LOCATION_CACHE" ]; then
-  # Fallback to auto-detection (only if no cache exists)
-  RESPONSE=$(curl -sf "http://ip-api.com/json")
-  if [ $? -eq 0 ] && [ -n "$RESPONSE" ]; then
-    echo "$RESPONSE" | jq '{lat: .lat, lon: .lon, city: .city}' > "$LOCATION_CACHE"
-  fi
-fi
-
-# Final check: if still no location, cannot proceed
+# Cache is persisted via impermanence. If missing, user must manually search.
 if [ ! -f "$LOCATION_CACHE" ]; then
   # Default fallback message
   echo '{"temp":"?","icon":"☁","city":"No Loc","symbol":""}'

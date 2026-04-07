@@ -10,7 +10,9 @@
 (defwidget clock []
   (eventbox
     :class "clock-container"
-    :tooltip "${clock_date}"
+    :tooltip "${clock_date}
+右键查看法定节假日日历"
+    :onrightclick "scripts/open-calendar &"
     (label
       :class "clock"
       :text "${clock_time}")))

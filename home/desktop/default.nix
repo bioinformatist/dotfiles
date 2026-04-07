@@ -14,6 +14,7 @@ let
     "eww/modules/window-title.yuck".source = ./eww/modules/window-title.yuck;
     "eww/modules/clock.yuck".source = ./eww/modules/clock.yuck;
     "eww/modules/weather.yuck".source = ./eww/modules/weather.yuck;
+    "eww/modules/terror-zone.yuck".source = ./eww/modules/terror-zone.yuck;
     # Phase 2: modules
     "eww/modules/audio.yuck".source = ./eww/modules/audio.yuck;
     "eww/modules/bluetooth.yuck".source = ./eww/modules/bluetooth.yuck;
@@ -26,6 +27,8 @@ let
     "eww/windows/bt-popup.yuck".source = ./eww/windows/bt-popup.yuck;
     "eww/windows/net-popup.yuck".source = ./eww/windows/net-popup.yuck;
     "eww/windows/weather-search.yuck".source = ./eww/windows/weather-search.yuck;
+    # Data files
+    "eww/terror-zones.json".source = ./eww/terror-zones.json;
   };
 
   # ── eww scripts (need executable permission) ───────────────
@@ -42,7 +45,8 @@ let
       "get-window-title"
       "get-weather"
       "open-weather"
-      "open-bars"
+      "open-calendar"
+      "manage-bars"
       # Phase 2
       "get-volume"
       "get-audio-sinks"
@@ -58,6 +62,8 @@ let
       "close-popups"
       "toggle-popup"
       "search-weather"
+      # D2R
+      "get-terror-zone"
     ]
   );
 in
