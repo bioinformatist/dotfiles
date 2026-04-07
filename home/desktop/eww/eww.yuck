@@ -2,6 +2,12 @@
 ;; Eww Bar — Main Entry Point
 ;; ═══════════════════════════════════════════════════════
 
+;; ─── Polling Intervals Overview ─────────────────────────
+;; Clock:        1s (time), 60s (date)
+;; Weather:      1800s (30 minutes) — yr.no API rate-limited
+;; Terror Zone:  120s (2 minutes) — d2emu.com/tz data refresh
+;; Other:        Event-driven (buttons, clicks) — no background polls
+
 ;; ─── Phase 1: Foundation ────────────────────────────────
 (include "./modules/workspaces.yuck")
 (include "./modules/window-title.yuck")
