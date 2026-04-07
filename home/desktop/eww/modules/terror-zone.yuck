@@ -1,0 +1,21 @@
+;; ═══ D2R Terror Zone (恐怖区域) ═══
+;; defpoll 120s: eww manages timing, script is stateless.
+;; Data: scrapes d2emu.com/tz, XOR keys extracted from page (not hardcoded).
+;; Tier: separate XP / Loot grades from local JSON.
+
+(defpoll tz_data :interval "120s"
+  :initial '{"zone": "...", "next": "", "xp": "", "loot": "", "next_xp": "", "next_loot": ""}'
+  "scripts/get-terror-zone")
+
+(defwidget terror-zone []
+  (eventbox
+    :class "terror-zone-container"
+    :tooltip "D2R 恐怖区域
+当前: ${tz_data.zone} (经验: ${tz_data.xp} | 掉落: ${tz_data.loot})
+下一个: ${tz_data.next} (经验: ${tz_data.next_xp} | 掉落: ${tz_data.next_loot})"
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 4
+      (label :class "tz-icon" :text "💀")
+      (label :class "tz-name" :text "${tz_data.zone}")
+      (label :class "tz-tier" :text "${tz_data.xp}/${tz_data.loot}"))))

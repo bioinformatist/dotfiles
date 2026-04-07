@@ -7,6 +7,7 @@
 (include "./modules/window-title.yuck")
 (include "./modules/clock.yuck")
 (include "./modules/weather.yuck")
+(include "./modules/terror-zone.yuck")
 
 ;; ─── Phase 2: System Modules ───────────────────────────
 (include "./modules/audio.yuck")

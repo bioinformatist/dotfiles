@@ -136,6 +136,28 @@ $font-main: "JetBrainsMono Nerd Font", "JetBrains Mono", "monospace";
   color: $green-dim;
 }
 
+// ─── Terror Zone ─────────────────────────────────────────────
+
+.terror-zone-container {
+  padding: 4px 10px;
+  border-radius: 8px;
+
+  .tz-icon {
+    font-size: 16px;
+  }
+
+  .tz-name {
+    font-size: 14px;
+    color: $green-normal;
+  }
+
+  .tz-tier {
+    font-size: 12px;
+    margin-left: 4px;
+    color: $green-dim;
+  }
+}
+
 // ─── Separator ───────────────────────────────────────────────
 
 .separator {

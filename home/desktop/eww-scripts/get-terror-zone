@@ -1,0 +1,118 @@
+#!/usr/bin/env nu
+# ═══ D2R 恐怖区域 (d2emu.com/tz 页面爬取) ═══
+# Stateless: called by defpoll every 120s. Fetches, decodes, outputs JSON.
+# XOR keys extracted from page at runtime — not hardcoded.
+
+let tier_file = ($env.HOME | path join ".config/eww/terror-zones.json")
+
+# ─── XOR decode a base64-encoded span value ───────────────────
+def xor-decode [encoded: string, k1: binary, k2: binary] {
+  let raw = ($encoded | decode base64)
+  let raw_len = ($raw | bytes length)
+  let k1_len = ($k1 | bytes length)
+  let k2_len = ($k2 | bytes length)
+
+  let r1 = (0..($raw_len - 1) | each { |i|
+    let b = ($raw | bytes at $i..<($i + 1) | into int)
+    let k = ($k1 | bytes at ($i mod $k1_len)..<(($i mod $k1_len) + 1) | into int)
+    $b bit-xor $k
+  })
+
+  $r1 | enumerate | each { |it|
+    let k = ($k2 | bytes at ($it.index mod $k2_len)..<(($it.index mod $k2_len) + 1) | into int)
+    $it.item bit-xor $k
+  } | each { |b| char --integer $b } | str join
+}
+
+# ─── Extract base64 value from span by splitting on the marker ─
+def extract-encoded [html: string, span_id: string] {
+  # Avoid regex with ([^"]*) — Nushell treats () as interpolation in $'...'
+  let marker = ('id="' + $span_id + '" value="')
+  let parts = ($html | split row $marker)
+  if ($parts | length) < 2 { return "" }
+  $parts | get 1 | split row '"' | first
+}
+
+# ─── Extract zone name pair from HTML ─────────────────────────
+def extract-zone [html: string, span_id: string, k1: binary, k2: binary] {
+  let encoded = (extract-encoded $html $span_id)
+  if ($encoded | is-empty) { return {zh: "解析失败", en: ""} }
+  let json_str = (xor-decode $encoded $k1 $k2)
+  let data = try { $json_str | from json } catch { return {zh: "解码失败", en: ""} }
+  let zh = ($data | get zhCN? | default "" | str replace --all "</br>" "/")
+  let en = ($data | get enUS? | default "" | str replace --all "</br>" "/")
+  {zh: $zh, en: $en}
+}
+
+# ─── Tier rank: S=5 A=4 B=3 C=2 D=1 F=0 for comparison ──────
+def tier-rank [t: string] {
+  match $t {
+    "S" => 5, "A" => 4, "B" => 3, "C" => 2, "D" => 1, _ => 0
+  }
+}
+
+# ─── Best tier across two tier strings ────────────────────────
+def best-tier [a: string, b: string] {
+  if (tier-rank $a) >= (tier-rank $b) { $a } else { $b }
+}
+
+# ─── Tier lookup: split by "/" and take best match across parts
+def lookup-tier [en_name: string] {
+  if not ($tier_file | path exists) { return {xp: "?", loot: "?"} }
+  if ($en_name | is-empty) { return {xp: "?", loot: "?"} }
+  let tiers = (open $tier_file)
+
+  # Split combined zone name (e.g. "Tamoe Highland/Outer Cloister/Pit") into parts
+  let parts = ($en_name | split row "/")
+
+  # For each part try: exact, "The {part}", strip leading "The "
+  let matched = ($parts | each { |part|
+    let candidates = [$part, ("The " + $part), ($part | str replace "^The " "" --regex)]
+    let hit = ($candidates | each { |c|
+      if ($c in $tiers) { $tiers | get $c } else { null }
+    } | compact)
+    if ($hit | is-empty) { null } else { $hit | first }
+  } | compact)
+
+  if ($matched | is-empty) { return {xp: "?", loot: "?"} }
+
+  # Take best (highest) tier across all matched areas
+  $matched | reduce { |it, acc|
+    {
+      xp:   (best-tier $acc.xp $it.xp),
+      loot: (best-tier $acc.loot $it.loot)
+    }
+  }
+}
+
+# ─── Main ─────────────────────────────────────────────────────
+def main [] {
+  let html = (^curl -sf https://d2emu.com/tz | str trim)
+  if ($html | is-empty) {
+    return '{"zone":"网络错误","next":"","xp":"","loot":"","next_xp":"","next_loot":""}'
+  }
+
+  # Dynamic key extraction — keys live in page JS, pattern: k??2jnb1
+  let keys = ($html | lines | each { |line|
+    $line | parse --regex `'(k[a-z]{2}2jnb1)'` | get capture0
+  } | flatten | uniq)
+  if ($keys | length) < 2 {
+    return '{"zone":"密钥提取失败","next":"","xp":"","loot":"","next_xp":"","next_loot":""}'
+  }
+  let k1 = ($keys | get 0 | encode utf8)
+  let k2 = ($keys | get 1 | encode utf8)
+
+  let current = (extract-zone $html "__1" $k1 $k2)
+  let next    = (extract-zone $html "__2" $k1 $k2)
+  let cur_tier  = (lookup-tier $current.en)
+  let next_tier = (lookup-tier $next.en)
+
+  {
+    zone:     $current.zh
+    next:     $next.zh
+    xp:       $cur_tier.xp
+    loot:     $cur_tier.loot
+    next_xp:  $next_tier.xp
+    next_loot: $next_tier.loot
+  } | to json -r
+}
