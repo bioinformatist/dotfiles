@@ -58,6 +58,9 @@
   sops.secrets."zeroclaw-user-context" = {
     owner = "ysun";
   };
+  # ZeroClaw door access secrets
+  sops.secrets."zeroclaw-door-card-no" = { owner = "ysun"; };
+  sops.secrets."zeroclaw-door-user-id" = { owner = "ysun"; };
   # systemd-tmpfiles-setup runs before sops-install-secrets, so this
   # guarantees ~/.zeroclaw/workspace/ is ysun-owned when sops writes USER.md.
   # Without this, sops (running as root) creates the parent dir as root,
@@ -65,6 +68,7 @@
   # Ref: https://github.com/Mic92/sops-nix/issues/235 (known sops-nix limitation)
   systemd.tmpfiles.rules = [
     "d /home/ysun/.zeroclaw/workspace 0755 ysun users -"
+    "d /home/ysun/.local/bin          0755 ysun users -"
   ];
 
   # ZeroClaw USER.md — private personal context rendered from sops secret.
@@ -74,6 +78,34 @@
     path = "/home/ysun/.zeroclaw/workspace/USER.md";
     content = ''
       ${config.sops.placeholder."zeroclaw-user-context"}
+    '';
+  };
+  # ZeroClaw open-door script — rendered with secret cardNo/userId injection.
+  # Executed by Jarvis when user says "Open the door"; runs immediately (auto_approve).
+  sops.templates."zeroclaw-open-door" = {
+    owner = "ysun";
+    mode  = "0755";
+    path  = "/home/ysun/.local/bin/open-door";
+    content = ''
+      #!/usr/bin/env nu
+      let result = (http post
+        --content-type application/json
+        https://www.91helife.com/erp/front/interface/door/openDoor/three
+        {
+          doorName: "车场出口门",
+          doorCommunityId: "362",
+          communityId: "362",
+          doorId: 90012947,
+          cardNo: "${config.sops.placeholder."zeroclaw-door-card-no"}",
+          userId: "${config.sops.placeholder."zeroclaw-door-user-id"}",
+          isScan: 2,
+        })
+      if $result.status == 1 {
+        print "Door opened successfully"
+      } else {
+        print $"Failed: ($result.msg)"
+        exit 1
+      }
     '';
   };
   # ZeroClaw config.toml — rendered from template with secret injection.
@@ -106,7 +138,8 @@
       level = "supervised"
       workspace_only = false
       allowed_roots = ["~/github.com"]
-      allowed_commands = ["git", "nix", "nixos-rebuild", "systemctl"]
+      allowed_commands = ["open-door"]
+      auto_approve = ["shell"]
 
       [memory]
       backend = "sqlite"
