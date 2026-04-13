@@ -80,34 +80,6 @@
       ${config.sops.placeholder."zeroclaw-user-context"}
     '';
   };
-  # ZeroClaw open-door script — rendered with secret cardNo/userId injection.
-  # Executed by Jarvis when user says "Open the door"; runs immediately (auto_approve).
-  sops.templates."zeroclaw-open-door" = {
-    owner = "ysun";
-    mode  = "0755";
-    path  = "/home/ysun/.local/bin/open-door";
-    content = ''
-      #!/usr/bin/env nu
-      let result = (http post
-        --content-type application/json
-        https://www.91helife.com/erp/front/interface/door/openDoor/three
-        {
-          doorName: "车场出口门",
-          doorCommunityId: "362",
-          communityId: "362",
-          doorId: 90012947,
-          cardNo: "${config.sops.placeholder."zeroclaw-door-card-no"}",
-          userId: "${config.sops.placeholder."zeroclaw-door-user-id"}",
-          isScan: 2,
-        })
-      if $result.status == 1 {
-        print "Door opened successfully"
-      } else {
-        print $"Failed: ($result.msg)"
-        exit 1
-      }
-    '';
-  };
   # ZeroClaw config.toml — rendered from template with secret injection.
   # The template is placed at a sops-managed path, then symlinked to
   # ~/.zeroclaw/config.toml by the home-manager activation below.
@@ -138,7 +110,7 @@
       level = "supervised"
       workspace_only = false
       allowed_roots = ["~/github.com"]
-      allowed_commands = ["open-door"]
+      allowed_commands = ["/home/ysun/.local/bin/open-door"]
       auto_approve = ["shell"]
 
       [memory]

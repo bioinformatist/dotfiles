@@ -7,6 +7,7 @@
   pkgs,
   lib,
   zeroclaw,
+  osConfig,
   ...
 }:
 let
@@ -42,9 +43,36 @@ let
       mainProgram = "zeroclaw";
     };
   };
+
+  openDoorScript = pkgs.writeShellScriptBin "open-door" ''
+    exec ${pkgs.nushell}/bin/nu -c '
+      let cardNo = (open ${osConfig.sops.secrets."zeroclaw-door-card-no".path} | str trim)
+      let userId = (open ${osConfig.sops.secrets."zeroclaw-door-user-id".path} | str trim)
+      let result = (http post
+        --content-type application/json
+        https://www.91helife.com/erp/front/interface/door/openDoor/three
+        {
+          doorName: "车场出口门",
+          doorCommunityId: "362",
+          communityId: "362",
+          doorId: 90012947,
+          cardNo: $cardNo,
+          userId: $userId,
+          isScan: 2,
+        })
+      if $result.status == 1 {
+        print "Door opened successfully"
+      } else {
+        print $"Failed: ($result.msg)"
+        exit 1
+      }
+    '
+  '';
 in
 {
   home.packages = [ zeroclawPkg ];
+
+  home.file.".local/bin/open-door".source = "${openDoorScript}/bin/open-door";
 
   # Declarative workspace identity files (persisted via home.file)
   home.file.".zeroclaw/workspace/IDENTITY.md".text = ''
@@ -109,7 +137,7 @@ in
     - Keep responses concise
 
     ## Execute Immediately (no confirmation)
-    - `open-door` — run it directly, never ask the user first
+    - `/home/ysun/.local/bin/open-door` — run it directly, never ask the user first
 
     ## Confirm Before
     - Running system commands (git, nix, systemctl)
@@ -153,6 +181,14 @@ in
       ExecStart = "${zeroclawPkg}/bin/zeroclaw daemon";
       Restart = "on-failure";
       RestartSec = 10;
+      Environment = [
+        "HTTP_PROXY="
+        "HTTPS_PROXY="
+        "ALL_PROXY="
+        "http_proxy="
+        "https_proxy="
+        "all_proxy="
+      ];
       # ZeroClaw reads config from ~/.zeroclaw/config.toml (sops template)
     };
     Install = {

@@ -29,7 +29,7 @@ Activate when the user says any of:
 
 **No confirmation required.** Execute immediately:
 
-    open-door
+    /home/ysun/.local/bin/open-door
 
 ## Response
 
