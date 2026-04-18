@@ -1,6 +1,10 @@
 {pkgs, ...}:
 {
-  imports = [ ./zeroclaw ./gaming.nix ];
+  imports = [
+    ./codex
+    ./zeroclaw
+    ./gaming.nix
+  ];
 
   # Cargo crates.io USTC mirror — declarative via home.file symlink.
   # ~/.cargo/registry/ (cache) is persisted separately via impermanence.
@@ -11,6 +15,7 @@
     sops # CLI for editing encrypted secrets (secrets/secrets.yaml)
     ouch # Rust-based archive tool (zip/tar/gz/xz/zstd/7z)
     claude-code
+    codex
   ];
 
   programs.ripgrep.enable = true;

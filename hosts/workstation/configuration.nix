@@ -184,6 +184,7 @@
         ".config/Antigravity" # Antigravity IDE login and session state
         ".config/claude" # Claude Code credentials and session state
         ".claude" # Claude Code memory, history, and session data
+        ".codex" # Codex config, auth, history, and MCP server state
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5" # Fcitx5/Rime user dictionary and learned words
         ".gemini" # Antigravity IDE data (conversations, knowledge base)

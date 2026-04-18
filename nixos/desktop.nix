@@ -7,6 +7,17 @@
   ...
 }:
 
+let
+  wechat-uos-fcitx = pkgs.symlinkJoin {
+    name = "wechat-uos-fcitx";
+    paths = [ pkgs.wechat-uos ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/wechat-uos \
+        --set QT_IM_MODULE fcitx
+    '';
+  };
+in
 {
   programs.hyprland = {
     enable = true;
@@ -139,7 +150,7 @@
       dunst
       google-chrome
       hyprlock
-      wechat-uos
+      wechat-uos-fcitx
     grim # Wayland screenshot backend
     slurp # Wayland region selector
     satty # Screenshot annotation editor (arrows, text, blur)

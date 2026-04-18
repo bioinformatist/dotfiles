@@ -86,7 +86,11 @@
         "github.com"
         ".config/sops"
         ".config/nushell"
+        ".codex" # Codex config, auth, history, and MCP server state
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
+      ];
+      files = [
+        ".claude.json" # Claude Code user preferences and GitHub MCP token source
       ];
     };
   };
