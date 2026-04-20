@@ -124,6 +124,14 @@
       searxng_instance_url = "http://192.168.0.116:8888"
       max_results = 5
 
+      # --- Transcription: speaches (faster-whisper) on GPU1 ---
+      [transcription]
+      enabled = true
+      provider = "openai"
+      api_url = "http://192.168.0.116:8090/v1/audio/transcriptions"
+      api_key = "no-key-needed"
+      model = "deepdml/faster-whisper-large-v3-turbo-ct2"
+
       # --- Channel ---
       [channels_config.telegram]
       bot_token = "${config.sops.placeholder."zeroclaw-telegram-token"}"

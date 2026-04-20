@@ -1,46 +1,50 @@
 # ZeroClaw — fast, lightweight AI personal assistant (Rust)
 # Self-hosted vLLM (Qwen3-30B-A3B) via Telegram
 #
-# Build uses the zeroclaw flake input source directly.
-# To update: `nix flake update zeroclaw`
+# Install uses the latest pinned upstream release binary to avoid long local Rust
+# builds during system rebuilds.
 {
   pkgs,
   lib,
-  zeroclaw,
   osConfig,
   ...
 }:
 let
-  zeroclawPkg = pkgs.rustPlatform.buildRustPackage {
+  zeroclawVersion = "0.7.3";
+  zeroclawAsset = "zeroclaw-x86_64-unknown-linux-gnu.tar.gz";
+  zeroclawPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "zeroclaw";
-    version = zeroclaw.shortRev or "unstable";
+    version = zeroclawVersion;
 
-    src = zeroclaw;
-
-    cargoLock = {
-      lockFile = "${zeroclaw}/Cargo.lock";
+    src = pkgs.fetchurl {
+      url = "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v${zeroclawVersion}/${zeroclawAsset}";
+      hash = "sha256-EDarTAG57Z45d5VFTAPTdtu2KI7nIu710rxrgHo7CgE=";
     };
 
-    nativeBuildInputs = with pkgs; [
-      pkg-config
-      protobuf
-    ];
+    sourceRoot = ".";
 
-    buildInputs = with pkgs; [
-      openssl
-    ];
+    unpackPhase = ''
+      tar -xzf "$src"
+    '';
 
-    # Only build the main binary, skip sub-crates
-    cargoBuildFlags = [ "--bin" "zeroclaw" ];
+    installPhase = ''
+      runHook preInstall
 
-    # Some tests require network access
-    doCheck = false;
+      mkdir -p "$out/bin" "$out/share/zeroclaw"
+      install -m755 zeroclaw "$out/bin/zeroclaw"
+      if [ -d web ]; then
+        cp -r web "$out/share/zeroclaw/"
+      fi
+
+      runHook postInstall
+    '';
 
     meta = with lib; {
       description = "Fast, small, fully autonomous AI personal assistant infrastructure";
       homepage = "https://github.com/zeroclaw-labs/zeroclaw";
       license = with licenses; [ mit asl20 ];
       mainProgram = "zeroclaw";
+      platforms = [ "x86_64-linux" ];
     };
   };
 

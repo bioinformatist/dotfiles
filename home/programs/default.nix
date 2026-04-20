@@ -15,7 +15,6 @@
     sops # CLI for editing encrypted secrets (secrets/secrets.yaml)
     ouch # Rust-based archive tool (zip/tar/gz/xz/zstd/7z)
     claude-code
-    codex
   ];
 
   programs.ripgrep.enable = true;
