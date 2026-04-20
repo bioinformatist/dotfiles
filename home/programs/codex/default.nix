@@ -78,6 +78,7 @@ in
       model_reasoning_effort = "medium"
       personality = "pragmatic"
       sandbox_mode = "danger-full-access"
+      approval_policy = "on-request"
       [features]
       memories = true
       codex_hooks = true
