@@ -77,7 +77,7 @@ in
       model = "gpt-5.4"
       model_reasoning_effort = "medium"
       personality = "pragmatic"
-      sandbox_mode = "danger-full-access"
+      sandbox_mode = "workspace-write"
       approval_policy = "on-request"
       [features]
       memories = true
