@@ -193,6 +193,8 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 This section covers the normal workflow for **updating all packages** on an already-installed, running system. No ISO or reinstallation is needed.
 
 > **Shell Note**: This section runs on the configured system using **Nushell**. The syntax differs from bash.
+>
+> **Maintenance Note**: The preferred day-to-day workflow now lives in the dedicated [Maintenance Guide](maintenance.md). Use this section as background for networking and manual rebuild commands; use `maintenance.md` for the actual maintenance command set.
 
 ### China Network Note
 
@@ -203,29 +205,36 @@ The update process involves **two types** of network requests, each requiring a 
 | **GitHub source fetching** | `nix flake update` pulls flake inputs (HTTPS tarballs) | Requires a **proxy**; USTC mirror cannot help |
 | **Binary cache download** | `nixos-rebuild` downloads pre-built packages from cache | Use **USTC mirror** (`--option substituters`) |
 
-> **Why does the proxy work?** Nix uses **libcurl** under the hood for HTTP requests. libcurl natively
-> supports `http_proxy`/`https_proxy` environment variables. `nix flake update` downloads tarballs via
-> HTTPS for `github:` inputs (not `git clone`), so it automatically picks up the proxy.
+> **Why does the proxy work?** Maintenance commands and `nix-daemon` now read proxy settings from
+> `~/.config/nix/local-proxy.nuon`. User-side helpers and daemon-side downloads therefore share one
+> local source of truth instead of relying on repeated ad-hoc `with-env` wrappers.
 
-Therefore, a full update requires **both** a proxy and the USTC mirror.
+Therefore, a full update still relies on **both** a proxy and the USTC mirror, but they are now
+configured through `~/.config/nix/local-proxy.nuon`.
 
-**Set proxy** (Nushell syntax, LAN or localhost proxy):
+**Local proxy config** (`~/.config/nix/local-proxy.nuon`):
 ```nu
-# Replace with your actual proxy address
-# Localhost example: http://127.0.0.1:7890
-# LAN proxy example: http://192.168.1.100:7890
-$env.http_proxy = "http://<proxy-address>:<port>"
-$env.https_proxy = "http://<proxy-address>:<port>"
+{
+  HTTP_PROXY: "http://<proxy-address>:<port>",
+  HTTPS_PROXY: "http://<proxy-address>:<port>",
+  NO_PROXY: "mirrors.ustc.edu.cn,cache.nixos.org,127.0.0.1,localhost",
+  substituters: [
+    "https://mirrors.ustc.edu.cn/nix-channels/store"
+    "https://cache.nixos.org"
+  ]
+}
 ```
 
-### Step 1: Update Flake Inputs (`flake.lock`)
+### Step 1: Manually Update Flake Inputs (`flake.lock`)
 
 This fetches the latest versions of all dependencies from GitHub (nixpkgs, home-manager, hyprland, etc.).
+It is now mainly a **manual full-refresh workflow**, not the preferred day-to-day maintenance path.
 
 ```nu
 cd /path/to/dotfiles   # e.g., ~/github.com/bioinformatist/dotfiles
 
 # Ensure proxy is set (see above)
+# This updates everything at once.
 nix flake update
 ```
 
@@ -235,20 +244,13 @@ This modifies `flake.lock` — you should commit it afterward.
 
 Apply the updated packages to the running system.
 
-> **Important**: `sudo` **strips** environment variables (including `http_proxy`/`https_proxy`) by default.
-> You must use `sudo -E` (`--preserve-env`) to keep your proxy settings, otherwise packages that need to fetch source from GitHub during build will fail.
-> Variables set via Nushell's `$env` are passed to child processes, so `sudo -E` inherits them correctly.
-
 ```nu
 # Replace <host> with your host name: vm-test, workstation, etc.
-# -E preserves proxy env vars; --option substituters uses USTC binary cache mirror
-sudo -E nixos-rebuild switch --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
-```
-
-If you don't need a proxy (network is fine), you can omit `-E` and the proxy setup:
-```nu
 sudo nixos-rebuild switch --flake $".#<host>"
 ```
+
+Because `nix-daemon` now reads `~/.config/nix/local-proxy.nuon`, you no longer need the long
+`with-env { HTTP_PROXY ... }` wrapper for normal rebuilds.
 
 ### Step 3: Commit the Lock File
 
@@ -263,13 +265,13 @@ git push
 If you want to **build without activating** (to check for build errors first):
 
 ```nu
-sudo -E nixos-rebuild build --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+sudo nixos-rebuild build --flake $".#<host>"
 ```
 
 Or use `test` to activate temporarily (reverts on next reboot):
 
 ```nu
-sudo -E nixos-rebuild test --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+sudo nixos-rebuild test --flake $".#<host>"
 ```
 
 ---

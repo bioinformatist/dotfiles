@@ -57,4 +57,179 @@ def d2r-bat [bat: string] {
   with-env { WINEPREFIX: $prefix } {
     ^steam-run $wine cmd.exe /c $bat
   }
-}
+}
+
+def maint-repo [] {
+  "/home/ysun/github.com/bioinformatist/dotfiles"
+}
+
+def maint-host [] {
+  "homePC"
+}
+
+def maint-config-file [] {
+  ($env.HOME | path join ".config" "nix" "local-proxy.nuon")
+}
+
+def maint-config [] {
+  let cfg_file = (maint-config-file)
+  if not ($cfg_file | path exists) {
+    error make {
+      msg: $"Maintenance config not found: ($cfg_file)\nCreate ~/.config/nix/local-proxy.nuon before using maint-* commands."
+    }
+  }
+
+  let cfg = (open $cfg_file)
+  let substituters = ($cfg.substituters? | default [] | str join " ")
+
+  {
+    HTTP_PROXY: ($cfg.HTTP_PROXY? | default "")
+    HTTPS_PROXY: ($cfg.HTTPS_PROXY? | default "")
+    http_proxy: ($cfg.HTTP_PROXY? | default "")
+    https_proxy: ($cfg.HTTPS_PROXY? | default "")
+    NO_PROXY: ($cfg.NO_PROXY? | default "")
+    no_proxy: ($cfg.NO_PROXY? | default "")
+    NIX_CONFIG: (if ($substituters | is-empty) { "" } else { $"substituters = ($substituters)" })
+  }
+}
+
+def maint-lock-update [inputs: list<string>] {
+  let repo = (maint-repo)
+  let args = (["flake" "update"] | append $inputs | append "--flake" | append $repo)
+
+  print $"Updating flake inputs: (($inputs | str join ', '))"
+  with-env (maint-config) {
+    ^nix ...$args
+  }
+}
+
+def maint-refresh-codex [] {
+  let repo = (maint-repo)
+  let codex_file = ($repo | path join "home" "programs" "codex" "default.nix")
+  let codex_asset = "codex-x86_64-unknown-linux-musl.tar.gz"
+
+  print "Refreshing codex release pin..."
+
+  print "Fetching latest Codex release metadata..."
+  let release_json = (with-env (maint-config) {
+    ^curl -L --fail --silent --show-error --connect-timeout 10 --max-time 30 -H "Accept: application/vnd.github+json" -H "User-Agent: dotfiles-maint-update-tools" "https://api.github.com/repos/openai/codex/releases/latest"
+  })
+  let release = ($release_json | from json)
+
+  let version = ($release.tag_name | str replace "rust-v" "")
+  let assets = ($release.assets | where name == $codex_asset)
+  if ($assets | is-empty) {
+    error make { msg: $"Could not find ($codex_asset) in the latest Codex release." }
+  }
+
+  let asset = ($assets | first)
+  let digest = ($asset.digest? | default "")
+  if not ($digest | str starts-with "sha256:") {
+    error make { msg: $"Could not find a sha256 digest for ($codex_asset) in the latest Codex release." }
+  }
+
+  print $"Using GitHub release digest for ($codex_asset) at Codex ($version)."
+  let digest_hex = ($digest | str replace "sha256:" "")
+  let hash = (^nix hash convert --hash-algo sha256 --from base16 --to sri $digest_hex | str trim)
+
+  let old = (open --raw $codex_file)
+  let new = (
+    $old
+    | str replace -r 'codexVersion = "[^"]+";' $'codexVersion = "($version)";'
+    | str replace -r 'hash = "sha256-[^"]+";' $'hash = "($hash)";'
+  )
+
+  if $new == $old {
+    print $"codex is already pinned at version ($version)."
+  } else {
+    $new | save -f $codex_file
+    print $"Updated codex to version ($version)."
+  }
+}
+
+# maint-update-tools: update low-risk tool inputs and refresh the local codex pin.
+def maint-update-tools [] {
+  maint-lock-update [
+    "zeroclaw"
+    "antigravity"
+    "yazi"
+    "anyrun"
+    "sops-nix"
+    "impermanence"
+    "disko"
+  ]
+  maint-refresh-codex
+  print "Tool-layer updates applied to flake.lock and home/programs/codex/default.nix."
+}
+
+# maint-update-hyprland: update Hyprland separately from nixpkgs.
+def maint-update-hyprland [] {
+  maint-lock-update [ "hyprland" ]
+}
+
+# maint-update-base: update the system base separately from Hyprland.
+def maint-update-base [] {
+  maint-lock-update [ "nixpkgs" "home-manager" ]
+}
+
+# maint-check: run a dry-run and summarize whether rebuilding is advisable.
+def maint-check [] {
+  let repo = (maint-repo)
+  let host = (maint-host)
+  let attr = $"($repo)#nixosConfigurations.($host).config.system.build.toplevel"
+  let tmp = (^mktemp "/tmp/maint-check.XXXXXX" | str trim)
+  let code_file = (^mktemp "/tmp/maint-check-code.XXXXXX" | str trim)
+
+  with-env (maint-config) {
+    ^bash -lc 'nix build --dry-run -L "$1" 2>&1 | tee "$2"; printf "%s" "${PIPESTATUS[0]}" > "$3"' bash $attr $tmp $code_file
+  }
+
+  let exit_code = (open --raw $code_file | str trim | into int)
+  let output = (open --raw $tmp)
+
+  let built = ($output | str contains "will be built")
+  let risk_markers = (
+    [
+      "nvidia-x11"
+      "linux-"
+      "hyprland"
+      "hyprlang"
+      "hyprutils"
+      "hyprgraphics"
+      "hyprwayland-scanner"
+      "hyprwire"
+    ]
+    | where {|marker| $output | str contains $marker }
+  )
+
+  print ""
+  print "---- maint-check summary ----"
+  print $"exit_code: ($exit_code)"
+
+  if ($risk_markers | is-empty) {
+    print "risk markers: none detected"
+  } else {
+    print $"risk markers: (($risk_markers | str join ', '))"
+  }
+
+  if $exit_code != 0 {
+    print "summary: dry-run failed; inspect the output above before running maint-switch."
+  } else if $built {
+    print "summary: detected `will be built`; do not run maint-switch yet."
+  } else {
+    print "summary: no `will be built` detected; you may continue with maint-switch."
+  }
+
+  ^rm -f $tmp $code_file
+}
+
+# maint-switch: rebuild and switch using the current lock state.
+def maint-switch [] {
+  let repo = (maint-repo)
+  let host = (maint-host)
+  let flake = $"($repo)#($host)"
+
+  with-env (maint-config) {
+    ^sudo --preserve-env=HTTP_PROXY,HTTPS_PROXY,http_proxy,https_proxy,NO_PROXY,no_proxy,NIX_CONFIG nixos-rebuild switch --flake $flake
+  }
+}

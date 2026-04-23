@@ -186,6 +186,7 @@
     users.ysun = {
       directories = [
         "github.com"
+        ".config/nix"
         ".config/sops"
         ".config/nushell"
         ".config/google-chrome" # Chrome profile (bookmarks, passwords, extensions)

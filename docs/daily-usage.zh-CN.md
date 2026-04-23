@@ -195,6 +195,8 @@
 本节适用于**已安装并正常运行的系统**上的日常包更新流程。无需 ISO 或重新安装。
 
 > **Shell 说明**：本节在已配置好的系统上操作，使用 **Nushell**。语法有所不同。
+>
+> **维护说明**：现在推荐的日常维护流程已迁移到独立的 [维护指南](maintenance.zh-CN.md)。本节保留网络背景和手动 rebuild 命令；实际维护命令请优先参考 `maintenance.zh-CN.md`。
 
 ### 中国大陆网络须知
 
@@ -205,29 +207,36 @@
 | **GitHub 源码获取** | `nix flake update` 拉取 flake inputs（HTTPS tarball） | 必须走**代理**，USTC 镜像无法加速 |
 | **二进制缓存下载** | `nixos-rebuild` 从 cache 下载预编译包 | 使用 **USTC 镜像**（`--option substituters`） |
 
-> **为什么代理能生效？** Nix 底层使用 **libcurl** 进行 HTTP 请求，libcurl 原生支持
-> `http_proxy`/`https_proxy` 环境变量。`nix flake update` 对 `github:` 类型的 input
-> 是通过 HTTPS 下载 tarball（而非 `git clone`），因此会自动使用代理。
+> **为什么代理能生效？** 现在维护命令和 `nix-daemon` 都从
+> `~/.config/nix/local-proxy.nuon` 读取代理设置。用户态 helper 和 daemon 侧下载因此共享同一个
+> 本地配置入口，不再依赖反复手写 `with-env` 包装。
 
-因此，完整更新需要**同时**配置代理和 USTC 镜像。
+因此，完整更新仍然需要**同时**依赖代理和 USTC 镜像，但它们现在都通过
+`~/.config/nix/local-proxy.nuon` 统一配置。
 
-**设置代理**（Nushell 语法，局域网代理或本机代理均可）：
+**本地代理配置**（`~/.config/nix/local-proxy.nuon`）：
 ```nu
-# 将地址替换为你的实际代理地址
-# 本机代理示例：http://127.0.0.1:7890
-# 局域网代理示例：http://192.168.1.100:7890
-$env.http_proxy = "http://<代理地址>:<端口>"
-$env.https_proxy = "http://<代理地址>:<端口>"
+{
+  HTTP_PROXY: "http://<代理地址>:<端口>",
+  HTTPS_PROXY: "http://<代理地址>:<端口>",
+  NO_PROXY: "mirrors.ustc.edu.cn,cache.nixos.org,127.0.0.1,localhost",
+  substituters: [
+    "https://mirrors.ustc.edu.cn/nix-channels/store"
+    "https://cache.nixos.org"
+  ]
+}
 ```
 
-### 第 1 步：更新 Flake 输入（`flake.lock`）
+### 第 1 步：手动更新 Flake 输入（`flake.lock`）
 
-此命令从 GitHub 拉取所有依赖的最新版本（nixpkgs、home-manager、hyprland 等）。
+此命令会从 GitHub 拉取所有依赖的最新版本（nixpkgs、home-manager、hyprland 等）。
+它现在主要用于**手动全量刷新**，不再是推荐的日常维护入口。
 
 ```nu
 cd /path/to/dotfiles   # 例如 ~/github.com/bioinformatist/dotfiles
 
 # 确保已设置代理（见上方）
+# 这会一次性更新所有输入
 nix flake update
 ```
 
@@ -237,20 +246,13 @@ nix flake update
 
 将更新后的软件包应用到运行中的系统。
 
-> **重要**：`sudo` 默认会**丢弃**当前用户的环境变量（包括 `http_proxy`/`https_proxy`）。
-> 必须使用 `sudo -E`（`--preserve-env`）来保留代理设置，否则构建过程中需要从 GitHub 拉取源码的包会失败。
-> Nushell 通过 `$env` 设置的变量会被传递给子进程，因此 `sudo -E` 可以正确继承它们。
-
 ```nu
 # 将 <host> 替换为你的主机名：vm-test、workstation 等
-# -E 保留代理环境变量；--option substituters 使用 USTC 二进制缓存镜像
-sudo -E nixos-rebuild switch --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
-```
-
-如果不需要代理（网络畅通），可以省略 `-E` 和代理设置：
-```nu
 sudo nixos-rebuild switch --flake $".#<host>"
 ```
+
+因为 `nix-daemon` 现在会读取 `~/.config/nix/local-proxy.nuon`，正常 rebuild 不再需要那条很长的
+`with-env { HTTP_PROXY ... }` 包装。
 
 ### 第 3 步：提交锁文件
 
@@ -265,13 +267,13 @@ git push
 如果想**只构建不激活**（先检查是否有构建错误）：
 
 ```nu
-sudo -E nixos-rebuild build --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+sudo nixos-rebuild build --flake $".#<host>"
 ```
 
 或使用 `test` 临时激活（下次重启后恢复）：
 
 ```nu
-sudo -E nixos-rebuild test --flake $".#<host>" --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org"
+sudo nixos-rebuild test --flake $".#<host>"
 ```
 
 ---
