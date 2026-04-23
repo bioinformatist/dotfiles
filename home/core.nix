@@ -4,6 +4,7 @@
   home = {
     inherit username;
     homeDirectory = "/home/${username}";
+    sessionPath = [ "/home/${username}/.local/bin" ];
     sessionVariables = {
       NIXOS_OZONE_WL = 1;
       # USTC mirrors for Rust ecosystem (avoid GFW issues)

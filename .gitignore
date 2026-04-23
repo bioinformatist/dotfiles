@@ -1,2 +1,3 @@
 .agent
+.claude/settings.local.json
 *.local.nix

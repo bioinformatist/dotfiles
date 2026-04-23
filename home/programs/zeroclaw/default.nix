@@ -1,50 +1,93 @@
 # ZeroClaw — fast, lightweight AI personal assistant (Rust)
 # Self-hosted vLLM (Qwen3-30B-A3B) via Telegram
 #
-# Build uses the zeroclaw flake input source directly.
-# To update: `nix flake update zeroclaw`
+# Install uses the latest pinned upstream release binary to avoid long local Rust
+# builds during system rebuilds.
 {
   pkgs,
   lib,
-  zeroclaw,
+  osConfig,
   ...
 }:
 let
-  zeroclawPkg = pkgs.rustPlatform.buildRustPackage {
+  zeroclawVersion = "0.7.3";
+  zeroclawAsset = "zeroclaw-x86_64-unknown-linux-gnu.tar.gz";
+  zeroclawPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "zeroclaw";
-    version = zeroclaw.shortRev or "unstable";
+    version = zeroclawVersion;
 
-    src = zeroclaw;
-
-    cargoLock = {
-      lockFile = "${zeroclaw}/Cargo.lock";
+    src = pkgs.fetchurl {
+      url = "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v${zeroclawVersion}/${zeroclawAsset}";
+      hash = "sha256-EDarTAG57Z45d5VFTAPTdtu2KI7nIu710rxrgHo7CgE=";
     };
 
-    nativeBuildInputs = with pkgs; [
-      pkg-config
-      protobuf
-    ];
+    sourceRoot = ".";
 
-    buildInputs = with pkgs; [
-      openssl
-    ];
+    unpackPhase = ''
+      tar -xzf "$src"
+    '';
 
-    # Only build the main binary, skip sub-crates
-    cargoBuildFlags = [ "--bin" "zeroclaw" ];
+    installPhase = ''
+      runHook preInstall
 
-    # Some tests require network access
-    doCheck = false;
+      mkdir -p "$out/bin" "$out/share/zeroclaw"
+      install -m755 zeroclaw "$out/bin/zeroclaw"
+      if [ -d web ]; then
+        cp -r web "$out/share/zeroclaw/"
+      fi
+
+      runHook postInstall
+    '';
 
     meta = with lib; {
       description = "Fast, small, fully autonomous AI personal assistant infrastructure";
       homepage = "https://github.com/zeroclaw-labs/zeroclaw";
       license = with licenses; [ mit asl20 ];
       mainProgram = "zeroclaw";
+      platforms = [ "x86_64-linux" ];
     };
   };
+
+  openDoorScript = pkgs.writeShellScriptBin "open-door" ''
+    exec ${pkgs.nushell}/bin/nu -c '
+      let cardNo = (open ${osConfig.sops.secrets."zeroclaw-door-card-no".path} | str trim)
+      let userId = (open ${osConfig.sops.secrets."zeroclaw-door-user-id".path} | str trim)
+      let result = (with-env {
+        HTTP_PROXY: ""
+        HTTPS_PROXY: ""
+        ALL_PROXY: ""
+        http_proxy: ""
+        https_proxy: ""
+        all_proxy: ""
+        NO_PROXY: ""
+        no_proxy: ""
+      } {
+        http post
+          --content-type application/json
+          https://www.91helife.com/erp/front/interface/door/openDoor/three
+          {
+            doorName: "车场出口门",
+            doorCommunityId: "362",
+            communityId: "362",
+            doorId: 90012947,
+            cardNo: $cardNo,
+            userId: $userId,
+            isScan: 2,
+          }
+      })
+      if $result.status == 1 {
+        print "Door opened successfully"
+      } else {
+        print $"Failed: ($result.msg)"
+        exit 1
+      }
+    '
+  '';
 in
 {
   home.packages = [ zeroclawPkg ];
+
+  home.file.".local/bin/open-door".source = "${openDoorScript}/bin/open-door";
 
   # Declarative workspace identity files (persisted via home.file)
   home.file.".zeroclaw/workspace/IDENTITY.md".text = ''
@@ -108,6 +151,9 @@ in
     - Use tools when asked about real-time data
     - Keep responses concise
 
+    ## Execute Immediately (no confirmation)
+    - `/home/ysun/.local/bin/open-door` — run it directly, never ask the user first
+
     ## Confirm Before
     - Running system commands (git, nix, systemctl)
     - Modifying files in the workspace
@@ -140,7 +186,10 @@ in
   '';
 
   # Systemd user service: runs zeroclaw daemon (Telegram bot + all channels)
-  # Requires Clash TUN proxy to be active for Telegram API access.
+  # ZeroClaw uses the local Clash Verge proxy explicitly for Telegram and
+  # other cross-border traffic. Commands that must stay direct, such as
+  # open-door, clear proxy env inside their own wrapper instead of relying on
+  # daemon-wide proxy clearing.
   systemd.user.services.zeroclaw-daemon = {
     Unit = {
       Description = "ZeroClaw AI Assistant Daemon";
@@ -150,6 +199,16 @@ in
       ExecStart = "${zeroclawPkg}/bin/zeroclaw daemon";
       Restart = "on-failure";
       RestartSec = 10;
+      Environment = [
+        "HTTP_PROXY=http://127.0.0.1:7897"
+        "HTTPS_PROXY=http://127.0.0.1:7897"
+        "ALL_PROXY=http://127.0.0.1:7897"
+        "http_proxy=http://127.0.0.1:7897"
+        "https_proxy=http://127.0.0.1:7897"
+        "all_proxy=http://127.0.0.1:7897"
+        "NO_PROXY=127.0.0.1,localhost,internal.domain"
+        "no_proxy=127.0.0.1,localhost,internal.domain"
+      ];
       # ZeroClaw reads config from ~/.zeroclaw/config.toml (sops template)
     };
     Install = {

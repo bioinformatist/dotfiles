@@ -58,6 +58,9 @@
   sops.secrets."zeroclaw-user-context" = {
     owner = "ysun";
   };
+  # ZeroClaw door access secrets
+  sops.secrets."zeroclaw-door-card-no" = { owner = "ysun"; };
+  sops.secrets."zeroclaw-door-user-id" = { owner = "ysun"; };
   # systemd-tmpfiles-setup runs before sops-install-secrets, so this
   # guarantees ~/.zeroclaw/workspace/ is ysun-owned when sops writes USER.md.
   # Without this, sops (running as root) creates the parent dir as root,
@@ -65,6 +68,7 @@
   # Ref: https://github.com/Mic92/sops-nix/issues/235 (known sops-nix limitation)
   systemd.tmpfiles.rules = [
     "d /home/ysun/.zeroclaw/workspace 0755 ysun users -"
+    "d /home/ysun/.local/bin          0755 ysun users -"
   ];
 
   # ZeroClaw USER.md — private personal context rendered from sops secret.
@@ -106,7 +110,8 @@
       level = "supervised"
       workspace_only = false
       allowed_roots = ["~/github.com"]
-      allowed_commands = ["git", "nix", "nixos-rebuild", "systemctl"]
+      allowed_commands = ["/home/ysun/.local/bin/open-door"]
+      auto_approve = ["shell"]
 
       [memory]
       backend = "sqlite"
@@ -118,6 +123,14 @@
       provider = "searxng"
       searxng_instance_url = "http://192.168.0.116:8888"
       max_results = 5
+
+      # --- Transcription: speaches (faster-whisper) on GPU1 ---
+      [transcription]
+      enabled = true
+      provider = "openai"
+      api_url = "http://192.168.0.116:8090/v1/audio/transcriptions"
+      api_key = "no-key-needed"
+      model = "deepdml/faster-whisper-large-v3-turbo-ct2"
 
       # --- Channel ---
       [channels_config.telegram]
@@ -179,6 +192,7 @@
         ".config/Antigravity" # Antigravity IDE login and session state
         ".config/claude" # Claude Code credentials and session state
         ".claude" # Claude Code memory, history, and session data
+        ".codex" # Codex config, auth, history, and MCP server state
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5" # Fcitx5/Rime user dictionary and learned words
         ".gemini" # Antigravity IDE data (conversations, knowledge base)

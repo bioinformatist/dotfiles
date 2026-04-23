@@ -1,6 +1,10 @@
 {pkgs, ...}:
 {
-  imports = [ ./zeroclaw ./gaming.nix ];
+  imports = [
+    ./codex
+    ./zeroclaw
+    ./gaming.nix
+  ];
 
   # Cargo crates.io USTC mirror — declarative via home.file symlink.
   # ~/.cargo/registry/ (cache) is persisted separately via impermanence.
