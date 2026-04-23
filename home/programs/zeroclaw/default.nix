@@ -52,18 +52,29 @@ let
     exec ${pkgs.nushell}/bin/nu -c '
       let cardNo = (open ${osConfig.sops.secrets."zeroclaw-door-card-no".path} | str trim)
       let userId = (open ${osConfig.sops.secrets."zeroclaw-door-user-id".path} | str trim)
-      let result = (http post
-        --content-type application/json
-        https://www.91helife.com/erp/front/interface/door/openDoor/three
-        {
-          doorName: "车场出口门",
-          doorCommunityId: "362",
-          communityId: "362",
-          doorId: 90012947,
-          cardNo: $cardNo,
-          userId: $userId,
-          isScan: 2,
-        })
+      let result = (with-env {
+        HTTP_PROXY: ""
+        HTTPS_PROXY: ""
+        ALL_PROXY: ""
+        http_proxy: ""
+        https_proxy: ""
+        all_proxy: ""
+        NO_PROXY: ""
+        no_proxy: ""
+      } {
+        http post
+          --content-type application/json
+          https://www.91helife.com/erp/front/interface/door/openDoor/three
+          {
+            doorName: "车场出口门",
+            doorCommunityId: "362",
+            communityId: "362",
+            doorId: 90012947,
+            cardNo: $cardNo,
+            userId: $userId,
+            isScan: 2,
+          }
+      })
       if $result.status == 1 {
         print "Door opened successfully"
       } else {
@@ -175,7 +186,10 @@ in
   '';
 
   # Systemd user service: runs zeroclaw daemon (Telegram bot + all channels)
-  # Requires Clash TUN proxy to be active for Telegram API access.
+  # ZeroClaw uses the local Clash Verge proxy explicitly for Telegram and
+  # other cross-border traffic. Commands that must stay direct, such as
+  # open-door, clear proxy env inside their own wrapper instead of relying on
+  # daemon-wide proxy clearing.
   systemd.user.services.zeroclaw-daemon = {
     Unit = {
       Description = "ZeroClaw AI Assistant Daemon";
@@ -186,12 +200,14 @@ in
       Restart = "on-failure";
       RestartSec = 10;
       Environment = [
-        "HTTP_PROXY="
-        "HTTPS_PROXY="
-        "ALL_PROXY="
-        "http_proxy="
-        "https_proxy="
-        "all_proxy="
+        "HTTP_PROXY=http://127.0.0.1:7897"
+        "HTTPS_PROXY=http://127.0.0.1:7897"
+        "ALL_PROXY=http://127.0.0.1:7897"
+        "http_proxy=http://127.0.0.1:7897"
+        "https_proxy=http://127.0.0.1:7897"
+        "all_proxy=http://127.0.0.1:7897"
+        "NO_PROXY=127.0.0.1,localhost,internal.domain"
+        "no_proxy=127.0.0.1,localhost,internal.domain"
       ];
       # ZeroClaw reads config from ~/.zeroclaw/config.toml (sops template)
     };
