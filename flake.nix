@@ -43,75 +43,105 @@
       sops-nix,
       ...
     }:
-    {
-      nixpkgs.overlays = [
-        yazi.overlays.default
-        import
-        ./overlays
-        { inherit inputs; }
-      ];
-
+    let
+      lib = nixpkgs.lib;
+      systems = [ "x86_64-linux" ];
+      forAllSystems = lib.genAttrs systems;
+      overlays = import ./overlays { inherit inputs; };
+      profiles = import ./profiles;
       nixosModules = import ./modules/nixos;
       homeManagerModules = import ./modules/home-manager;
-
-      nixosConfigurations =
+      mkHost =
+        { hostDir, username, isVM }:
         let
+          specialArgs = {
+            inherit username isVM inputs;
+          };
+        in
+        nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          inherit specialArgs;
+
+          modules = [
+            ./hosts/${hostDir}/configuration.nix
+            disko.nixosModules.disko
+            impermanence.nixosModules.impermanence
+            sops-nix.nixosModules.sops
+            home-manager.nixosModules.home-manager
+            {
+              nixpkgs.overlays = [
+                yazi.overlays.default
+                overlays.additions
+                overlays.modifications
+              ];
+
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.extraSpecialArgs = inputs // specialArgs;
+              home-manager.users.${username} = import ./users/${username}/home.nix;
+            }
+          ];
+        };
+    in
+    {
+      inherit overlays profiles nixosModules homeManagerModules;
+
+      packages = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [
+              yazi.overlays.default
+              overlays.additions
+              overlays.modifications
+            ];
+          };
+        in
+        import ./pkgs pkgs
+      );
+
+      nixosConfigurations = {
+        vm-test = mkHost {
+          hostDir = "vm-test";
           username = "ysun";
-          mkHost =
-            { hostDir, isVM }:
-            let
-              specialArgs = {
-                inherit username isVM;
+          isVM = true;
+        };
+        homePC = mkHost {
+          hostDir = "workstation";
+          username = "ysun";
+          isVM = false;
+        };
+      };
+
+      homeConfigurations =
+        let
+          mkHome =
+            username:
+            home-manager.lib.homeManagerConfiguration {
+              pkgs = import nixpkgs {
+                system = "x86_64-linux";
+                overlays = [
+                  yazi.overlays.default
+                  overlays.additions
+                  overlays.modifications
+                ];
               };
-            in
-            nixpkgs.lib.nixosSystem {
-              system = "x86_64-linux";
-              specialArgs = { inherit username inputs; };
-
+              extraSpecialArgs = inputs // { inherit username; };
               modules = [
-                ./hosts/${hostDir}/configuration.nix
-                disko.nixosModules.disko
-                impermanence.nixosModules.impermanence
-                sops-nix.nixosModules.sops
-                home-manager.nixosModules.home-manager
-                {
-                  home-manager.useGlobalPkgs = true;
-                  home-manager.useUserPackages = true;
-
-                  home-manager.extraSpecialArgs = inputs // specialArgs;
-                  home-manager.users.${username} = import ./users/${username}/home.nix;
-                }
+                homeManagerModules.shared
+                (
+                  { pkgs, ... }:
+                  {
+                    home.packages = [ yazi.packages.${pkgs.stdenv.hostPlatform.system}.default ];
+                  }
+                )
               ];
             };
         in
         {
-          vm-test = mkHost {
-            hostDir = "vm-test";
-            isVM = true;
-          };
-          homePC = mkHost {
-            hostDir = "workstation";
-            isVM = false;
-          };
-        };
-
-      homeConfigurations =
-        let
-          mkHome = home-manager.lib.homeManagerConfiguration {
-            pkgs = nixpkgs.legacyPackages.x86_64-linux;
-            modules = [
-              (
-                { pkgs, ... }:
-                {
-                  home.packages = [ yazi.packages.${pkgs.stdenv.hostPlatform.system}.default ];
-                }
-              )
-            ];
-          };
-        in
-        {
-          "ysun@vm-test" = mkHome;
-          "ysun@homePC" = mkHome;
+          "ysun@vm-test" = mkHome "ysun";
+          "ysun@homePC" = mkHome "ysun";
         };
     };
 }
