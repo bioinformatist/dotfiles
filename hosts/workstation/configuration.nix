@@ -15,9 +15,11 @@
   imports = [
     ./hardware-configuration.nix
     ./disko-config.nix
-    ../../nixos/common.nix
+    ../../profiles/headless.nix
+    ../../nixos/proxy.nix
     ../../nixos/desktop.nix
     ../../nixos/nvidia.nix
+    ../../nixos/workstation-audio.nix
   ];
 
   # --- Physical machine: Boot ---

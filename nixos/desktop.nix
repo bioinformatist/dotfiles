@@ -19,6 +19,41 @@ let
   };
 in
 {
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+
+  fonts = {
+    packages = with pkgs; [
+      sarasa-gothic
+      noto-fonts-cjk-sans
+      noto-fonts-cjk-serif
+      nerd-fonts.jetbrains-mono
+      maple-mono.NF
+    ];
+
+    fontconfig.defaultFonts = {
+      serif = [
+        "Noto Serif CJK SC"
+        "Noto Serif"
+      ];
+      sansSerif = [
+        "Sarasa UI SC"
+        "Noto Sans CJK SC"
+        "Noto Sans"
+      ];
+      monospace = [
+        "JetBrains Mono"
+        "Sarasa Mono SC"
+        "Noto Sans Mono CJK SC"
+      ];
+    };
+  };
+
   programs.hyprland = {
     enable = true;
     withUWSM = true;

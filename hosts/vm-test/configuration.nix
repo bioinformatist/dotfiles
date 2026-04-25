@@ -14,7 +14,8 @@
     ./hardware-configuration.nix
     ./disko-config.nix
     ../../modules/nixos/vm-tweaks.nix
-    ../../nixos/common.nix
+    ../../profiles/headless.nix
+    ../../nixos/proxy.nix
     ../../nixos/desktop.nix
   ]
   ++ lib.optional (builtins.pathExists ./proxy.local.nix) ./proxy.local.nix;
@@ -26,7 +27,7 @@
   boot.loader.grub.device = "nodev";
 
   # --- VM-specific: Networking ---
-  networking.hostName = "homePC";
+  networking.hostName = "vm-test";
   networking.wireless = {
     enable = true;
     networks = {

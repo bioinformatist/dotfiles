@@ -6,11 +6,11 @@
 
 ## 🖥️ 主机配置
 
-本仓库支持多主机配置，通过共享模块（`nixos/common.nix`、`nixos/desktop.nix`）复用通用配置：
+本仓库支持多主机配置，通过可复用基础模块复用通用配置：
 
-| 属性 | `vm-test` | `workstation` |
+| 属性 | `vm-test` | `homePC` |
 | :--- | :--- | :--- |
-| **主机名** | `homePC` | `homePC` |
+| **主机名** | `vm-test` | `homePC` |
 | **架构** | `x86_64-linux` | `x86_64-linux` |
 | **用户** | `ysun` | `ysun` |
 | **引导** | GRUB（EFI，可移动模式） | systemd-boot |
@@ -31,7 +31,7 @@
 
 ### 持久化路径（Impermanence）
 
-**系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。`workstation` 额外持久化 `/var/lib/NetworkManager`。
+**系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。`homePC` 额外持久化 `/var/lib/NetworkManager`。
 
 **系统级**：
 
@@ -41,8 +41,8 @@
 | `/var/lib/bluetooth` | 蓝牙设备配对信息 |
 | `/var/lib/nixos` | NixOS 状态（UID/GID 映射） |
 | `/var/lib/systemd/coredump` | 崩溃转储文件 |
-| `/etc/NetworkManager/system-connections` | 已保存的 Wi-Fi / VPN 配置（仅 `workstation`） |
-| `/var/lib/NetworkManager` | NetworkManager 运行时状态（仅 `workstation`） |
+| `/etc/NetworkManager/system-connections` | 已保存的 Wi-Fi / VPN 配置（仅 `homePC`） |
+| `/var/lib/NetworkManager` | NetworkManager 运行时状态（仅 `homePC`） |
 | `/var/lib/sops-nix` | 用于解密 secrets 的 Age 密钥 |
 | `/var/lib/colord` | 颜色配置文件校准数据 |
 | `/etc/machine-id` | 机器唯一标识（systemd / journald 所需） |
@@ -56,18 +56,18 @@
 | `~/.config/sops` | sops 解密所需的 Age 私钥 |
 | `~/.config/nushell` | Nushell 用户配置（env.nu、config.nu） |
 | `~/.config/google-chrome` | Chrome 配置（书签、密码、扩展） |
-| `~/.config/Antigravity` | Antigravity IDE 登录与会话状态（仅 `workstation`） |
+| `~/.config/Antigravity` | Antigravity IDE 登录与会话状态（仅 `homePC`） |
 | `~/.config/claude` | Claude Code 凭据（`proxy.nuon`） |
 | `~/.claude` | Claude Code 记忆、对话历史、会话数据 |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge 代理配置和设置 |
 | `~/.local/share/fcitx5` | Rime 用户词典和学习数据 |
-| `~/.local/share/TelegramDesktop` | Telegram 登录会话和聊天缓存（仅 `workstation`） |
-| `~/.local/share/Steam` | Steam 游戏、Proton 前缀、存档（仅 `workstation`） |
-| `~/.cargo/registry` | Cargo 包缓存（加速 Rust 构建，仅 `workstation`） |
-| `~/.gemini` | Antigravity IDE 知识库和对话数据（仅 `workstation`） |
+| `~/.local/share/TelegramDesktop` | Telegram 登录会话和聊天缓存（仅 `homePC`） |
+| `~/.local/share/Steam` | Steam 游戏、Proton 前缀、存档（仅 `homePC`） |
+| `~/.cargo/registry` | Cargo 包缓存（加速 Rust 构建，仅 `homePC`） |
+| `~/.gemini` | Antigravity IDE 知识库和对话数据（仅 `homePC`） |
 | `~/xwechat_files` | 微信聊天记录和文件 |
-| `~/Downloads` | 下载目录（仅 `workstation`） |
-| `~/Documents` | 文档目录（仅 `workstation`） |
+| `~/Downloads` | 下载目录（仅 `homePC`） |
+| `~/Documents` | 文档目录（仅 `homePC`） |
 | `~/.ssh/known_hosts` | SSH 已知主机（以文件而非目录形式持久化，详见配置注释） |
 | `~/.config/hypr/monitors.conf` | nwg-displays 写入的显示器布局 |
 | `~/.zeroclaw/active_workspace.toml` | ZeroClaw 工作区标记 |
@@ -247,7 +247,7 @@ nix flake update
 将更新后的软件包应用到运行中的系统。
 
 ```nu
-# 将 <host> 替换为你的主机名：vm-test、workstation 等
+# 将 <host> 替换为你的 flake 主机名：vm-test、homePC 等
 sudo nixos-rebuild switch --flake $".#<host>"
 ```
 
@@ -286,7 +286,7 @@ sudo nixos-rebuild test --flake $".#<host>"
 
 | 项目 | 详情 |
 | :--- | :--- |
-| **WiFi** | `vm-test`: `wpa_supplicant`；`workstation`: `NetworkManager` |
+| **WiFi** | `vm-test`: `wpa_supplicant`；`homePC`: `NetworkManager` |
 | **系统代理** | 始终指向 `http://127.0.0.1:7897`（本地回环抽象） |
 | **Clash Verge** | 处理实际上游路由（局域网代理、机场、热点等） |
 | **Nix Substituters** | USTC 镜像（主）、Hyprland cachix、Yazi cachix |
@@ -396,7 +396,7 @@ cp ProjectDiablo2.mpq $"($d2r)/mods/ProjectDiablo2/"
 本系统采用**临时根文件系统**方案。仅特定目录在重启之间保持持久化，详见上方"持久化路径"表格。
 
 ### 软件渲染（仅 VM）
-在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染。物理机（`workstation`）不包含此设置。
+在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染。物理机（`homePC`）不包含此设置。
 
 ### Fcitx5 非正常关机后无响应（Ctrl+Space 失效）
 

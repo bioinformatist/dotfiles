@@ -12,3 +12,4 @@ My NixOS Settings.
 | 👉 **[Daily Usage](docs/daily-usage.md)** | Software catalog, keybindings, system updates, proxy workflow |
 | 👉 **[Secret Management](docs/secret-management.md)** | Sops-Nix, Age keys, SSH keys |
 | 👉 **[Recovery](docs/recovery.md)** | Rescue a broken system from ISO, troubleshoot secrets |
+| 👉 **[Upstream Reuse](docs/upstream-reuse.md)** | Stable flake outputs, headless/ai-serving profiles, downstream composition |

@@ -160,4 +160,4 @@ maint-switch
 
 - `claude-code` 走的是 `pkgs.claude-code`，因此它随 `nixpkgs` 更新，属于 `maint-update-base`，而不是 `maint-update-tools`。
 - 这些维护函数默认面向当前这台 `homePC`。
-- `workstation` 已持久化 `~/.config/nix/`，因此 `local-proxy.nuon` 创建后可跨重启保留。
+- `homePC` 已持久化 `~/.config/nix/`，因此 `local-proxy.nuon` 创建后可跨重启保留。

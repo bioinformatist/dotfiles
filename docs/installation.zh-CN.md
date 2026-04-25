@@ -67,7 +67,7 @@ sudo reboot
 
 ## 物理机部署
 
-将 `workstation` 配置安装到一台新物理机上。本节提供两条路线，选择适合你的情况的一条。
+将 `homePC` 配置安装到一台新物理机上。本节提供两条路线，选择适合你的情况的一条。
 
 ### 前置准备（两条路线都需要）
 
@@ -100,7 +100,7 @@ cd ~/github.com/bioinformatist/dotfiles
 #    - 执行 nixos-install
 #    - 将 sops 密钥复制到持久化目录
 nix run github:nix-community/nixos-anywhere -- \
-  --flake .#workstation \
+  --flake .#homePC \
   --extra-files /tmp/extra \
   --generate-hardware-config nixos-generate-config \
     ./hosts/workstation/hardware-configuration.nix \
@@ -214,7 +214,7 @@ export http_proxy=http://192.168.x.x:7890
 export https_proxy=http://192.168.x.x:7890
 
 # 安装（sudo -E 保留代理环境变量）
-sudo -E nixos-install --flake .#workstation --no-root-passwd \
+sudo -E nixos-install --flake .#homePC --no-root-passwd \
   --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
 ```
 

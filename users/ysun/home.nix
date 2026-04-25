@@ -1,11 +1,8 @@
 { pkgs, lib, ... }:
 {
   imports = [
-    ../../home/core.nix
-
+    ../../home/shared.nix
     ../../home/desktop
-    ../../home/tui
-    ../../home/shell
     ../../home/programs
   ];
 
