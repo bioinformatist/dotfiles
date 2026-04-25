@@ -1,10 +1,14 @@
 {
   username,
   config,
+  lib,
   pkgs,
   ...
 }:
 
+let
+  passwordFile = lib.attrByPath [ "sops" "secrets" "${username}-password" "path" ] null config;
+in
 {
   nix.settings = {
     experimental-features = [
@@ -30,7 +34,9 @@
     isNormalUser = true;
     extraGroups = [ "wheel" ];
     shell = pkgs.nushell;
-    hashedPasswordFile = config.sops.secrets."${username}-password".path;
+  }
+  // lib.optionalAttrs (passwordFile != null) {
+    hashedPasswordFile = passwordFile;
   };
 
   security.sudo.extraRules = [

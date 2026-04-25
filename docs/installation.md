@@ -67,7 +67,7 @@ sudo reboot
 
 ## Physical Machine Deployment
 
-Install the `workstation` configuration on a new physical machine. Choose the path that fits your situation.
+Install the `homePC` configuration on a new physical machine. Choose the path that fits your situation.
 
 ### Prerequisites (Both Paths)
 
@@ -100,7 +100,7 @@ cd ~/github.com/bioinformatist/dotfiles
 #    - Run nixos-install
 #    - Copy sops key to persistent storage
 nix run github:nix-community/nixos-anywhere -- \
-  --flake .#workstation \
+  --flake .#homePC \
   --extra-files /tmp/extra \
   --generate-hardware-config nixos-generate-config \
     ./hosts/workstation/hardware-configuration.nix \
@@ -214,7 +214,7 @@ export http_proxy=http://192.168.x.x:7890
 export https_proxy=http://192.168.x.x:7890
 
 # Install (sudo -E preserves proxy env vars)
-sudo -E nixos-install --flake .#workstation --no-root-passwd \
+sudo -E nixos-install --flake .#homePC --no-root-passwd \
   --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store"
 ```
 

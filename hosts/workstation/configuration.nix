@@ -16,7 +16,6 @@
     ./hardware-configuration.nix
     ./disko-config.nix
     ../../profiles/headless.nix
-    ../../profiles/ai-serving.nix
     ../../nixos/proxy.nix
     ../../nixos/desktop.nix
     ../../nixos/nvidia.nix

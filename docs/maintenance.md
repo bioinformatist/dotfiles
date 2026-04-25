@@ -160,4 +160,4 @@ If the check shows `nvidia-x11`, `linux-`, or other heavy components under `will
 
 - `claude-code` follows `pkgs.claude-code`, so it moves with `nixpkgs` and therefore belongs to `maint-update-base`, not `maint-update-tools`.
 - The maintenance helpers assume the current host is `homePC`.
-- `~/.config/nix/` is persisted on `workstation`, so `local-proxy.nuon` survives reboot once created.
+- `~/.config/nix/` is persisted on `homePC`, so `local-proxy.nuon` survives reboot once created.

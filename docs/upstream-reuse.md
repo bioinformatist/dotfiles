@@ -8,12 +8,12 @@ Downstream repositories should only consume these flake outputs:
 
 - `profiles.headless`
 - `profiles.ai-serving`
-- `nixosModules.*`
-- `homeManagerModules.*`
+- `nixosModules.{headless,ai-serving}`
+- `homeManagerModules.{core,tui}`
 - `overlays`
 - `packages`
 
-Do not import internal paths like `./nixos/*.nix` or `./hosts/*` from downstream.
+Do not import internal paths like `./nixos/*.nix`, `./home/*.nix`, or `./hosts/*` from downstream.
 
 ## Profile boundaries
 
@@ -23,6 +23,7 @@ Do not import internal paths like `./nixos/*.nix` or `./hosts/*` from downstream
 - OpenSSH and GitHub SSH host policy
 - a normal user defined by `specialArgs.username`
 - sudo policy and core system defaults
+- optional automatic password wiring when `${username}-password` exists under `sops.secrets`
 
 It does not include:
 
@@ -44,7 +45,7 @@ It does not include CUDA userspace or model-serving application stacks.
 
 The personal hosts in this repo stay full-featured by composing extra local modules:
 
-- `homePC`: `profiles.headless` + `profiles.ai-serving` + proxy + desktop + NVIDIA desktop integration
+- `homePC`: `profiles.headless` + proxy + desktop + NVIDIA desktop integration
 - `vm-test`: `profiles.headless` + proxy + desktop + VM tweaks
 
 ## Downstream example
@@ -68,6 +69,8 @@ The personal hosts in this repo stay full-featured by composing extra local modu
   };
 }
 ```
+
+If the downstream repo uses `sops-nix`, defining `sops.secrets."ops-password"` will automatically feed the user password into `profiles.headless`. Otherwise, set the user password in downstream code by some other mechanism.
 
 ## 116 ownership split
 

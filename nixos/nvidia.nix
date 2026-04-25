@@ -5,6 +5,12 @@
 { pkgs, ... }:
 
 {
+  hardware.nvidia = {
+    modesetting.enable = true;
+    open = true;
+    powerManagement.enable = true;
+  };
+
   hardware.graphics = {
     enable = true;
     # nvidia-vaapi-driver: VA-API hardware video acceleration on Wayland

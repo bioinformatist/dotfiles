@@ -129,7 +129,7 @@
               };
               extraSpecialArgs = inputs // { inherit username; };
               modules = [
-                homeManagerModules.shared
+                ./home/shared.nix
                 (
                   { pkgs, ... }:
                   {

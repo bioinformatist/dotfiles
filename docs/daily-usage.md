@@ -6,11 +6,11 @@ An overview of applications, keybindings, and day-to-day workflows configured in
 
 ## 🖥️ Host Configuration
 
-This repository supports multiple host configurations, sharing common settings via modules (`nixos/common.nix`, `nixos/desktop.nix`):
+This repository supports multiple host configurations, sharing common settings via reusable base modules:
 
-| Property | `vm-test` | `workstation` |
+| Property | `vm-test` | `homePC` |
 | :--- | :--- | :--- |
-| **Hostname** | `homePC` | `homePC` |
+| **Hostname** | `vm-test` | `homePC` |
 | **Architecture** | `x86_64-linux` | `x86_64-linux` |
 | **User** | `ysun` | `ysun` |
 | **Boot** | GRUB (EFI, removable) | systemd-boot |
@@ -39,8 +39,8 @@ This repository supports multiple host configurations, sharing common settings v
 | `/var/lib/bluetooth` | Bluetooth device pairings |
 | `/var/lib/nixos` | NixOS state (UIDs/GIDs) |
 | `/var/lib/systemd/coredump` | Crash dumps |
-| `/etc/NetworkManager/system-connections` | Saved Wi-Fi / VPN profiles (`workstation` only) |
-| `/var/lib/NetworkManager` | NetworkManager runtime state (`workstation` only) |
+| `/etc/NetworkManager/system-connections` | Saved Wi-Fi / VPN profiles (`homePC` only) |
+| `/var/lib/NetworkManager` | NetworkManager runtime state (`homePC` only) |
 | `/var/lib/sops-nix` | Age key for secret decryption |
 | `/var/lib/colord` | Color profile calibration data |
 | `/etc/machine-id` | Stable machine identity (required by systemd / journald) |
@@ -54,18 +54,18 @@ This repository supports multiple host configurations, sharing common settings v
 | `~/.config/sops` | Age private key for sops secret decryption |
 | `~/.config/nushell` | Nushell user config (env.nu, config.nu) |
 | `~/.config/google-chrome` | Chrome profile (bookmarks, passwords, extensions) |
-| `~/.config/Antigravity` | Antigravity IDE login and session state (`workstation` only) |
+| `~/.config/Antigravity` | Antigravity IDE login and session state (`homePC` only) |
 | `~/.config/claude` | Claude Code credentials (`proxy.nuon`) |
 | `~/.claude` | Claude Code memory, conversation history, session data |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge proxy profiles and settings |
 | `~/.local/share/fcitx5` | Rime user dictionary and learned words |
-| `~/.local/share/TelegramDesktop` | Telegram login session and chat cache (`workstation` only) |
-| `~/.local/share/Steam` | Steam games, Proton prefixes, save data (`workstation` only) |
-| `~/.cargo/registry` | Cargo crate cache (speeds up Rust builds) (`workstation` only) |
-| `~/.gemini` | Antigravity IDE knowledge base and conversation data (`workstation` only) |
+| `~/.local/share/TelegramDesktop` | Telegram login session and chat cache (`homePC` only) |
+| `~/.local/share/Steam` | Steam games, Proton prefixes, save data (`homePC` only) |
+| `~/.cargo/registry` | Cargo crate cache (speeds up Rust builds) (`homePC` only) |
+| `~/.gemini` | Antigravity IDE knowledge base and conversation data (`homePC` only) |
 | `~/xwechat_files` | WeChat chat history and files |
-| `~/Downloads` | Downloads (`workstation` only) |
-| `~/Documents` | Documents (`workstation` only) |
+| `~/Downloads` | Downloads (`homePC` only) |
+| `~/Documents` | Documents (`homePC` only) |
 | `~/.ssh/known_hosts` | SSH known hosts (persisted as file, not directory — see note in config) |
 | `~/.config/hypr/monitors.conf` | Monitor layout written by nwg-displays |
 | `~/.zeroclaw/active_workspace.toml` | ZeroClaw workspace marker |
@@ -245,7 +245,7 @@ This modifies `flake.lock` — you should commit it afterward.
 Apply the updated packages to the running system.
 
 ```nu
-# Replace <host> with your host name: vm-test, workstation, etc.
+# Replace <host> with your flake host name: vm-test, homePC, etc.
 sudo nixos-rebuild switch --flake $".#<host>"
 ```
 
@@ -284,7 +284,7 @@ The system follows a **"Localhost Abstraction"** strategy:
 
 | Item | Detail |
 | :--- | :--- |
-| **WiFi** | `vm-test`: `wpa_supplicant`; `workstation`: `NetworkManager` |
+| **WiFi** | `vm-test`: `wpa_supplicant`; `homePC`: `NetworkManager` |
 | **System Proxy** | Always points to `http://127.0.0.1:7897` (localhost abstraction) |
 | **Clash Verge** | Handles actual upstream routing (LAN proxy, airport, hotspot, etc.) |
 | **Nix Substituters** | USTC mirror (primary), Hyprland cachix, Yazi cachix |
@@ -394,7 +394,7 @@ In Battle.net → D2R **Game Settings → Additional command line arguments**:
 This system uses an **ephemeral root** approach. Only specific directories are persisted between reboots — see the Persisted Paths table above.
 
 ### Software Rendering (VM Only)
-In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1`. The physical machine (`workstation`) does not include this setting.
+In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1`. The physical machine (`homePC`) does not include this setting.
 
 ### Fcitx5 Not Responding After Unclean Shutdown (Ctrl+Space Broken)
 

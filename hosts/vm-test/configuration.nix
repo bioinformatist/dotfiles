@@ -27,7 +27,7 @@
   boot.loader.grub.device = "nodev";
 
   # --- VM-specific: Networking ---
-  networking.hostName = "homePC";
+  networking.hostName = "vm-test";
   networking.wireless = {
     enable = true;
     networks = {

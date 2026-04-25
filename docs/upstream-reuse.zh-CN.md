@@ -8,12 +8,12 @@
 
 - `profiles.headless`
 - `profiles.ai-serving`
-- `nixosModules.*`
-- `homeManagerModules.*`
+- `nixosModules.{headless,ai-serving}`
+- `homeManagerModules.{core,tui}`
 - `overlays`
 - `packages`
 
-不要在下游直接 import 本仓库内部路径，例如 `./nixos/*.nix` 或 `./hosts/*`。
+不要在下游直接 import 本仓库内部路径，例如 `./nixos/*.nix`、`./home/*.nix` 或 `./hosts/*`。
 
 ## Profile 边界
 
@@ -23,6 +23,7 @@
 - OpenSSH 与 GitHub SSH host policy
 - 由 `specialArgs.username` 定义的普通用户
 - sudo 策略与核心系统默认项
+- 如果 `sops.secrets` 下存在 `${username}-password`，会自动接上用户密码文件
 
 它不包含：
 
@@ -44,7 +45,7 @@
 
 本仓库里的个人主机继续通过额外本地模块保持完整能力：
 
-- `homePC`：`profiles.headless` + `profiles.ai-serving` + proxy + desktop + NVIDIA 桌面集成
+- `homePC`：`profiles.headless` + proxy + desktop + NVIDIA 桌面集成
 - `vm-test`：`profiles.headless` + proxy + desktop + VM tweaks
 
 ## 下游示例
@@ -68,6 +69,8 @@
   };
 }
 ```
+
+如果下游仓库使用 `sops-nix`，那么只要声明 `sops.secrets."ops-password"`，`profiles.headless` 就会自动把它接到用户密码上。否则，下游需要自己用别的方式设置用户密码。
 
 ## 116 的上下游分工
 
