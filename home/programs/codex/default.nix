@@ -1,4 +1,6 @@
 {
+  config,
+  lib,
   pkgs,
   ...
 }:
@@ -58,14 +60,36 @@ let
     export GITHUB_PERSONAL_ACCESS_TOKEN="$token"
     exec ${pkgs.github-mcp-server}/bin/github-mcp-server stdio --toolsets context,issues,pull_requests,repos,users,orgs
   '';
+
+  trustedProjects = lib.unique (
+    [
+      "/home/ysun/github.com/bioinformatist/dotfiles"
+    ]
+    ++ config.dotfiles.codex.trustedProjects
+  );
+
+  trustedProjectsToml = lib.concatMapStringsSep "\n\n" (
+    path:
+    ''
+      [projects."${path}"]
+      trust_level = "trusted"
+    ''
+  ) trustedProjects;
 in
 {
-  home.packages = [ codexPkg ];
+  options.dotfiles.codex.trustedProjects = lib.mkOption {
+    type = with lib.types; listOf str;
+    default = [ ];
+    description = "Extra project roots that Codex should treat as trusted.";
+  };
 
-  # Codex keeps its own state under ~/.codex, which is ephemeral on this system.
-  # Persist the whole directory so auth, history, and other runtime state
-  # survive reboot.
-  home.file.".codex/AGENTS.md".text = ''
+  config = {
+    home.packages = [ codexPkg ];
+
+    # Codex keeps its own state under ~/.codex, which is ephemeral on this system.
+    # Persist the whole directory so auth, history, and other runtime state
+    # survive reboot.
+    home.file.".codex/AGENTS.md".text = ''
     # CLAUDE.md
 
     Behavioral guidelines to reduce common LLM coding mistakes. Merge with
@@ -136,17 +160,17 @@ in
 
     Strong success criteria let you loop independently. Weak criteria ("make it
     work") require constant clarification.
-  '';
+    '';
 
-  home.file.".codex/config.toml" = {
-    # Even though ~/.codex is persisted, keep config.toml declarative so
-    # long-lived policy and UI defaults do not drift from the Nix-managed
-    # baseline. This also means interactive Codex features that try to rewrite
-    # config.toml will fail by design, because the file is a read-only symlink
-    # into the Nix store.
-    # Model and sandbox defaults are intentionally managed here for the same reason.
-    force = true;
-    text = ''
+    home.file.".codex/config.toml" = {
+      # Even though ~/.codex is persisted, keep config.toml declarative so
+      # long-lived policy and UI defaults do not drift from the Nix-managed
+      # baseline. This also means interactive Codex features that try to rewrite
+      # config.toml will fail by design, because the file is a read-only symlink
+      # into the Nix store.
+      # Model and sandbox defaults are intentionally managed here for the same reason.
+      force = true;
+      text = ''
       model = "gpt-5.4"
       model_reasoning_effort = "medium"
       personality = "pragmatic"
@@ -159,22 +183,21 @@ in
       [tui]
       status_line = ["model-with-reasoning", "current-dir", "context-remaining", "five-hour-limit", "weekly-limit", "thread-title"]
 
-      [projects."/home/ysun/github.com/bioinformatist/dotfiles"]
-      trust_level = "trusted"
+      ${trustedProjectsToml}
 
       [mcp_servers.github]
       command = "${githubMcpServer}/bin/github-mcp-server"
-    '';
-  };
+      '';
+    };
 
-  # Command allow/prompt rules are different from config.toml: keep a
-  # declarative baseline in its own file, but do not take over default.rules.
-  # That lets Codex continue writing ad-hoc approvals gathered from the TUI to
-  # ~/.codex/rules/default.rules, while this baseline remains reproducible under
-  # Home Manager.
-  # This split is intentional: policy stays declarative, transient approvals do not.
-  # Keep this baseline small so interactive approvals can stay the exception path.
-  home.file.".codex/rules/baseline.rules".text = ''
+    # Command allow/prompt rules are different from config.toml: keep a
+    # declarative baseline in its own file, but do not take over default.rules.
+    # That lets Codex continue writing ad-hoc approvals gathered from the TUI to
+    # ~/.codex/rules/default.rules, while this baseline remains reproducible under
+    # Home Manager.
+    # This split is intentional: policy stays declarative, transient approvals do not.
+    # Keep this baseline small so interactive approvals can stay the exception path.
+    home.file.".codex/rules/baseline.rules".text = ''
     # Read-only shell commands that are routinely useful during code exploration.
     prefix_rule(
         pattern = ["pwd"],
@@ -254,6 +277,7 @@ in
             "git log -- home/programs/codex/default.nix",
         ],
     )
-  '';
+    '';
+  };
 
 }
