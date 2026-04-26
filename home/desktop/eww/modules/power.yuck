@@ -1,0 +1,11 @@
+;; ═══ Power Module ═══
+;; Opens the per-monitor power action popup.
+
+(defwidget power [monitor_id]
+  (button
+    :class "module-btn"
+    :onclick "~/.config/eww/scripts/toggle-popup power ${monitor_id}"
+    :tooltip "Power"
+    (label
+      :class "icon-power"
+      :text "⏻")))

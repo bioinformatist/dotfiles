@@ -11,7 +11,7 @@
 HYPR_SOCKET="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
 
 close_all_popups() {
-  for t in audio bt net; do
+  for t in audio bt net power weather-search; do
     for m in 0 1 2; do
       eww close "${t}-popup-${m}" 2>/dev/null || true
       eww close "${t}-closer-${m}" 2>/dev/null || true

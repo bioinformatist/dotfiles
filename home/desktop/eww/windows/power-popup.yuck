@@ -1,0 +1,129 @@
+;; ═══ Power Popup Window ═══
+;; Small action panel for logout, poweroff, and reboot.
+
+(defwidget power-action-btn [icon title subtitle command class_name]
+  (button
+    :class "power-action-btn ${class_name}"
+    :onclick command
+    (box :orientation "h"
+         :space-evenly false
+         :spacing 12
+      (label :class "power-action-icon" :text icon)
+      (box :orientation "v"
+           :space-evenly false
+           :spacing 2
+           :hexpand true
+        (label :class "power-action-title" :text title :halign "start")
+        (label :class "power-action-subtitle" :text subtitle :halign "start")))))
+
+(defwidget power-popup-content [monitor_id]
+  (box :class "popup-panel power-panel"
+       :orientation "v"
+       :space-evenly false
+       :spacing 14
+
+    (box :class "popup-header"
+         :orientation "h"
+         :space-evenly false
+         :spacing 10
+      (label :class "popup-icon" :text "⏻")
+      (label :class "popup-title" :text "Power"))
+
+    (power-action-btn
+      :icon "󰍃"
+      :title "Logout"
+      :subtitle "End the current desktop session"
+      :command "~/.config/eww/scripts/run-power-action logout ${monitor_id}"
+      :class_name "power-action-logout")
+
+    (power-action-btn
+      :icon "󰐥"
+      :title "Power Off"
+      :subtitle "Shut the system down"
+      :command "~/.config/eww/scripts/run-power-action poweroff ${monitor_id}"
+      :class_name "power-action-poweroff")
+
+    (power-action-btn
+      :icon "󰜉"
+      :title "Reboot"
+      :subtitle "Restart the system"
+      :command "~/.config/eww/scripts/run-power-action reboot ${monitor_id}"
+      :class_name "power-action-reboot")))
+
+(defwidget power-closer-content [monitor_id]
+  (eventbox :onclick "~/.config/eww/scripts/toggle-popup power ${monitor_id}"))
+
+(defwindow power-popup-0
+  :monitor 0
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "320px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (power-popup-content :monitor_id 0))
+
+(defwindow power-closer-0
+  :monitor 0
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (power-closer-content :monitor_id 0))
+
+(defwindow power-popup-1
+  :monitor 1
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "320px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (power-popup-content :monitor_id 1))
+
+(defwindow power-closer-1
+  :monitor 1
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (power-closer-content :monitor_id 1))
+
+(defwindow power-popup-2
+  :monitor 2
+  :geometry (geometry :x "-16px"
+                      :y "4px"
+                      :width "320px"
+                      :anchor "top right")
+  :stacking "overlay"
+  :focusable false
+  :exclusive false
+  :namespace "eww-popup"
+  (power-popup-content :monitor_id 2))
+
+(defwindow power-closer-2
+  :monitor 2
+  :geometry (geometry :x "0px"
+                      :y "0px"
+                      :width "100%"
+                      :height "100%"
+                      :anchor "center")
+  :stacking "fg"
+  :focusable false
+  :exclusive false
+  :namespace "eww-closer"
+  (power-closer-content :monitor_id 2))

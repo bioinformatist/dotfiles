@@ -19,6 +19,7 @@ let
     "eww/modules/audio.yuck".source = ./eww/modules/audio.yuck;
     "eww/modules/bluetooth.yuck".source = ./eww/modules/bluetooth.yuck;
     "eww/modules/network.yuck".source = ./eww/modules/network.yuck;
+    "eww/modules/power.yuck".source = ./eww/modules/power.yuck;
     "eww/modules/sysinfo.yuck".source = ./eww/modules/sysinfo.yuck;
     "eww/modules/notifications.yuck".source = ./eww/modules/notifications.yuck;
     # Windows
@@ -26,6 +27,7 @@ let
     "eww/windows/audio-popup.yuck".source = ./eww/windows/audio-popup.yuck;
     "eww/windows/bt-popup.yuck".source = ./eww/windows/bt-popup.yuck;
     "eww/windows/net-popup.yuck".source = ./eww/windows/net-popup.yuck;
+    "eww/windows/power-popup.yuck".source = ./eww/windows/power-popup.yuck;
     "eww/windows/weather-search.yuck".source = ./eww/windows/weather-search.yuck;
     # Data files
     "eww/terror-zones.json".source = ./eww/terror-zones.json;
@@ -61,6 +63,7 @@ let
       "get-notifications"
       "close-popups"
       "toggle-popup"
+      "run-power-action"
       "search-weather"
       # D2R
       "get-terror-zone"

@@ -226,6 +226,7 @@ $font-main: "JetBrainsMono Nerd Font", "JetBrains Mono", "monospace";
 
 .icon-notif-active { color: $green-bright; font-size: 18px; }
 .icon-notif-idle   { color: $green-dark;   font-size: 18px; }
+.icon-power        { color: $amber-warn;   font-size: 18px; }
 
 .icon-active   { color: $green-bright; font-size: 14px; }
 .icon-inactive { color: $green-dark;   font-size: 14px; }
@@ -404,6 +405,51 @@ scale {
   border-color: $green-glow;
   background-color: rgba(0, 255, 65, 0.08);
   text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+}
+
+// ─── Power Panel ────────────────────────────────────────────
+
+.power-panel {
+  min-width: 300px;
+}
+
+.power-action-btn {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 65, 0.12);
+  background-color: rgba(0, 255, 65, 0.03);
+  transition: background-color 150ms ease-in-out, border-color 150ms ease-in-out;
+
+  &:hover {
+    background-color: $bg-hover;
+    border-color: rgba(0, 255, 65, 0.28);
+  }
+}
+
+.power-action-icon {
+  min-width: 24px;
+  font-size: 20px;
+  color: $green-bright;
+}
+
+.power-action-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: $green-bright;
+}
+
+.power-action-subtitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: $green-dark;
+}
+
+.power-action-poweroff,
+.power-action-reboot {
+  .power-action-icon,
+  .power-action-title {
+    color: $amber-warn;
+  }
 }
 
 // ─── Network ─────────────────────────────────────────────────

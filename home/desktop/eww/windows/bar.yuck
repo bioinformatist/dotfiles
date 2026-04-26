@@ -36,7 +36,8 @@
       (notifications)
       (network :monitor_id monitor_id)
       (bluetooth :monitor_id monitor_id)
-      (audio :monitor_id monitor_id))))
+      (audio :monitor_id monitor_id)
+      (power :monitor_id monitor_id))))
 
 ;; ─── Monitor 0 ──────────────────────────────────────────────
 (defwindow bar0
