@@ -16,6 +16,7 @@
     ./hardware-configuration.nix
     ./disko-config.nix
     ../../profiles/headless.nix
+    ../../nixos/china-network.nix
     ../../nixos/proxy.nix
     ../../nixos/desktop.nix
     ../../nixos/nvidia.nix
@@ -48,6 +49,10 @@
   sops.secrets."github-ssh-key-vm-test" = {
     owner = "ysun";
     path = "/home/ysun/.ssh/id_ed25519";
+  };
+  sops.secrets."sctmes-ops-ssh-key" = {
+    owner = "ysun";
+    path = "/home/ysun/.ssh/id_ed25519_sctmes_ops";
   };
   sops.secrets."clash-subscription-url" = {
     owner = "ysun";

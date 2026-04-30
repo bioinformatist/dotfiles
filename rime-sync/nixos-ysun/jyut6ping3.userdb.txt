@@ -2,8 +2,13 @@
 #@/db_name	jyut6ping3
 #@/db_type	userdb
 #@/rime_version	1.16.1
-#@/tick	4
+#@/tick	9
 #@/user_id	nixos-ysun
-mou5 co3 	冇錯	c=1 d=1 t=4
-waan4 	環	c=1 d=1 t=4
-zung1 	中	c=2 d=1.98506 t=4
+dang2 	等	c=1 d=0.995012 t=9
+mei5 gwok3 	美國	c=1 d=1 t=9
+mou5 co3 	冇錯	c=1 d=1 t=9
+nei5 	你	c=1 d=0.985112 t=9
+saai1 	嘥	c=1 d=0.980199 t=9
+si4 gaan3 	時間	c=1 d=0.99005 t=9
+waan4 	環	c=1 d=1 t=9
+zung1 	中	c=2 d=1.98506 t=9

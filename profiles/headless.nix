@@ -90,10 +90,12 @@ in
         User git
         UpdateHostKeys no
   '';
+  programs.ssh.systemd-ssh-proxy.enable = false;
 
   system.activationScripts.fixSshDirOwnership = ''
     if [ -d /home/${username}/.ssh ]; then
       chown ${username}:users /home/${username}/.ssh
+      chmod 700 /home/${username}/.ssh
     fi
   '';
 

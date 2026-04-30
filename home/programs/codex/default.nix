@@ -5,7 +5,7 @@
   ...
 }:
 let
-  codexVersion = "0.123.0";
+  codexVersion = "0.125.0";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
@@ -14,7 +14,7 @@ let
 
     src = pkgs.fetchurl {
       url = "https://github.com/openai/codex/releases/download/rust-v${codexVersion}/${codexAsset}";
-      hash = "sha256-SxJ/o89pRDxtLmiBqIMBi2c3tIi5nQHYEuOGKPV90sY=";
+      hash = "sha256-SiClOUOn5qDF+kRj1OR8WN2OVT7OveRVpBB+mQa/sAE=";
     };
 
     sourceRoot = ".";
@@ -171,7 +171,7 @@ in
       # Model and sandbox defaults are intentionally managed here for the same reason.
       force = true;
       text = ''
-      model = "gpt-5.4"
+      model = "gpt-5.5"
       model_reasoning_effort = "medium"
       personality = "pragmatic"
       sandbox_mode = "workspace-write"
@@ -179,6 +179,9 @@ in
       [features]
       memories = true
       codex_hooks = true
+
+      [notices]
+      hide_rate_limit_model_nudge = true
 
       [tui]
       status_line = ["model-with-reasoning", "current-dir", "context-remaining", "five-hour-limit", "weekly-limit", "thread-title"]
@@ -234,6 +237,16 @@ in
         match = [
             "rg codex home/programs",
             "rg --files home/programs",
+        ],
+    )
+
+    prefix_rule(
+        pattern = ["nix", "eval"],
+        decision = "allow",
+        justification = "Allow read-only Nix evaluation during configuration inspection.",
+        match = [
+            "nix eval .#nixosConfigurations.homePC.config.system.build.toplevel.drvPath",
+            "nix eval .#nixosConfigurations.vm-test.config.system.build.toplevel.drvPath",
         ],
     )
 

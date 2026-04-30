@@ -183,5 +183,24 @@
     };
   };
 
+  # OpenSSH rejects Nix-store-backed symlinked user config on this tmpfs/persist
+  # layout, so write a real 0600 file instead of using programs.ssh.
+  home.activation.sshConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+    rm -f "$HOME/.ssh/config"
+    install -m 600 /dev/stdin "$HOME/.ssh/config" <<'EOF'
+Host 116 bigdick 192.168.0.116
+  IdentitiesOnly yes
+  User ysun
+  HostName 192.168.0.116
+  IdentityFile ~/.ssh/id_ed25519_sctmes_ops
+  UpdateHostKeys no
+EOF
+  '';
+
+  home.file.".ssh/id_ed25519_sctmes_ops.pub".text =
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtt7b+dw26OWbwowudCyFf+HwR6Phh/8pUA0DnA26tV ysun@sctmes-ops\n";
+
   services.ssh-agent.enable = true;
 }
