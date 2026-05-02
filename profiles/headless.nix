@@ -30,6 +30,8 @@ in
 
   time.timeZone = "Asia/Shanghai";
 
+  programs.nano.enable = false;
+
   users.users.${username} = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];

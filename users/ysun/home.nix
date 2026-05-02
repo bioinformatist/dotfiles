@@ -105,16 +105,6 @@
     };
   };
 
-  programs.starship = {
-    enable = true;
-    settings = {
-      add_newline = false;
-      aws.disabled = true;
-      gcloud.disabled = true;
-      line_break.disabled = true;
-    };
-  };
-
   # --- Declarative Rime schema configuration ---
   # Fcitx5 profile/config/addons are managed at the NixOS level (desktop.nix).
   # Here we only manage Rime's own schema YAML files via xdg.dataFile.

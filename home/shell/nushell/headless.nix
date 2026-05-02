@@ -2,7 +2,7 @@
   programs.nushell = {
     enable = true;
     configFile.source = ./headless-config.nu;
-    loginFile.source = ./login.nu;
+    loginFile.text = "";
     shellAliases = {
       rg = "rg --hyperlink-format=default";
     };
