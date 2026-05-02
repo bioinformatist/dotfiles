@@ -19,28 +19,37 @@ def --wrapped claude-proxy [...args: string] {
   }
 }
 
-def maint-repo [] {
-  if "DOTFILES_MAINT_REPO" in $env {
-    $env.DOTFILES_MAINT_REPO
-  } else {
-    error make { msg: "DOTFILES_MAINT_REPO is not set for maint-* commands." }
+def maint-settings-file [] {
+  ($env.HOME | path join ".config" "dotfiles" "maint.nuon")
+}
+
+def maint-settings [] {
+  let settings_file = (maint-settings-file)
+  if not ($settings_file | path exists) {
+    error make { msg: $"Maintenance settings not found: ($settings_file)" }
   }
+
+  open $settings_file
+}
+
+def maint-repo [] {
+  (maint-settings).repo
 }
 
 def maint-host [] {
-  if "DOTFILES_MAINT_HOST" in $env {
-    $env.DOTFILES_MAINT_HOST
-  } else {
-    error make { msg: "DOTFILES_MAINT_HOST is not set for maint-* commands." }
-  }
+  (maint-settings).host
 }
 
 def maint-config-file [] {
-  if "DOTFILES_MAINT_PROXY_CONFIG" in $env {
-    $env.DOTFILES_MAINT_PROXY_CONFIG
-  } else {
-    ($env.HOME | path join ".config" "nix" "local-proxy.nuon")
-  }
+  (maint-settings).proxyConfig
+}
+
+def maint-risk-markers [] {
+  (maint-settings).riskMarkers? | default []
+}
+
+def maint-update-groups [] {
+  (maint-settings).updateGroups? | default {}
 }
 
 def maint-config [] {
@@ -71,6 +80,23 @@ def maint-lock-update [inputs: list<string>] {
   with-env (maint-config) {
     ^nix ...$args
   }
+}
+
+def maint-update [group: string] {
+  let inputs = (maint-update-groups | get --optional $group | default [])
+  if ($inputs | is-empty) {
+    error make { msg: $"Maintenance update group not configured: ($group)" }
+  }
+
+  maint-lock-update $inputs
+}
+
+def maint-update-tools [] {
+  maint-update "tools"
+}
+
+def maint-update-base [] {
+  maint-update "base"
 }
 
 def maint-refresh-codex [] {
@@ -117,10 +143,11 @@ def maint-refresh-codex [] {
   }
 }
 
-def maint-check [] {
+def maint-check [risk_markers: list<string> = []] {
   let repo = (maint-repo)
   let host = (maint-host)
   let attr = $"($repo)#nixosConfigurations.($host).config.system.build.toplevel"
+  let markers = if ($risk_markers | is-empty) { maint-risk-markers } else { $risk_markers }
   let tmp = (^mktemp "/tmp/maint-check.XXXXXX" | str trim)
   let code_file = (^mktemp "/tmp/maint-check-code.XXXXXX" | str trim)
 
@@ -132,10 +159,19 @@ def maint-check [] {
   let output = (open --raw $tmp)
 
   let built = ($output | str contains "will be built")
+  let matched_markers = (
+    $markers
+    | where {|marker| $output | str contains $marker }
+  )
 
   print ""
   print "---- maint-check summary ----"
   print $"exit_code: ($exit_code)"
+  if ($matched_markers | is-empty) {
+    print "risk markers: none detected"
+  } else {
+    print $"risk markers: (($matched_markers | str join ', '))"
+  }
 
   if $exit_code != 0 {
     print "summary: dry-run failed; inspect the output above before rebuilding."
