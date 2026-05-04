@@ -33,6 +33,7 @@ in
       default = { };
       description = "Named flake input groups used by maint-update commands.";
     };
+
   };
 
   config = {
