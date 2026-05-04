@@ -99,50 +99,6 @@ def maint-update-base [] {
   maint-update "base"
 }
 
-def maint-refresh-codex [] {
-  let repo = (maint-repo)
-  let codex_file = ($repo | path join "home" "programs" "codex" "default.nix")
-  let codex_asset = "codex-x86_64-unknown-linux-musl.tar.gz"
-
-  print "Refreshing codex release pin..."
-
-  print "Fetching latest Codex release metadata..."
-  let release_json = (with-env (maint-config) {
-    ^curl -L --fail --silent --show-error --connect-timeout 10 --max-time 30 -H "Accept: application/vnd.github+json" -H "User-Agent: dotfiles-maint-update-tools" "https://api.github.com/repos/openai/codex/releases/latest"
-  })
-  let release = ($release_json | from json)
-
-  let version = ($release.tag_name | str replace "rust-v" "")
-  let assets = ($release.assets | where name == $codex_asset)
-  if ($assets | is-empty) {
-    error make { msg: $"Could not find ($codex_asset) in the latest Codex release." }
-  }
-
-  let asset = ($assets | first)
-  let digest = ($asset.digest? | default "")
-  if not ($digest | str starts-with "sha256:") {
-    error make { msg: $"Could not find a sha256 digest for ($codex_asset) in the latest Codex release." }
-  }
-
-  print $"Using GitHub release digest for ($codex_asset) at Codex ($version)."
-  let digest_hex = ($digest | str replace "sha256:" "")
-  let hash = (^nix hash convert --hash-algo sha256 --from base16 --to sri $digest_hex | str trim)
-
-  let old = (open --raw $codex_file)
-  let new = (
-    $old
-    | str replace -r 'codexVersion = "[^"]+";' $'codexVersion = "($version)";'
-    | str replace -r 'hash = "sha256-[^"]+";' $'hash = "($hash)";'
-  )
-
-  if $new == $old {
-    print $"codex is already pinned at version ($version)."
-  } else {
-    $new | save -f $codex_file
-    print $"Updated codex to version ($version)."
-  }
-}
-
 def maint-check [risk_markers: list<string> = []] {
   let repo = (maint-repo)
   let host = (maint-host)
