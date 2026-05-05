@@ -92,6 +92,8 @@ def maint-update [group: string] {
 }
 
 def maint-update-tools [] {
+  print "Updating configured binary-friendly tool inputs..."
+  print "Codex pins are refreshed upstream; headless hosts receive them through their upstream flake input."
   maint-update "tools"
 }
 

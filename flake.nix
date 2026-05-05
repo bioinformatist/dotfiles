@@ -13,7 +13,6 @@
     };
     hyprland.url = "github:hyprwm/Hyprland";
     swww.url = "github:LGFae/swww";
-    yazi.url = "github:sxyazi/yazi";
     impermanence.url = "github:nix-community/impermanence";
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -21,10 +20,6 @@
     };
     antigravity = {
       url = "github:jacopone/antigravity-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    anyrun = {
-      url = "github:anyrun-org/anyrun";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     zeroclaw = {
@@ -38,7 +33,6 @@
       nixpkgs,
       disko,
       home-manager,
-      yazi,
       impermanence,
       sops-nix,
       ...
@@ -70,7 +64,6 @@
             home-manager.nixosModules.home-manager
             {
               nixpkgs.overlays = [
-                yazi.overlays.default
                 overlays.additions
                 overlays.modifications
               ];
@@ -92,7 +85,6 @@
           pkgs = import nixpkgs {
             inherit system;
             overlays = [
-              yazi.overlays.default
               overlays.additions
               overlays.modifications
             ];
@@ -122,7 +114,6 @@
               pkgs = import nixpkgs {
                 system = "x86_64-linux";
                 overlays = [
-                  yazi.overlays.default
                   overlays.additions
                   overlays.modifications
                 ];
@@ -130,12 +121,6 @@
               extraSpecialArgs = inputs // { inherit username; };
               modules = [
                 ./home/shared.nix
-                (
-                  { pkgs, ... }:
-                  {
-                    home.packages = [ yazi.packages.${pkgs.stdenv.hostPlatform.system}.default ];
-                  }
-                )
               ];
             };
         in

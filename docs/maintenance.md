@@ -57,10 +57,10 @@ sudo systemctl restart nix-daemon
 
 Updates the lower-risk tool layer:
 
-- flake inputs: `zeroclaw`, `antigravity`, `yazi`, `anyrun`, `sops-nix`, `impermanence`, `disko`
+- flake inputs: `zeroclaw`, `antigravity`, `sops-nix`, `impermanence`, `disko`
 - local Codex release pin in [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
 
-This is the normal entry point when you want tools to stay fresh without pushing the whole system base forward.
+This is the normal entry point when you want binary-friendly tools to stay fresh without pushing the whole system base forward. Yazi and Anyrun intentionally follow nixpkgs instead of separate source flake inputs.
 
 ```nu
 maint-update-tools
@@ -122,7 +122,7 @@ maint-switch
 
 ### Tool-layer refresh
 
-Use this when you mainly care about things like Codex, ZeroClaw, Antigravity, Yazi, or Anyrun.
+Use this when you mainly care about binary-friendly tool pins such as Codex, ZeroClaw, and Antigravity. Yazi and Anyrun follow nixpkgs.
 
 ```nu
 maint-update-tools

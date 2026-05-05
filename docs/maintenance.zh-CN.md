@@ -57,10 +57,10 @@ sudo systemctl restart nix-daemon
 
 更新相对低风险的工具层：
 
-- flake inputs：`zeroclaw`、`antigravity`、`yazi`、`anyrun`、`sops-nix`、`impermanence`、`disko`
+- flake inputs：`zeroclaw`、`antigravity`、`sops-nix`、`impermanence`、`disko`
 - 本地声明的 Codex release pin： [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
 
-当你主要想让 Codex、ZeroClaw、Antigravity、Yazi、Anyrun 这些日常工具尽量新时，应优先使用这个入口。
+当你主要想让二进制友好的工具保持较新时，应优先使用这个入口。Yazi 和 Anyrun 刻意跟随 nixpkgs，而不是单独的源码 flake input。
 
 ```nu
 maint-update-tools
@@ -122,7 +122,7 @@ maint-switch
 
 ### 工具层刷新
 
-当你主要关心 Codex、ZeroClaw、Antigravity、Yazi、Anyrun 这些工具时，使用：
+当你主要关心 Codex、ZeroClaw、Antigravity 这类二进制友好的工具 pin 时，使用。Yazi 和 Anyrun 跟随 nixpkgs。
 
 ```nu
 maint-update-tools

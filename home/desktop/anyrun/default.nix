@@ -1,36 +1,8 @@
+{ pkgs, ... }:
 {
-  anyrun,
-  pkgs,
-  ...
-}:
-let
-  sys = pkgs.stdenv.hostPlatform.system;
-  # Map plugin library name → Nix derivation.
-  # The .so files inside each derivation are at $out/lib/lib<name>.so.
-  pluginDefs = {
-    "libapplications.so" = anyrun.packages.${sys}.applications;
-    "librink.so" = anyrun.packages.${sys}.rink;
-    "libshell.so" = anyrun.packages.${sys}.shell;
-    "libsymbols.so" = anyrun.packages.${sys}.symbols;
-    "libwebsearch.so" = anyrun.packages.${sys}.websearch;
-  };
+  home.packages = [ pkgs.anyrun ];
 
-  # Build xdg.configFile entries for plugin symlinks
-  pluginFiles = builtins.listToAttrs (
-    map (soName: {
-      name = "anyrun/plugins/${soName}";
-      value = { source = "${pluginDefs.${soName}}/lib/${soName}"; };
-    }) (builtins.attrNames pluginDefs)
-  );
-in
-{
-  # Install anyrun binary
-  home.packages = [
-    anyrun.packages.${sys}.anyrun
-  ];
-
-  # Merge plugin symlinks + config files into a single xdg.configFile attrset
-  xdg.configFile = pluginFiles // {
+  xdg.configFile = {
     # Main config (RON format)
     "anyrun/config.ron".text = ''
       Config(

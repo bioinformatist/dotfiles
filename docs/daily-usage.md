@@ -103,7 +103,7 @@ Everything else is wiped on reboot.
 | **[Nushell](https://www.nushell.sh/)** | `pkgs.nushell` (default shell) | Modern shell treating data as structured tables |
 | **[Starship](https://starship.rs/)** | Home Manager | Minimal, blazing-fast cross-shell prompt |
 | **[Helix](https://helix-editor.com/)** (`hx`) | Home Manager | Post-modern modal text editor (`$EDITOR` / `$VISUAL`) |
-| **[Yazi](https://yazi-rs.github.io/)** (`y`) | `inputs.yazi` (flake) | Blazing fast terminal file manager (Rust). Use `y` (not `yazi`) — the shell wrapper changes your cwd on exit |
+| **[Yazi](https://yazi-rs.github.io/)** (`y`) | `pkgs.yazi` | Blazing fast terminal file manager (Rust). Use `y` (not `yazi`) — the shell wrapper changes your cwd on exit |
 | **[Zellij](https://zellij.dev/)** | Home Manager | Terminal multiplexer with panes and tabs |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)** (`rg`) | Home Manager | Recursive regex search tool |
 
@@ -287,7 +287,7 @@ The system follows a **"Localhost Abstraction"** strategy:
 | **WiFi** | `vm-test`: `wpa_supplicant`; `homePC`: `NetworkManager` |
 | **System Proxy** | Always points to `http://127.0.0.1:7897` (localhost abstraction) |
 | **Clash Verge** | Handles actual upstream routing (LAN proxy, airport, hotspot, etc.) |
-| **Nix Substituters** | USTC mirror (primary), Hyprland cachix, Yazi cachix |
+| **Nix Substituters** | USTC mirror (primary), Hyprland cachix |
 
 ### Setting up an Upstream LAN Proxy
 

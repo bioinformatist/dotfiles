@@ -108,7 +108,7 @@ def maint-refresh-codex [] {
   let codex_file = ($repo | path join "home" "programs" "codex" "default.nix")
   let codex_asset = "codex-x86_64-unknown-linux-musl.tar.gz"
 
-  print "Refreshing codex release pin..."
+  print "Refreshing Codex from the official OpenAI release binary..."
 
   print "Fetching latest Codex release metadata..."
   let release_json = (with-env (maint-config) {
@@ -147,13 +147,13 @@ def maint-refresh-codex [] {
   }
 }
 
-# maint-update-tools: update low-risk tool inputs and refresh the local codex pin.
+# maint-update-tools: update binary-friendly tool inputs and refresh the Codex
+# official release binary pin. Yazi and Anyrun follow nixpkgs binary cache.
 def maint-update-tools [] {
+  print "Updating binary-friendly tool inputs..."
   maint-lock-update [
     "zeroclaw"
     "antigravity"
-    "yazi"
-    "anyrun"
     "sops-nix"
     "impermanence"
     "disko"

@@ -105,7 +105,7 @@
 | **[Nushell](https://www.nushell.sh/)** | `pkgs.nushell`（默认 shell） | 将数据视为结构化表格的现代 Shell |
 | **[Starship](https://starship.rs/)** | Home Manager | 极简、极速的跨 Shell 提示符 |
 | **[Helix](https://helix-editor.com/)**（`hx`） | Home Manager | 后现代模态文本编辑器（`$EDITOR` / `$VISUAL`） |
-| **[Yazi](https://yazi-rs.github.io/)** (`y`) | `inputs.yazi`（flake） | 极速终端文件管理器（Rust）。使用 `y`（而非 `yazi`）——shell 封装器在退出时会自动切换工作目录 |
+| **[Yazi](https://yazi-rs.github.io/)** (`y`) | `pkgs.yazi` | 极速终端文件管理器（Rust）。使用 `y`（而非 `yazi`）——shell 封装器在退出时会自动切换工作目录 |
 | **[Zellij](https://zellij.dev/)** | Home Manager | 终端复用器（窗格 + 标签页） |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)**（`rg`） | Home Manager | 递归正则表达式搜索工具 |
 
@@ -289,7 +289,7 @@ sudo nixos-rebuild test --flake $".#<host>"
 | **WiFi** | `vm-test`: `wpa_supplicant`；`homePC`: `NetworkManager` |
 | **系统代理** | 始终指向 `http://127.0.0.1:7897`（本地回环抽象） |
 | **Clash Verge** | 处理实际上游路由（局域网代理、机场、热点等） |
-| **Nix Substituters** | USTC 镜像（主）、Hyprland cachix、Yazi cachix |
+| **Nix Substituters** | USTC 镜像（主）、Hyprland cachix |
 
 ### 设置上游局域网代理
 
