@@ -154,12 +154,19 @@ def maint-update-tools [] {
   maint-lock-update [
     "zeroclaw"
     "antigravity"
+  ]
+  maint-refresh-codex
+  print "Tool-layer updates applied to flake.lock and home/programs/codex/default.nix."
+}
+
+# maint-update-infra: update low-frequency infrastructure inputs. These may
+# build local helpers, so keep them out of the routine tool path.
+def maint-update-infra [] {
+  maint-lock-update [
     "sops-nix"
     "impermanence"
     "disko"
   ]
-  maint-refresh-codex
-  print "Tool-layer updates applied to flake.lock and home/programs/codex/default.nix."
 }
 
 # maint-update-hyprland: update Hyprland separately from nixpkgs.

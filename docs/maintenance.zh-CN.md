@@ -57,13 +57,27 @@ sudo systemctl restart nix-daemon
 
 更新相对低风险的工具层：
 
-- flake inputs：`zeroclaw`、`antigravity`、`sops-nix`、`impermanence`、`disko`
+- flake inputs：`zeroclaw`、`antigravity`
 - 本地声明的 Codex release pin： [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
 
 当你主要想让二进制友好的工具保持较新时，应优先使用这个入口。Yazi 和 Anyrun 刻意跟随 nixpkgs，而不是单独的源码 flake input。
 
 ```nu
 maint-update-tools
+```
+
+### `maint-update-infra`
+
+更新低频基础设施输入：
+
+- `sops-nix`
+- `impermanence`
+- `disko`
+
+这一路径可能触发本地 helper 程序构建，所以应放在基础设施维护窗口中执行，而不是日常工具刷新。
+
+```nu
+maint-update-infra
 ```
 
 ### `maint-update-hyprland`
@@ -131,6 +145,18 @@ maint-switch
 ```
 
 如果 `maint-check` 检测到 `will be built`，就停在这一步，不要继续。
+
+### 基础设施刷新
+
+当你明确想更新 secrets、持久化或分区相关基础设施时，使用：
+
+```nu
+maint-update-infra
+maint-check
+maint-switch
+```
+
+如果 `maint-check` 显示你暂时不想接受的本地 helper 构建，就停在这一步。
 
 ### Hyprland 刷新
 

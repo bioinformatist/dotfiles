@@ -57,13 +57,27 @@ sudo systemctl restart nix-daemon
 
 Updates the lower-risk tool layer:
 
-- flake inputs: `zeroclaw`, `antigravity`, `sops-nix`, `impermanence`, `disko`
+- flake inputs: `zeroclaw`, `antigravity`
 - local Codex release pin in [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
 
 This is the normal entry point when you want binary-friendly tools to stay fresh without pushing the whole system base forward. Yazi and Anyrun intentionally follow nixpkgs instead of separate source flake inputs.
 
 ```nu
 maint-update-tools
+```
+
+### `maint-update-infra`
+
+Updates low-frequency infrastructure inputs:
+
+- `sops-nix`
+- `impermanence`
+- `disko`
+
+This path may build local helper programs, so use it during an infrastructure maintenance window instead of the routine tool refresh.
+
+```nu
+maint-update-infra
 ```
 
 ### `maint-update-hyprland`
@@ -131,6 +145,18 @@ maint-switch
 ```
 
 Stop after `maint-check` if it reports `will be built`.
+
+### Infrastructure refresh
+
+Use this when you intentionally want newer secret, persistence, or partitioning infrastructure.
+
+```nu
+maint-update-infra
+maint-check
+maint-switch
+```
+
+Stop after `maint-check` if it shows local helper builds you do not want to accept yet.
 
 ### Hyprland refresh
 

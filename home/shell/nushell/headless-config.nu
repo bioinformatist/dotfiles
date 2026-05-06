@@ -97,6 +97,11 @@ def maint-update-tools [] {
   maint-update "tools"
 }
 
+def maint-update-infra [] {
+  print "Updating configured low-frequency infrastructure inputs..."
+  maint-update "infra"
+}
+
 def maint-update-base [] {
   maint-update "base"
 }
