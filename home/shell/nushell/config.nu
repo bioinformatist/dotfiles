@@ -181,9 +181,8 @@ def dotfiles-maint-refresh-zeroclaw [] {
   }
 }
 
-# maint-update-tools: update binary-friendly tool inputs and refresh the Codex
-# and ZeroClaw official release binary pins. Yazi and Anyrun follow nixpkgs
-# binary cache.
+# Update binary-friendly tool inputs and refresh the Codex and ZeroClaw
+# official release binary pins. Yazi and Anyrun follow nixpkgs binary cache.
 def maint-update-tools [] {
   print "Updating binary-friendly tool inputs..."
   dotfiles-maint-lock-update [
@@ -194,8 +193,8 @@ def maint-update-tools [] {
   print "Tool-layer updates applied to flake.lock and release-pinned tool packages."
 }
 
-# maint-update-infra: update low-frequency infrastructure inputs. These may
-# build local helpers, so keep them out of the routine tool path.
+# Update low-frequency infrastructure inputs. These may build local helpers, so
+# keep them out of the routine tool path.
 def maint-update-infra [] {
   dotfiles-maint-lock-update [
     "sops-nix"
@@ -204,17 +203,17 @@ def maint-update-infra [] {
   ]
 }
 
-# maint-update-hyprland: update Hyprland separately from nixpkgs.
+# Update Hyprland separately from nixpkgs.
 def maint-update-hyprland [] {
   dotfiles-maint-lock-update [ "hyprland" ]
 }
 
-# maint-update-base: update the system base separately from Hyprland.
+# Update the system base separately from Hyprland.
 def maint-update-base [] {
   dotfiles-maint-lock-update [ "nixpkgs" "home-manager" ]
 }
 
-# maint-check: run a dry-run and summarize whether rebuilding is advisable.
+# Run a dry-run and summarize whether rebuilding is advisable.
 def maint-check [] {
   let repo = (dotfiles-maint-repo)
   let host = (dotfiles-maint-host)
@@ -265,7 +264,7 @@ def maint-check [] {
   ^rm -f $tmp $code_file
 }
 
-# maint-switch: rebuild and switch using the current lock state.
+# Rebuild and switch using the current lock state.
 def maint-switch [] {
   let repo = (dotfiles-maint-repo)
   let host = (dotfiles-maint-host)

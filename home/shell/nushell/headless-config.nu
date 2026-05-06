@@ -91,25 +91,25 @@ def dotfiles-maint-update [group: string] {
   dotfiles-maint-lock-update $inputs
 }
 
-# maint-update-tools: update the configured binary-friendly tool input group.
+# Update the configured binary-friendly tool input group.
 def maint-update-tools [] {
   print "Updating configured binary-friendly tool inputs..."
   print "Codex pins are refreshed upstream; headless hosts receive them through their upstream flake input."
   dotfiles-maint-update "tools"
 }
 
-# maint-update-infra: update configured low-frequency infrastructure inputs.
+# Update configured low-frequency infrastructure inputs.
 def maint-update-infra [] {
   print "Updating configured low-frequency infrastructure inputs..."
   dotfiles-maint-update "infra"
 }
 
-# maint-update-base: update configured base system inputs.
+# Update configured base system inputs.
 def maint-update-base [] {
   dotfiles-maint-update "base"
 }
 
-# maint-check: run a dry-run and summarize whether rebuilding is advisable.
+# Run a dry-run and summarize whether rebuilding is advisable.
 def maint-check [risk_markers: list<string> = []] {
   let repo = (dotfiles-maint-repo)
   let host = (dotfiles-maint-host)
@@ -151,7 +151,7 @@ def maint-check [risk_markers: list<string> = []] {
   ^rm -f $tmp $code_file
 }
 
-# maint-switch: rebuild and switch using the current lock state.
+# Rebuild and switch using the current lock state.
 def maint-switch [] {
   let repo = (dotfiles-maint-repo)
   let host = (dotfiles-maint-host)
