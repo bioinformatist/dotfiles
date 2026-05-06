@@ -33,7 +33,7 @@ This file is intentionally not tracked by git. Example:
 Meaning:
 
 - maintenance helpers use this file for GitHub API requests
-- Codex release hashes come from GitHub's release asset digest, so the update helper does not download the tarball just to compute a hash
+- Codex and ZeroClaw release hashes come from GitHub's release asset digest, so the update helper does not download tarballs just to compute hashes
 - `nix-daemon` uses the same file for proxy, `NO_PROXY`, and `substituters`
 - changing the proxy address only requires editing this one file
 
@@ -57,8 +57,9 @@ sudo systemctl restart nix-daemon
 
 Updates the lower-risk tool layer:
 
-- flake inputs: `zeroclaw`, `antigravity`
+- flake input: `antigravity`
 - local Codex release pin in [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
+- local ZeroClaw release pin in [home/programs/zeroclaw/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/zeroclaw/default.nix)
 
 This is the normal entry point when you want binary-friendly tools to stay fresh without pushing the whole system base forward. Yazi and Anyrun intentionally follow nixpkgs instead of separate source flake inputs.
 

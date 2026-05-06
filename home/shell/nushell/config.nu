@@ -103,34 +103,41 @@ def maint-lock-update [inputs: list<string>] {
   }
 }
 
+def maint-fetch-github-release [repo_slug: string] {
+  let release_json = (with-env (maint-config) {
+    ^curl -L --fail --silent --show-error --connect-timeout 10 --max-time 30 -H "Accept: application/vnd.github+json" -H "User-Agent: dotfiles-maint-update-tools" $"https://api.github.com/repos/($repo_slug)/releases/latest"
+  })
+
+  $release_json | from json
+}
+
+def maint-github-release-asset-hash [release: record asset_name: string] {
+  let assets = ($release.assets | where name == $asset_name)
+  if ($assets | is-empty) {
+    error make { msg: $"Could not find ($asset_name) in the latest release." }
+  }
+
+  let asset = ($assets | first)
+  let digest = ($asset.digest? | default "")
+  if not ($digest | str starts-with "sha256:") {
+    error make { msg: $"Could not find a sha256 digest for ($asset_name)." }
+  }
+
+  let digest_hex = ($digest | str replace "sha256:" "")
+  ^nix hash convert --hash-algo sha256 --from base16 --to sri $digest_hex | str trim
+}
+
 def maint-refresh-codex [] {
   let repo = (maint-repo)
   let codex_file = ($repo | path join "home" "programs" "codex" "default.nix")
   let codex_asset = "codex-x86_64-unknown-linux-musl.tar.gz"
 
   print "Refreshing Codex from the official OpenAI release binary..."
-
   print "Fetching latest Codex release metadata..."
-  let release_json = (with-env (maint-config) {
-    ^curl -L --fail --silent --show-error --connect-timeout 10 --max-time 30 -H "Accept: application/vnd.github+json" -H "User-Agent: dotfiles-maint-update-tools" "https://api.github.com/repos/openai/codex/releases/latest"
-  })
-  let release = ($release_json | from json)
-
+  let release = (maint-fetch-github-release "openai/codex")
   let version = ($release.tag_name | str replace "rust-v" "")
-  let assets = ($release.assets | where name == $codex_asset)
-  if ($assets | is-empty) {
-    error make { msg: $"Could not find ($codex_asset) in the latest Codex release." }
-  }
-
-  let asset = ($assets | first)
-  let digest = ($asset.digest? | default "")
-  if not ($digest | str starts-with "sha256:") {
-    error make { msg: $"Could not find a sha256 digest for ($codex_asset) in the latest Codex release." }
-  }
-
   print $"Using GitHub release digest for ($codex_asset) at Codex ($version)."
-  let digest_hex = ($digest | str replace "sha256:" "")
-  let hash = (^nix hash convert --hash-algo sha256 --from base16 --to sri $digest_hex | str trim)
+  let hash = (maint-github-release-asset-hash $release $codex_asset)
 
   let old = (open --raw $codex_file)
   let new = (
@@ -147,16 +154,44 @@ def maint-refresh-codex [] {
   }
 }
 
+def maint-refresh-zeroclaw [] {
+  let repo = (maint-repo)
+  let zeroclaw_file = ($repo | path join "home" "programs" "zeroclaw" "default.nix")
+  let zeroclaw_asset = "zeroclaw-x86_64-unknown-linux-gnu.tar.gz"
+
+  print "Refreshing ZeroClaw from the official release binary..."
+  print "Fetching latest ZeroClaw release metadata..."
+  let release = (maint-fetch-github-release "zeroclaw-labs/zeroclaw")
+  let version = ($release.tag_name | str replace "v" "")
+  print $"Using GitHub release digest for ($zeroclaw_asset) at ZeroClaw ($version)."
+  let hash = (maint-github-release-asset-hash $release $zeroclaw_asset)
+
+  let old = (open --raw $zeroclaw_file)
+  let new = (
+    $old
+    | str replace -r 'zeroclawVersion = "[^"]+";' $'zeroclawVersion = "($version)";'
+    | str replace -r 'hash = "sha256-[^"]+";' $'hash = "($hash)";'
+  )
+
+  if $new == $old {
+    print $"zeroclaw is already pinned at version ($version)."
+  } else {
+    $new | save -f $zeroclaw_file
+    print $"Updated zeroclaw to version ($version)."
+  }
+}
+
 # maint-update-tools: update binary-friendly tool inputs and refresh the Codex
-# official release binary pin. Yazi and Anyrun follow nixpkgs binary cache.
+# and ZeroClaw official release binary pins. Yazi and Anyrun follow nixpkgs
+# binary cache.
 def maint-update-tools [] {
   print "Updating binary-friendly tool inputs..."
   maint-lock-update [
-    "zeroclaw"
     "antigravity"
   ]
   maint-refresh-codex
-  print "Tool-layer updates applied to flake.lock and home/programs/codex/default.nix."
+  maint-refresh-zeroclaw
+  print "Tool-layer updates applied to flake.lock and release-pinned tool packages."
 }
 
 # maint-update-infra: update low-frequency infrastructure inputs. These may

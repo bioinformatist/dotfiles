@@ -33,7 +33,7 @@
 含义如下：
 
 - 维护函数访问 GitHub API 时使用这个文件
-- Codex release hash 直接来自 GitHub release asset digest，因此更新函数不会为了计算 hash 再下载 tarball
+- Codex 和 ZeroClaw release hash 直接来自 GitHub release asset digest，因此更新函数不会为了计算 hash 再下载 tarball
 - `nix-daemon` 也使用同一个文件里的代理、`NO_PROXY` 和 `substituters`
 - 以后代理地址变化时，只需要改这一个文件
 
@@ -57,8 +57,9 @@ sudo systemctl restart nix-daemon
 
 更新相对低风险的工具层：
 
-- flake inputs：`zeroclaw`、`antigravity`
+- flake input：`antigravity`
 - 本地声明的 Codex release pin： [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
+- 本地声明的 ZeroClaw release pin： [home/programs/zeroclaw/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/zeroclaw/default.nix)
 
 当你主要想让二进制友好的工具保持较新时，应优先使用这个入口。Yazi 和 Anyrun 刻意跟随 nixpkgs，而不是单独的源码 flake input。
 
