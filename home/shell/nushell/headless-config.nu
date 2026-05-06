@@ -19,12 +19,12 @@ def --wrapped claude-proxy [...args: string] {
   }
 }
 
-def maint-settings-file [] {
+def dotfiles-maint-settings-file [] {
   ($env.HOME | path join ".config" "dotfiles" "maint.nuon")
 }
 
-def maint-settings [] {
-  let settings_file = (maint-settings-file)
+def dotfiles-maint-settings [] {
+  let settings_file = (dotfiles-maint-settings-file)
   if not ($settings_file | path exists) {
     error make { msg: $"Maintenance settings not found: ($settings_file)" }
   }
@@ -32,28 +32,28 @@ def maint-settings [] {
   open $settings_file
 }
 
-def maint-repo [] {
-  (maint-settings).repo
+def dotfiles-maint-repo [] {
+  (dotfiles-maint-settings).repo
 }
 
-def maint-host [] {
-  (maint-settings).host
+def dotfiles-maint-host [] {
+  (dotfiles-maint-settings).host
 }
 
-def maint-config-file [] {
-  (maint-settings).proxyConfig
+def dotfiles-maint-config-file [] {
+  (dotfiles-maint-settings).proxyConfig
 }
 
-def maint-risk-markers [] {
-  (maint-settings).riskMarkers? | default []
+def dotfiles-maint-risk-markers [] {
+  (dotfiles-maint-settings).riskMarkers? | default []
 }
 
-def maint-update-groups [] {
-  (maint-settings).updateGroups? | default {}
+def dotfiles-maint-update-groups [] {
+  (dotfiles-maint-settings).updateGroups? | default {}
 }
 
-def maint-config [] {
-  let cfg_file = (maint-config-file)
+def dotfiles-maint-config [] {
+  let cfg_file = (dotfiles-maint-config-file)
   if not ($cfg_file | path exists) {
     return {}
   }
@@ -72,49 +72,53 @@ def maint-config [] {
   }
 }
 
-def maint-lock-update [inputs: list<string>] {
-  let repo = (maint-repo)
+def dotfiles-maint-lock-update [inputs: list<string>] {
+  let repo = (dotfiles-maint-repo)
   let args = (["flake" "update"] | append $inputs | append "--flake" | append $repo)
 
   print $"Updating flake inputs: (($inputs | str join ', '))"
-  with-env (maint-config) {
+  with-env (dotfiles-maint-config) {
     ^nix ...$args
   }
 }
 
-def maint-update [group: string] {
-  let inputs = (maint-update-groups | get --optional $group | default [])
+def dotfiles-maint-update [group: string] {
+  let inputs = (dotfiles-maint-update-groups | get --optional $group | default [])
   if ($inputs | is-empty) {
     error make { msg: $"Maintenance update group not configured: ($group)" }
   }
 
-  maint-lock-update $inputs
+  dotfiles-maint-lock-update $inputs
 }
 
+# maint-update-tools: update the configured binary-friendly tool input group.
 def maint-update-tools [] {
   print "Updating configured binary-friendly tool inputs..."
   print "Codex pins are refreshed upstream; headless hosts receive them through their upstream flake input."
-  maint-update "tools"
+  dotfiles-maint-update "tools"
 }
 
+# maint-update-infra: update configured low-frequency infrastructure inputs.
 def maint-update-infra [] {
   print "Updating configured low-frequency infrastructure inputs..."
-  maint-update "infra"
+  dotfiles-maint-update "infra"
 }
 
+# maint-update-base: update configured base system inputs.
 def maint-update-base [] {
-  maint-update "base"
+  dotfiles-maint-update "base"
 }
 
+# maint-check: run a dry-run and summarize whether rebuilding is advisable.
 def maint-check [risk_markers: list<string> = []] {
-  let repo = (maint-repo)
-  let host = (maint-host)
+  let repo = (dotfiles-maint-repo)
+  let host = (dotfiles-maint-host)
   let attr = $"($repo)#nixosConfigurations.($host).config.system.build.toplevel"
-  let markers = if ($risk_markers | is-empty) { maint-risk-markers } else { $risk_markers }
+  let markers = if ($risk_markers | is-empty) { dotfiles-maint-risk-markers } else { $risk_markers }
   let tmp = (^mktemp "/tmp/maint-check.XXXXXX" | str trim)
   let code_file = (^mktemp "/tmp/maint-check-code.XXXXXX" | str trim)
 
-  with-env (maint-config) {
+  with-env (dotfiles-maint-config) {
     ^bash -lc 'nix build --dry-run -L "$1" 2>&1 | tee "$2"; printf "%s" "${PIPESTATUS[0]}" > "$3"' bash $attr $tmp $code_file
   }
 
@@ -147,12 +151,13 @@ def maint-check [risk_markers: list<string> = []] {
   ^rm -f $tmp $code_file
 }
 
+# maint-switch: rebuild and switch using the current lock state.
 def maint-switch [] {
-  let repo = (maint-repo)
-  let host = (maint-host)
+  let repo = (dotfiles-maint-repo)
+  let host = (dotfiles-maint-host)
   let flake = $"($repo)#($host)"
 
-  with-env (maint-config) {
+  with-env (dotfiles-maint-config) {
     ^sudo --preserve-env=HTTP_PROXY,HTTPS_PROXY,http_proxy,https_proxy,NO_PROXY,no_proxy,NIX_CONFIG nixos-rebuild switch --flake $flake
   }
 }

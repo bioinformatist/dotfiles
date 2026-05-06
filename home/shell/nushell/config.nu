@@ -59,20 +59,20 @@ def d2r-bat [bat: string] {
   }
 }
 
-def maint-repo [] {
+def dotfiles-maint-repo [] {
   "/home/ysun/github.com/bioinformatist/dotfiles"
 }
 
-def maint-host [] {
+def dotfiles-maint-host [] {
   "homePC"
 }
 
-def maint-config-file [] {
+def dotfiles-maint-config-file [] {
   ($env.HOME | path join ".config" "nix" "local-proxy.nuon")
 }
 
-def maint-config [] {
-  let cfg_file = (maint-config-file)
+def dotfiles-maint-config [] {
+  let cfg_file = (dotfiles-maint-config-file)
   if not ($cfg_file | path exists) {
     error make {
       msg: $"Maintenance config not found: ($cfg_file)\nCreate ~/.config/nix/local-proxy.nuon before using maint-* commands."
@@ -93,25 +93,25 @@ def maint-config [] {
   }
 }
 
-def maint-lock-update [inputs: list<string>] {
-  let repo = (maint-repo)
+def dotfiles-maint-lock-update [inputs: list<string>] {
+  let repo = (dotfiles-maint-repo)
   let args = (["flake" "update"] | append $inputs | append "--flake" | append $repo)
 
   print $"Updating flake inputs: (($inputs | str join ', '))"
-  with-env (maint-config) {
+  with-env (dotfiles-maint-config) {
     ^nix ...$args
   }
 }
 
-def maint-fetch-github-release [repo_slug: string] {
-  let release_json = (with-env (maint-config) {
+def dotfiles-maint-fetch-github-release [repo_slug: string] {
+  let release_json = (with-env (dotfiles-maint-config) {
     ^curl -L --fail --silent --show-error --connect-timeout 10 --max-time 30 -H "Accept: application/vnd.github+json" -H "User-Agent: dotfiles-maint-update-tools" $"https://api.github.com/repos/($repo_slug)/releases/latest"
   })
 
   $release_json | from json
 }
 
-def maint-github-release-asset-hash [release: record asset_name: string] {
+def dotfiles-maint-github-release-asset-hash [release: record asset_name: string] {
   let assets = ($release.assets | where name == $asset_name)
   if ($assets | is-empty) {
     error make { msg: $"Could not find ($asset_name) in the latest release." }
@@ -127,17 +127,17 @@ def maint-github-release-asset-hash [release: record asset_name: string] {
   ^nix hash convert --hash-algo sha256 --from base16 --to sri $digest_hex | str trim
 }
 
-def maint-refresh-codex [] {
-  let repo = (maint-repo)
+def dotfiles-maint-refresh-codex [] {
+  let repo = (dotfiles-maint-repo)
   let codex_file = ($repo | path join "home" "programs" "codex" "default.nix")
   let codex_asset = "codex-x86_64-unknown-linux-musl.tar.gz"
 
   print "Refreshing Codex from the official OpenAI release binary..."
   print "Fetching latest Codex release metadata..."
-  let release = (maint-fetch-github-release "openai/codex")
+  let release = (dotfiles-maint-fetch-github-release "openai/codex")
   let version = ($release.tag_name | str replace "rust-v" "")
   print $"Using GitHub release digest for ($codex_asset) at Codex ($version)."
-  let hash = (maint-github-release-asset-hash $release $codex_asset)
+  let hash = (dotfiles-maint-github-release-asset-hash $release $codex_asset)
 
   let old = (open --raw $codex_file)
   let new = (
@@ -154,17 +154,17 @@ def maint-refresh-codex [] {
   }
 }
 
-def maint-refresh-zeroclaw [] {
-  let repo = (maint-repo)
+def dotfiles-maint-refresh-zeroclaw [] {
+  let repo = (dotfiles-maint-repo)
   let zeroclaw_file = ($repo | path join "home" "programs" "zeroclaw" "default.nix")
   let zeroclaw_asset = "zeroclaw-x86_64-unknown-linux-gnu.tar.gz"
 
   print "Refreshing ZeroClaw from the official release binary..."
   print "Fetching latest ZeroClaw release metadata..."
-  let release = (maint-fetch-github-release "zeroclaw-labs/zeroclaw")
+  let release = (dotfiles-maint-fetch-github-release "zeroclaw-labs/zeroclaw")
   let version = ($release.tag_name | str replace "v" "")
   print $"Using GitHub release digest for ($zeroclaw_asset) at ZeroClaw ($version)."
-  let hash = (maint-github-release-asset-hash $release $zeroclaw_asset)
+  let hash = (dotfiles-maint-github-release-asset-hash $release $zeroclaw_asset)
 
   let old = (open --raw $zeroclaw_file)
   let new = (
@@ -186,18 +186,18 @@ def maint-refresh-zeroclaw [] {
 # binary cache.
 def maint-update-tools [] {
   print "Updating binary-friendly tool inputs..."
-  maint-lock-update [
+  dotfiles-maint-lock-update [
     "antigravity"
   ]
-  maint-refresh-codex
-  maint-refresh-zeroclaw
+  dotfiles-maint-refresh-codex
+  dotfiles-maint-refresh-zeroclaw
   print "Tool-layer updates applied to flake.lock and release-pinned tool packages."
 }
 
 # maint-update-infra: update low-frequency infrastructure inputs. These may
 # build local helpers, so keep them out of the routine tool path.
 def maint-update-infra [] {
-  maint-lock-update [
+  dotfiles-maint-lock-update [
     "sops-nix"
     "impermanence"
     "disko"
@@ -206,23 +206,23 @@ def maint-update-infra [] {
 
 # maint-update-hyprland: update Hyprland separately from nixpkgs.
 def maint-update-hyprland [] {
-  maint-lock-update [ "hyprland" ]
+  dotfiles-maint-lock-update [ "hyprland" ]
 }
 
 # maint-update-base: update the system base separately from Hyprland.
 def maint-update-base [] {
-  maint-lock-update [ "nixpkgs" "home-manager" ]
+  dotfiles-maint-lock-update [ "nixpkgs" "home-manager" ]
 }
 
 # maint-check: run a dry-run and summarize whether rebuilding is advisable.
 def maint-check [] {
-  let repo = (maint-repo)
-  let host = (maint-host)
+  let repo = (dotfiles-maint-repo)
+  let host = (dotfiles-maint-host)
   let attr = $"($repo)#nixosConfigurations.($host).config.system.build.toplevel"
   let tmp = (^mktemp "/tmp/maint-check.XXXXXX" | str trim)
   let code_file = (^mktemp "/tmp/maint-check-code.XXXXXX" | str trim)
 
-  with-env (maint-config) {
+  with-env (dotfiles-maint-config) {
     ^bash -lc 'nix build --dry-run -L "$1" 2>&1 | tee "$2"; printf "%s" "${PIPESTATUS[0]}" > "$3"' bash $attr $tmp $code_file
   }
 
@@ -267,11 +267,11 @@ def maint-check [] {
 
 # maint-switch: rebuild and switch using the current lock state.
 def maint-switch [] {
-  let repo = (maint-repo)
-  let host = (maint-host)
+  let repo = (dotfiles-maint-repo)
+  let host = (dotfiles-maint-host)
   let flake = $"($repo)#($host)"
 
-  with-env (maint-config) {
+  with-env (dotfiles-maint-config) {
     ^sudo --preserve-env=HTTP_PROXY,HTTPS_PROXY,http_proxy,https_proxy,NO_PROXY,no_proxy,NIX_CONFIG nixos-rebuild switch --flake $flake
   }
 }
