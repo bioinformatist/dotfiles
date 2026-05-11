@@ -5,13 +5,37 @@
 
 TARGET=$1
 VAL=$2
+STATUS=0
 
 echo "[$(date)] set-vol called: target=$TARGET val=$VAL" >> /tmp/eww-vol-debug.log
 
 if [ "$TARGET" = "sink" ]; then
-  pactl set-sink-volume @DEFAULT_SINK@ "${VAL}%" >> /tmp/eww-vol-debug.log 2>&1
+  pactl set-sink-volume @DEFAULT_SINK@ "${VAL}%" >> /tmp/eww-vol-debug.log 2>&1 || STATUS=$?
 else
-  pactl set-source-volume @DEFAULT_SOURCE@ "${VAL}%" >> /tmp/eww-vol-debug.log 2>&1
+  ALSA_VAL=${VAL%.*}
+  if [ "$ALSA_VAL" -gt 100 ]; then
+    ALSA_VAL=100
+  fi
+
+  pactl set-source-volume @DEFAULT_SOURCE@ "${VAL}%" >> /tmp/eww-vol-debug.log 2>&1 || STATUS=$?
+
+  DEFAULT_SOURCE=$(pactl get-default-source 2>/dev/null)
+  ALSA_CARD=$(pactl list sources 2>/dev/null | awk -v default_source="$DEFAULT_SOURCE" '
+    BEGIN { in_default = 0 }
+    /^\tName: / {
+      in_default = ($2 == default_source)
+    }
+    in_default && /^\t\talsa.card = / {
+      gsub(/"/, "", $3)
+      print $3
+      exit
+    }
+  ')
+
+  if [ -n "$ALSA_CARD" ] && command -v amixer >/dev/null 2>&1; then
+    amixer -c "$ALSA_CARD" sset Capture "${ALSA_VAL}%" cap >> /tmp/eww-vol-debug.log 2>&1 || STATUS=$?
+  fi
 fi
 
-echo "[$(date)] set-vol exit code: $?" >> /tmp/eww-vol-debug.log
+echo "[$(date)] set-vol exit code: $STATUS" >> /tmp/eww-vol-debug.log
+exit "$STATUS"

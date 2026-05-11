@@ -4,7 +4,7 @@
 # Outputs JSON with volume percentage and mute state.
 
 get_audio_status() {
-  local SINK_VOL SINK_MUTED SOURCE_VOL SOURCE_MUTED
+  local SINK_VOL SINK_MUTED SOURCE_VOL SOURCE_MUTED ALSA_CARD ALSA_CAPTURE
 
   # Use pactl for reliable sink and source info
   local SINK_INFO SOURCE_INFO
@@ -17,9 +17,30 @@ get_audio_status() {
   SINK_PCT=$(echo "$SINK_INFO" | grep -oP '\d+(?=%)' | head -1)
   SOURCE_PCT=$(echo "$SOURCE_INFO" | grep -oP '\d+(?=%)' | head -1)
 
+  DEFAULT_SOURCE=$(pactl get-default-source 2>/dev/null)
+  ALSA_CARD=$(pactl list sources 2>/dev/null | awk -v default_source="$DEFAULT_SOURCE" '
+    BEGIN { in_default = 0 }
+    /^\tName: / {
+      in_default = ($2 == default_source)
+    }
+    in_default && /^\t\talsa.card = / {
+      gsub(/"/, "", $3)
+      print $3
+      exit
+    }
+  ')
+  if [ -n "$ALSA_CARD" ] && command -v amixer >/dev/null 2>&1; then
+    ALSA_CAPTURE=$(amixer -c "$ALSA_CARD" sget Capture 2>/dev/null)
+    ALSA_PCT=$(echo "$ALSA_CAPTURE" | grep -oP '\d+(?=%)' | head -1)
+    if [ -n "$ALSA_PCT" ]; then
+      SOURCE_PCT=$ALSA_PCT
+      SOURCE_MUTED=$(echo "$ALSA_CAPTURE" | grep -c "\[off\]" || true)
+    fi
+  fi
+
   # Extract mute state
   SINK_MUTED=$(echo "$SINK_MUTE_INFO" | grep -c "yes" || true)
-  SOURCE_MUTED=$(echo "$SOURCE_MUTE_INFO" | grep -c "yes" || true)
+  SOURCE_MUTED=${SOURCE_MUTED:-$(echo "$SOURCE_MUTE_INFO" | grep -c "yes" || true)}
 
   SINK_PCT=${SINK_PCT:-0}
   SOURCE_PCT=${SOURCE_PCT:-0}

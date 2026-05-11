@@ -92,6 +92,7 @@ in
     dbus         # dbus-monitor for Bluetooth events
     dunst        # Notification daemon (dunstctl)
     pulseaudio   # pactl stream for volume events
+    alsa-utils   # amixer for hardware capture gain in the audio popup
     # jq is already in nixos/desktop.nix systemPackages
 
     # Fonts — Nerd Font variant includes all glyph icons
