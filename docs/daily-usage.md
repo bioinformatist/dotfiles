@@ -335,7 +335,7 @@ The subscription URL is stored encrypted in the repository via sops-nix (see [Se
 
 Battle.net runs as a **non-Steam game** added to Steam, using the Proton compatibility layer.
 
-1. Download `Battle.net-Setup.exe` — the official site detects Linux UA and hides the download button, use `curl` to bypass:
+1. Download `Battle.net-Setup.exe` - the official site detects Linux UA and hides the download button, use `curl` to bypass:
    ```nushell
    # China mainland (国服)
    curl -L -o Battle.net-Setup-CN.exe "https://downloader.battlenet.com.cn/download/getInstallerForGame?os=win&gameProgram=BATTLENET_APP&version=Live"
@@ -345,8 +345,22 @@ Battle.net runs as a **non-Steam game** added to Steam, using the Proton compati
 2. Steam → **Library** → bottom-left **Add a Game** → **Add a Non-Steam Game**, select the installer
 3. Right-click the entry → **Properties** → **Compatibility** → check "Force the use of a specific Steam Play compatibility tool" → select **Proton-GE**
 4. Launch and complete the Battle.net installation
-5. Once installed, add **Battle.net.exe** (at `drive_c/Program Files (x86)/Battle.net/Battle.net.exe` inside the prefix) as another non-Steam game with the same Proton-GE config
-6. Install and launch D2R through Battle.net
+5. Once installed, **edit the same non-Steam game entry**. Do not keep launching `Battle.net-Setup*.exe`, and do not create a second non-Steam game entry
+6. In Nushell, get the installed Battle.net path:
+   ```nushell
+   d2r-bnet-steam
+   ```
+7. Copy the output `target` into Steam's **Target** field, and `start_in` into **Start In**. Keep the double quotes in both fields because the path contains spaces and `(x86)`:
+   ```text
+   Target:
+   "/home/ysun/.local/share/Steam/steamapps/compatdata/<ID>/pfx/drive_c/Program Files (x86)/Battle.net/Battle.net.exe"
+
+   Start In:
+   "/home/ysun/.local/share/Steam/steamapps/compatdata/<ID>/pfx/drive_c/Program Files (x86)/Battle.net"
+   ```
+8. Install and launch D2R through Battle.net
+
+`Battle.net-Setup*.exe` is only for the first install. Daily launch must point to `Battle.net.exe` inside the prefix; otherwise Play runs the installer again, which looks like a reinstall or install-then-update cycle. Steam creates a Proton prefix per non-Steam game entry, so creating a new entry can assign a different `compatdata/<ID>`. After installation, prefer editing the original entry.
 
 > Steam creates a separate Proton prefix per non-Steam game at `~/.local/share/Steam/steamapps/compatdata/<numeric-ID>/`.
 

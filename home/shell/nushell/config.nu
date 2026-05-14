@@ -28,6 +28,24 @@ def --env d2r-mods [] {
   cd (($d2r_results | first) + "/mods")
 }
 
+# d2r-bnet: print the installed Battle.net launcher path inside the Proton prefix.
+def d2r-bnet [] {
+  let bnet_results = (glob ($env.HOME + "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files \\(x86\\)/Battle.net/Battle.net.exe"))
+  if ($bnet_results | is-empty) {
+    error make { msg: "Battle.net.exe not found under Steam compatdata" }
+  }
+  $bnet_results | first
+}
+
+# d2r-bnet-steam: print Steam shortcut fields for the installed Battle.net launcher.
+def d2r-bnet-steam [] {
+  let target = (d2r-bnet)
+  {
+    target: ('"' + $target + '"')
+    start_in: ('"' + ($target | path dirname) + '"')
+  }
+}
+
 # d2r-bat: run a Diablo II Resurrected mod .bat script inside the D2R Proton prefix.
 # Usage: d2r-bat "<filename>.bat"   (file name relative to D2R's mods/ directory)
 # Auto-discovers the Proton prefix and the wine binary bundled with proton-ge-bin.
