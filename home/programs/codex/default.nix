@@ -5,7 +5,7 @@
   ...
 }:
 let
-  codexVersion = "0.128.0";
+  codexVersion = "0.130.0";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
@@ -14,7 +14,7 @@ let
 
     src = pkgs.fetchurl {
       url = "https://github.com/openai/codex/releases/download/rust-v${codexVersion}/${codexAsset}";
-      hash = "sha256-iGuF5hGMC0MjRDfKAH++kjYRpTsQPQDg0650rvsg4jo=";
+      hash = "sha256-Fneee3hXUIp2ijbX1OCE7sM27COUbtcKmwlIm4+GEZA=";
     };
 
     sourceRoot = ".";

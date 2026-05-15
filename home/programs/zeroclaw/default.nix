@@ -10,7 +10,7 @@
   ...
 }:
 let
-  zeroclawVersion = "0.7.3";
+  zeroclawVersion = "0.7.5";
   zeroclawAsset = "zeroclaw-x86_64-unknown-linux-gnu.tar.gz";
   zeroclawPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "zeroclaw";
@@ -18,7 +18,7 @@ let
 
     src = pkgs.fetchurl {
       url = "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v${zeroclawVersion}/${zeroclawAsset}";
-      hash = "sha256-EDarTAG57Z45d5VFTAPTdtu2KI7nIu710rxrgHo7CgE=";
+      hash = "sha256-i8gnao2Prvs+SoJPM4dpKedGb2Mu58U2OTY2ihry5Pc=";
     };
 
     sourceRoot = ".";
