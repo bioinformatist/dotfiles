@@ -8,8 +8,8 @@
 
 {
   home.packages = with pkgs; [
-    protontricks    # Helper for Proton prefix management
-    gamemode        # Feral GameMode — CPU governor + nice level optimization
+    protontricks # Helper for Proton prefix management
+    gamemode # Feral GameMode — CPU governor + nice level optimization
   ];
 
   # Proton-GE is declared in configuration.nix via programs.steam.extraCompatPackages.

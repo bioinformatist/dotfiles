@@ -42,7 +42,10 @@ let
     meta = with lib; {
       description = "Fast, small, fully autonomous AI personal assistant infrastructure";
       homepage = "https://github.com/zeroclaw-labs/zeroclaw";
-      license = with licenses; [ mit asl20 ];
+      license = with licenses; [
+        mit
+        asl20
+      ];
       mainProgram = "zeroclaw";
       platforms = [ "x86_64-linux" ];
     };

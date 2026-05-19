@@ -8,9 +8,13 @@
 }:
 
 let
+  wechatPkgs = import inputs.nixpkgs-wechat {
+    inherit (pkgs.stdenv.hostPlatform) system;
+    config.allowUnfree = true;
+  };
   wechat-uos-fcitx = pkgs.symlinkJoin {
     name = "wechat-uos-fcitx";
-    paths = [ pkgs.wechat-uos ];
+    paths = [ wechatPkgs.wechat-uos ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/wechat-uos \
@@ -21,7 +25,9 @@ in
 {
   nix.settings = {
     extra-substituters = [ "https://hyprland.cachix.org" ];
-    extra-trusted-public-keys = [ "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" ];
+    extra-trusted-public-keys = [
+      "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+    ];
   };
 
   security.rtkit.enable = true;
@@ -75,7 +81,10 @@ in
   xdg.portal = {
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
     config.hyprland = {
-      default = [ "hyprland" "gtk" ];
+      default = [
+        "hyprland"
+        "gtk"
+      ];
       "org.freedesktop.impl.portal.Screenshot" = [ "gtk" ];
       "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
     };
@@ -191,13 +200,13 @@ in
       google-chrome
       hyprlock
       wechat-uos-fcitx
-    grim # Wayland screenshot backend
-    slurp # Wayland region selector
-    satty # Screenshot annotation editor (arrows, text, blur)
-    xclip # X11 clipboard bridge (for XWayland apps like WeChat)
-    jq # JSON processor (used by screenshot keybind to get active monitor)
-    nwg-displays # GUI monitor layout tool (like Windows display settings)
-    kdePackages.polkit-kde-agent-1
+      grim # Wayland screenshot backend
+      slurp # Wayland region selector
+      satty # Screenshot annotation editor (arrows, text, blur)
+      xclip # X11 clipboard bridge (for XWayland apps like WeChat)
+      jq # JSON processor (used by screenshot keybind to get active monitor)
+      nwg-displays # GUI monitor layout tool (like Windows display settings)
+      kdePackages.polkit-kde-agent-1
     ]
     ++ [
       inputs.swww.packages.${pkgs.stdenv.hostPlatform.system}.swww

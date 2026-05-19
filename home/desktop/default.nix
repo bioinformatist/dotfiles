@@ -35,39 +35,41 @@ let
 
   # ── eww scripts (need executable permission) ───────────────
   ewwScriptFiles = builtins.listToAttrs (
-    map (name: {
-      name = "eww/scripts/${name}";
-      value = {
-        source = ./eww-scripts/${name};
-        executable = true;
-      };
-    }) [
-      # Phase 1
-      "get-workspaces"
-      "get-window-title"
-      "get-weather"
-      "open-weather"
-      "open-calendar"
-      "manage-bars"
-      # Phase 2
-      "get-volume"
-      "get-audio-sinks"
-      "get-audio-sources"
-      "set-audio-device"
-      "set-vol"
-      "get-bluetooth"
-      "bt-toggle"
-      "bt-pair"
-      "get-network"
-      "get-sysinfo"
-      "get-notifications"
-      "close-popups"
-      "toggle-popup"
-      "run-power-action"
-      "search-weather"
-      # D2R
-      "get-terror-zone"
-    ]
+    map
+      (name: {
+        name = "eww/scripts/${name}";
+        value = {
+          source = ./eww-scripts/${name};
+          executable = true;
+        };
+      })
+      [
+        # Phase 1
+        "get-workspaces"
+        "get-window-title"
+        "get-weather"
+        "open-weather"
+        "open-calendar"
+        "manage-bars"
+        # Phase 2
+        "get-volume"
+        "get-audio-sinks"
+        "get-audio-sources"
+        "set-audio-device"
+        "set-vol"
+        "get-bluetooth"
+        "bt-toggle"
+        "bt-pair"
+        "get-network"
+        "get-sysinfo"
+        "get-notifications"
+        "close-popups"
+        "toggle-popup"
+        "run-power-action"
+        "search-weather"
+        # D2R
+        "get-terror-zone"
+      ]
   );
 in
 {
@@ -87,12 +89,12 @@ in
 
   # ── eww runtime dependencies ───────────────────────────────
   home.packages = with pkgs; [
-    socat        # Hyprland IPC socket listener
-    curl         # Weather API requests
-    dbus         # dbus-monitor for Bluetooth events
-    dunst        # Notification daemon (dunstctl)
-    pulseaudio   # pactl stream for volume events
-    alsa-utils   # amixer for hardware capture gain in the audio popup
+    socat # Hyprland IPC socket listener
+    curl # Weather API requests
+    dbus # dbus-monitor for Bluetooth events
+    dunst # Notification daemon (dunstctl)
+    pulseaudio # pactl stream for volume events
+    alsa-utils # amixer for hardware capture gain in the audio popup
     # jq is already in nixos/desktop.nix systemPackages
 
     # Fonts — Nerd Font variant includes all glyph icons

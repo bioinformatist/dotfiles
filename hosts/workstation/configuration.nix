@@ -1,8 +1,6 @@
 # Workstation (physical machine) host configuration.
 # Shared settings are in ../../nixos/common.nix and ../../nixos/desktop.nix.
 
-
-
 {
   inputs,
   config,
@@ -66,8 +64,12 @@
     owner = "ysun";
   };
   # ZeroClaw door access secrets
-  sops.secrets."zeroclaw-door-card-no" = { owner = "ysun"; };
-  sops.secrets."zeroclaw-door-user-id" = { owner = "ysun"; };
+  sops.secrets."zeroclaw-door-card-no" = {
+    owner = "ysun";
+  };
+  sops.secrets."zeroclaw-door-user-id" = {
+    owner = "ysun";
+  };
   # systemd-tmpfiles-setup runs before sops-install-secrets, so this
   # guarantees ~/.zeroclaw/workspace/ is ysun-owned when sops writes USER.md.
   # Without this, sops (running as root) creates the parent dir as root,
@@ -205,6 +207,7 @@
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5" # Fcitx5/Rime user dictionary and learned words
         ".gemini" # Antigravity IDE data (conversations, knowledge base)
+        ".xwechat" # WeChat login/session state
         "xwechat_files" # WeChat chat history and data
         # Physical machine daily-use paths
         "Downloads"

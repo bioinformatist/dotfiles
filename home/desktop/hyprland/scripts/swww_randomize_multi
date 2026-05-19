@@ -43,6 +43,17 @@ RESIZE_TYPE="fit"
 # Parse display list robustly (removes leading colons/spaces handled by weird VM outputs)
 DISPLAY_LIST=$(swww query | sed 's/^[: ]*//' | cut -d: -f1)
 
+fullscreen_active() {
+    hyprctl clients -j 2>/dev/null \
+        | jq -e 'any(.[]; (.fullscreen // 0) == 2 or (.fullscreenClient // 0) == 2)' >/dev/null 2>&1
+}
+
+wait_for_no_fullscreen() {
+    while fullscreen_active; do
+        sleep 5
+    done
+}
+
 while true; do
     find -L ${WALLPAPER_DIR} -type f \
         | while read -r img; do
@@ -62,6 +73,7 @@ while true; do
                         break 2
                     fi
                 fi
+                wait_for_no_fullscreen
                 swww img --resize=$RESIZE_TYPE --outputs $disp $img
                 # make sure each image is only used once
                 img=""

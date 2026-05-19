@@ -63,6 +63,7 @@ This repository supports multiple host configurations, sharing common settings v
 | `~/.local/share/Steam` | Steam games, Proton prefixes, save data (`homePC` only) |
 | `~/.cargo/registry` | Cargo crate cache (speeds up Rust builds) (`homePC` only) |
 | `~/.gemini` | Antigravity IDE knowledge base and conversation data (`homePC` only) |
+| `~/.xwechat` | WeChat login and device session state |
 | `~/xwechat_files` | WeChat chat history and files |
 | `~/Downloads` | Downloads (`homePC` only) |
 | `~/Documents` | Documents (`homePC` only) |
@@ -92,7 +93,7 @@ Everything else is wiped on reboot.
 | **Antigravity** | `inputs.antigravity` (flake) | IDE |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland-native lock screen |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland-native portal for screen sharing, file dialogs, etc. |
-| **WeChat** | `pkgs.wechat-uos` | WeChat desktop client (runs via XWayland) |
+| **WeChat** | `nixpkgs-wechat.wechat-uos` | WeChat desktop client (runs via XWayland) |
 | **grim** + **slurp** | `pkgs.grim`, `pkgs.slurp` | Wayland screen capture + region selector |
 | **satty** | `pkgs.satty` | Screenshot annotation editor (arrows, text, blur, brush) |
 
@@ -358,11 +359,14 @@ Battle.net runs as a **non-Steam game** added to Steam, using the Proton compati
    Start In:
    "/home/ysun/.local/share/Steam/steamapps/compatdata/<ID>/pfx/drive_c/Program Files (x86)/Battle.net"
    ```
-8. Install and launch D2R through Battle.net
+8. In the same Steam entry, disable **Enable the Steam Overlay while in-game**. The overlay starts `gameoverlayui` even for this non-Steam Battle.net entry and can add input/rendering overhead while D2R is running.
+9. Install and launch D2R through Battle.net
 
 `Battle.net-Setup*.exe` is only for the first install. Daily launch must point to `Battle.net.exe` inside the prefix; otherwise Play runs the installer again, which looks like a reinstall or install-then-update cycle. Steam creates a Proton prefix per non-Steam game entry, so creating a new entry can assign a different `compatdata/<ID>`. After installation, prefer editing the original entry.
 
 > Steam creates a separate Proton prefix per non-Steam game at `~/.local/share/Steam/steamapps/compatdata/<numeric-ID>/`.
+
+After D2R starts, minimize the Battle.net main window if possible. Leaving the Chromium/CEF Battle.net UI visible can add CPU/GPU/compositor load on top of D2R.
 
 ### D2R Mod Installation
 

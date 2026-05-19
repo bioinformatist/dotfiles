@@ -200,11 +200,13 @@ def dotfiles-maint-refresh-zeroclaw [] {
 }
 
 # Update binary-friendly tool inputs and refresh the Codex and ZeroClaw
-# official release binary pins. Yazi and Anyrun follow nixpkgs binary cache.
+# official release binary pins. WeChat follows a dedicated nixpkgs input.
+# Yazi and Anyrun follow the base nixpkgs binary cache.
 def maint-update-tools [] {
   print "Updating binary-friendly tool inputs..."
   dotfiles-maint-lock-update [
     "antigravity"
+    "nixpkgs-wechat"
   ]
   dotfiles-maint-refresh-codex
   dotfiles-maint-refresh-zeroclaw

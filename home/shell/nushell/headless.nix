@@ -48,7 +48,13 @@ in
 
     xdg.configFile."dotfiles/maint.nuon" = lib.mkIf cfg.enable {
       text = builtins.toJSON {
-        inherit (cfg) repo host proxyConfig riskMarkers updateGroups;
+        inherit (cfg)
+          repo
+          host
+          proxyConfig
+          riskMarkers
+          updateGroups
+          ;
       };
     };
   };

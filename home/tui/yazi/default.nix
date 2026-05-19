@@ -10,9 +10,21 @@
     settings = builtins.fromTOML (builtins.readFile ./yazi.toml);
     keymap = {
       mgr.prepend_keymap = [
-        { on = [ "z" ]; run = "plugin zoxide"; desc = "Jump to a directory via zoxide"; }
-        { on = [ "Z" ]; run = "plugin zoxide --args=list"; desc = "Pick a directory via zoxide"; }
-        { on = [ "<C-s>" ]; run = "plugin fzf"; desc = "Find files by name via fzf"; }
+        {
+          on = [ "z" ];
+          run = "plugin zoxide";
+          desc = "Jump to a directory via zoxide";
+        }
+        {
+          on = [ "Z" ];
+          run = "plugin zoxide --args=list";
+          desc = "Pick a directory via zoxide";
+        }
+        {
+          on = [ "<C-s>" ];
+          run = "plugin fzf";
+          desc = "Find files by name via fzf";
+        }
       ];
     };
   };

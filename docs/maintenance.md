@@ -58,10 +58,11 @@ sudo systemctl restart nix-daemon
 Updates the lower-risk tool layer:
 
 - flake input: `antigravity`
+- flake input: `nixpkgs-wechat` for WeChat
 - local Codex release pin in [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
 - local ZeroClaw release pin in [home/programs/zeroclaw/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/zeroclaw/default.nix)
 
-This is the normal entry point when you want binary-friendly tools to stay fresh without pushing the whole system base forward. Yazi and Anyrun intentionally follow nixpkgs instead of separate source flake inputs.
+This is the normal entry point when you want binary-friendly tools to stay fresh without pushing the whole system base forward. WeChat uses a dedicated nixpkgs input so it can move independently. Yazi and Anyrun intentionally follow nixpkgs instead of separate source flake inputs.
 
 ```nu
 maint-update-tools
@@ -137,7 +138,7 @@ maint-switch
 
 ### Tool-layer refresh
 
-Use this when you mainly care about binary-friendly tool pins such as Codex, ZeroClaw, and Antigravity. Yazi and Anyrun follow nixpkgs.
+Use this when you mainly care about binary-friendly tool pins such as Codex, ZeroClaw, Antigravity, and WeChat. Yazi and Anyrun follow nixpkgs.
 
 ```nu
 maint-update-tools

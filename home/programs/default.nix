@@ -5,12 +5,13 @@
   ...
 }:
 {
-  imports =
-    [ ./codex ]
-    ++ lib.optionals (!isVM) [
-      ./zeroclaw
-      ./gaming.nix
-    ];
+  imports = [
+    ./codex
+  ]
+  ++ lib.optionals (!isVM) [
+    ./zeroclaw
+    ./gaming.nix
+  ];
 
   # Cargo crates.io USTC mirror — declarative via home.file symlink.
   # ~/.cargo/registry/ (cache) is persisted separately via impermanence.
@@ -23,10 +24,13 @@
       ouch # Rust-based archive tool (zip/tar/gz/xz/zstd/7z)
       claude-code
     ])
-    ++ lib.optionals (!isVM) (with pkgs; [
-      discord
-      wemeet
-    ]);
+    ++ lib.optionals (!isVM) (
+      with pkgs;
+      [
+        discord
+        wemeet
+      ]
+    );
 
   programs.ripgrep.enable = true;
 }

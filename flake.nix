@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-wechat.url = "github:NixOS/nixpkgs/nixos-unstable";
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -42,7 +43,11 @@
       nixosModules = import ./modules/nixos;
       homeManagerModules = import ./modules/home-manager;
       mkHost =
-        { hostDir, username, isVM }:
+        {
+          hostDir,
+          username,
+          isVM,
+        }:
         let
           specialArgs = {
             inherit username isVM inputs;
@@ -73,7 +78,12 @@
         };
     in
     {
-      inherit overlays profiles nixosModules homeManagerModules;
+      inherit
+        overlays
+        profiles
+        nixosModules
+        homeManagerModules
+        ;
 
       packages = forAllSystems (
         system:
@@ -114,7 +124,9 @@
                   overlays.modifications
                 ];
               };
-              extraSpecialArgs = inputs // { inherit username; };
+              extraSpecialArgs = inputs // {
+                inherit username;
+              };
               modules = [
                 ./home/shared.nix
               ];
