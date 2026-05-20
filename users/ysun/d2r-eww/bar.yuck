@@ -1,12 +1,8 @@
-;; ═══ Bar Window Definitions ═══
-;; One defwindow per monitor (supports up to 3 monitors).
-;; The manage-bars script detects connected monitors and opens
-;; only the relevant bar windows.
+;; Bar Window Definitions — D2R-enabled variant
 
 (defwidget bar_widget [monitor_id]
   (centerbox :orientation "h"
              :class "bar-inner"
-    ;; ─── Left: Workspaces + Window Title ───
     (box :class "bar-left"
          :orientation "h"
          :space-evenly false
@@ -15,16 +11,15 @@
       (workspaces :monitor_id monitor_id)
       (window-title))
 
-    ;; ─── Center: Clock + Weather ───
     (box :class "bar-center"
          :orientation "h"
          :space-evenly false
          :halign "center"
          :spacing 12
       (clock)
-      (weather :monitor_id monitor_id))
+      (weather :monitor_id monitor_id)
+      (terror-zone))
 
-    ;; ─── Right: System Modules ───
     (box :class "bar-right"
          :orientation "h"
          :space-evenly false
@@ -38,7 +33,6 @@
       (audio :monitor_id monitor_id)
       (power :monitor_id monitor_id))))
 
-;; ─── Monitor 0 ──────────────────────────────────────────────
 (defwindow bar0
   :monitor 0
   :geometry (geometry :x "0%"
@@ -51,7 +45,6 @@
   :namespace "eww-bar"
   (bar_widget :monitor_id 0))
 
-;; ─── Monitor 1 ──────────────────────────────────────────────
 (defwindow bar1
   :monitor 1
   :geometry (geometry :x "0%"
@@ -64,7 +57,6 @@
   :namespace "eww-bar"
   (bar_widget :monitor_id 1))
 
-;; ─── Monitor 2 ──────────────────────────────────────────────
 (defwindow bar2
   :monitor 2
   :geometry (geometry :x "0%"

@@ -22,7 +22,6 @@
       telegram-desktop
       sops # CLI for editing encrypted secrets (secrets/secrets.yaml)
       ouch # Rust-based archive tool (zip/tar/gz/xz/zstd/7z)
-      claude-code
     ])
     ++ lib.optionals (!isVM) (
       with pkgs;

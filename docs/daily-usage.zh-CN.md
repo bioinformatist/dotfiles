@@ -55,16 +55,13 @@
 | `~/github.com` | 所有源码和 dotfiles |
 | `~/.config/sops` | sops 解密所需的 Age 私钥 |
 | `~/.config/nushell` | Nushell 用户配置（env.nu、config.nu） |
+| `~/.config/gh` | GitHub CLI 登录状态 |
 | `~/.config/google-chrome` | Chrome 配置（书签、密码、扩展） |
-| `~/.config/Antigravity` | Antigravity IDE 登录与会话状态（仅 `homePC`） |
-| `~/.config/claude` | Claude Code 凭据（`proxy.nuon`） |
-| `~/.claude` | Claude Code 记忆、对话历史、会话数据 |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge 代理配置和设置 |
 | `~/.local/share/fcitx5` | Rime 用户词典和学习数据 |
 | `~/.local/share/TelegramDesktop` | Telegram 登录会话和聊天缓存（仅 `homePC`） |
 | `~/.local/share/Steam` | Steam 游戏、Proton 前缀、存档（仅 `homePC`） |
 | `~/.cargo/registry` | Cargo 包缓存（加速 Rust 构建，仅 `homePC`） |
-| `~/.gemini` | Antigravity IDE 知识库和对话数据（仅 `homePC`） |
 | `~/.xwechat` | 微信登录和设备会话状态 |
 | `~/xwechat_files` | 微信聊天记录和文件 |
 | `~/Downloads` | 下载目录（仅 `homePC`） |
@@ -92,7 +89,6 @@
 | **Eww** | `pkgs.eww` + Home Manager | 桌面小部件和状态栏 |
 | **Dunst** | Home Manager 服务 | 通知守护进程 |
 | **swww** | `inputs.swww`（flake） | Wayland 壁纸守护进程，附带多显示器随机轮换脚本 |
-| **Antigravity** | `inputs.antigravity`（flake） | IDE |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland 原生锁屏 |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland 原生门户（屏幕共享、文件对话框等） |
 | **微信** | `nixpkgs-wechat.wechat-uos` | 微信桌面客户端（通过 XWayland 运行） |
@@ -115,6 +111,7 @@
 | 包 | 说明 |
 | :--- | :--- |
 | `git` | 版本控制 |
+| `gh` | GitHub CLI |
 | `wl-clipboard` | Wayland 剪贴板工具（`wl-copy` / `wl-paste`） |
 | `proxychains` | 强制任何程序通过 SOCKS5/HTTP 代理（`127.0.0.1:7897`） |
 | `nix-ld` | 未打补丁二进制文件的动态链接器 |
@@ -159,7 +156,6 @@
 | `SUPER + F` | 切换**全屏** |
 | `SUPER + Return` | 启动**终端**（Ghostty） |
 | `SUPER + B` | 启动**浏览器**（Chrome） |
-| `SUPER + SHIFT + G` | 启动 **Antigravity IDE** |
 | `SUPER + SHIFT + P` | 启动**代理客户端**（Clash Verge） |
 | `SUPER + W` | 启动**微信** |
 | `SUPER + L` | **锁屏**（hyprlock） |
@@ -429,22 +425,17 @@ hyprctl dispatch exec "fcitx5 -d --replace"
 
 > fcitx5 通过 `hyprland.conf` 中的 `uwsm app --` 启动，确保其在 `graphical-session.target` 就绪、`zwp_input_method_v2` 协议可用后才启动。正常开机时此机制可靠；上述命令仅在非正常关机留下残余状态时需要。
 
-### Claude Code（`claude-proxy`）
+### GitHub CLI 认证
 
-Claude Code 通过 `claude-proxy` Nushell wrapper 启动，该 wrapper 从 `~/.config/claude/proxy.nuon`（不被 git 追踪）读取凭据和代理配置并注入为环境变量。所有子进程（包括 MCP server）都会继承这些变量。
+`gh` 通过声明式配置安装，但它的登录状态由用户态管理。全新安装后，用 sops 中保存的 GitHub token 认证一次：
 
-**`proxy.nuon` 格式：**
-```nushell
-{
-  ANTHROPIC_BASE_URL: "http://<api-relay>:<port>/",
-  ANTHROPIC_AUTH_TOKEN: "sk-...",
-  ANTHROPIC_MODEL: "claude-...",
-  HTTP_PROXY: "http://<lan-proxy>:<port>",
-  HTTPS_PROXY: "http://<lan-proxy>:<port>"
-}
+```nu
+open /run/secrets/github-mcp-token | str trim | ^gh auth login --with-token
+^gh config set git_protocol ssh --host github.com
 ```
 
-当局域网代理地址变更时，只需更新此文件中的 `HTTP_PROXY`/`HTTPS_PROXY`，无需修改任何 MCP 或 shell 配置。
+在 `homePC` 上，`~/.config/gh` 已持久化，因此这次登录会跨重启保留。不要用 Nix 或 sops 管理 `~/.config/gh/hosts.yml`；这个文件由 `gh` 自己维护和迁移。
+
 
 ### Sops 首次引导
 如果你在新机器上运行 `sops` 时找不到密钥，请在 Nushell 中运行：

@@ -6,12 +6,12 @@
 (defpoll audio-sinks
   :interval "5s"
   :initial '[]'
-  `/home/ysun/.config/eww/scripts/get-audio-sinks`)
+  `~/.config/eww/scripts/get-audio-sinks`)
 
 (defpoll audio-sources
   :interval "5s"
   :initial '[]'
-  `/home/ysun/.config/eww/scripts/get-audio-sources`)
+  `~/.config/eww/scripts/get-audio-sources`)
 
 (defwidget audio-popup-content []
   (box :class "popup-panel"
@@ -41,7 +41,7 @@
         :min 0
         :max 150
         :value {audio-status.sink_vol}
-        :onchange "/home/ysun/.config/eww/scripts/set-vol sink {}"
+        :onchange "~/.config/eww/scripts/set-vol sink {}"
         :hexpand true)
       (label
         :class "vol-label"
@@ -55,7 +55,7 @@
       (for sink in audio-sinks
         (button
           :class {sink.active ? "device-btn device-btn-active" : "device-btn"}
-          :onclick "/home/ysun/.config/eww/scripts/set-audio-device sink ${sink.id} &"
+          :onclick "~/.config/eww/scripts/set-audio-device sink ${sink.id} &"
           (box :orientation "h"
                :space-evenly false
                :spacing 8
@@ -79,7 +79,7 @@
         :min 0
         :max 150
         :value {audio-status.source_vol}
-        :onchange "/home/ysun/.config/eww/scripts/set-vol source {}"
+        :onchange "~/.config/eww/scripts/set-vol source {}"
         :hexpand true)
       (label
         :class "vol-label"
@@ -93,7 +93,7 @@
       (for source in audio-sources
         (button
           :class {source.active ? "device-btn device-btn-active" : "device-btn"}
-          :onclick "/home/ysun/.config/eww/scripts/set-audio-device source ${source.id} &"
+          :onclick "~/.config/eww/scripts/set-audio-device source ${source.id} &"
           (box :orientation "h"
                :space-evenly false
                :spacing 8

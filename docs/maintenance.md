@@ -57,7 +57,6 @@ sudo systemctl restart nix-daemon
 
 Updates the lower-risk tool layer:
 
-- flake input: `antigravity`
 - flake input: `nixpkgs-wechat` for WeChat
 - local Codex release pin in [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
 - local ZeroClaw release pin in [home/programs/zeroclaw/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/zeroclaw/default.nix)
@@ -138,7 +137,7 @@ maint-switch
 
 ### Tool-layer refresh
 
-Use this when you mainly care about binary-friendly tool pins such as Codex, ZeroClaw, Antigravity, and WeChat. Yazi and Anyrun follow nixpkgs.
+Use this when you mainly care about binary-friendly tool pins such as Codex, ZeroClaw, and WeChat. Yazi and Anyrun follow nixpkgs.
 
 ```nu
 maint-update-tools
@@ -186,6 +185,5 @@ If the check shows `nvidia-x11`, `linux-`, or other heavy components under `will
 
 ## Notes
 
-- `claude-code` follows `pkgs.claude-code`, so it moves with `nixpkgs` and therefore belongs to `maint-update-base`, not `maint-update-tools`.
 - The maintenance helpers assume the current host is `homePC`.
 - `~/.config/nix/` is persisted on `homePC`, so `local-proxy.nuon` survives reboot once created.

@@ -22,6 +22,10 @@ in
 
   programs.nano.enable = false;
 
+  environment.systemPackages = [
+    pkgs.gh
+  ];
+
   users.users.${username} = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];

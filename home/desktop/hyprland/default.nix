@@ -1,7 +1,6 @@
 {
   lib,
   pkgs,
-  isVM ? false,
   ...
 }:
 {
@@ -27,9 +26,6 @@
     systemd.enable = false;
     enable = true;
     extraConfig = builtins.readFile ./hyprland.conf;
-    settings = lib.mkIf isVM {
-      debug.damage_tracking = 0;
-    };
   };
 
   # ── swww wallpaper services ──────────────────────────────────────────

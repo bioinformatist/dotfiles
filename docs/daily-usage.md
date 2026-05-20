@@ -53,16 +53,13 @@ This repository supports multiple host configurations, sharing common settings v
 | `~/github.com` | All source code and dotfiles |
 | `~/.config/sops` | Age private key for sops secret decryption |
 | `~/.config/nushell` | Nushell user config (env.nu, config.nu) |
+| `~/.config/gh` | GitHub CLI auth state |
 | `~/.config/google-chrome` | Chrome profile (bookmarks, passwords, extensions) |
-| `~/.config/Antigravity` | Antigravity IDE login and session state (`homePC` only) |
-| `~/.config/claude` | Claude Code credentials (`proxy.nuon`) |
-| `~/.claude` | Claude Code memory, conversation history, session data |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge proxy profiles and settings |
 | `~/.local/share/fcitx5` | Rime user dictionary and learned words |
 | `~/.local/share/TelegramDesktop` | Telegram login session and chat cache (`homePC` only) |
 | `~/.local/share/Steam` | Steam games, Proton prefixes, save data (`homePC` only) |
 | `~/.cargo/registry` | Cargo crate cache (speeds up Rust builds) (`homePC` only) |
-| `~/.gemini` | Antigravity IDE knowledge base and conversation data (`homePC` only) |
 | `~/.xwechat` | WeChat login and device session state |
 | `~/xwechat_files` | WeChat chat history and files |
 | `~/Downloads` | Downloads (`homePC` only) |
@@ -90,7 +87,6 @@ Everything else is wiped on reboot.
 | **Eww** | `pkgs.eww` + Home Manager | Desktop widgets and status bar |
 | **Dunst** | Home Manager service | Notification daemon |
 | **swww** | `inputs.swww` (flake) | Wayland wallpaper daemon with custom multi-monitor rotation script |
-| **Antigravity** | `inputs.antigravity` (flake) | IDE |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland-native lock screen |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland-native portal for screen sharing, file dialogs, etc. |
 | **WeChat** | `nixpkgs-wechat.wechat-uos` | WeChat desktop client (runs via XWayland) |
@@ -113,6 +109,7 @@ Everything else is wiped on reboot.
 | Package | Description |
 | :--- | :--- |
 | `git` | Version control |
+| `gh` | GitHub CLI |
 | `wl-clipboard` | Wayland clipboard utilities (`wl-copy` / `wl-paste`) |
 | `proxychains` | Force any program through SOCKS5/HTTP proxy (`127.0.0.1:7897`) |
 | `nix-ld` | Dynamic linker for unpatched binaries |
@@ -157,7 +154,6 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + F` | Toggle **Fullscreen** |
 | `SUPER + Return` | Launch **Terminal** (Ghostty) |
 | `SUPER + B` | Launch **Browser** (Chrome) |
-| `SUPER + SHIFT + G` | Launch **Antigravity IDE** |
 | `SUPER + SHIFT + P` | Launch **Proxy Client** (Clash Verge) |
 | `SUPER + W` | Launch **WeChat** |
 | `SUPER + L` | **Lock Screen** (hyprlock) |
@@ -427,22 +423,17 @@ hyprctl dispatch exec "fcitx5 -d --replace"
 
 > fcitx5 is started via `uwsm app --` in `hyprland.conf`, which ensures it launches only after `graphical-session.target` is reached and the `zwp_input_method_v2` protocol is ready. On a clean boot this is reliable; the above workaround is only needed after an unclean shutdown leaves stale state.
 
-### Claude Code (`claude-proxy`)
+### GitHub CLI Authentication
 
-Claude Code is launched via the `claude-proxy` Nushell wrapper, which injects credentials and proxy settings from `~/.config/claude/proxy.nuon` (not tracked by git). All child processes — including MCP servers — inherit these variables.
+`gh` is installed declaratively, but its auth state is user-managed. After a fresh install, authenticate once with the GitHub token stored in sops:
 
-**`proxy.nuon` format:**
-```nushell
-{
-  ANTHROPIC_BASE_URL: "http://<api-relay>:<port>/",
-  ANTHROPIC_AUTH_TOKEN: "sk-...",
-  ANTHROPIC_MODEL: "claude-...",
-  HTTP_PROXY: "http://<lan-proxy>:<port>",
-  HTTPS_PROXY: "http://<lan-proxy>:<port>"
-}
+```nu
+open /run/secrets/github-mcp-token | str trim | ^gh auth login --with-token
+^gh config set git_protocol ssh --host github.com
 ```
 
-When your LAN proxy address changes, update `HTTP_PROXY`/`HTTPS_PROXY` in this file. No MCP or shell config needs to change.
+On `homePC`, `~/.config/gh` is persisted so this login survives reboot. Do not manage `~/.config/gh/hosts.yml` with Nix or sops; `gh` owns and migrates that file itself.
+
 
 ### Sops Bootstrapping (First Time)
 If you are on a new machine and `sops` fails to find your keys, run this in Nushell:

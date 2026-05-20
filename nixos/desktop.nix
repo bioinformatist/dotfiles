@@ -210,6 +210,5 @@ in
     ]
     ++ [
       inputs.swww.packages.${pkgs.stdenv.hostPlatform.system}.swww
-      inputs.antigravity.packages.${pkgs.stdenv.hostPlatform.system}.google-antigravity-no-fhs
     ];
 }

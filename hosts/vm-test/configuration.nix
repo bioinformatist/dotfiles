@@ -91,7 +91,6 @@
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
       ];
       files = [
-        ".claude.json" # Claude Code user preferences and GitHub MCP token source
       ];
     };
   };

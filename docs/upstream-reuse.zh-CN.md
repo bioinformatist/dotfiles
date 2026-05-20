@@ -8,10 +8,12 @@
 
 - `profiles.headless`
 - `profiles.ai-serving`
-- `nixosModules.{headless,ai-serving}`
-- `homeManagerModules.{core,tui}`
+- `profiles.workstationCn`
+- `nixosModules.{headless,ai-serving,nixProxy,nvidiaDesktop,workstationCn}`
+- `homeManagerModules.{core,tui,codex,devHeadless,workstationCn}`
 - `overlays`
 - `packages`
+- `templates.workstation-cn`
 
 不要在下游直接 import 本仓库内部路径，例如 `./nixos/*.nix`、`./home/*.nix` 或 `./hosts/*`。
 
@@ -41,11 +43,29 @@
 
 它不包含 CUDA userspace，也不包含具体模型服务栈。
 
+`profiles.workstationCn` 提供中国大陆开发工作站系统层：
+
+- `profiles.headless`
+- 中国大陆 Nix substituter / DNS 默认项
+- Nix daemon 代理入口
+- Hyprland / PipeWire / Fcitx5 + Rime / 中文字体
+- Clash Verge、WeChat、截图工具、基础 GUI 工具
+
+它不包含：
+
+- 磁盘布局
+- sops secrets
+- 具体用户名之外的个人账号内容
+- NVIDIA 桌面补丁
+- ZeroClaw、D2R、公司 SSH、业务服务
+
+NVIDIA 桌面机器应额外叠加 `nixosModules.nvidiaDesktop`。
+
 ## 当前本仓库主机组合
 
 本仓库里的个人主机继续通过额外本地模块保持完整能力：
 
-- `homePC`：`profiles.headless` + proxy + desktop + NVIDIA 桌面集成
+- `homePC`：`profiles.workstationCn` + NVIDIA 桌面集成 + 个人 Home Manager 层
 - `vm-test`：`profiles.headless` + proxy + desktop + VM tweaks
 
 ## 下游示例

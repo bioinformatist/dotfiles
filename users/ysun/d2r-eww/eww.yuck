@@ -1,0 +1,21 @@
+;; Eww Bar — D2R-enabled entry point
+
+(include "./modules/workspaces.yuck")
+(include "./modules/window-title.yuck")
+(include "./modules/clock.yuck")
+(include "./modules/weather.yuck")
+(include "./modules/terror-zone.yuck")
+
+(include "./modules/audio.yuck")
+(include "./modules/bluetooth.yuck")
+(include "./modules/network.yuck")
+(include "./modules/power.yuck")
+(include "./modules/sysinfo.yuck")
+(include "./modules/notifications.yuck")
+
+(include "./windows/bar.yuck")
+(include "./windows/audio-popup.yuck")
+(include "./windows/bt-popup.yuck")
+(include "./windows/net-popup.yuck")
+(include "./windows/power-popup.yuck")
+(include "./windows/weather-search.yuck")

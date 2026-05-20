@@ -1,0 +1,1 @@
+import ../../nixos/nvidia.nix

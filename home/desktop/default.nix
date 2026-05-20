@@ -14,7 +14,6 @@ let
     "eww/modules/window-title.yuck".source = ./eww/modules/window-title.yuck;
     "eww/modules/clock.yuck".source = ./eww/modules/clock.yuck;
     "eww/modules/weather.yuck".source = ./eww/modules/weather.yuck;
-    "eww/modules/terror-zone.yuck".source = ./eww/modules/terror-zone.yuck;
     # Phase 2: modules
     "eww/modules/audio.yuck".source = ./eww/modules/audio.yuck;
     "eww/modules/bluetooth.yuck".source = ./eww/modules/bluetooth.yuck;
@@ -30,7 +29,6 @@ let
     "eww/windows/power-popup.yuck".source = ./eww/windows/power-popup.yuck;
     "eww/windows/weather-search.yuck".source = ./eww/windows/weather-search.yuck;
     # Data files
-    "eww/terror-zones.json".source = ./eww/terror-zones.json;
   };
 
   # ── eww scripts (need executable permission) ───────────────
@@ -67,8 +65,6 @@ let
         "toggle-popup"
         "run-power-action"
         "search-weather"
-        # D2R
-        "get-terror-zone"
       ]
   );
 in

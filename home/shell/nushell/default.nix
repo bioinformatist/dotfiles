@@ -1,8 +1,9 @@
+{ lib, ... }:
 {
   programs.nushell = {
     enable = true;
-    configFile.source = ./config.nu;
-    loginFile.source = ./login.nu;
+    configFile.source = lib.mkForce ./config.nu;
+    loginFile.source = lib.mkForce ./login.nu;
     shellAliases = {
       rg = "rg --hyperlink-format=default";
     };

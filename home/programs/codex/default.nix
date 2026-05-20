@@ -51,15 +51,20 @@ let
   githubMcpServer = pkgs.writeShellScriptBin "github-mcp-server" ''
     set -euo pipefail
 
-    # Reuse the GitHub token already managed for Claude Code so both tools share
-    # the same auth without duplicating a secret in the repository.
-    token="$(${pkgs.jq}/bin/jq -r '.mcpServers.github.env.GITHUB_PERSONAL_ACCESS_TOKEN // empty' "$HOME/.claude.json" 2>/dev/null || true)"
+    token=""
+    token_file="${config.dotfiles.codex.githubTokenFile}"
+    if [ -n "$token_file" ] && [ -r "$token_file" ]; then
+      token="$(tr -d '\n' < "$token_file")"
+    fi
     if [ -z "$token" ] && [ -n "''${GITHUB_PERSONAL_ACCESS_TOKEN:-}" ]; then
       token="$GITHUB_PERSONAL_ACCESS_TOKEN"
     fi
+    if [ -z "$token" ]; then
+      token="$(${pkgs.gh}/bin/gh auth token --hostname github.com 2>/dev/null || true)"
+    fi
 
     if [ -z "$token" ]; then
-      echo "GitHub token not found in ~/.claude.json or GITHUB_PERSONAL_ACCESS_TOKEN" >&2
+      echo "GitHub token not found in dotfiles.codex.githubTokenFile, GITHUB_PERSONAL_ACCESS_TOKEN, or gh auth" >&2
       exit 1
     fi
 
@@ -67,12 +72,7 @@ let
     exec ${pkgs.github-mcp-server}/bin/github-mcp-server stdio --toolsets context,issues,pull_requests,repos,users,orgs
   '';
 
-  trustedProjects = lib.unique (
-    [
-      "/home/ysun/github.com/bioinformatist/dotfiles"
-    ]
-    ++ config.dotfiles.codex.trustedProjects
-  );
+  trustedProjects = lib.unique config.dotfiles.codex.trustedProjects;
 
   trustedProjectsToml = lib.concatMapStringsSep "\n\n" (path: ''
     [projects."${path}"]
@@ -111,6 +111,12 @@ in
     description = "Extra project roots that Codex should treat as trusted.";
   };
 
+  options.dotfiles.codex.githubTokenFile = lib.mkOption {
+    type = lib.types.str;
+    default = "";
+    description = "Path to a GitHub token file used by the GitHub MCP server.";
+  };
+
   config = {
     home.packages = [ codexPkg ];
 
@@ -118,7 +124,7 @@ in
     # Persist the whole directory so auth, history, and other runtime state
     # survive reboot.
     home.file.".codex/AGENTS.md".text = ''
-      # CLAUDE.md
+      # AGENTS.md
 
       Behavioral guidelines to reduce common LLM coding mistakes. Merge with
       project-specific instructions as needed.

@@ -57,7 +57,6 @@ sudo systemctl restart nix-daemon
 
 更新相对低风险的工具层：
 
-- flake input：`antigravity`
 - flake input：`nixpkgs-wechat`，用于微信
 - 本地声明的 Codex release pin： [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
 - 本地声明的 ZeroClaw release pin： [home/programs/zeroclaw/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/zeroclaw/default.nix)
@@ -138,7 +137,7 @@ maint-switch
 
 ### 工具层刷新
 
-当你主要关心 Codex、ZeroClaw、Antigravity、微信这类二进制友好的工具 pin 时，使用。Yazi 和 Anyrun 跟随 nixpkgs。
+当你主要关心 Codex、ZeroClaw、微信这类二进制友好的工具 pin 时，使用。Yazi 和 Anyrun 跟随 nixpkgs。
 
 ```nu
 maint-update-tools
@@ -186,6 +185,5 @@ maint-switch
 
 ## 说明
 
-- `claude-code` 走的是 `pkgs.claude-code`，因此它随 `nixpkgs` 更新，属于 `maint-update-base`，而不是 `maint-update-tools`。
 - 这些维护函数默认面向当前这台 `homePC`。
 - `homePC` 已持久化 `~/.config/nix/`，因此 `local-proxy.nuon` 创建后可跨重启保留。

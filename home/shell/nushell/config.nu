@@ -7,18 +7,6 @@ $env.EDITOR = "hx"
 $env.VISUAL = "hx"
 $env.SOPS_AGE_KEY_FILE = ("~/.config/sops/age/keys.txt" | path expand)
 
-# claude-proxy: run claude with credentials loaded from ~/.config/claude/proxy.nuon
-# Usage: claude-proxy [claude args...]
-# The proxy.nuon file is NOT tracked by git; delete it when the token expires.
-def --wrapped claude-proxy [...args: string] {
-  let creds_file = ($env.HOME | path join ".config" "claude" "proxy.nuon")
-  if ($creds_file | path exists) {
-    with-env (open $creds_file) { ^claude ...$args }
-  } else {
-    error make { msg: $"Credentials file not found: ($creds_file)\nCreate it with: mkdir -p ~/.config/claude && '{ ANTHROPIC_BASE_URL: \"...\", ANTHROPIC_AUTH_TOKEN: \"...\", ANTHROPIC_MODEL: \"...\" }' | save ($creds_file)" }
-  }
-}
-
 # d2r-mods: jump to the D2R mods directory.
 def --env d2r-mods [] {
   let d2r_results = (glob ($env.HOME + "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files \\(x86\\)/Diablo II Resurrected"))
@@ -205,7 +193,6 @@ def dotfiles-maint-refresh-zeroclaw [] {
 def maint-update-tools [] {
   print "Updating binary-friendly tool inputs..."
   dotfiles-maint-lock-update [
-    "antigravity"
     "nixpkgs-wechat"
   ]
   dotfiles-maint-refresh-codex

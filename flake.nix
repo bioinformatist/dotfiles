@@ -19,10 +19,6 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    antigravity = {
-      url = "github:jacopone/antigravity-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -39,8 +35,8 @@
       systems = [ "x86_64-linux" ];
       forAllSystems = lib.genAttrs systems;
       overlays = import ./overlays { inherit inputs; };
-      profiles = import ./profiles;
-      nixosModules = import ./modules/nixos;
+      profiles = import ./profiles { inherit inputs; };
+      nixosModules = import ./modules/nixos { inherit inputs; };
       homeManagerModules = import ./modules/home-manager;
       mkHost =
         {
@@ -98,6 +94,11 @@
         in
         import ./pkgs pkgs
       );
+
+      templates.workstation-cn = {
+        path = ./templates/workstation-cn;
+        description = "Internal China-friendly NixOS workstation starter";
+      };
 
       nixosConfigurations = {
         vm-test = mkHost {

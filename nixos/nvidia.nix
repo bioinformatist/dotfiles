@@ -22,5 +22,10 @@
 
   # NixOS-specific: auto-configure Electron/CEF apps to use Wayland
   # Ref: https://wiki.hyprland.org/Nvidia/#flickering-in-electron--cef-apps
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    LIBVA_DRIVER_NAME = "nvidia";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    NVD_BACKEND = "direct";
+  };
 }

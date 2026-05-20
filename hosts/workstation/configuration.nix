@@ -13,12 +13,9 @@
   imports = [
     ./hardware-configuration.nix
     ./disko-config.nix
-    ../../profiles/headless.nix
-    ../../nixos/china-network.nix
-    ../../nixos/proxy.nix
-    ../../nixos/desktop.nix
+    (import ../../profiles/workstation-cn.nix { inherit inputs; })
     ../../nixos/nvidia.nix
-    ../../nixos/workstation-audio.nix
+    ../../nixos/mudfish.nix
   ];
 
   # --- Physical machine: Boot ---
@@ -53,6 +50,9 @@
     path = "/home/ysun/.ssh/id_ed25519_sctmes_ops";
   };
   sops.secrets."clash-subscription-url" = {
+    owner = "ysun";
+  };
+  sops.secrets."github-mcp-token" = {
     owner = "ysun";
   };
   # ZeroClaw secrets — fill via: sudo SOPS_AGE_KEY_FILE=... sops set secrets/secrets.yaml
@@ -155,6 +155,8 @@
 
   # --- Home Manager ---
   home-manager.backupFileExtension = "backup";
+  home-manager.users.ysun.dotfiles.codex.githubTokenFile =
+    config.sops.secrets."github-mcp-token".path;
 
   # --- Gaming ---
   programs.steam = {
@@ -199,14 +201,11 @@
         ".config/nix"
         ".config/sops"
         ".config/nushell"
+        ".config/gh" # GitHub CLI auth state; initialize with gh auth login after install
         ".config/google-chrome" # Chrome profile (bookmarks, passwords, extensions)
-        ".config/Antigravity" # Antigravity IDE login and session state
-        ".config/claude" # Claude Code credentials and session state
-        ".claude" # Claude Code memory, history, and session data
         ".codex" # Codex config, auth, history, and MCP server state
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5" # Fcitx5/Rime user dictionary and learned words
-        ".gemini" # Antigravity IDE data (conversations, knowledge base)
         ".xwechat" # WeChat login/session state
         "xwechat_files" # WeChat chat history and data
         # Physical machine daily-use paths
@@ -224,7 +223,6 @@
       # the id_ed25519 symlink that sops-nix creates on tmpfs.
       files = [
         ".ssh/known_hosts"
-        ".claude.json" # Claude Code user preferences (theme, model, etc.)
         ".config/hypr/monitors.conf" # nwg-displays monitor layout (persists across reboots)
         # ZeroClaw mutable state only — config.toml is declarative (via sops.templates)
         ".zeroclaw/active_workspace.toml" # workspace marker
