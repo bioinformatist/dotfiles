@@ -7,7 +7,6 @@
 {
   imports = [
     ../../home/workstation-cn.nix
-    ../../home/shell
   ]
   ++ lib.optionals (!isVM) [
     ./d2r-eww

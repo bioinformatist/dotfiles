@@ -2,7 +2,7 @@
 {
   imports = [
     ./core.nix
-    ./shell/headless.nix
+    ./shell
     ./tui
     ./desktop
     ./programs/workstation-cn.nix
