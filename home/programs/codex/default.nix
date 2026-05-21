@@ -5,7 +5,7 @@
   ...
 }:
 let
-  codexVersion = "0.131.0";
+  codexVersion = "0.132.0";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
@@ -14,7 +14,7 @@ let
 
     src = pkgs.fetchurl {
       url = "https://github.com/openai/codex/releases/download/rust-v${codexVersion}/${codexAsset}";
-      hash = "sha256-9bJnMrdslUN0L3k3p8iPh54AwKc7ZzAIBDpc7mPoNh0=";
+      hash = "sha256-i2RDLuTvWx19GXqtRTWidryFIj9OQWN2nA4QFc2og7I=";
     };
 
     sourceRoot = ".";
@@ -85,6 +85,7 @@ let
     personality = "pragmatic"
     sandbox_mode = "workspace-write"
     approval_policy = "on-request"
+
     [features]
     memories = true
     hooks = true
@@ -103,6 +104,63 @@ let
     [mcp_servers.github]
     command = "${githubMcpServer}/bin/github-mcp-server"
   '';
+
+  mergeCodexConfig = pkgs.writeShellApplication {
+    name = "merge-codex-config";
+    runtimeInputs = [
+      (pkgs.python3.withPackages (pythonPackages: [
+        pythonPackages.tomlkit
+      ]))
+    ];
+    text = ''
+      python3 - "$@" <<'PY'
+      import os
+      import sys
+      import tempfile
+      from pathlib import Path
+
+      import tomlkit
+
+      managed_path = Path(sys.argv[1])
+      target_path = Path(sys.argv[2])
+
+      managed = tomlkit.parse(managed_path.read_text())
+      if target_path.exists():
+          target = tomlkit.parse(target_path.read_text())
+      else:
+          target = tomlkit.document()
+
+      def merge(dst, src):
+          for key, value in src.items():
+              if (
+                  key in dst
+                  and hasattr(dst[key], "items")
+                  and hasattr(value, "items")
+              ):
+                  merge(dst[key], value)
+              else:
+                  dst[key] = value
+
+      merge(target, managed)
+
+      target_path.parent.mkdir(parents=True, exist_ok=True)
+      fd, tmp_name = tempfile.mkstemp(
+          prefix=".config.toml.",
+          dir=str(target_path.parent),
+          text=True,
+      )
+      try:
+          with os.fdopen(fd, "w") as tmp:
+              tmp.write(tomlkit.dumps(target))
+          os.chmod(tmp_name, 0o600)
+          os.replace(tmp_name, target_path)
+      finally:
+          if os.path.exists(tmp_name):
+              os.unlink(tmp_name)
+      PY
+    '';
+  };
+
 in
 {
   options.dotfiles.codex.trustedProjects = lib.mkOption {
@@ -196,16 +254,14 @@ in
       work") require constant clarification.
     '';
 
-    # Keep the Codex baseline declarative, but install it as a real writable file.
-    # Codex records hook trust decisions in config.toml; a Home Manager symlink
-    # into the Nix store makes "Trust all and continue" fail with config/batchWrite.
+    # Keep config.toml as a real writable file. Codex stores runtime state there
+    # too, so activation overlays only the keys this module owns.
     home.activation.codex-config = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       configFile="$HOME/.codex/config.toml"
-      mkdir -p "$(dirname "$configFile")"
-      if [ -L "$configFile" ] || [ ! -e "$configFile" ]; then
+      if [ -L "$configFile" ]; then
         rm -f "$configFile"
-        install -m600 ${codexConfigToml} "$configFile"
       fi
+      ${mergeCodexConfig}/bin/merge-codex-config ${codexConfigToml} "$configFile"
     '';
 
     # Command allow/prompt rules are different from config.toml: keep a
