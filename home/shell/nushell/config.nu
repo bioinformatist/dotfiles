@@ -7,7 +7,7 @@ $env.EDITOR = "hx"
 $env.VISUAL = "hx"
 $env.SOPS_AGE_KEY_FILE = ("~/.config/sops/age/keys.txt" | path expand)
 
-# d2r-mods: jump to the D2R mods directory.
+# Jump to the D2R mods directory.
 def --env d2r-mods [] {
   let d2r_results = (glob ($env.HOME + "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files \\(x86\\)/Diablo II Resurrected"))
   if ($d2r_results | is-empty) {
@@ -16,7 +16,7 @@ def --env d2r-mods [] {
   cd (($d2r_results | first) + "/mods")
 }
 
-# d2r-bnet: print the installed Battle.net launcher path inside the Proton prefix.
+# Print the installed Battle.net launcher path inside the Proton prefix.
 def d2r-bnet [] {
   let bnet_results = (glob ($env.HOME + "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files \\(x86\\)/Battle.net/Battle.net.exe"))
   if ($bnet_results | is-empty) {
@@ -25,7 +25,7 @@ def d2r-bnet [] {
   $bnet_results | first
 }
 
-# d2r-bnet-steam: print Steam shortcut fields for the installed Battle.net launcher.
+# Print Steam shortcut fields for the installed Battle.net launcher.
 def d2r-bnet-steam [] {
   let target = (d2r-bnet)
   {
@@ -34,8 +34,8 @@ def d2r-bnet-steam [] {
   }
 }
 
-# d2r-bat: run a Diablo II Resurrected mod .bat script inside the D2R Proton prefix.
-# Usage: d2r-bat "<filename>.bat"   (file name relative to D2R's mods/ directory)
+# Run a Diablo II Resurrected mod .bat script inside the D2R Proton prefix.
+# Usage: d2r-bat "<filename>.bat"   (from a mod directory, or relative to D2R's mods/ directory)
 # Auto-discovers the Proton prefix and the wine binary bundled with proton-ge-bin.
 # Note: scripts ending with "pause" will wait for Enter — press it to exit.
 def d2r-bat [bat: string] {
@@ -57,11 +57,24 @@ def d2r-bat [bat: string] {
   }
   let wine = ($wine_results | last) + "/files/bin/wine"
 
+  let mods_dir = ($d2r + "/mods")
+  let cwd = (pwd)
+  let bat_from_mod_dir = (
+    ($cwd | str starts-with ($mods_dir + "/"))
+    and not ($bat | str contains "/")
+    and not ($bat | str contains "\\")
+  )
+  let bat_arg = if $bat_from_mod_dir {
+    (($cwd | str substring (($mods_dir | str length) + 1)..) + "/" + $bat)
+  } else {
+    $bat
+  }
+
   # 3. Run the .bat from the mods/ directory (cwd is mapped to Wine's cwd,
   #    avoiding cmd.exe path parsing issues with Chinese chars / fullwidth brackets).
-  cd ($d2r + "/mods")
+  cd $mods_dir
   with-env { WINEPREFIX: $prefix } {
-    ^steam-run $wine cmd.exe /c $bat
+    ^steam-run $wine cmd.exe /c $bat_arg
   }
 }
 
@@ -86,7 +99,6 @@ def dotfiles-maint-config [] {
   }
 
   let cfg = (open $cfg_file)
-  let substituters = ($cfg.substituters? | default [] | str join " ")
 
   {
     HTTP_PROXY: ($cfg.HTTP_PROXY? | default "")
@@ -95,7 +107,6 @@ def dotfiles-maint-config [] {
     https_proxy: ($cfg.HTTPS_PROXY? | default "")
     NO_PROXY: ($cfg.NO_PROXY? | default "")
     no_proxy: ($cfg.NO_PROXY? | default "")
-    NIX_CONFIG: (if ($substituters | is-empty) { "" } else { $"substituters = ($substituters)" })
   }
 }
 
@@ -188,11 +199,13 @@ def dotfiles-maint-refresh-zeroclaw [] {
 }
 
 # Update binary-friendly tool inputs and refresh the Codex and ZeroClaw
-# official release binary pins. WeChat follows a dedicated nixpkgs input.
-# Yazi and Anyrun follow the base nixpkgs binary cache.
+# official release binary pins. TUI and proxy tools follow nixpkgs-tools so
+# they can move without rolling the base system. Yazelix is intentionally kept
+# out of the routine path because its main branch can require local Rust builds.
 def maint-update-tools [] {
   print "Updating binary-friendly tool inputs..."
   dotfiles-maint-lock-update [
+    "nixpkgs-tools"
     "nixpkgs-wechat"
   ]
   dotfiles-maint-refresh-codex

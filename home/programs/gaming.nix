@@ -1,4 +1,4 @@
-# Gaming — Steam + Proton-GE + GameMode
+# Gaming — Steam + Proton-GE
 # Declarative gaming setup for Battle.net / D2R via Steam + Proton.
 #
 # Battle.net must be launched from Steam (non-Steam game shortcut).
@@ -9,7 +9,6 @@
 {
   home.packages = with pkgs; [
     protontricks # Helper for Proton prefix management
-    gamemode # Feral GameMode — CPU governor + nice level optimization
   ];
 
   # Proton-GE is declared in configuration.nix via programs.steam.extraCompatPackages.

@@ -1,9 +1,11 @@
+{ inputs }:
+
 {
   core = import ../../home/core.nix;
-  tui = import ../../home/tui;
+  tui = import ./tui.nix { inherit inputs; };
   codex = import ../../home/programs/codex;
-  workstationCn = import ../../home/workstation-cn.nix;
+  workstationCn = import ./workstation-cn.nix { inherit inputs; };
   shellHeadless = import ./shell-headless.nix;
-  tuiHeadless = import ./tui-headless.nix;
-  devHeadless = import ./dev-headless.nix;
+  tuiHeadless = import ./tui-headless.nix { inherit inputs; };
+  devHeadless = import ./dev-headless.nix { inherit inputs; };
 }

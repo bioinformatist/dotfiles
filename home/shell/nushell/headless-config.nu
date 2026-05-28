@@ -47,7 +47,6 @@ def dotfiles-maint-config [] {
   }
 
   let cfg = (open $cfg_file)
-  let substituters = ($cfg.substituters? | default [] | str join " ")
 
   {
     HTTP_PROXY: ($cfg.HTTP_PROXY? | default "")
@@ -56,7 +55,6 @@ def dotfiles-maint-config [] {
     https_proxy: ($cfg.HTTPS_PROXY? | default "")
     NO_PROXY: ($cfg.NO_PROXY? | default "")
     no_proxy: ($cfg.NO_PROXY? | default "")
-    NIX_CONFIG: (if ($substituters | is-empty) { "" } else { $"substituters = ($substituters)" })
   }
 }
 

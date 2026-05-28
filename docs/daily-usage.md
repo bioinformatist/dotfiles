@@ -355,7 +355,11 @@ Battle.net runs as a **non-Steam game** added to Steam, using the Proton compati
    Start In:
    "/home/ysun/.local/share/Steam/steamapps/compatdata/<ID>/pfx/drive_c/Program Files (x86)/Battle.net"
    ```
-8. In the same Steam entry, disable **Enable the Steam Overlay while in-game**. The overlay starts `gameoverlayui` even for this non-Steam Battle.net entry and can add input/rendering overhead while D2R is running.
+8. In the same Steam entry, set the verified **Launch Options**:
+   ```text
+   LD_PRELOAD= DISABLE_VK_LAYER_VALVE_steam_overlay_1=1 VK_LOADER_LAYERS_DISABLE='*steam_overlay*' gamemoderun %command%
+   ```
+   Steam's **Enable the Steam Overlay while in-game** UI toggle is unreliable for this non-Steam Battle.net entry; even when the UI shows it disabled, the runtime can still inject `gameoverlayrenderer.so` and allow `Shift+Tab` to open the overlay. The environment variables hard-disable the Steam overlay, and `gamemoderun` was verified to noticeably reduce D2R CPU usage.
 9. Install and launch D2R through Battle.net
 
 `Battle.net-Setup*.exe` is only for the first install. Daily launch must point to `Battle.net.exe` inside the prefix; otherwise Play runs the installer again, which looks like a reinstall or install-then-update cycle. Steam creates a Proton prefix per non-Steam game entry, so creating a new entry can assign a different `compatdata/<ID>`. After installation, prefer editing the original entry.

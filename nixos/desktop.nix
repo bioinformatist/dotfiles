@@ -8,6 +8,7 @@
 }:
 
 let
+  toolPkgs = inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   wechatPkgs = import inputs.nixpkgs-wechat {
     inherit (pkgs.stdenv.hostPlatform) system;
     config.allowUnfree = true;
@@ -92,7 +93,7 @@ in
 
   programs.clash-verge = {
     enable = true;
-    package = pkgs.clash-verge-rev;
+    package = toolPkgs.clash-verge-rev;
     tunMode = true;
     serviceMode = true;
   };

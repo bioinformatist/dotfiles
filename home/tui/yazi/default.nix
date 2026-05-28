@@ -1,4 +1,7 @@
-{ pkgs, ... }:
+{
+  pkgs,
+  ...
+}:
 {
   xdg.configFile."yazi/hx_file.nu".source = ./hx_file.nu;
 

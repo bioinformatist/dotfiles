@@ -166,6 +166,7 @@
     # Do NOT manually place in compatibilitytools.d — impermanence makes that unreliable.
     extraCompatPackages = with pkgs; [ proton-ge-bin ];
   };
+  programs.gamemode.enable = true;
 
   # --- Impermanence ---
   fileSystems."/persist".neededForBoot = true;

@@ -55,14 +55,11 @@ in
               https_proxy="$(${pkgs.nushell}/bin/nu -c 'let cfg = open ${nuConfigPath}; ($cfg.HTTPS_PROXY? | default "")' | tr -d '\n')"
               all_proxy="$(${pkgs.nushell}/bin/nu -c 'let cfg = open ${nuConfigPath}; ($cfg.ALL_PROXY? | default "")' | tr -d '\n')"
               no_proxy="$(${pkgs.nushell}/bin/nu -c 'let cfg = open ${nuConfigPath}; ($cfg.NO_PROXY? | default "")' | tr -d '\n')"
-              substituters="$(${pkgs.nushell}/bin/nu -c 'let cfg = open ${nuConfigPath}; ($cfg.substituters? | default [] | str join " ")' | tr -d '\n')"
-
               {
                 [ -n "$http_proxy" ] && printf 'HTTP_PROXY=%s\nhttp_proxy=%s\n' "$http_proxy" "$http_proxy"
                 [ -n "$https_proxy" ] && printf 'HTTPS_PROXY=%s\nhttps_proxy=%s\n' "$https_proxy" "$https_proxy"
                 [ -n "$all_proxy" ] && printf 'ALL_PROXY=%s\nall_proxy=%s\n' "$all_proxy" "$all_proxy"
                 [ -n "$no_proxy" ] && printf 'NO_PROXY=%s\nno_proxy=%s\n' "$no_proxy" "$no_proxy"
-                [ -n "$substituters" ] && printf 'NIX_CONFIG="substituters = %s"\n' "$substituters"
               } > "$out"
             fi
           '';

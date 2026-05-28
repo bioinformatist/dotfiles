@@ -71,6 +71,7 @@ in
 {
   imports = [
     ./anyrun
+    ./ghostty
     ./hyprland
   ];
 

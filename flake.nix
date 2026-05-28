@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-tools.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-wechat.url = "github:NixOS/nixpkgs/nixos-unstable";
     disko = {
       url = "github:nix-community/disko";
@@ -10,6 +11,10 @@
     };
     home-manager = {
       url = "github:nix-community/home-manager/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    yazelix = {
+      url = "github:luccahuguet/yazelix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hyprland.url = "github:hyprwm/Hyprland";
@@ -37,7 +42,7 @@
       overlays = import ./overlays { inherit inputs; };
       profiles = import ./profiles { inherit inputs; };
       nixosModules = import ./modules/nixos { inherit inputs; };
-      homeManagerModules = import ./modules/home-manager;
+      homeManagerModules = import ./modules/home-manager { inherit inputs; };
       mkHost =
         {
           hostDir,

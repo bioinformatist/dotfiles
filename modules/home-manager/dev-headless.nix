@@ -1,9 +1,11 @@
+{ inputs }:
+
 { pkgs, ... }:
 {
   imports = [
     ../../home/core.nix
     ./shell-headless.nix
-    ./tui-headless.nix
+    (import ./tui-headless.nix { inherit inputs; })
     ../../home/programs/codex
   ];
 

@@ -1,5 +1,7 @@
+{ inputs }:
+
 {
   imports = [
-    ../../home/tui/headless.nix
+    (import ./tui.nix { inherit inputs; })
   ];
 }

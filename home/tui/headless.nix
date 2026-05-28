@@ -1,6 +1,5 @@
 {
   imports = [
-    ./helix
-    ./yazi
+    ./default.nix
   ];
 }
