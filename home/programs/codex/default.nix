@@ -73,6 +73,8 @@ let
   '';
 
   trustedProjects = lib.unique config.dotfiles.codex.trustedProjects;
+  writableRoots = lib.unique config.dotfiles.codex.writableRoots;
+  writableRootsToml = builtins.toJSON writableRoots;
 
   trustedProjectsToml = lib.concatMapStringsSep "\n\n" (path: ''
     [projects."${path}"]
@@ -85,6 +87,9 @@ let
     personality = "pragmatic"
     sandbox_mode = "workspace-write"
     approval_policy = "on-request"
+
+    [sandbox_workspace_write]
+    writable_roots = ${writableRootsToml}
 
     [features]
     memories = true
@@ -167,6 +172,14 @@ in
     type = with lib.types; listOf str;
     default = [ ];
     description = "Extra project roots that Codex should treat as trusted.";
+  };
+
+  options.dotfiles.codex.writableRoots = lib.mkOption {
+    type = with lib.types; listOf str;
+    default = [
+      "/home/ysun/.codex/memories"
+    ];
+    description = "Extra directories that Codex may write in workspace-write mode.";
   };
 
   options.dotfiles.codex.githubTokenFile = lib.mkOption {
