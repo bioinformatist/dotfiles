@@ -48,6 +48,10 @@ sudo systemctl restart nix-daemon
 - 不要把 `nix flake update` 当成日常一把梭的更新命令。
 - 工具层更新应与 `hyprland` 更新分开。
 - `hyprland` 更新应与系统底座（`nixpkgs` / `home-manager`）更新分开。
+- Home Manager 的 release 分支应与当前 Nixpkgs 的 release 号对齐。本系统可以使用
+  `nixos-unstable`，但如果 Nixpkgs 报告 `26.05`，Home Manager 就应使用
+  `release-26.05`，而不是 `master`。不要用
+  `home.enableNixpkgsReleaseCheck = false` 消掉 release mismatch warning。
 - 每次都先执行 `maint-check`，再决定是否执行 `maint-switch`。
 - 如果 `maint-check` 检测到 `will be built`，优先选择暂缓更新，而不是本地编译。
 
@@ -58,10 +62,11 @@ sudo systemctl restart nix-daemon
 更新相对低风险的工具层：
 
 - flake input：`nixpkgs-wechat`，用于微信
+- flake input：`anyrun`，用于 Anyrun
 - 本地声明的 Codex release pin： [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
 - 本地声明的 ZeroClaw release pin： [home/programs/zeroclaw/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/zeroclaw/default.nix)
 
-当你主要想让二进制友好的工具保持较新时，应优先使用这个入口。微信使用独立的 nixpkgs input，因此可以单独更新。Yazi 和 Anyrun 刻意跟随 nixpkgs，而不是单独的源码 flake input。
+当你主要想让二进制友好的工具保持较新时，应优先使用这个入口。微信使用独立的 nixpkgs input，因此可以单独更新。Anyrun 使用自己的上游 flake input，因此可以独立更新并使用上游 binary cache。Yazi 跟随 `nixpkgs-tools`。
 
 ```nu
 maint-update-tools
@@ -96,7 +101,7 @@ maint-update-hyprland
 - `nixpkgs`
 - `home-manager`
 
-这是风险最高的一类更新，因为它最容易牵动新的内核 / NVIDIA 组合。
+这是风险最高的一类更新，因为它最容易牵动新的内核 / NVIDIA 组合。更新这一层时，Home Manager 分支应与目标系统报告的 Nixpkgs release 对齐，例如 `26.05` Nixpkgs 对应 `release-26.05`。
 
 ```nu
 maint-update-base
@@ -125,7 +130,7 @@ summary 只关注两类信息：
 
 ### `maint-switch`
 
-基于当前仓库状态执行真正的 rebuild 和 switch。
+基于当前仓库状态构建目标系统，然后选择安全的激活方式。
 
 ```nu
 maint-switch
@@ -133,11 +138,20 @@ maint-switch
 
 `maint-switch` 不会隐式更新任何 input；它只应用当前仓库里已经记录好的状态。
 
+激活前，它会比较目标系统和当前 booted system：
+
+- 如果 booted kernel 会变化，执行 `nixos-rebuild boot` 并提示重启。
+- 如果 NVIDIA userspace 会变化，同样执行 `nixos-rebuild boot` 并提示重启。
+- 否则才执行普通的 `nixos-rebuild switch`。
+
+这样可以避免在正在运行的 Wayland 会话中热切换到 kernel / NVIDIA /
+Hyprland 混合版本状态。
+
 ## 典型工作流
 
 ### 工具层刷新
 
-当你主要关心 Codex、ZeroClaw、微信这类二进制友好的工具 pin 时，使用。Yazi 和 Anyrun 跟随 nixpkgs。
+当你主要关心 Codex、ZeroClaw、微信、Anyrun 这类二进制友好的工具 pin 时，使用。Yazi 跟随 `nixpkgs-tools`。
 
 ```nu
 maint-update-tools
@@ -181,7 +195,7 @@ maint-check
 maint-switch
 ```
 
-如果检查结果里出现 `nvidia-x11`、`linux-` 或其他重型组件进入 `will be built`，建议先取消这次更新。
+如果检查结果里出现 `nvidia-x11`、`linux-` 或其他重型组件进入 `will be built`，而你暂时不想接受这些更新，就先取消这次更新。如果继续，`maint-switch` 会在 kernel 或 NVIDIA 变化时自动使用 boot activation，而不是热切换。
 
 ## 说明
 

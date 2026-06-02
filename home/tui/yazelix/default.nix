@@ -6,5 +6,5 @@
   ];
 
   programs.yazelix.enable = true;
-  programs.yazelix.runtime_tool_sources.yazi = "host";
+  programs.yazelix.runtime_variant = "ghostty";
 }

@@ -1,46 +1,64 @@
-{ pkgs, ... }:
 {
-  home.packages = [ pkgs.anyrun ];
+  anyrun,
+  pkgs,
+  ...
+}:
+let
+  anyrunPkgs = anyrun.packages.${pkgs.stdenv.hostPlatform.system};
+in
+{
+  imports = [
+    (
+      { modulesPath, ... }:
+      {
+        disabledModules = [ "${modulesPath}/programs/anyrun.nix" ];
+      }
+    )
+    anyrun.homeManagerModules.default
+  ];
 
-  xdg.configFile = {
-    # Main config (RON format)
-    "anyrun/config.ron".text = ''
-      Config(
-        // Centered horizontally, slightly below top
-        x: Fraction(0.5),
-        y: Absolute(200),
+  programs.anyrun = {
+    enable = true;
+    daemon.enable = true;
+    package = anyrunPkgs.default;
 
-        width: Absolute(800),
-        height: Absolute(1),
+    config = {
+      x = {
+        fraction = 0.5;
+      };
+      y = {
+        absolute = 200;
+      };
+      width = {
+        absolute = 800;
+      };
+      height = {
+        absolute = 1;
+      };
+      hideIcons = false;
+      ignoreExclusiveZones = false;
+      layer = "overlay";
+      hidePluginInfo = false;
+      closeOnClick = true;
+      showResultsImmediately = false;
+      maxEntries = null;
+      plugins = with anyrunPkgs; [
+        applications
+        rink
+        shell
+        symbols
+        websearch
+      ];
+    };
 
-        hide_icons: false,
-        ignore_exclusive_zones: false,
-        layer: Overlay,
-        hide_plugin_info: false,
-        close_on_click: true,
-        show_results_immediately: false,
-        max_entries: None,
-
-        plugins: [
-          "libapplications.so",
-          "librink.so",
-          "libshell.so",
-          "libsymbols.so",
-          "libwebsearch.so",
-        ],
-      )
-    '';
-
-    # Websearch plugin config — default to Google
-    "anyrun/websearch.ron".text = ''
+    extraConfigFiles."websearch.ron".text = ''
       Config(
         prefix: "?",
         engines: [Google],
       )
     '';
 
-    # GTK4 CSS theme — dark glassmorphism style matching Hyprland theme
-    "anyrun/style.css".text = ''
+    extraCss = ''
       @define-color accent rgba(51, 204, 255, 0.9);
       @define-color accent-dim rgba(51, 204, 255, 0.4);
       @define-color bg-color rgba(22, 22, 22, 0.85);

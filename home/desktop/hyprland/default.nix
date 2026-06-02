@@ -25,6 +25,7 @@
   wayland.windowManager.hyprland = {
     systemd.enable = false;
     enable = true;
+    configType = "hyprlang";
     extraConfig = builtins.readFile ./hyprland.conf;
   };
 

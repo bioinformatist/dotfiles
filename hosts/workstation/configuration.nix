@@ -216,6 +216,7 @@
         ".cargo/registry" # Cargo registry cache (speeds up rebuilds)
         ".local/share/Steam" # Steam games, Proton prefixes, saves
         ".cache/eww" # Weather location cache (prevents proxy-IP mis-detection on reboot)
+        ".cache/fontconfig" # Font cache for GTK/Pango app cold starts
       ];
       # known_hosts is a symlink → /persist (cross-filesystem), so SSH cannot
       # atomically update it (link() fails). We suppress the harmless warning

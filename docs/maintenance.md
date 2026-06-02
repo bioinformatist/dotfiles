@@ -48,6 +48,10 @@ sudo systemctl restart nix-daemon
 - Do **not** use `nix flake update` as a routine one-shot update command.
 - Update tool-layer components separately from `hyprland`.
 - Update `hyprland` separately from the base system (`nixpkgs` / `home-manager`).
+- Keep Home Manager release-aligned with the current Nixpkgs release number.
+  This system may use `nixos-unstable`, but if Nixpkgs reports `26.05`,
+  Home Manager should use `release-26.05` rather than `master`. Do not silence
+  release mismatch warnings with `home.enableNixpkgsReleaseCheck = false`.
 - Always run `maint-check` before `maint-switch`.
 - If `maint-check` reports `will be built`, prefer waiting and trying again later instead of compiling locally.
 
@@ -58,10 +62,11 @@ sudo systemctl restart nix-daemon
 Updates the lower-risk tool layer:
 
 - flake input: `nixpkgs-wechat` for WeChat
+- flake input: `anyrun` for Anyrun
 - local Codex release pin in [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
 - local ZeroClaw release pin in [home/programs/zeroclaw/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/zeroclaw/default.nix)
 
-This is the normal entry point when you want binary-friendly tools to stay fresh without pushing the whole system base forward. WeChat uses a dedicated nixpkgs input so it can move independently. Yazi and Anyrun intentionally follow nixpkgs instead of separate source flake inputs.
+This is the normal entry point when you want binary-friendly tools to stay fresh without pushing the whole system base forward. WeChat uses a dedicated nixpkgs input so it can move independently. Anyrun uses its upstream flake input so it can move independently while using the upstream binary cache. Yazi follows `nixpkgs-tools`.
 
 ```nu
 maint-update-tools
@@ -96,7 +101,7 @@ Updates only the base system inputs:
 - `nixpkgs`
 - `home-manager`
 
-This is the riskiest update category because it can pull in a new kernel / NVIDIA combination.
+This is the riskiest update category because it can pull in a new kernel / NVIDIA combination. When bumping this layer, keep the Home Manager branch matched to the Nixpkgs release reported by the target system, for example `release-26.05` with a `26.05` Nixpkgs.
 
 ```nu
 maint-update-base
@@ -125,7 +130,8 @@ If `will be built` is detected, the summary explicitly recommends **not** rebuil
 
 ### `maint-switch`
 
-Performs the actual rebuild and switch using the current lock state.
+Builds the target system using the current lock state, then chooses a safe
+activation mode.
 
 ```nu
 maint-switch
@@ -133,11 +139,20 @@ maint-switch
 
 `maint-switch` does not update any inputs by itself. It only applies the state currently recorded in the repository.
 
+Before activating, it compares the target system with the booted system:
+
+- If the booted kernel changes, it runs `nixos-rebuild boot` and asks you to reboot.
+- If the NVIDIA userspace changes, it also runs `nixos-rebuild boot` and asks you to reboot.
+- Otherwise it runs the normal `nixos-rebuild switch`.
+
+This avoids hot-switching into a mixed kernel/NVIDIA/Hyprland runtime, which can
+break the running Wayland session.
+
 ## Recommended Workflow
 
 ### Tool-layer refresh
 
-Use this when you mainly care about binary-friendly tool pins such as Codex, ZeroClaw, and WeChat. Yazi and Anyrun follow nixpkgs.
+Use this when you mainly care about binary-friendly tool pins such as Codex, ZeroClaw, WeChat, and Anyrun. Yazi follows `nixpkgs-tools`.
 
 ```nu
 maint-update-tools
@@ -181,7 +196,7 @@ maint-check
 maint-switch
 ```
 
-If the check shows `nvidia-x11`, `linux-`, or other heavy components under `will be built`, stop and retry later.
+If the check shows `nvidia-x11`, `linux-`, or other heavy components under `will be built`, stop if you do not want to accept those updates yet. If you continue, `maint-switch` will use boot activation instead of hot switch when kernel or NVIDIA changes require it.
 
 ## Notes
 
