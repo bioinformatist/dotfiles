@@ -1,13 +1,10 @@
-{
-  username,
-  ...
-}:
+{ ... }:
 
 {
-  imports = [ ../modules/nixos/nix-proxy.nix ];
+  imports = [ ../modules/nixos/nix-network.nix ];
 
-  dotfiles.nixProxy = {
+  dotfiles.nixNetwork.proxy = {
     enable = true;
-    configPath = "/home/${username}/.config/nix/local-proxy.nuon";
+    url = "http://127.0.0.1:7897";
   };
 }

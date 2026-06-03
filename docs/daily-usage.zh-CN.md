@@ -6,18 +6,18 @@
 
 ## 🖥️ 主机配置
 
-本仓库支持多主机配置，通过可复用基础模块复用通用配置：
+本仓库目前维护 `homePC` 工作站配置。
 
-| 属性 | `vm-test` | `homePC` |
-| :--- | :--- | :--- |
-| **主机名** | `vm-test` | `homePC` |
-| **架构** | `x86_64-linux` | `x86_64-linux` |
-| **用户** | `ysun` | `ysun` |
-| **引导** | GRUB（EFI，可移动模式） | systemd-boot |
-| **根文件系统** | 临时（`tmpfs`），持久化于 `/persist` | 同左 |
-| **网络** | `wpa_supplicant`（硬编码 SSID） | `NetworkManager` |
-| **GPU** | 软件渲染（`vm-tweaks.nix`） | 硬件加速 |
-| **时区** | `Asia/Shanghai` | `Asia/Shanghai` |
+| 属性 | `homePC` |
+| :--- | :--- |
+| **主机名** | `homePC` |
+| **架构** | `x86_64-linux` |
+| **用户** | `ysun` |
+| **引导** | systemd-boot |
+| **根文件系统** | 临时（`tmpfs`），持久化于 `/persist` |
+| **网络** | `NetworkManager` |
+| **GPU** | 硬件加速 |
+| **时区** | `Asia/Shanghai` |
 
 ### NixOS 基础设施模块
 
@@ -27,7 +27,6 @@
 | [impermanence](https://github.com/nix-community/impermanence) | 临时根文件系统 —— 仅白名单路径在重启后保留 |
 | [sops-nix](https://github.com/Mic92/sops-nix) | 声明式密钥管理，使用 Age 加密（两台机器共享同一 key） |
 | [home-manager](https://github.com/nix-community/home-manager) | 用户级配置管理（作为 NixOS 模块集成） |
-| `vm-tweaks.nix` | 仅 `vm-test`：VMware 虚拟机支持，强制软件渲染 |
 
 ### 持久化路径（Impermanence）
 
@@ -204,25 +203,9 @@
 | **GitHub 源码获取** | `nix flake update` 拉取 flake inputs（HTTPS tarball） | 必须走**代理**，USTC 镜像无法加速 |
 | **二进制缓存下载** | `nixos-rebuild` 从 cache 下载预编译包 | 使用 **USTC 镜像**（`--option substituters`） |
 
-> **为什么代理能生效？** 现在维护命令和 `nix-daemon` 都从
-> `~/.config/nix/local-proxy.nuon` 读取代理设置。用户态 helper 和 daemon 侧下载因此共享同一个
-> 本地配置入口，不再依赖反复手写 `with-env` 包装。
-
-因此，完整更新仍然需要**同时**依赖代理和 USTC 镜像，但它们现在都通过
-`~/.config/nix/local-proxy.nuon` 统一配置。
-
-**本地代理配置**（`~/.config/nix/local-proxy.nuon`）：
-```nu
-{
-  HTTP_PROXY: "http://<代理地址>:<端口>",
-  HTTPS_PROXY: "http://<代理地址>:<端口>",
-  NO_PROXY: "mirrors.ustc.edu.cn,cache.nixos.org,127.0.0.1,localhost",
-  substituters: [
-    "https://mirrors.ustc.edu.cn/nix-channels/store"
-    "https://cache.nixos.org"
-  ]
-}
-```
+`profiles.workstationCn` 通过 `dotfiles.nixNetwork.profile = "china"` 声明该策略：
+USTC 会被放到 Nix substituter 列表前面，同时保留官方 cache 作为 fallback。
+本地代理 URL 也通过 NixOS 配置声明，并注入 `nix-daemon`。
 
 ### 第 1 步：手动更新 Flake 输入（`flake.lock`）
 
@@ -232,7 +215,6 @@
 ```nu
 cd /path/to/dotfiles   # 例如 ~/github.com/bioinformatist/dotfiles
 
-# 确保已设置代理（见上方）
 # 这会一次性更新所有输入
 nix flake update
 ```
@@ -244,12 +226,9 @@ nix flake update
 将更新后的软件包应用到运行中的系统。
 
 ```nu
-# 将 <host> 替换为你的 flake 主机名：vm-test、homePC 等
-sudo nixos-rebuild switch --flake $".#<host>"
+# 重建当前维护的工作站主机
+sudo nixos-rebuild switch --flake .#homePC
 ```
-
-因为 `nix-daemon` 现在会读取 `~/.config/nix/local-proxy.nuon`，正常 rebuild 不再需要那条很长的
-`with-env { HTTP_PROXY ... }` 包装。
 
 ### 第 3 步：提交锁文件
 
@@ -283,10 +262,10 @@ sudo nixos-rebuild test --flake $".#<host>"
 
 | 项目 | 详情 |
 | :--- | :--- |
-| **WiFi** | `vm-test`: `wpa_supplicant`；`homePC`: `NetworkManager` |
+| **WiFi** | `NetworkManager` |
 | **系统代理** | 始终指向 `http://127.0.0.1:7897`（本地回环抽象） |
 | **Clash Verge** | 处理实际上游路由（局域网代理、机场、热点等） |
-| **Nix Substituters** | USTC 镜像（主）、Hyprland cachix |
+| **Nix Substituters** | USTC 镜像在官方 cache 之前；Cachix 条目单独声明 |
 
 ### 设置上游局域网代理
 

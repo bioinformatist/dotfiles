@@ -1,14 +1,11 @@
 {
   pkgs,
   lib,
-  isVM ? false,
   ...
 }:
 {
   imports = [
     ../../home/workstation-cn.nix
-  ]
-  ++ lib.optionals (!isVM) [
     ./d2r-eww
     ../../home/programs/gaming.nix
     ../../home/programs/zeroclaw
@@ -116,10 +113,6 @@
   dotfiles.codex.trustedProjects = [
     "/home/ysun/github.com/bioinformatist/dotfiles"
   ];
-
-  wayland.windowManager.hyprland.settings = lib.mkIf isVM {
-    debug.damage_tracking = 0;
-  };
 
   # --- Declarative Rime schema configuration ---
   # Fcitx5 profile/config/addons are managed at the NixOS level (desktop.nix).

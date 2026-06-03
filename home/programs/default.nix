@@ -1,14 +1,10 @@
 {
-  isVM ? false,
   pkgs,
-  lib,
   ...
 }:
 {
   imports = [
     ./codex
-  ]
-  ++ lib.optionals (!isVM) [
     ./zeroclaw
     ./gaming.nix
   ];
@@ -23,13 +19,10 @@
       sops # CLI for editing encrypted secrets (secrets/secrets.yaml)
       ouch # Rust-based archive tool (zip/tar/gz/xz/zstd/7z)
     ])
-    ++ lib.optionals (!isVM) (
-      with pkgs;
-      [
-        discord
-        wemeet
-      ]
-    );
+    ++ (with pkgs; [
+      discord
+      wemeet
+    ]);
 
   programs.ripgrep.enable = true;
 }

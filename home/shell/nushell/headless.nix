@@ -16,12 +16,6 @@ in
       description = "NixOS flake host used by maint-* commands.";
     };
 
-    proxyConfig = lib.mkOption {
-      type = lib.types.str;
-      default = "$HOME/.config/nix/local-proxy.nuon";
-      description = "Nuon file with proxy and substituter settings for maint-* commands.";
-    };
-
     riskMarkers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
@@ -51,7 +45,6 @@ in
         inherit (cfg)
           repo
           host
-          proxyConfig
           riskMarkers
           updateGroups
           ;

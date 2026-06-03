@@ -9,7 +9,7 @@
 - `profiles.headless`
 - `profiles.ai-serving`
 - `profiles.workstationCn`
-- `nixosModules.{headless,ai-serving,nixProxy,nvidiaDesktop,workstationCn}`
+- `nixosModules.{headless,ai-serving,nixNetwork,nvidiaDesktop,workstationCn}`
 - `homeManagerModules.{core,tui,codex,devHeadless,workstationCn}`
 - `overlays`
 - `packages`
@@ -46,8 +46,7 @@
 `profiles.workstationCn` 提供中国大陆开发工作站系统层：
 
 - `profiles.headless`
-- 中国大陆 Nix substituter / DNS 默认项
-- Nix daemon 代理入口
+- 声明式中国大陆 Nix 网络与代理默认项
 - Hyprland / PipeWire / Fcitx5 + Rime / 中文字体
 - Clash Verge、WeChat、截图工具、基础 GUI 工具
 
@@ -66,7 +65,6 @@ NVIDIA 桌面机器应额外叠加 `nixosModules.nvidiaDesktop`。
 本仓库里的个人主机继续通过额外本地模块保持完整能力：
 
 - `homePC`：`profiles.workstationCn` + NVIDIA 桌面集成 + 个人 Home Manager 层
-- `vm-test`：`profiles.headless` + proxy + desktop + VM tweaks
 
 ## 下游示例
 

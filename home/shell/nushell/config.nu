@@ -86,28 +86,8 @@ def dotfiles-maint-host [] {
   "homePC"
 }
 
-def dotfiles-maint-config-file [] {
-  ($env.HOME | path join ".config" "nix" "local-proxy.nuon")
-}
-
 def dotfiles-maint-config [] {
-  let cfg_file = (dotfiles-maint-config-file)
-  if not ($cfg_file | path exists) {
-    error make {
-      msg: $"Maintenance config not found: ($cfg_file)\nCreate ~/.config/nix/local-proxy.nuon before using maint-* commands."
-    }
-  }
-
-  let cfg = (open $cfg_file)
-
-  {
-    HTTP_PROXY: ($cfg.HTTP_PROXY? | default "")
-    HTTPS_PROXY: ($cfg.HTTPS_PROXY? | default "")
-    http_proxy: ($cfg.HTTP_PROXY? | default "")
-    https_proxy: ($cfg.HTTPS_PROXY? | default "")
-    NO_PROXY: ($cfg.NO_PROXY? | default "")
-    no_proxy: ($cfg.NO_PROXY? | default "")
-  }
+  {}
 }
 
 def dotfiles-maint-lock-update [inputs: list<string>] {

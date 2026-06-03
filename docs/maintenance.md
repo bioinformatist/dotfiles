@@ -10,38 +10,28 @@ This guide covers the **preferred maintenance workflow** for this system:
 
 The commands below are provided by Nushell functions defined in [home/shell/nushell/config.nu](/home/ysun/github.com/bioinformatist/dotfiles/home/shell/nushell/config.nu).
 
-## Local Proxy Config
+## Declarative Network Profile
 
-All maintenance commands and `nix-daemon` now read network settings from a single local file:
+Network behavior is declared in NixOS modules, not in a mutable home-directory file.
 
-`~/.config/nix/local-proxy.nuon`
+`profiles.workstationCn` selects the China-friendly profile:
 
-This file is intentionally not tracked by git. Example:
-
-```nushell
-{
-  HTTP_PROXY: "http://192.168.0.116:7890",
-  HTTPS_PROXY: "http://192.168.0.116:7890",
-  NO_PROXY: "mirrors.ustc.edu.cn,cache.nixos.org,127.0.0.1,localhost",
-  substituters: [
-    "https://mirrors.ustc.edu.cn/nix-channels/store"
-    "https://cache.nixos.org"
-  ]
-}
+```nix
+dotfiles.nixNetwork.profile = "china";
 ```
 
-Meaning:
+That prepends the USTC Nix cache mirror while keeping the official `cache.nixos.org`
+cache as the fallback. The local proxy URL is also declared in NixOS config:
 
-- maintenance helpers use this file for GitHub API requests
-- Codex and ZeroClaw release hashes come from GitHub's release asset digest, so the update helper does not download tarballs just to compute hashes
-- `nix-daemon` uses the same file for proxy, `NO_PROXY`, and `substituters`
-- changing the proxy address only requires editing this one file
-
-After changing this file, restart the daemon once so new daemon-side settings take effect:
-
-```nu
-sudo systemctl restart nix-daemon
+```nix
+dotfiles.nixNetwork.proxy = {
+  enable = true;
+  url = "http://127.0.0.1:7897";
+};
 ```
+
+To use the global network profile outside mainland China, change the profile to
+`"global"` and rebuild.
 
 ## Principles
 
@@ -201,4 +191,4 @@ If the check shows `nvidia-x11`, `linux-`, or other heavy components under `will
 ## Notes
 
 - The maintenance helpers assume the current host is `homePC`.
-- `~/.config/nix/` is persisted on `homePC`, so `local-proxy.nuon` survives reboot once created.
+- Network cache and proxy behavior are part of the NixOS configuration.

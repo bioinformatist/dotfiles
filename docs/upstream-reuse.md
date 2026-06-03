@@ -9,7 +9,7 @@ Downstream repositories should only consume these flake outputs:
 - `profiles.headless`
 - `profiles.ai-serving`
 - `profiles.workstationCn`
-- `nixosModules.{headless,ai-serving,nixProxy,nvidiaDesktop,workstationCn}`
+- `nixosModules.{headless,ai-serving,nixNetwork,nvidiaDesktop,workstationCn}`
 - `homeManagerModules.{core,tui,codex,devHeadless,workstationCn}`
 - `overlays`
 - `packages`
@@ -46,8 +46,7 @@ It does not include CUDA userspace or model-serving application stacks.
 `profiles.workstationCn` provides the China-friendly development workstation layer:
 
 - `profiles.headless`
-- China-friendly Nix substituter / DNS defaults
-- Nix daemon proxy entry point
+- declarative China-friendly Nix network and proxy defaults
 - Hyprland / PipeWire / Fcitx5 + Rime / CJK fonts
 - Clash Verge, WeChat, screenshot tools, and baseline GUI tools
 
@@ -66,7 +65,6 @@ NVIDIA desktop hosts should explicitly add `nixosModules.nvidiaDesktop`.
 The personal hosts in this repo stay full-featured by composing extra local modules:
 
 - `homePC`: `profiles.workstationCn` + NVIDIA desktop integration + personal Home Manager layer
-- `vm-test`: `profiles.headless` + proxy + desktop + VM tweaks
 
 ## Downstream example
 

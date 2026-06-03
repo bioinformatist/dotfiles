@@ -97,7 +97,7 @@ sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
 ```
 
 ## 6. Managing Device SSH Keys
-All hosts in this repository share a single GitHub SSH key (stored as the sops secret `github-ssh-key-vm-test`), which is automatically deployed to `~/.ssh/id_ed25519` during `nixos-rebuild`.
+Hosts in this repository use a shared GitHub SSH key, which is automatically deployed to `~/.ssh/id_ed25519` during `nixos-rebuild`. The sops secret is still named `github-ssh-key-vm-test` for historical reasons.
 
 To generate a new key or replace the existing one:
 
@@ -115,7 +115,7 @@ To generate a new key or replace the existing one:
     nix shell nixpkgs#sops --command sops secrets/secrets.yaml
     ```
 
-    Update the `github-ssh-key-vm-test` key content:
+    Update the historical `github-ssh-key-vm-test` key content:
     ```yaml
     github-ssh-key-vm-test: |
       -----BEGIN OPENSSH PRIVATE KEY-----

@@ -6,18 +6,18 @@ An overview of applications, keybindings, and day-to-day workflows configured in
 
 ## 🖥️ Host Configuration
 
-This repository supports multiple host configurations, sharing common settings via reusable base modules:
+This repository currently manages the `homePC` workstation configuration.
 
-| Property | `vm-test` | `homePC` |
-| :--- | :--- | :--- |
-| **Hostname** | `vm-test` | `homePC` |
-| **Architecture** | `x86_64-linux` | `x86_64-linux` |
-| **User** | `ysun` | `ysun` |
-| **Boot** | GRUB (EFI, removable) | systemd-boot |
-| **Root FS** | Ephemeral (`tmpfs`), persistent at `/persist` | Same |
-| **Networking** | `wpa_supplicant` (hardcoded SSIDs) | `NetworkManager` |
-| **GPU** | Software rendering (`vm-tweaks.nix`) | Hardware accelerated |
-| **Timezone** | `Asia/Shanghai` | `Asia/Shanghai` |
+| Property | `homePC` |
+| :--- | :--- |
+| **Hostname** | `homePC` |
+| **Architecture** | `x86_64-linux` |
+| **User** | `ysun` |
+| **Boot** | systemd-boot |
+| **Root FS** | Ephemeral (`tmpfs`), persistent at `/persist` |
+| **Networking** | `NetworkManager` |
+| **GPU** | Hardware accelerated |
+| **Timezone** | `Asia/Shanghai` |
 
 ### NixOS Infrastructure Modules
 
@@ -27,7 +27,6 @@ This repository supports multiple host configurations, sharing common settings v
 | [impermanence](https://github.com/nix-community/impermanence) | Ephemeral root — only whitelisted paths survive reboot |
 | [sops-nix](https://github.com/Mic92/sops-nix) | Declarative secret management with Age encryption (same key shared across machines) |
 | [home-manager](https://github.com/nix-community/home-manager) | User-level configuration (integrated as NixOS module) |
-| `vm-tweaks.nix` | `vm-test` only: VMware guest support, forces software rendering |
 
 ### Persisted Paths (Impermanence)
 
@@ -202,25 +201,9 @@ The update process involves **two types** of network requests, each requiring a 
 | **GitHub source fetching** | `nix flake update` pulls flake inputs (HTTPS tarballs) | Requires a **proxy**; USTC mirror cannot help |
 | **Binary cache download** | `nixos-rebuild` downloads pre-built packages from cache | Use **USTC mirror** (`--option substituters`) |
 
-> **Why does the proxy work?** Maintenance commands and `nix-daemon` now read proxy settings from
-> `~/.config/nix/local-proxy.nuon`. User-side helpers and daemon-side downloads therefore share one
-> local source of truth instead of relying on repeated ad-hoc `with-env` wrappers.
-
-Therefore, a full update still relies on **both** a proxy and the USTC mirror, but they are now
-configured through `~/.config/nix/local-proxy.nuon`.
-
-**Local proxy config** (`~/.config/nix/local-proxy.nuon`):
-```nu
-{
-  HTTP_PROXY: "http://<proxy-address>:<port>",
-  HTTPS_PROXY: "http://<proxy-address>:<port>",
-  NO_PROXY: "mirrors.ustc.edu.cn,cache.nixos.org,127.0.0.1,localhost",
-  substituters: [
-    "https://mirrors.ustc.edu.cn/nix-channels/store"
-    "https://cache.nixos.org"
-  ]
-}
-```
+`profiles.workstationCn` declares this through `dotfiles.nixNetwork.profile = "china"`:
+USTC is prepended to the Nix substituter list, while the official cache remains the fallback.
+The local proxy URL is declared in NixOS config and injected into `nix-daemon`.
 
 ### Step 1: Manually Update Flake Inputs (`flake.lock`)
 
@@ -230,7 +213,6 @@ It is now mainly a **manual full-refresh workflow**, not the preferred day-to-da
 ```nu
 cd /path/to/dotfiles   # e.g., ~/github.com/bioinformatist/dotfiles
 
-# Ensure proxy is set (see above)
 # This updates everything at once.
 nix flake update
 ```
@@ -242,12 +224,9 @@ This modifies `flake.lock` — you should commit it afterward.
 Apply the updated packages to the running system.
 
 ```nu
-# Replace <host> with your flake host name: vm-test, homePC, etc.
-sudo nixos-rebuild switch --flake $".#<host>"
+# Rebuild the maintained workstation host.
+sudo nixos-rebuild switch --flake .#homePC
 ```
-
-Because `nix-daemon` now reads `~/.config/nix/local-proxy.nuon`, you no longer need the long
-`with-env { HTTP_PROXY ... }` wrapper for normal rebuilds.
 
 ### Step 3: Commit the Lock File
 
@@ -281,10 +260,10 @@ The system follows a **"Localhost Abstraction"** strategy:
 
 | Item | Detail |
 | :--- | :--- |
-| **WiFi** | `vm-test`: `wpa_supplicant`; `homePC`: `NetworkManager` |
+| **WiFi** | `NetworkManager` |
 | **System Proxy** | Always points to `http://127.0.0.1:7897` (localhost abstraction) |
 | **Clash Verge** | Handles actual upstream routing (LAN proxy, airport, hotspot, etc.) |
-| **Nix Substituters** | USTC mirror (primary), Hyprland cachix |
+| **Nix Substituters** | USTC mirror before the official cache; Cachix entries are declared separately |
 
 ### Setting up an Upstream LAN Proxy
 

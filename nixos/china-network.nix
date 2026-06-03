@@ -1,13 +1,13 @@
-{ lib, ... }:
+{ ... }:
 
 {
-  networking.networkmanager.insertNameservers = [
-    "223.5.5.5"
-    "223.6.6.6"
-  ];
+  imports = [ ../modules/nixos/nix-network.nix ];
 
-  nix.settings.substituters = lib.mkForce [
-    "https://mirrors.ustc.edu.cn/nix-channels/store"
-    "https://cache.nixos.org"
-  ];
+  dotfiles.nixNetwork = {
+    profile = "china";
+    networkManagerNameservers = [
+      "223.5.5.5"
+      "223.6.6.6"
+    ];
+  };
 }

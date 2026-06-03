@@ -16,7 +16,6 @@
     };
     yazelix = {
       url = "github:luccahuguet/yazelix";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
     hyprland.url = "github:hyprwm/Hyprland";
     swww.url = "github:LGFae/swww";
@@ -48,11 +47,10 @@
         {
           hostDir,
           username,
-          isVM,
         }:
         let
           specialArgs = {
-            inherit username isVM inputs;
+            inherit username inputs;
           };
         in
         nixpkgs.lib.nixosSystem {
@@ -107,15 +105,9 @@
       };
 
       nixosConfigurations = {
-        vm-test = mkHost {
-          hostDir = "vm-test";
-          username = "ysun";
-          isVM = true;
-        };
         homePC = mkHost {
           hostDir = "workstation";
           username = "ysun";
-          isVM = false;
         };
       };
 
@@ -140,7 +132,6 @@
             };
         in
         {
-          "ysun@vm-test" = mkHome "ysun";
           "ysun@homePC" = mkHome "ysun";
         };
     };

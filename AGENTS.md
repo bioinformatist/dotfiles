@@ -34,10 +34,7 @@ abstraction when changing shared modules, profiles, or flake outputs.
 - The repo's shell workflow is Nushell-first. Prefer Nushell syntax when writing or updating repo commands and examples.
 - When executing Nushell snippets through Codex tools, do not rely on the tool's shell selection alone. Invoke Nushell explicitly as `nu -c '...'`, otherwise the command may still be interpreted by `/bin/sh`.
 - Secrets must go through sops-nix. See `docs/secret-management.md`.
-- `vm-test` is only an evaluation / regression target. Do not treat it as a
-  real host with product requirements, and do not optimize user-facing changes
-  around VM behavior. Keep it evaluating successfully, but gate real hardware,
-  desktop, GPU, or personal applications away from it when needed.
+- The repo currently exposes `homePC` as the maintained host configuration.
 - Changes are verified manually by the user after rebuild.
 - System rebuild command:
   ```nushell

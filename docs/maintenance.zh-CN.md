@@ -10,38 +10,27 @@
 
 下面的命令都由 [home/shell/nushell/config.nu](/home/ysun/github.com/bioinformatist/dotfiles/home/shell/nushell/config.nu) 中定义的 Nushell 函数提供。
 
-## 本地代理配置
+## 声明式网络配置
 
-现在所有维护命令和 `nix-daemon` 都统一从下面这个本地文件读取网络配置：
+网络行为由 NixOS 模块声明，不再依赖 home 目录里的可变配置文件。
 
-`~/.config/nix/local-proxy.nuon`
+`profiles.workstationCn` 默认选择中国大陆网络 profile：
 
-该文件刻意不纳入 git。示例：
-
-```nushell
-{
-  HTTP_PROXY: "http://192.168.0.116:7890",
-  HTTPS_PROXY: "http://192.168.0.116:7890",
-  NO_PROXY: "mirrors.ustc.edu.cn,cache.nixos.org,127.0.0.1,localhost",
-  substituters: [
-    "https://mirrors.ustc.edu.cn/nix-channels/store"
-    "https://cache.nixos.org"
-  ]
-}
+```nix
+dotfiles.nixNetwork.profile = "china";
 ```
 
-含义如下：
+这会把 USTC Nix cache 镜像放在前面，同时保留官方 `cache.nixos.org`
+作为 fallback。本地代理 URL 也在 NixOS 配置中声明：
 
-- 维护函数访问 GitHub API 时使用这个文件
-- Codex 和 ZeroClaw release hash 直接来自 GitHub release asset digest，因此更新函数不会为了计算 hash 再下载 tarball
-- `nix-daemon` 也使用同一个文件里的代理、`NO_PROXY` 和 `substituters`
-- 以后代理地址变化时，只需要改这一个文件
-
-修改该文件后，重启一次 daemon 才会让 daemon 侧的新配置生效：
-
-```nu
-sudo systemctl restart nix-daemon
+```nix
+dotfiles.nixNetwork.proxy = {
+  enable = true;
+  url = "http://127.0.0.1:7897";
+};
 ```
+
+如果离开中国大陆并希望使用全球网络 profile，把 profile 改成 `"global"` 后 rebuild。
 
 ## 原则
 
@@ -200,4 +189,4 @@ maint-switch
 ## 说明
 
 - 这些维护函数默认面向当前这台 `homePC`。
-- `homePC` 已持久化 `~/.config/nix/`，因此 `local-proxy.nuon` 创建后可跨重启保留。
+- Nix cache 与代理行为属于 NixOS 声明式配置。

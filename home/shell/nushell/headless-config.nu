@@ -28,10 +28,6 @@ def dotfiles-maint-host [] {
   (dotfiles-maint-settings).host
 }
 
-def dotfiles-maint-config-file [] {
-  (dotfiles-maint-settings).proxyConfig
-}
-
 def dotfiles-maint-risk-markers [] {
   (dotfiles-maint-settings).riskMarkers? | default []
 }
@@ -41,21 +37,7 @@ def dotfiles-maint-update-groups [] {
 }
 
 def dotfiles-maint-config [] {
-  let cfg_file = (dotfiles-maint-config-file)
-  if not ($cfg_file | path exists) {
-    return {}
-  }
-
-  let cfg = (open $cfg_file)
-
-  {
-    HTTP_PROXY: ($cfg.HTTP_PROXY? | default "")
-    HTTPS_PROXY: ($cfg.HTTPS_PROXY? | default "")
-    http_proxy: ($cfg.HTTP_PROXY? | default "")
-    https_proxy: ($cfg.HTTPS_PROXY? | default "")
-    NO_PROXY: ($cfg.NO_PROXY? | default "")
-    no_proxy: ($cfg.NO_PROXY? | default "")
-  }
+  {}
 }
 
 def dotfiles-maint-lock-update [inputs: list<string>] {

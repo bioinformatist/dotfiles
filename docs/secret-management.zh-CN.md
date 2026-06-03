@@ -97,7 +97,7 @@ sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
 ```
 
 ## 6. 管理设备 SSH 密钥
-本仓库中所有主机共享同一份 GitHub SSH 密钥（存储为 sops 密钥 `github-ssh-key-vm-test`），在 `nixos-rebuild` 时自动部署到 `~/.ssh/id_ed25519`。
+本仓库中的主机使用共享 GitHub SSH 密钥，并在 `nixos-rebuild` 时自动部署到 `~/.ssh/id_ed25519`。对应的 sops secret 仍因历史原因命名为 `github-ssh-key-vm-test`。
 
 若需生成新密钥或替换现有密钥：
 
@@ -115,7 +115,7 @@ sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
     nix shell nixpkgs#sops --command sops secrets/secrets.yaml
     ```
 
-    更新 `github-ssh-key-vm-test` 键的内容：
+    更新历史命名的 `github-ssh-key-vm-test` 键内容：
     ```yaml
     github-ssh-key-vm-test: |
       -----BEGIN OPENSSH PRIVATE KEY-----

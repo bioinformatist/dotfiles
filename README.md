@@ -8,8 +8,7 @@ My NixOS Settings.
 
 | Guide | Description |
 |---|---|
-| 👉 **[Installation](docs/installation.md)** | VM setup, physical machine deployment (nixos-anywhere / USB) |
-| 👉 **[Daily Usage](docs/daily-usage.md)** | Software catalog, keybindings, system updates, proxy workflow |
+| 👉 **[Daily Usage](docs/daily-usage.md)** | Software catalog, keybindings, system updates, network profile |
+| 👉 **[Maintenance](docs/maintenance.md)** | Routine updates, rebuild checks, flake input groups |
 | 👉 **[Secret Management](docs/secret-management.md)** | Sops-Nix, Age keys, SSH keys |
-| 👉 **[Recovery](docs/recovery.md)** | Rescue a broken system from ISO, troubleshoot secrets |
 | 👉 **[Upstream Reuse](docs/upstream-reuse.md)** | Stable flake outputs, headless/ai-serving profiles, downstream composition |

@@ -47,4 +47,4 @@ nix run github:nix-community/nixos-anywhere -- \
 
 ## 兼容性规则
 
-第一轮 Stage 0 不迁移 `sctmes/dotfiles`。116 继续消费 `headless`、`ai-serving`、`nixProxy` 和 `devHeadless`，本仓库改动后只用本地 upstream override 做 eval 验收。
+第一轮 Stage 0 不迁移 `sctmes/dotfiles`。116 继续消费 `headless`、`ai-serving`、`nixNetwork` 和 `devHeadless`，本仓库改动后只用本地 upstream override 做 eval 验收。
