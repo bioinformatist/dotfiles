@@ -265,6 +265,13 @@ in
 
       Strong success criteria let you loop independently. Weak criteria ("make it
       work") require constant clarification.
+
+      ## 5. Git And Nix
+
+      Write commit messages in Conventional Commits format: `<type>: <summary>`.
+      Run `nix eval`, `nix check`, and `nix build` directly; Codex already sets
+      `XDG_CACHE_HOME`, so do not add an `env XDG_CACHE_HOME=...` prefix unless
+      debugging that environment variable itself.
     '';
 
     # Keep config.toml as a real writable file. Codex stores runtime state there
@@ -289,16 +296,42 @@ in
       prefix_rule(pattern=["ls"], decision="allow")
       prefix_rule(pattern=["cat"], decision="allow")
       prefix_rule(pattern=["rg"], decision="allow")
+      prefix_rule(pattern=["sed", "-n"], decision="allow")
+      prefix_rule(pattern=["head"], decision="allow")
+      prefix_rule(pattern=["tail"], decision="allow")
+      prefix_rule(pattern=["nl", "-ba"], decision="allow")
+      prefix_rule(pattern=["wc"], decision="allow")
+      prefix_rule(pattern=["stat"], decision="allow")
+      prefix_rule(pattern=["file"], decision="allow")
 
       prefix_rule(pattern=["nix", "eval"], decision="allow")
       prefix_rule(pattern=["nix", "check"], decision="allow")
       prefix_rule(pattern=["nix", "build"], decision="allow")
       prefix_rule(pattern=["nix", "flake", "update"], decision="allow")
+      prefix_rule(pattern=["nix", "flake", "show"], decision="allow")
+      prefix_rule(pattern=["nix", "flake", "metadata"], decision="allow")
+      prefix_rule(pattern=["nix", "path-info"], decision="allow")
+      prefix_rule(pattern=["nix", "config", "show"], decision="allow")
 
       prefix_rule(pattern=["git", "status"], decision="allow")
       prefix_rule(pattern=["git", "diff"], decision="allow")
       prefix_rule(pattern=["git", "show"], decision="allow")
       prefix_rule(pattern=["git", "log"], decision="allow")
+      prefix_rule(pattern=["git", "branch"], decision="allow")
+      prefix_rule(pattern=["git", "rev-parse"], decision="allow")
+      prefix_rule(pattern=["git", "ls-files"], decision="allow")
+
+      prefix_rule(pattern=["systemctl", "is-active"], decision="allow")
+      prefix_rule(pattern=["systemctl", "status"], decision="allow")
+      prefix_rule(pattern=["systemctl", "show"], decision="allow")
+      prefix_rule(pattern=["systemctl", "list-units"], decision="allow")
+
+      prefix_rule(pattern=["date"], decision="allow")
+      prefix_rule(pattern=["uname"], decision="allow")
+      prefix_rule(pattern=["hostname"], decision="allow")
+      prefix_rule(pattern=["uptime"], decision="allow")
+      prefix_rule(pattern=["df"], decision="allow")
+      prefix_rule(pattern=["free"], decision="allow")
     '';
   };
 
