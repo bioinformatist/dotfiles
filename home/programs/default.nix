@@ -1,10 +1,9 @@
-{
-  pkgs,
-  ...
-}:
+{ inputs }:
+
+{ pkgs, ... }:
 {
   imports = [
-    ./codex
+    (import ./codex { inherit inputs; })
     ./zeroclaw
     ./gaming.nix
   ];

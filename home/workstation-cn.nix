@@ -1,16 +1,13 @@
+{ inputs }:
+
 {
-  inputs ? null,
   pkgs,
   yazelix ? inputs.yazelix,
   ...
 }:
 
 let
-  toolPkgs =
-    if inputs != null && inputs ? nixpkgs-tools then
-      inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system}
-    else
-      pkgs;
+  toolPkgs = inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 in
 {
   imports = [
@@ -19,7 +16,7 @@ in
     ./tui
     (import ./tui/yazelix { inherit yazelix; })
     ./desktop
-    ./programs/workstation-cn.nix
+    (import ./programs/workstation-cn.nix { inherit inputs; })
   ];
 
   xdg.enable = true;

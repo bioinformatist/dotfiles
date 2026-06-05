@@ -6,7 +6,7 @@
     ../../home/core.nix
     ./shell-headless.nix
     (import ./tui-headless.nix { inherit inputs; })
-    ../../home/programs/codex
+    (import ../../home/programs/codex { inherit inputs; })
   ];
 
   xdg.enable = true;

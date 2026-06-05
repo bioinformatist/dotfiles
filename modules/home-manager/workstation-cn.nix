@@ -1,17 +1,7 @@
 { inputs }:
 
-{ pkgs, ... }:
-
-let
-  tuiToolPkgs = inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-in
 {
   imports = [
-    ../../home/workstation-cn.nix
+    (import ../../home/workstation-cn.nix { inherit inputs; })
   ];
-
-  _module.args = {
-    inherit tuiToolPkgs;
-    yazelix = inputs.yazelix;
-  };
 }

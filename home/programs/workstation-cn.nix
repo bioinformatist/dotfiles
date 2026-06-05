@@ -1,7 +1,9 @@
+{ inputs }:
+
 { pkgs, ... }:
 {
   imports = [
-    ./codex
+    (import ./codex { inherit inputs; })
   ];
 
   home.file.".cargo/config.toml".source = ./cargo-config.toml;

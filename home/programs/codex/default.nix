@@ -1,3 +1,5 @@
+{ inputs }:
+
 {
   config,
   lib,
@@ -5,6 +7,7 @@
   ...
 }:
 let
+  codexToolPkgs = inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   codexVersion = "0.137.0";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
@@ -108,6 +111,9 @@ let
 
     [mcp_servers.github]
     command = "${githubMcpServer}/bin/github-mcp-server"
+
+    [plugins."github@openai-curated"]
+    enabled = true
   '';
 
   mergeCodexConfig = pkgs.writeShellApplication {
@@ -189,7 +195,10 @@ in
   };
 
   config = {
-    home.packages = [ codexPkg ];
+    home.packages = [
+      codexPkg
+      codexToolPkgs.mcp-nixos
+    ];
 
     # Codex keeps its own state under ~/.codex, which is ephemeral on this system.
     # Persist the whole directory so auth, history, and other runtime state

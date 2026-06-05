@@ -1,11 +1,12 @@
 {
+  inputs,
   pkgs,
   lib,
   ...
 }:
 {
   imports = [
-    ../../home/workstation-cn.nix
+    (import ../../home/workstation-cn.nix { inherit inputs; })
     ./d2r-eww
     ../../home/programs/gaming.nix
     ../../home/programs/zeroclaw
