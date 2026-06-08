@@ -11,6 +11,13 @@ let
   codexVersion = "0.137.0";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
+  playwrightCliVersion = "0.1.13";
+  playwrightCliSource = pkgs.fetchFromGitHub {
+    owner = "microsoft";
+    repo = "playwright-cli";
+    rev = "v${playwrightCliVersion}";
+    hash = "sha256-hHK/GR5Drlt+e0L9kyNmn+ht1PCrVH6WrVbxGB1Wsxg=";
+  };
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "codex";
     version = codexVersion;
@@ -75,6 +82,14 @@ let
     exec ${pkgs.github-mcp-server}/bin/github-mcp-server stdio --toolsets context,issues,pull_requests,repos,users,orgs
   '';
 
+  playwrightCli = pkgs.writeShellScriptBin "playwright-cli" ''
+    set -euo pipefail
+
+    export PATH="${pkgs.nodejs_24}/bin:$PATH"
+    export npm_config_cache="''${XDG_CACHE_HOME:-$HOME/.cache}/npm"
+    exec ${pkgs.nodejs_24}/bin/npx -y @playwright/cli@${playwrightCliVersion} "$@"
+  '';
+
   trustedProjects = lib.unique config.dotfiles.codex.trustedProjects;
   writableRoots = lib.unique config.dotfiles.codex.writableRoots;
   writableRootsToml = builtins.toJSON writableRoots;
@@ -111,6 +126,12 @@ let
 
     [mcp_servers.github]
     command = "${githubMcpServer}/bin/github-mcp-server"
+
+    [mcp_servers.context7]
+    command = "${pkgs.context7-mcp}/bin/context7-mcp"
+    required = true
+    startup_timeout_sec = 30
+    tool_timeout_sec = 120
 
     [plugins."github@openai-curated"]
     enabled = true
@@ -198,7 +219,10 @@ in
     home.packages = [
       codexPkg
       codexToolPkgs.mcp-nixos
+      playwrightCli
     ];
+
+    home.file.".agents/skills/playwright-cli".source = "${playwrightCliSource}/skills/playwright-cli";
 
     # Codex keeps its own state under ~/.codex, which is ephemeral on this system.
     # Persist the whole directory so auth, history, and other runtime state
