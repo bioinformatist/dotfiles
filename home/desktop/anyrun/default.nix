@@ -5,6 +5,26 @@
 }:
 let
   anyrunPkgs = anyrun.packages.${pkgs.stdenv.hostPlatform.system};
+  applicationExecPreprocessor = pkgs.writeShellScript "anyrun-application-exec-preprocessor" ''
+    first="$1"
+    shift
+
+    case "$first" in
+      term|no-term)
+        term_flag="$first"
+        ;;
+      *)
+        term_flag="$1"
+        shift
+        ;;
+    esac
+
+    if [ "$term_flag" = "term" ]; then
+      printf '%s\n' "$*"
+    else
+      printf 'uwsm app -- %s\n' "$*"
+    fi
+  '';
 in
 {
   imports = [
@@ -55,6 +75,12 @@ in
       Config(
         prefix: "?",
         engines: [Google],
+      )
+    '';
+
+    extraConfigFiles."applications.ron".text = ''
+      Config(
+        preprocess_exec_script: Some("${applicationExecPreprocessor}"),
       )
     '';
 

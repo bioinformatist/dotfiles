@@ -21,7 +21,7 @@ dotfiles.nixNetwork.profile = "china";
 ```
 
 That prepends the USTC Nix cache mirror while keeping the official `cache.nixos.org`
-cache as the fallback. The local proxy URL is also declared in NixOS config:
+cache as the fallback. The local proxy URL is declared in NixOS config:
 
 ```nix
 dotfiles.nixNetwork.proxy = {
@@ -29,6 +29,11 @@ dotfiles.nixNetwork.proxy = {
   url = "http://127.0.0.1:7897";
 };
 ```
+
+This proxy is intentionally scoped to Nix maintenance paths. It is injected into
+`nix-daemon`, and the same values are exported to `/etc/dotfiles/nix-network.json`
+for `maint-*` commands. Do not treat it as a desktop/session proxy for GUI
+applications.
 
 To use the global network profile outside mainland China, change the profile to
 `"global"` and rebuild.
@@ -131,9 +136,14 @@ maint-switch
 
 Before activating, it compares the target system with the booted system:
 
-- If the booted kernel changes, it runs `nixos-rebuild boot` and asks you to reboot.
-- If the NVIDIA userspace changes, it also runs `nixos-rebuild boot` and asks you to reboot.
-- Otherwise it runs the normal `nixos-rebuild switch`.
+- If the booted kernel changes, it runs `nixos-rebuild --no-reexec boot --store-path ...` and asks you to reboot.
+- If the NVIDIA userspace changes, it also runs `nixos-rebuild --no-reexec boot --store-path ...` and asks you to reboot.
+- Otherwise it runs `nixos-rebuild --no-reexec switch --store-path ...`.
+
+The build and GitHub fetching happen before privilege escalation, under the
+`maint-*` scoped proxy environment. Root only activates the already-built system
+closure, so `maint-switch` does not need to preserve proxy variables through
+`sudo`.
 
 This avoids hot-switching into a mixed kernel/NVIDIA/Hyprland runtime, which can
 break the running Wayland session.

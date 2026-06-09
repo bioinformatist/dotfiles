@@ -36,8 +36,17 @@ def dotfiles-maint-update-groups [] {
   (dotfiles-maint-settings).updateGroups? | default {}
 }
 
+def dotfiles-maint-network-config [] {
+  let config_file = "/etc/dotfiles/nix-network.json"
+  if ($config_file | path exists) {
+    open $config_file
+  } else {
+    {}
+  }
+}
+
 def dotfiles-maint-config [] {
-  {}
+  (dotfiles-maint-network-config).proxyEnv? | default {}
 }
 
 def dotfiles-maint-lock-update [inputs: list<string>] {
@@ -153,24 +162,19 @@ def maint-check [risk_markers: list<string> = []] {
 
 # Rebuild and switch using the current lock state.
 def maint-switch [] {
-  let repo = (dotfiles-maint-repo)
-  let host = (dotfiles-maint-host)
-  let flake = $"($repo)#($host)"
   let attr = (dotfiles-maint-toplevel-attr)
 
   print "Building target system closure..."
   let target = (dotfiles-maint-build-toplevel $attr)
   let risk = (dotfiles-maint-switch-risk $target)
 
-  with-env (dotfiles-maint-config) {
-    if $risk.requiresBoot {
-      print "Detected runtime-sensitive changes; using boot activation instead of hot switch."
-      if $risk.kernelChanged { print "risk: booted kernel differs from target kernel" }
-      if $risk.nvidiaChanged { print "risk: NVIDIA userspace differs from current system" }
-      print "Next step after this finishes: reboot into the new generation."
-      ^sudo --preserve-env=HTTP_PROXY,HTTPS_PROXY,http_proxy,https_proxy,NO_PROXY,no_proxy,NIX_CONFIG nixos-rebuild boot --flake $flake
-    } else {
-      ^sudo --preserve-env=HTTP_PROXY,HTTPS_PROXY,http_proxy,https_proxy,NO_PROXY,no_proxy,NIX_CONFIG nixos-rebuild switch --flake $flake
-    }
+  if $risk.requiresBoot {
+    print "Detected runtime-sensitive changes; using boot activation instead of hot switch."
+    if $risk.kernelChanged { print "risk: booted kernel differs from target kernel" }
+    if $risk.nvidiaChanged { print "risk: NVIDIA userspace differs from current system" }
+    print "Next step after this finishes: reboot into the new generation."
+    ^sudo nixos-rebuild --no-reexec boot --store-path $target
+  } else {
+    ^sudo nixos-rebuild --no-reexec switch --store-path $target
   }
 }

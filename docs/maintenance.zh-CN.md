@@ -30,6 +30,10 @@ dotfiles.nixNetwork.proxy = {
 };
 ```
 
+该代理有意限制在 Nix 维护路径内：它会注入 `nix-daemon`，同时写入
+`/etc/dotfiles/nix-network.json` 供 `maint-*` 命令读取。不应将其视为
+GUI 应用的桌面/session 级代理。
+
 如果离开中国大陆并希望使用全球网络 profile，把 profile 改成 `"global"` 后 rebuild。
 
 ## 原则
@@ -129,9 +133,13 @@ maint-switch
 
 激活前，它会比较目标系统和当前 booted system：
 
-- 如果 booted kernel 会变化，执行 `nixos-rebuild boot` 并提示重启。
-- 如果 NVIDIA userspace 会变化，同样执行 `nixos-rebuild boot` 并提示重启。
-- 否则才执行普通的 `nixos-rebuild switch`。
+- 如果 booted kernel 会变化，执行 `nixos-rebuild --no-reexec boot --store-path ...` 并提示重启。
+- 如果 NVIDIA userspace 会变化，同样执行 `nixos-rebuild --no-reexec boot --store-path ...` 并提示重启。
+- 否则才执行 `nixos-rebuild --no-reexec switch --store-path ...`。
+
+构建和 GitHub 拉取发生在提权前，并使用 `maint-*` 作用域内的代理环境。
+root 只激活已经构建好的 system closure，因此 `maint-switch` 不需要通过
+`sudo` 传递代理变量。
 
 这样可以避免在正在运行的 Wayland 会话中热切换到 kernel / NVIDIA /
 Hyprland 混合版本状态。

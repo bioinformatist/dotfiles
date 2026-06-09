@@ -32,7 +32,7 @@ in
     };
 
     proxy = {
-      enable = lib.mkEnableOption "declarative proxy settings for Nix and shell tools";
+      enable = lib.mkEnableOption "declarative proxy settings for Nix maintenance";
 
       url = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
@@ -73,9 +73,10 @@ in
       ];
     })
     (lib.mkIf (cfg.proxy.enable && cfg.proxy.url != null) {
-      networking.proxy.default = cfg.proxy.url;
-      networking.proxy.noProxy = cfg.proxy.noProxy;
       systemd.services.nix-daemon.environment = proxyEnv;
+      environment.etc."dotfiles/nix-network.json".text = builtins.toJSON {
+        inherit proxyEnv;
+      };
     })
     (lib.mkIf (cfg.nameservers != [ ]) {
       networking.nameservers = cfg.nameservers;

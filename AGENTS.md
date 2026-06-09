@@ -33,12 +33,13 @@ abstraction when changing shared modules, profiles, or flake outputs.
 
 - The repo's shell workflow is Nushell-first. Prefer Nushell syntax when writing or updating repo commands and examples.
 - When executing Nushell snippets through Codex tools, do not rely on the tool's shell selection alone. Invoke Nushell explicitly as `nu -c '...'`, otherwise the command may still be interpreted by `/bin/sh`.
+- Proxy boundary is a hard contract: `dotfiles.nixNetwork.proxy` may only feed `nix-daemon` and `/etc/dotfiles/nix-network.json` for `maint-*`; build/fetch before `sudo`, activate with `nixos-rebuild --no-reexec ... --store-path`, and never reintroduce `networking.proxy.default`, desktop/session proxy exports, or `sudo --preserve-env` proxy tunneling.
 - Secrets must go through sops-nix. See `docs/secret-management.md`.
 - The repo currently exposes `homePC` as the maintained host configuration.
 - Changes are verified manually by the user after rebuild.
 - System rebuild command:
   ```nushell
-  sudo nixos-rebuild switch --flake .#homePC
+  maint-switch
   ```
 
 ## Documentation

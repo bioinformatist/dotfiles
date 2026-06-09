@@ -203,7 +203,9 @@ The update process involves **two types** of network requests, each requiring a 
 
 `profiles.workstationCn` declares this through `dotfiles.nixNetwork.profile = "china"`:
 USTC is prepended to the Nix substituter list, while the official cache remains the fallback.
-The local proxy URL is declared in NixOS config and injected into `nix-daemon`.
+The local proxy URL is declared in NixOS config for Nix maintenance paths only:
+`nix-daemon` receives it directly, and `maint-*` commands read the same values
+from `/etc/dotfiles/nix-network.json`. It is not exported as a desktop/session-wide proxy environment.
 
 ### Step 1: Manually Update Flake Inputs (`flake.lock`)
 
@@ -214,7 +216,9 @@ It is now mainly a **manual full-refresh workflow**, not the preferred day-to-da
 cd /path/to/dotfiles   # e.g., ~/github.com/bioinformatist/dotfiles
 
 # This updates everything at once.
-nix flake update
+with-env (dotfiles-maint-config) {
+  nix flake update
+}
 ```
 
 This modifies `flake.lock` — you should commit it afterward.
@@ -225,7 +229,7 @@ Apply the updated packages to the running system.
 
 ```nu
 # Rebuild the maintained workstation host.
-sudo nixos-rebuild switch --flake .#homePC
+maint-switch
 ```
 
 ### Step 3: Commit the Lock File
@@ -238,30 +242,25 @@ git push
 
 ### (Optional) Preview Changes Before Switching
 
-If you want to **build without activating** (to check for build errors first):
+Use the maintenance helper to dry-run the target system before activation:
 
 ```nu
-sudo nixos-rebuild build --flake $".#<host>"
-```
-
-Or use `test` to activate temporarily (reverts on next reboot):
-
-```nu
-sudo nixos-rebuild test --flake $".#<host>"
+maint-check
 ```
 
 ---
 
 ## 🌐 Network Proxy & Dynamic Routing
 
-The system follows a **"Localhost Abstraction"** strategy:
-- **NixOS (System-wide)**: Configured to *always* trust `http://127.0.0.1:7897` (localhost). You never need to change system config when moving underlying networks.
+The system follows a **Nix maintenance-scoped localhost proxy** strategy:
+- **Nix maintenance traffic**: `nix-daemon` uses `http://127.0.0.1:7897`, and `maint-*` commands read the same proxy env from `/etc/dotfiles/nix-network.json`.
+- **Desktop applications**: GUI apps do not inherit `http_proxy` / `https_proxy` / `all_proxy` from NixOS config by default.
 - **Clash Verge (User GUI)**: Handles the actual upstream connection (e.g., your LAN proxy, airport Wi-Fi, 5G hotspot).
 
 | Item | Detail |
 | :--- | :--- |
 | **WiFi** | `NetworkManager` |
-| **System Proxy** | Always points to `http://127.0.0.1:7897` (localhost abstraction) |
+| **Nix Maintenance Proxy** | Points to `http://127.0.0.1:7897`; scoped to `nix-daemon` and `maint-*` commands |
 | **Clash Verge** | Handles actual upstream routing (LAN proxy, airport, hotspot, etc.) |
 | **Nix Substituters** | USTC mirror before the official cache; Cachix entries are declared separately |
 

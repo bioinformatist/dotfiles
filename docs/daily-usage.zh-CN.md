@@ -205,7 +205,9 @@
 
 `profiles.workstationCn` 通过 `dotfiles.nixNetwork.profile = "china"` 声明该策略：
 USTC 会被放到 Nix substituter 列表前面，同时保留官方 cache 作为 fallback。
-本地代理 URL 也通过 NixOS 配置声明，并注入 `nix-daemon`。
+本地代理 URL 也通过 NixOS 配置声明，但只作用于 Nix 维护路径：
+`nix-daemon` 会直接获得它，`maint-*` 命令会从 `/etc/dotfiles/nix-network.json`
+读取同一组值。它不会导出为桌面/session 级代理环境变量。
 
 ### 第 1 步：手动更新 Flake 输入（`flake.lock`）
 
@@ -216,7 +218,9 @@ USTC 会被放到 Nix substituter 列表前面，同时保留官方 cache 作为
 cd /path/to/dotfiles   # 例如 ~/github.com/bioinformatist/dotfiles
 
 # 这会一次性更新所有输入
-nix flake update
+with-env (dotfiles-maint-config) {
+  nix flake update
+}
 ```
 
 此操作会修改 `flake.lock` 文件——之后应提交该文件。
@@ -227,7 +231,7 @@ nix flake update
 
 ```nu
 # 重建当前维护的工作站主机
-sudo nixos-rebuild switch --flake .#homePC
+maint-switch
 ```
 
 ### 第 3 步：提交锁文件
@@ -240,30 +244,25 @@ git push
 
 ### （可选）切换前预览变更
 
-如果想**只构建不激活**（先检查是否有构建错误）：
+使用维护 helper 在激活前 dry-run 目标系统：
 
 ```nu
-sudo nixos-rebuild build --flake $".#<host>"
-```
-
-或使用 `test` 临时激活（下次重启后恢复）：
-
-```nu
-sudo nixos-rebuild test --flake $".#<host>"
+maint-check
 ```
 
 ---
 
 ## 🌐 网络代理 & 动态路由
 
-系统采用**"本地回环抽象"**策略：
-- **NixOS（系统级）**：配置为*始终*信任 `http://127.0.0.1:7897`（本地回环）。切换底层网络时无需更改系统配置。
+系统采用 **Nix 维护路径作用域的本地代理**策略：
+- **Nix 维护流量**：`nix-daemon` 使用 `http://127.0.0.1:7897`，`maint-*` 命令从 `/etc/dotfiles/nix-network.json` 读取同一组代理环境变量。
+- **桌面应用**：GUI 应用默认不会从 NixOS 配置继承 `http_proxy` / `https_proxy` / `all_proxy`。
 - **Clash Verge（用户 GUI）**：负责处理实际的上游连接（如局域网代理、机场 WiFi、5G 热点等）。
 
 | 项目 | 详情 |
 | :--- | :--- |
 | **WiFi** | `NetworkManager` |
-| **系统代理** | 始终指向 `http://127.0.0.1:7897`（本地回环抽象） |
+| **Nix 维护代理** | 指向 `http://127.0.0.1:7897`；仅作用于 `nix-daemon` 和 `maint-*` 命令 |
 | **Clash Verge** | 处理实际上游路由（局域网代理、机场、热点等） |
 | **Nix Substituters** | USTC 镜像在官方 cache 之前；Cachix 条目单独声明 |
 
