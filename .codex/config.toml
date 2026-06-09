@@ -1,3 +1,6 @@
 [mcp_servers.nixos]
 command = "mcp-nixos"
 required = false
+
+[mcp_servers.nixos.tools.nix]
+approval_mode = "approve"

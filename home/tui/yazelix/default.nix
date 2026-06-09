@@ -9,7 +9,7 @@
 
   programs.yazelix = {
     enable = true;
-    package = yazelix.packages.${pkgs.stdenv.hostPlatform.system}.yazelix_ghostty;
     terminal = "ghostty";
+    runtime_tool_sources.helix = "host";
   };
 }
