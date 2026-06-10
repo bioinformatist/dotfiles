@@ -11,7 +11,7 @@ let
   codexVersion = "0.139.0";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
-  codexHash = "sha256-2W6IMTuVWX6cu4cE9tsW27gcBxQrCM+2KEeatDNpaTE=";
+  codexHash = "sha256-Euv3DfQdyDEGGGKRKrXn6s3RErsX6M6bIJjLPZIYAIE=";
   playwrightCliVersion = "0.1.13";
   playwrightCliSource = pkgs.fetchFromGitHub {
     owner = "microsoft";
@@ -48,6 +48,19 @@ let
           ]
         }
       runHook postInstall
+    '';
+
+    doInstallCheck = true;
+    installCheckPhase = ''
+      runHook preInstallCheck
+
+      actualVersion="$("$out/libexec/codex" --version 2>&1 | sed -n 's/^codex-cli //p' | tail -n 1)"
+      if [ "$actualVersion" != "${codexVersion}" ]; then
+        echo "expected codex ${codexVersion}, got $actualVersion" >&2
+        exit 1
+      fi
+
+      runHook postInstallCheck
     '';
 
     meta = with pkgs.lib; {
