@@ -8,7 +8,7 @@
 }:
 let
   codexToolPkgs = inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-  codexVersion = "0.137.0";
+  codexVersion = "0.139.0";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
   playwrightCliVersion = "0.1.13";
@@ -16,7 +16,7 @@ let
     owner = "microsoft";
     repo = "playwright-cli";
     rev = "v${playwrightCliVersion}";
-    hash = "sha256-hHK/GR5Drlt+e0L9kyNmn+ht1PCrVH6WrVbxGB1Wsxg=";
+    hash = "sha256-Euv3DfQdyDEGGGKRKrXn6s3RErsX6M6bIJjLPZIYAIE=";
   };
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "codex";
