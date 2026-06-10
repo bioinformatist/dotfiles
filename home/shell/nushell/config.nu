@@ -183,7 +183,7 @@ def dotfiles-maint-refresh-codex [] {
   let new = (
     $old
     | str replace -r 'codexVersion = "[^"]+";' $'codexVersion = "($version)";'
-    | str replace -r 'hash = "sha256-[^"]+";' $'hash = "($hash)";'
+    | str replace -r 'codexHash = "sha256-[^"]+";' $'codexHash = "($hash)";'
   )
 
   if $new == $old {
@@ -210,7 +210,7 @@ def dotfiles-maint-refresh-zeroclaw [] {
   let new = (
     $old
     | str replace -r 'zeroclawVersion = "[^"]+";' $'zeroclawVersion = "($version)";'
-    | str replace -r 'hash = "sha256-[^"]+";' $'hash = "($hash)";'
+    | str replace -r 'zeroclawHash = "sha256-[^"]+";' $'zeroclawHash = "($hash)";'
   )
 
   if $new == $old {

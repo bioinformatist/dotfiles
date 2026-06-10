@@ -11,12 +11,13 @@ let
   codexVersion = "0.139.0";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
+  codexHash = "sha256-2W6IMTuVWX6cu4cE9tsW27gcBxQrCM+2KEeatDNpaTE=";
   playwrightCliVersion = "0.1.13";
   playwrightCliSource = pkgs.fetchFromGitHub {
     owner = "microsoft";
     repo = "playwright-cli";
     rev = "v${playwrightCliVersion}";
-    hash = "sha256-Euv3DfQdyDEGGGKRKrXn6s3RErsX6M6bIJjLPZIYAIE=";
+    hash = "sha256-hHK/GR5Drlt+e0L9kyNmn+ht1PCrVH6WrVbxGB1Wsxg=";
   };
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "codex";
@@ -24,7 +25,7 @@ let
 
     src = pkgs.fetchurl {
       url = "https://github.com/openai/codex/releases/download/rust-v${codexVersion}/${codexAsset}";
-      hash = "sha256-2W6IMTuVWX6cu4cE9tsW27gcBxQrCM+2KEeatDNpaTE=";
+      hash = codexHash;
     };
 
     sourceRoot = ".";
