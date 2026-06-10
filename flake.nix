@@ -16,6 +16,7 @@
     };
     yazelix = {
       url = "github:luccahuguet/yazelix";
+      inputs.nixpkgs.follows = "nixpkgs-tools";
     };
     hyprland.url = "github:hyprwm/Hyprland";
     swww.url = "github:LGFae/swww";
