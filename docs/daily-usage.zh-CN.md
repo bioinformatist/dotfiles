@@ -411,14 +411,13 @@ d2r-bat ProjectDiablo2/setup.bat
 
 在崩溃或非正常关机后，fcitx5 可能正常启动但 Wayland 前端未能正确初始化。症状：`Ctrl+Space` 无反应，`fcitx5-remote` 输出 `0`（无法连接）。
 
-修复方法——通过 Hyprland 重启 fcitx5：
+修复方法——重启 Fcitx5 自启动服务：
 
 ```nu
-pkill fcitx5
-hyprctl dispatch exec "fcitx5 -d --replace"
+systemctl --user restart app-org.fcitx.Fcitx5@autostart.service
 ```
 
-> fcitx5 通过 `hyprland.conf` 中的 `uwsm app --` 启动，确保其在 `graphical-session.target` 就绪、`zwp_input_method_v2` 协议可用后才启动。正常开机时此机制可靠；上述命令仅在非正常关机留下残余状态时需要。
+> UWSM 会在图形会话就绪后通过 XDG 自启动服务启动 fcitx5。正常开机时此机制可靠；上述命令仅在非正常关机留下残余状态时需要。
 
 ### GitHub CLI 认证
 

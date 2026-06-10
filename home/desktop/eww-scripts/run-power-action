@@ -13,11 +13,8 @@ case "$ACTION" in
   logout)
     exec uwsm stop
     ;;
-  poweroff)
-    exec systemctl poweroff
-    ;;
-  reboot)
-    exec systemctl reboot
+  poweroff|reboot)
+    exec systemctl --user start --no-block "dotfiles-power-action@${ACTION}.service"
     ;;
   *)
     echo "Unknown power action: $ACTION" >&2

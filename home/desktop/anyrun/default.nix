@@ -22,7 +22,7 @@ let
     if [ "$term_flag" = "term" ]; then
       printf '%s\n' "$*"
     else
-      printf 'uwsm app -- %s\n' "$*"
+      printf 'uwsm-app -s a -- %s\n' "$*"
     fi
   '';
 in
@@ -80,7 +80,11 @@ in
 
     extraConfigFiles."applications.ron".text = ''
       Config(
+        desktop_actions: false,
+        max_entries: 5,
+        hide_description: false,
         preprocess_exec_script: Some("${applicationExecPreprocessor}"),
+        terminal: None,
       )
     '';
 

@@ -396,14 +396,13 @@ In VM environments where GPU acceleration is unstable, software rendering is for
 
 After a crash or unclean shutdown, fcitx5 may start but fail to initialize its Wayland frontend properly. Symptom: `Ctrl+Space` does nothing, and `fcitx5-remote` prints `0` (unreachable).
 
-Fix — restart fcitx5 via Hyprland:
+Fix — restart the Fcitx5 autostart service:
 
 ```nu
-pkill fcitx5
-hyprctl dispatch exec "fcitx5 -d --replace"
+systemctl --user restart app-org.fcitx.Fcitx5@autostart.service
 ```
 
-> fcitx5 is started via `uwsm app --` in `hyprland.conf`, which ensures it launches only after `graphical-session.target` is reached and the `zwp_input_method_v2` protocol is ready. On a clean boot this is reliable; the above workaround is only needed after an unclean shutdown leaves stale state.
+> UWSM starts fcitx5 through the XDG autostart service after the graphical session is ready. The command above is only needed after an unclean shutdown leaves stale state.
 
 ### GitHub CLI Authentication
 
