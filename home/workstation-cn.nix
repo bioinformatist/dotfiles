@@ -14,7 +14,10 @@ in
     ./core.nix
     ./shell
     ./tui
-    (import ./tui/yazelix { inherit yazelix; })
+    (import ./tui/yazelix {
+      inherit yazelix;
+      yazelixPkgs = toolPkgs;
+    })
     ./desktop
     (import ./programs/workstation-cn.nix { inherit inputs; })
   ];
