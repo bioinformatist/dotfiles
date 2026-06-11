@@ -1,6 +1,5 @@
 {
   yazelix,
-  yazelixPkgs,
 }:
 
 { lib, pkgs, ... }:
@@ -13,12 +12,17 @@ in
     yazelix.homeManagerModules.default
   ];
 
+  # Keep Yazelix's runtime closure owned by the Yazelix flake, so downstream
+  # hosts cannot perturb Yazelix cache keys with their own nixpkgs.
   _module.args.mkYazelixPackage = lib.mkForce (
     args:
     yazelix.lib.${system}.mkYazelix (
-      args
-      // {
-        pkgs = yazelixPkgs;
+      builtins.removeAttrs args [
+        "pkgs"
+        "extraRuntimePackages"
+      ]
+      // lib.optionalAttrs ((args.extraRuntimePackages or null) == []) {
+        extraRuntimePackages = [ ];
       }
     )
   );
