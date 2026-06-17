@@ -19,6 +19,58 @@ let
     rev = "v${playwrightCliVersion}";
     hash = "sha256-hHK/GR5Drlt+e0L9kyNmn+ht1PCrVH6WrVbxGB1Wsxg=";
   };
+  stopSlopRev = "8da1f030185bdfe8471220585162991eaeb970e9";
+  stopSlopSource = pkgs.fetchFromGitHub {
+    owner = "hardikpandya";
+    repo = "stop-slop";
+    rev = stopSlopRev;
+    hash = "sha256-JMqlCRVEAfwG1TLMDpnamznkBfkmX6e2XyETTTH/TSE=";
+  };
+  stopSlopSkillMd = pkgs.writeText "stop-slop-SKILL.md" ''
+    ---
+    name: stop-slop
+    description: Prose final-pass editor for GitHub issue bodies, pull request bodies, release notes, README/docs changes, public comments, and user-facing explanations. Use when Codex drafts or revises substantial prose that will be published or committed, especially when the user asks to polish, de-slop, make it less AI-written, improve a PR/issue body, or prepare docs text; do not use for ordinary code implementation, debugging transcripts, logs, quoted text, command output, API names, or Chinese conversational replies unless explicitly requested.
+    ---
+
+    # Stop Slop
+
+    Use this skill as a final prose pass, after technical facts are correct.
+
+    ## Workflow
+
+    1. Preserve facts, scope, and intent.
+    2. Leave code blocks, commands, logs, stack traces, quoted source text, identifiers, API names, filenames, branch names, commit messages, and test names unchanged unless the user explicitly asks to rewrite them.
+    3. For English prose, remove formulaic AI phrasing, throat-clearing, empty emphasis, stock transitions, fake symmetry, inflated claims, and punchline endings.
+    4. Prefer concrete nouns, direct verbs, and specific consequences over vague summaries.
+    5. Keep useful technical caution. Do not remove uncertainty, caveats, or passive voice when they make the engineering claim more accurate.
+    6. Keep the output in the user's requested language and tone. For Chinese output, use the reference files only as a smell list, not as English style rules.
+    7. If a reference detail is needed, read only the relevant file:
+       - `references/phrases.md` for filler phrases and stock wording.
+       - `references/structures.md` for formulaic paragraph and sentence shapes.
+       - `references/examples.md` for before/after patterns.
+
+    ## Output Rules
+
+    - Return the revised text, not a scoring report, unless asked.
+    - Mention material factual changes separately if any were unavoidable.
+    - Keep Markdown structure valid and preserve links.
+    - Do not make the prose more combative or marketing-like.
+  '';
+  stopSlopOpenaiYaml = pkgs.writeText "stop-slop-openai.yaml" ''
+    interface:
+      display_name: "Stop Slop"
+      short_description: "Polish publishable prose without AI tells"
+      default_prompt: "Use $stop-slop to tighten this PR or issue text without changing technical facts."
+    policy:
+      allow_implicit_invocation: true
+  '';
+  stopSlopSkill = pkgs.runCommand "codex-stop-slop-skill" { } ''
+    mkdir -p "$out/agents" "$out/references"
+    cp ${stopSlopSource}/LICENSE "$out/LICENSE"
+    cp ${stopSlopSource}/references/*.md "$out/references/"
+    cp ${stopSlopSkillMd} "$out/SKILL.md"
+    cp ${stopSlopOpenaiYaml} "$out/agents/openai.yaml"
+  '';
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "codex";
     version = codexVersion;
@@ -107,6 +159,15 @@ let
   trustedProjects = lib.unique config.dotfiles.codex.trustedProjects;
   writableRoots = lib.unique config.dotfiles.codex.writableRoots;
   writableRootsToml = builtins.toJSON writableRoots;
+  stopSlopAgentsText = lib.optionalString config.dotfiles.codex.stopSlop.enable ''
+
+    ## 6. Publishable Prose
+
+    Use `$stop-slop` as a final pass for English PR bodies, issue bodies,
+    release notes, README/docs text, public comments, and other publishable
+    prose. Preserve technical facts, quoted text, code blocks, command output,
+    identifiers, API names, and useful uncertainty.
+  '';
 
   trustedProjectsToml = lib.concatMapStringsSep "\n\n" (path: ''
     [projects."${path}"]
@@ -229,6 +290,12 @@ in
     description = "Path to a GitHub token file used by the GitHub MCP server.";
   };
 
+  options.dotfiles.codex.stopSlop.enable = lib.mkOption {
+    type = lib.types.bool;
+    default = true;
+    description = "Whether to install the stop-slop Codex prose-editing skill and reference it from global AGENTS.md.";
+  };
+
   config = {
     home.packages = [
       codexPkg
@@ -237,6 +304,9 @@ in
     ];
 
     home.file.".agents/skills/playwright-cli".source = "${playwrightCliSource}/skills/playwright-cli";
+    home.file.".agents/skills/stop-slop" = lib.mkIf config.dotfiles.codex.stopSlop.enable {
+      source = stopSlopSkill;
+    };
 
     # Codex keeps its own state under ~/.codex, which is ephemeral on this system.
     # Persist the whole directory so auth, history, and other runtime state
@@ -319,7 +389,8 @@ in
       Run `nix eval`, `nix check`, and `nix build` directly; Codex already sets
       `XDG_CACHE_HOME`, so do not add an `env XDG_CACHE_HOME=...` prefix unless
       debugging that environment variable itself.
-    '';
+    ''
+    + stopSlopAgentsText;
 
     # Keep config.toml as a real writable file. Codex stores runtime state there
     # too, so activation overlays only the keys this module owns.
