@@ -279,7 +279,7 @@ in
   options.dotfiles.codex.writableRoots = lib.mkOption {
     type = with lib.types; listOf str;
     default = [
-      "/home/ysun/.codex/memories"
+      "${config.home.homeDirectory}/.codex/memories"
     ];
     description = "Extra directories that Codex may write in workspace-write mode.";
   };
