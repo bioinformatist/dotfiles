@@ -14,7 +14,7 @@ The commands below are provided by Nushell functions defined in [home/shell/nush
 
 Network behavior is declared in NixOS modules, not in a mutable home-directory file.
 
-`profiles.workstationCn` selects the China-friendly profile:
+`homePC` selects the China-friendly profile:
 
 ```nix
 dotfiles.nixNetwork.profile = "china";

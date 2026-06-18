@@ -203,7 +203,7 @@
 | **GitHub 源码获取** | `nix flake update` 拉取 flake inputs（HTTPS tarball） | 必须走**代理**，USTC 镜像无法加速 |
 | **二进制缓存下载** | `nixos-rebuild` 从 cache 下载预编译包 | 使用 **USTC 镜像**（`--option substituters`） |
 
-`profiles.workstationCn` 通过 `dotfiles.nixNetwork.profile = "china"` 声明该策略：
+`homePC` 通过 `dotfiles.nixNetwork.profile = "china"` 声明该策略：
 USTC 会被放到 Nix substituter 列表前面，同时保留官方 cache 作为 fallback。
 本地代理 URL 也通过 NixOS 配置声明，但只作用于 Nix 维护路径：
 `nix-daemon` 会直接获得它，`maint-*` 命令会从 `/etc/dotfiles/nix-network.json`

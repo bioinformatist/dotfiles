@@ -1,12 +1,12 @@
-# workstation-cn starter
+# workstation starter
 
-这是内部 NixOS 开发工作站模板。它复用 `github:bioinformatist/dotfiles` 暴露的 `profiles.workstationCn` 和 `homeManagerModules.workstationCn`。
+这是 NixOS 开发工作站模板。它通过 `github:bioinformatist/dotfiles` 暴露的 `lib.mkWorkstationSystem` 继承上游 Nixpkgs、Home Manager、disko 和 stateVersion 策略。
 
 ## 必改项
 
 1. 在 `flake.nix` 中替换 `username` 和 `hostName`。
 2. 在 `hosts/workstation/disko-config.nix` 中把 `/dev/disk/by-id/REPLACE_ME` 改成目标磁盘。
-3. 在 `flake.nix` 中替换 SSH public key，并在首次安装后移除临时 `initialPassword`。
+3. 在 `flake.nix` 中替换 SSH public key。
 4. 在 `users/changeme/home.nix` 中替换 Git 用户名和邮箱。
 
 ## 验证

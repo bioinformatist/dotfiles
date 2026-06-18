@@ -1,0 +1,34 @@
+[package]
+name = "dotfiles-workstation-web"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+js-sys = "0.3"
+console_error_panic_hook = "0.1"
+leptos = { version = "0.8", features = ["csr"] }
+serde_json = "1"
+sha-crypt = { version = "0.5", default-features = false, features = ["std"] }
+wasm-bindgen = "0.2"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "Blob",
+  "BlobPropertyBag",
+  "Clipboard",
+  "Document",
+  "Element",
+  "HtmlAnchorElement",
+  "HtmlElement",
+  "HtmlInputElement",
+  "HtmlTextAreaElement",
+  "Navigator",
+  "Url",
+  "Window",
+]
+
+[build-dependencies]
+serde_json = "1"

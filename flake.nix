@@ -41,6 +41,14 @@
       profiles = import ./profiles { inherit inputs; };
       nixosModules = import ./modules/nixos { inherit inputs; };
       homeManagerModules = import ./modules/home-manager { inherit inputs; };
+      dotfilesLib = import ./lib {
+        inherit
+          inputs
+          profiles
+          nixosModules
+          homeManagerModules
+          ;
+      };
       mkHost =
         {
           hostDir,
@@ -82,6 +90,7 @@
         nixosModules
         homeManagerModules
         ;
+      lib = dotfilesLib;
 
       packages = forAllSystems (
         system:
@@ -97,9 +106,49 @@
         import ./pkgs pkgs
       );
 
-      templates.workstation-cn = {
-        path = ./templates/workstation-cn;
-        description = "Internal China-friendly NixOS workstation starter";
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+          };
+        in
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              actionlint
+              binaryen
+              cargo
+              clippy
+              jq
+              lld
+              nil
+              nixfmt
+              rustc
+              rustfmt
+              trunk
+              wasm-bindgen-cli
+            ];
+          };
+
+          workstation-web = pkgs.mkShell {
+            packages = with pkgs; [
+              binaryen
+              cargo
+              clippy
+              lld
+              rustc
+              rustfmt
+              trunk
+              wasm-bindgen-cli
+            ];
+          };
+        }
+      );
+
+      templates.workstation = {
+        path = ./templates/workstation;
+        description = "NixOS workstation starter";
       };
 
       nixosConfigurations = {

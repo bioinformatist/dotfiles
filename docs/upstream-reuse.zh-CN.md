@@ -8,12 +8,13 @@
 
 - `profiles.headless`
 - `profiles.ai-serving`
-- `profiles.workstationCn`
-- `nixosModules.{headless,ai-serving,nixNetwork,nvidiaDesktop,workstationCn}`
-- `homeManagerModules.{core,tui,codex,devHeadless,workstationCn}`
+- `profiles.workstation`
+- `nixosModules.{headless,ai-serving,nixNetwork,nvidiaDesktop,workstation}`
+- `homeManagerModules.{core,tui,codex,devHeadless,workstation}`
+- `lib.{versions,mkWorkstationSystem}`
 - `overlays`
 - `packages`
-- `templates.workstation-cn`
+- `templates.workstation`
 
 不要在下游直接 import 本仓库内部路径，例如 `./nixos/*.nix`、`./home/*.nix` 或 `./hosts/*`。
 
@@ -43,16 +44,17 @@
 
 它不包含 CUDA userspace，也不包含具体模型服务栈。
 
-`profiles.workstationCn` 提供中国大陆开发工作站系统层：
+`profiles.workstation` 提供开发工作站系统层：
 
 - `profiles.headless`
-- 声明式中国大陆 Nix 网络与代理默认项
 - Hyprland / PipeWire / Fcitx5 + Rime / 中文字体
-- Clash Verge、WeChat、截图工具、基础 GUI 工具
+- WeChat、截图工具、基础 GUI 工具
 
 它不包含：
 
 - 磁盘布局
+- 中国网络/代理默认值
+- Clash Verge，除非显式设置 `dotfiles.workstation.clash.enable = true`
 - sops secrets
 - 具体用户名之外的个人账号内容
 - NVIDIA 桌面补丁
@@ -64,7 +66,7 @@ NVIDIA 桌面机器应额外叠加 `nixosModules.nvidiaDesktop`。
 
 本仓库里的个人主机继续通过额外本地模块保持完整能力：
 
-- `homePC`：`profiles.workstationCn` + NVIDIA 桌面集成 + 个人 Home Manager 层
+- `homePC`：`profiles.workstation` + 中国网络/代理设置 + Clash Verge + NVIDIA 桌面集成 + 个人 Home Manager 层
 
 ## 下游示例
 

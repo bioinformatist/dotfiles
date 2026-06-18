@@ -18,7 +18,7 @@ in
       inherit yazelix;
     })
     ./desktop
-    (import ./programs/workstation-cn.nix { inherit inputs; })
+    (import ./programs/workstation.nix { inherit inputs; })
   ];
 
   xdg.enable = true;

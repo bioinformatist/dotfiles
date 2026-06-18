@@ -6,9 +6,10 @@ Stage 0 的目标是内部交付：快速为自己、朋友、同事或新电脑
 
 - `profiles.headless`：最小系统基础，用户、SSH、Nix、sudo。
 - `profiles.ai-serving`：GPU / Docker 宿主能力，继续服务服务器和 116。
-- `profiles.workstationCn`：中国大陆开发工作站系统层。
+- `profiles.workstation`：开发工作站系统层，不默认启用中国网络和 Clash Verge。
 - `nixosModules.nvidiaDesktop`：NVIDIA + Wayland 桌面补丁，按需叠加。
-- `homeManagerModules.workstationCn`：通用桌面用户层。
+- `homeManagerModules.workstation`：通用桌面用户层。
+- `lib.mkWorkstationSystem`：模板和 Web 生成器使用的系统组装入口，统一继承上游版本策略。
 - `users/ysun`：个人 Git、SSH、Rime sync、ZeroClaw、D2R、Codex trust。
 
 ## 新机器模板
@@ -16,14 +17,14 @@ Stage 0 的目标是内部交付：快速为自己、朋友、同事或新电脑
 ```bash
 mkdir my-workstation
 cd my-workstation
-nix flake init -t github:bioinformatist/dotfiles#workstation-cn
+nix flake init -t github:bioinformatist/dotfiles#workstation
 ```
 
 必须先替换：
 
 - `flake.nix` 里的 `username` 和 `hostName`
 - `hosts/workstation/disko-config.nix` 里的 `/dev/disk/by-id/REPLACE_ME`
-- `flake.nix` 里的 SSH public key 和临时密码
+- `flake.nix` 里的 SSH public key
 - `users/changeme/home.nix` 里的 Git identity
 
 ## 验收

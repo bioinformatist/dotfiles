@@ -8,12 +8,13 @@ Downstream repositories should only consume these flake outputs:
 
 - `profiles.headless`
 - `profiles.ai-serving`
-- `profiles.workstationCn`
-- `nixosModules.{headless,ai-serving,nixNetwork,nvidiaDesktop,workstationCn}`
-- `homeManagerModules.{core,tui,codex,devHeadless,workstationCn}`
+- `profiles.workstation`
+- `nixosModules.{headless,ai-serving,nixNetwork,nvidiaDesktop,workstation}`
+- `homeManagerModules.{core,tui,codex,devHeadless,workstation}`
+- `lib.{versions,mkWorkstationSystem}`
 - `overlays`
 - `packages`
-- `templates.workstation-cn`
+- `templates.workstation`
 
 Do not import internal paths like `./nixos/*.nix`, `./home/*.nix`, or `./hosts/*` from downstream.
 
@@ -43,16 +44,17 @@ It does not include:
 
 It does not include CUDA userspace or model-serving application stacks.
 
-`profiles.workstationCn` provides the China-friendly development workstation layer:
+`profiles.workstation` provides the development workstation system layer:
 
 - `profiles.headless`
-- declarative China-friendly Nix network and proxy defaults
 - Hyprland / PipeWire / Fcitx5 + Rime / CJK fonts
-- Clash Verge, WeChat, screenshot tools, and baseline GUI tools
+- WeChat, screenshot tools, and baseline GUI tools
 
 It does not include:
 
 - disk layout
+- China network/proxy defaults
+- Clash Verge unless `dotfiles.workstation.clash.enable = true` is set explicitly
 - sops secrets
 - personal account content beyond the configured username
 - NVIDIA desktop patches
@@ -64,7 +66,7 @@ NVIDIA desktop hosts should explicitly add `nixosModules.nvidiaDesktop`.
 
 The personal hosts in this repo stay full-featured by composing extra local modules:
 
-- `homePC`: `profiles.workstationCn` + NVIDIA desktop integration + personal Home Manager layer
+- `homePC`: `profiles.workstation` + China network/proxy settings + Clash Verge + NVIDIA desktop integration + personal Home Manager layer
 
 ## Downstream example
 

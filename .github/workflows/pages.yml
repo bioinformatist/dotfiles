@@ -1,0 +1,55 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cachix/install-nix-action@v34
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Export upstream metadata
+        run: |
+          {
+            echo "DOTFILES_GENERATOR_UPSTREAM_REV=$(git rev-parse HEAD)"
+            echo "DOTFILES_GENERATOR_UPSTREAM_LAST_MODIFIED=$(git log -1 --format=%ct)"
+            echo "DOTFILES_GENERATOR_UPSTREAM_NAR_HASH=$(nix flake metadata --json . | jq -r '.locked.narHash')"
+          } >> "$GITHUB_ENV"
+
+      - name: Build workstation generator
+        run: nix develop ../..#workstation-web --command trunk build --release --public-url "/${{ github.event.repository.name }}/"
+        working-directory: web/workstation
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: web/workstation/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

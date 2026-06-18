@@ -14,7 +14,7 @@
 
 网络行为由 NixOS 模块声明，不再依赖 home 目录里的可变配置文件。
 
-`profiles.workstationCn` 默认选择中国大陆网络 profile：
+`homePC` 默认选择中国大陆网络 profile：
 
 ```nix
 dotfiles.nixNetwork.profile = "china";

@@ -8,6 +8,7 @@
 
 let
   passwordFile = lib.attrByPath [ "sops" "secrets" "${username}-password" "path" ] null config;
+  versions = import ../lib/versions.nix;
 in
 {
   nix.settings = {
@@ -101,5 +102,5 @@ in
     fi
   '';
 
-  system.stateVersion = "24.11";
+  system.stateVersion = lib.mkDefault versions.systemStateVersion;
 }

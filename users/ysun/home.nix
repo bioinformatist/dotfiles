@@ -6,7 +6,7 @@
 }:
 {
   imports = [
-    (import ../../home/workstation-cn.nix { inherit inputs; })
+    (import ../../home/workstation.nix { inherit inputs; })
     ./d2r-eww
     ../../home/programs/gaming.nix
     ../../home/programs/zeroclaw
@@ -176,7 +176,7 @@
 
   programs.git = {
     enable = true;
-    signing.format = "openpgp"; # silence stateVersion < 25.05 warning
+    signing.format = "openpgp";
     settings = {
       user.name = "Yu Sun";
       user.email = "ysun@sctmes.com";

@@ -201,7 +201,7 @@ The update process involves **two types** of network requests, each requiring a 
 | **GitHub source fetching** | `nix flake update` pulls flake inputs (HTTPS tarballs) | Requires a **proxy**; USTC mirror cannot help |
 | **Binary cache download** | `nixos-rebuild` downloads pre-built packages from cache | Use **USTC mirror** (`--option substituters`) |
 
-`profiles.workstationCn` declares this through `dotfiles.nixNetwork.profile = "china"`:
+`homePC` declares this through `dotfiles.nixNetwork.profile = "china"`:
 USTC is prepended to the Nix substituter list, while the official cache remains the fallback.
 The local proxy URL is declared in NixOS config for Nix maintenance paths only:
 `nix-daemon` receives it directly, and `maint-*` commands read the same values

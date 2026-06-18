@@ -13,7 +13,9 @@
   imports = [
     ./hardware-configuration.nix
     ./disko-config.nix
-    (import ../../profiles/workstation-cn.nix { inherit inputs; })
+    (import ../../profiles/workstation.nix { inherit inputs; })
+    ../../nixos/china-network.nix
+    ../../nixos/proxy.nix
     ../../nixos/nvidia.nix
     ../../nixos/mudfish.nix
   ];
@@ -25,6 +27,7 @@
   # --- Physical machine: Networking ---
   networking.hostName = "homePC";
   networking.networkmanager.enable = true;
+  dotfiles.workstation.clash.enable = true;
 
   # --- Physical machine: Bluetooth ---
   hardware.bluetooth = {
