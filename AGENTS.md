@@ -33,11 +33,13 @@ abstraction when changing shared modules, profiles, or flake outputs.
 
 - The repo's shell workflow is Nushell-first. Prefer Nushell syntax when writing or updating repo commands and examples.
 - When executing Nushell snippets through Codex tools, do not rely on the tool's shell selection alone. Invoke Nushell explicitly as `nu -c '...'`, otherwise the command may still be interpreted by `/bin/sh`.
+- This repo contains unfree packages. For full flake checks, run `env NIXPKGS_ALLOW_UNFREE=1 nix flake check --impure --allow-import-from-derivation`; do not treat plain `nix flake check` failing on `mudfish` as a code regression.
 - Proxy boundary is a hard contract: `dotfiles.nixNetwork.proxy` may only feed `nix-daemon` and `/etc/dotfiles/nix-network.json` for `maint-*`; build/fetch before `sudo`, activate with `nixos-rebuild --no-reexec ... --store-path`, and never reintroduce `networking.proxy.default`, desktop/session proxy exports, or `sudo --preserve-env` proxy tunneling.
 - Secrets must go through sops-nix. See `docs/secret-management.md`.
 - Product web UI is Rust-first: prefer Rust/WASM for UI state, validation, rendering, file generation, archives, download, clipboard, and browser storage when mature Rust crates or `web-sys` bindings are enough. Keep JavaScript glue narrow and only for browser API gaps.
 - Do not add a product CLI user entrypoint, backend service, online Nix/ISO builder, remote installer, secret upload, private-key handling, token handling, or persisted password handling unless explicitly requested. Initial passwords may only be processed in-browser long enough to generate `initialHashedPassword`; never write plaintext passwords to generated files, URLs, logs, or browser storage.
 - Although this repo started as the `homePC` configuration, most current development and browser testing happens from a headless server whose downstream configuration lives in `/home/ysun/github.com/sctmes/dotfiles`. When using Playwright or testing product UI, assume an SSH/headless environment first; local browsers may be unavailable unless explicitly installed in the test shell.
+- For product UI browser debugging, use `nix develop .#workstation-web-browser` for the headless Chromium/CDP side; do not assume a graphical desktop browser is available.
 - The repo currently exposes `homePC` as the maintained host configuration.
 - Changes are verified manually by the user after rebuild.
 - System rebuild command:

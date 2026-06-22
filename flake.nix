@@ -112,6 +112,88 @@
           pkgs = import nixpkgs {
             inherit system;
           };
+          workstationWebPackages = with pkgs; [
+            binaryen
+            cargo
+            clippy
+            lld
+            rustc
+            rustfmt
+            trunk
+            wasm-bindgen-cli
+          ];
+          workstationWebServe = pkgs.writeShellApplication {
+            name = "workstation-web-serve";
+            runtimeInputs = with pkgs; [
+              gitMinimal
+              trunk
+            ];
+            text = ''
+              root="$PWD"
+              if git_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+                root="$git_root"
+              fi
+
+              app_dir="$root/web/workstation"
+              if [ ! -d "$app_dir" ]; then
+                echo "web/workstation not found under $root" >&2
+                exit 1
+              fi
+
+              cd "$app_dir"
+              # Trunk 0.21 parses NO_COLOR as a boolean and rejects the common
+              # NO_COLOR=1 convention used by Codex shells.
+              unset NO_COLOR
+              exec trunk serve --address 127.0.0.1 --port "''${PORT:-8080}" --open false "$@"
+            '';
+          };
+          workstationWebChrome = pkgs.writeShellApplication {
+            name = "workstation-web-chrome";
+            runtimeInputs = with pkgs; [
+              chromium
+              coreutils
+            ];
+            text = ''
+              export FONTCONFIG_FILE="${pkgs.fontconfig.out}/etc/fonts/fonts.conf"
+
+              url="http://127.0.0.1:''${PORT:-8080}/"
+              if [ "$#" -gt 0 ] && [[ "$1" != -* ]]; then
+                url="$1"
+                shift
+              fi
+
+              profile_dir="$(mktemp -d -t workstation-web-chrome.XXXXXX)"
+              cleanup() {
+                rm -rf "$profile_dir"
+              }
+              finish() {
+                status=$?
+                cleanup
+                exit "$status"
+              }
+              trap finish EXIT
+
+              sandbox_flags=()
+              if [ "''${WORKSTATION_WEB_CHROME_NO_SANDBOX:-}" = "1" ]; then
+                sandbox_flags+=(--no-sandbox)
+              fi
+
+              chromium \
+                --headless=new \
+                --remote-debugging-address=127.0.0.1 \
+                --remote-debugging-port="''${CDP_PORT:-9222}" \
+                --user-data-dir="$profile_dir" \
+                --window-size="''${WINDOW_SIZE:-1440,1000}" \
+                --no-first-run \
+                --no-default-browser-check \
+                --disable-dev-shm-usage \
+                --disable-background-networking \
+                --disable-sync \
+                "''${sandbox_flags[@]}" \
+                "$@" \
+                "$url"
+            '';
+          };
         in
         {
           default = pkgs.mkShell {
@@ -132,15 +214,14 @@
           };
 
           workstation-web = pkgs.mkShell {
-            packages = with pkgs; [
-              binaryen
-              cargo
-              clippy
-              lld
-              rustc
-              rustfmt
-              trunk
-              wasm-bindgen-cli
+            packages = workstationWebPackages;
+          };
+
+          workstation-web-browser = pkgs.mkShell {
+            packages = workstationWebPackages ++ [
+              pkgs.chromium
+              workstationWebServe
+              workstationWebChrome
             ];
           };
         }

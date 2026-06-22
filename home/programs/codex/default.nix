@@ -26,6 +26,53 @@ let
     rev = stopSlopRev;
     hash = "sha256-JMqlCRVEAfwG1TLMDpnamznkBfkmX6e2XyETTTH/TSE=";
   };
+  ponytailVersion = "4.7.0";
+  ponytailSource = pkgs.fetchFromGitHub {
+    owner = "DietrichGebert";
+    repo = "ponytail";
+    rev = "v${ponytailVersion}";
+    hash = "sha256-Q6vlkbTfBFrNFTxEwYeMe5ciOe6QdULegvExwT//gJs=";
+  };
+  ponytailSkillMd = pkgs.writeText "ponytail-SKILL.md" ''
+    ---
+    name: ponytail
+    description: On-demand minimalist implementation assistant. Use only when the user explicitly asks for Ponytail, YAGNI, the simplest viable implementation, stdlib/native-first implementation, or a minimal solution. Do not use as an always-on coding style, persistent mode, prose editor, or substitute for correctness/security review.
+    license: MIT
+    upstream: https://github.com/DietrichGebert/ponytail/tree/v${ponytailVersion}
+    ---
+
+    # Ponytail
+
+    Use this skill as a bounded YAGNI and minimal-implementation pass. It is
+    intentionally not persistent: apply it to the current task only, unless the
+    user explicitly asks again.
+
+    ## Ladder
+
+    Prefer the first option that actually satisfies the request:
+
+    1. Skip work that does not need to exist.
+    2. Use the standard library when it covers the need.
+    3. Use native platform features before custom code or new dependencies.
+    4. Use already-installed dependencies before adding new ones.
+    5. Keep the implementation as small and direct as the real requirement allows.
+
+    ## Boundaries
+
+    Do not remove trust-boundary validation, security controls, accessibility
+    basics, data-loss prevention, edge-case correctness, required checks, or
+    explicitly requested behavior. If the smallest implementation has a known
+    ceiling, say what triggers the larger version.
+
+    For over-engineering review, prefer `$ponytail-review` or
+    `$ponytail-audit`; those are complexity-only passes and do not replace a
+    normal correctness/security review.
+  '';
+  ponytailSkill = pkgs.runCommand "codex-ponytail-skill" { } ''
+    mkdir -p "$out"
+    cp ${ponytailSource}/LICENSE "$out/LICENSE"
+    cp ${ponytailSkillMd} "$out/SKILL.md"
+  '';
   stopSlopSkillMd = pkgs.writeText "stop-slop-SKILL.md" ''
     ---
     name: stop-slop
@@ -168,6 +215,18 @@ let
     prose. Preserve technical facts, quoted text, code blocks, command output,
     identifiers, API names, and useful uncertainty.
   '';
+  ponytailAgentsText = lib.optionalString config.dotfiles.codex.ponytail.enable ''
+
+    ## Minimalist Implementation
+
+    Use `$ponytail` skills only when the user asks for YAGNI, the simplest
+    viable implementation, or an over-engineering audit. Prefer
+    `$ponytail-review` / `$ponytail-audit` for complexity-focused review; they
+    do not replace correctness, security, regression, or test-coverage review.
+    Do not let Ponytail guidance remove trust-boundary validation, security
+    controls, accessibility basics, data-loss prevention, or explicitly
+    requested behavior.
+  '';
 
   trustedProjectsToml = lib.concatMapStringsSep "\n\n" (path: ''
     [projects."${path}"]
@@ -296,6 +355,12 @@ in
     description = "Whether to install the stop-slop Codex prose-editing skill and reference it from global AGENTS.md.";
   };
 
+  options.dotfiles.codex.ponytail.enable = lib.mkOption {
+    type = lib.types.bool;
+    default = true;
+    description = "Whether to install Ponytail Codex skills for on-demand YAGNI and over-engineering review workflows.";
+  };
+
   config = {
     home.packages = [
       codexPkg
@@ -306,6 +371,18 @@ in
     home.file.".agents/skills/playwright-cli".source = "${playwrightCliSource}/skills/playwright-cli";
     home.file.".agents/skills/stop-slop" = lib.mkIf config.dotfiles.codex.stopSlop.enable {
       source = stopSlopSkill;
+    };
+    home.file.".agents/skills/ponytail" = lib.mkIf config.dotfiles.codex.ponytail.enable {
+      source = ponytailSkill;
+    };
+    home.file.".agents/skills/ponytail-review" = lib.mkIf config.dotfiles.codex.ponytail.enable {
+      source = "${ponytailSource}/skills/ponytail-review";
+    };
+    home.file.".agents/skills/ponytail-audit" = lib.mkIf config.dotfiles.codex.ponytail.enable {
+      source = "${ponytailSource}/skills/ponytail-audit";
+    };
+    home.file.".agents/skills/ponytail-debt" = lib.mkIf config.dotfiles.codex.ponytail.enable {
+      source = "${ponytailSource}/skills/ponytail-debt";
     };
 
     # Codex keeps its own state under ~/.codex, which is ephemeral on this system.
@@ -390,7 +467,8 @@ in
       `XDG_CACHE_HOME`, so do not add an `env XDG_CACHE_HOME=...` prefix unless
       debugging that environment variable itself.
     ''
-    + stopSlopAgentsText;
+    + stopSlopAgentsText
+    + ponytailAgentsText;
 
     # Keep config.toml as a real writable file. Codex stores runtime state there
     # too, so activation overlays only the keys this module owns.
@@ -425,6 +503,8 @@ in
       prefix_rule(pattern=["nix", "eval"], decision="allow")
       prefix_rule(pattern=["nix", "check"], decision="allow")
       prefix_rule(pattern=["nix", "build"], decision="allow")
+      prefix_rule(pattern=["nix", "flake", "check"], decision="allow")
+      prefix_rule(pattern=["env", "NIXPKGS_ALLOW_UNFREE=1", "nix", "flake", "check"], decision="allow")
       prefix_rule(pattern=["nix", "flake", "update"], decision="allow")
       prefix_rule(pattern=["nix", "flake", "show"], decision="allow")
       prefix_rule(pattern=["nix", "flake", "metadata"], decision="allow")
