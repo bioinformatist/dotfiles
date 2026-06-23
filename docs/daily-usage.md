@@ -92,6 +92,12 @@ Everything else is wiped on reboot.
 | **grim** + **slurp** | `pkgs.grim`, `pkgs.slurp` | Wayland screen capture + region selector |
 | **satty** | `pkgs.satty` | Screenshot annotation editor (arrows, text, blur, brush) |
 
+### Evaluated But Not Installed
+
+| Application | Decision |
+| :--- | :--- |
+| **Warp Terminal** | Not a good fit for this system. It needs extra NixOS/Nushell compatibility wrapping, and its OpenAI integration currently supports API-key billing rather than reusing a ChatGPT Plus/Pro subscription. |
+
 ### TUI & Shell
 
 | Application | Package / Source | Description |

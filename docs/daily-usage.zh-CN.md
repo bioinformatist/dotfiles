@@ -94,6 +94,12 @@
 | **grim** + **slurp** | `pkgs.grim`、`pkgs.slurp` | Wayland 屏幕截图 + 区域选择器 |
 | **satty** | `pkgs.satty` | 截图标注编辑器（箭头、文字、模糊、画笔） |
 
+### 已评估但未安装
+
+| 应用 | 结论 |
+| :--- | :--- |
+| **Warp Terminal** | 当前不适合本系统。它需要额外的 NixOS/Nushell 兼容封装，并且 OpenAI 集成目前走 API key 计费，不能直接复用 ChatGPT Plus/Pro 订阅。 |
+
 ### TUI & Shell
 
 | 应用 | 包 / 来源 | 说明 |
