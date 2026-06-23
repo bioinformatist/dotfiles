@@ -10,7 +10,6 @@
 }:
 
 let
-  toolPkgs = inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   wechatPkgs = import inputs.nixpkgs-wechat {
     inherit (pkgs.stdenv.hostPlatform) system;
     config.allowUnfree = true;
@@ -22,6 +21,24 @@ let
     postBuild = ''
       wrapProgram $out/bin/wechat-uos \
         --set QT_IM_MODULE fcitx
+    '';
+  };
+  clash-verge-rev = pkgs.symlinkJoin {
+    name = "clash-verge-rev-2.4.7-webkit-wrapper";
+    # Temporary rollback for the blank Proxies page seen after nixpkgs-tools
+    # updated Clash Verge Rev to 2.5.1. Keep using the main nixpkgs 2.4.7
+    # package until a stable nixpkgs-tools package includes
+    # tauri-plugin-mihomo 0.5.4 or newer.
+    paths = [ pkgs.clash-verge-rev ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    meta = pkgs.clash-verge-rev.meta or { } // {
+      mainProgram = "clash-verge";
+    };
+    postBuild = ''
+      # Work around WebKitGTK transparent rendering on Hyprland/NVIDIA.
+      wrapProgram $out/bin/clash-verge \
+        --set WEBKIT_DISABLE_DMABUF_RENDERER 1 \
+        --set WEBKIT_DISABLE_COMPOSITING_MODE 1
     '';
   };
 in
@@ -212,7 +229,7 @@ in
     (lib.mkIf config.dotfiles.workstation.clash.enable {
       programs.clash-verge = {
         enable = true;
-        package = toolPkgs.clash-verge-rev;
+        package = clash-verge-rev;
         tunMode = true;
         serviceMode = true;
       };
