@@ -35,13 +35,6 @@ fn metadata_string(metadata: Option<&Value>, pointer: &str) -> Option<String> {
     metadata?.pointer(pointer)?.as_str().map(ToOwned::to_owned)
 }
 
-fn metadata_number(metadata: Option<&Value>, pointer: &str) -> Option<String> {
-    metadata?
-        .pointer(pointer)?
-        .as_u64()
-        .map(|value| value.to_string())
-}
-
 fn generate_i18n() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=locales");
     let i18n_mod_directory =
@@ -55,7 +48,6 @@ fn generate_i18n() -> Result<(), Box<dyn Error>> {
 }
 
 fn main() {
-    println!("cargo:rerun-if-changed=../../flake.lock");
     println!("cargo:rerun-if-changed=../../.git/HEAD");
     generate_i18n().expect("i18n code generation succeeds");
 
@@ -74,21 +66,5 @@ fn main() {
         .or_else(|| metadata_string(current_metadata.as_ref(), "/locked/dirtyRev"))
         .unwrap_or_else(|| "UNKNOWN_REV".to_owned());
 
-    let last_modified = env::var("DOTFILES_GENERATOR_UPSTREAM_LAST_MODIFIED")
-        .ok()
-        .or_else(|| command_output("git", &["log", "-1", "--format=%ct"]))
-        .or_else(|| metadata_number(clean_metadata.as_ref(), "/locked/lastModified"))
-        .or_else(|| metadata_number(current_metadata.as_ref(), "/locked/lastModified"))
-        .or_else(|| metadata_number(current_metadata.as_ref(), "/lastModified"))
-        .unwrap_or_else(|| "0".to_owned());
-
-    let nar_hash = env::var("DOTFILES_GENERATOR_UPSTREAM_NAR_HASH")
-        .ok()
-        .or_else(|| metadata_string(clean_metadata.as_ref(), "/locked/narHash"))
-        .or_else(|| metadata_string(current_metadata.as_ref(), "/locked/narHash"))
-        .unwrap_or_else(|| "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".to_owned());
-
     println!("cargo:rustc-env=DOTFILES_GENERATOR_UPSTREAM_REV={rev}");
-    println!("cargo:rustc-env=DOTFILES_GENERATOR_UPSTREAM_LAST_MODIFIED={last_modified}");
-    println!("cargo:rustc-env=DOTFILES_GENERATOR_UPSTREAM_NAR_HASH={nar_hash}");
 }

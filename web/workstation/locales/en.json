@@ -26,6 +26,9 @@
     "initial_password": "Initial password",
     "target_disk": "Target disk",
     "nvidia": "Enable NVIDIA desktop patch",
+    "wechat": "Include WeChat desktop",
+    "wechat_proxy": "WeChat preflight proxy",
+    "wechat_preflight_confirmed": "I have verified that the install machine can download the WeChat package through this proxy",
     "git_name": "Name",
     "git_email": "Email"
   },
@@ -44,12 +47,18 @@
     "disk_suffix": ".",
     "disk_risk": "DANGER: disko will erase and repartition this system disk. All existing data on that disk will be destroyed.",
     "disk_missing": "You can still download the package, but the install command is unavailable until a target disk is set.",
-    "china_network": "China Mainland mode installs Clash Verge and forces nix-daemon through http://127.0.0.1:7897. Configure the Clash subscription immediately after first boot; without it, nix flake update and nixos-rebuild will not be able to fetch dependencies.",
+    "china_network": "China Mainland mode installs Clash Verge, then forces nix-daemon through http://127.0.0.1:7897. Configure the Clash subscription immediately after first boot; without it, nix flake update and nixos-rebuild will not be able to fetch dependencies.",
+    "wechat_china": "Enabled by default for China Mainland. Because the WeChat package comes from a UOS Debian source, the install machine must be able to reach that URL before installation.",
+    "wechat_china_disabled": "WeChat will not be installed. The new system will not include WeChat desktop unless you add it later.",
+    "wechat_global": "Optional outside China Mainland. WeChat is an unfree binary package and can fail when Tencent changes the Debian package URL before nixpkgs catches up.",
+    "wechat_proxy": "Use a proxy URL reachable from the machine that will run nixos-anywhere, for example http://192.168.0.116:7890. Browser JavaScript cannot test a custom LAN proxy directly, so verify it on that machine first.",
+    "wechat_preflight": "Run this command on the machine that will run nixos-anywhere. It fetches the first byte from the exact WeChat deb URL through the proxy above.",
     "git": "Optional. Fill this in if the new user should have Git identity configured immediately."
   },
   "tree": {
     "nvidia": "NVIDIA patch",
     "china_mainland": "China Mainland proxy",
+    "wechat": "WeChat desktop",
     "disko": "destructive disk"
   },
   "validation": {
@@ -59,11 +68,16 @@
     "password_required": "Enter an initial password or switch to SSH public key.",
     "ssh_invalid": "This SSH public key does not look valid.",
     "password_too_short": "Use at least 8 characters.",
-    "disk_unstable": "Use a stable /dev/disk/by-id/... path instead of /dev/sdX or /dev/nvmeXnY."
+    "disk_unstable": "Use a stable /dev/disk/by-id/... path instead of /dev/sdX or /dev/nvmeXnY.",
+    "wechat_proxy_required": "Enter the proxy URL you verified for the WeChat package download.",
+    "wechat_proxy_invalid": "Use a proxy URL like http://192.168.0.116:7890 or socks5h://192.168.0.116:7890, without credentials or paths.",
+    "wechat_preflight_required": "Confirm the WeChat preflight download before generating the package."
   },
   "actions": {
     "download": "Download zip",
-    "copy_command": "Copy command"
+    "copy": "Copy",
+    "copied": "Copied",
+    "copy_failed": "Copy failed"
   },
   "output": {
     "package_ready": "The package can be downloaded.",
@@ -73,8 +87,6 @@
   },
   "flash": {
     "download_ready": "Configuration package generated.",
-    "command_copied": "Install command copied.",
-    "download_failed": "The browser could not create the download.",
-    "clipboard_failed": "The browser clipboard API is unavailable."
+    "download_failed": "The browser could not create the download."
   }
 }

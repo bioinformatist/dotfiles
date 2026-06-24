@@ -3,13 +3,13 @@ use std::collections::BTreeMap;
 use js_sys::{Array, Uint8Array};
 use leptos::prelude::*;
 use thaw::{Button, ButtonAppearance, ConfigProvider, Text, TextTag};
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{closure::Closure, JsCast};
 use wasm_bindgen_futures::{spawn_local, JsFuture};
 use web_sys::{Blob, BlobPropertyBag, HtmlAnchorElement, HtmlDocument, HtmlTextAreaElement, Url};
 
 use crate::generator::{
-    derive_state, generate, zip_project, GeneratedFile, IssueCode, NetworkMode, ProductSpec,
-    UPSTREAM_REV,
+    derive_state, generate, wechat_preflight_command, zip_project, GeneratedFile, IssueCode,
+    NetworkMode, ProductSpec, UPSTREAM_REV,
 };
 use crate::i18n::*;
 
@@ -22,9 +22,19 @@ enum LoginChoice {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum FlashMessage {
     DownloadReady,
-    CommandCopied,
     DownloadFailed,
-    ClipboardFailed,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum CopyFeedback {
+    Copied,
+    Failed,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct CopyFeedbackState {
+    kind: CopyFeedback,
+    id: u32,
 }
 
 #[component]
@@ -53,9 +63,19 @@ fn GeneratorApp() -> impl IntoView {
     let git_email = RwSignal::new(String::new());
     let disk_path = RwSignal::new(String::new());
     let nvidia = RwSignal::new(false);
+    let china_wechat = RwSignal::new(true);
+    let global_wechat = RwSignal::new(false);
+    let wechat_proxy_url = RwSignal::new(String::new());
+    let wechat_preflight_confirmed = RwSignal::new(false);
     let network_mode = RwSignal::new(NetworkMode::China);
     let flash = RwSignal::new(None::<FlashMessage>);
+    let command_copy_feedback = RwSignal::new(None::<CopyFeedbackState>);
+    let preflight_copy_feedback = RwSignal::new(None::<CopyFeedbackState>);
 
+    let wechat_enabled = Memo::new(move |_| match network_mode.get() {
+        NetworkMode::China => china_wechat.get(),
+        NetworkMode::Global => global_wechat.get(),
+    });
     let spec = move || ProductSpec {
         host_name: host_name.get(),
         username: username.get(),
@@ -74,6 +94,9 @@ fn GeneratorApp() -> impl IntoView {
         git_email: git_email.get(),
         disk_path: disk_path.get(),
         nvidia: nvidia.get(),
+        wechat: wechat_enabled.get(),
+        wechat_proxy_url: wechat_proxy_url.get(),
+        wechat_preflight_confirmed: wechat_preflight_confirmed.get(),
         network_mode: network_mode.get(),
     };
 
@@ -98,6 +121,22 @@ fn GeneratorApp() -> impl IntoView {
         Memo::new(move |_| state.get().errors.contains(&IssueCode::DiskPathUnstable));
     let has_china_notice =
         Memo::new(move |_| state.get().notices.contains(&IssueCode::ChinaNetwork));
+    let has_wechat_proxy_missing =
+        Memo::new(move |_| state.get().errors.contains(&IssueCode::WechatProxyMissing));
+    let has_wechat_proxy_invalid =
+        Memo::new(move |_| state.get().errors.contains(&IssueCode::WechatProxyInvalid));
+    let has_wechat_proxy_error =
+        Memo::new(move |_| has_wechat_proxy_missing.get() || has_wechat_proxy_invalid.get());
+    let has_wechat_preflight_error = Memo::new(move |_| {
+        state
+            .get()
+            .errors
+            .contains(&IssueCode::WechatPreflightUnconfirmed)
+    });
+    let needs_wechat_preflight =
+        Memo::new(move |_| network_mode.get() == NetworkMode::China && wechat_enabled.get());
+    let current_wechat_preflight_command =
+        Memo::new(move |_| wechat_preflight_command(&wechat_proxy_url.get()));
 
     let file_preview = Memo::new(move |_| {
         if !state.get().can_download {
@@ -131,27 +170,6 @@ fn GeneratorApp() -> impl IntoView {
                 }
             }
             Err(_) => flash.set(Some(FlashMessage::DownloadFailed)),
-        }
-    };
-
-    let copy_command = move |_| {
-        flash.set(None);
-        match install_command.get() {
-            Some(command) => {
-                if copy_with_selection_fallback(&command).is_ok() {
-                    flash.set(Some(FlashMessage::CommandCopied));
-                    return;
-                }
-
-                spawn_local(async move {
-                    let message = match copy_with_clipboard_api(&command).await {
-                        Ok(()) => FlashMessage::CommandCopied,
-                        Err(()) => FlashMessage::ClipboardFailed,
-                    };
-                    flash.set(Some(message));
-                });
-            }
-            None => flash.set(Some(FlashMessage::ClipboardFailed)),
         }
     };
 
@@ -351,6 +369,121 @@ fn GeneratorApp() -> impl IntoView {
                             <Show when=move || has_china_notice.get()>
                                 <p class="field-notice">{move || t_string!(i18n, help.china_network)}</p>
                             </Show>
+                            <label class="check-row">
+                                <input
+                                    type="checkbox"
+                                    prop:checked=move || wechat_enabled.get()
+                                    on:change=move |ev| {
+                                        let checked = event_target_checked(&ev);
+                                        match network_mode.get() {
+                                            NetworkMode::China => china_wechat.set(checked),
+                                            NetworkMode::Global => global_wechat.set(checked),
+                                        }
+                                        if !checked {
+                                            wechat_preflight_confirmed.set(false);
+                                        }
+                                    }
+                                />
+                                <span>{move || t_string!(i18n, fields.wechat)}</span>
+                            </label>
+                            <Show
+                                when=move || network_mode.get() == NetworkMode::China
+                                fallback=move || view! {
+                                    <p class="field-help">{move || t_string!(i18n, help.wechat_global)}</p>
+                                }
+                            >
+                                <p class="field-help">{move || t_string!(i18n, help.wechat_china)}</p>
+                                <Show
+                                    when=move || wechat_enabled.get()
+                                    fallback=move || view! {
+                                        <p class="field-warning">{move || t_string!(i18n, help.wechat_china_disabled)}</p>
+                                    }
+                                >
+                                    <label for="wechat-proxy">{move || t_string!(i18n, fields.wechat_proxy)}</label>
+                                    <input
+                                        id="wechat-proxy"
+                                        placeholder="http://192.168.0.116:7890"
+                                        aria-invalid=move || bool_attr(has_wechat_proxy_error.get())
+                                        aria-describedby="wechat-proxy-help wechat-proxy-error"
+                                        prop:value=move || wechat_proxy_url.get()
+                                        on:input=move |ev| {
+                                            wechat_proxy_url.set(event_target_value(&ev));
+                                            wechat_preflight_confirmed.set(false);
+                                        }
+                                    />
+                                    <p id="wechat-proxy-help" class="field-help">
+                                        {move || t_string!(i18n, help.wechat_proxy)}
+                                    </p>
+                                    <Show when=move || has_wechat_proxy_missing.get()>
+                                        <p id="wechat-proxy-error" class="field-error">
+                                            {move || t_string!(i18n, validation.wechat_proxy_required)}
+                                        </p>
+                                    </Show>
+                                    <Show when=move || has_wechat_proxy_invalid.get()>
+                                        <p id="wechat-proxy-error" class="field-error">
+                                            {move || t_string!(i18n, validation.wechat_proxy_invalid)}
+                                        </p>
+                                    </Show>
+
+                                    <div class="confirm-with-help">
+                                        <label class="check-row check-row-compact">
+                                            <input
+                                                type="checkbox"
+                                                disabled=move || has_wechat_proxy_error.get()
+                                                aria-invalid=move || bool_attr(has_wechat_preflight_error.get())
+                                                aria-describedby="wechat-preflight-error wechat-preflight-help"
+                                                prop:checked=move || wechat_preflight_confirmed.get()
+                                                on:change=move |ev| wechat_preflight_confirmed.set(event_target_checked(&ev))
+                                            />
+                                            <span class="tooltip-trigger" tabindex="0">
+                                                {move || t_string!(i18n, fields.wechat_preflight_confirmed)}
+                                            </span>
+                                        </label>
+                                        <div class="tooltip-card" role="tooltip">
+                                            <p id="wechat-preflight-help">
+                                                {move || t_string!(i18n, help.wechat_preflight)}
+                                            </p>
+                                            <div class="copy-code">
+                                                <pre>{move || current_wechat_preflight_command.get()}</pre>
+                                                <div class="code-copy-group">
+                                                    <Show when=move || preflight_copy_feedback.get().is_some()>
+                                                        <span
+                                                            class="copy-feedback"
+                                                            class:copy-feedback-failed=move || {
+                                                                matches!(
+                                                                    preflight_copy_feedback.get().map(|state| state.kind),
+                                                                    Some(CopyFeedback::Failed),
+                                                                )
+                                                            }
+                                                        >
+                                                            {move || copy_feedback_text(i18n, preflight_copy_feedback.get())}
+                                                        </span>
+                                                    </Show>
+                                                    <button
+                                                        type="button"
+                                                        class="icon-copy"
+                                                        aria-label=move || t_string!(i18n, actions.copy)
+                                                        title=move || t_string!(i18n, actions.copy)
+                                                        on:click=move |_| {
+                                                            copy_text(
+                                                                current_wechat_preflight_command.get(),
+                                                                preflight_copy_feedback,
+                                                            );
+                                                        }
+                                                    >
+                                                        <span class="copy-icon" aria-hidden="true"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Show when=move || needs_wechat_preflight.get() && has_wechat_preflight_error.get()>
+                                        <p id="wechat-preflight-error" class="field-error">
+                                            {move || t_string!(i18n, validation.wechat_preflight_required)}
+                                        </p>
+                                    </Show>
+                                </Show>
+                            </Show>
                         </fieldset>
 
                         <fieldset>
@@ -391,12 +524,6 @@ fn GeneratorApp() -> impl IntoView {
                                 >
                                     {move || t_string!(i18n, actions.download)}
                                 </Button>
-                                <Button
-                                    disabled=move || !state.get().can_install
-                                    on_click=copy_command
-                                >
-                                    {move || t_string!(i18n, actions.copy_command)}
-                                </Button>
                             </div>
                             <Show when=move || state.get().can_download && !state.get().can_install>
                                 <p class="action-note">{move || t_string!(i18n, output.command_unavailable)}</p>
@@ -414,7 +541,37 @@ fn GeneratorApp() -> impl IntoView {
                                     <p class="empty-output">{move || t_string!(i18n, output.command_unavailable)}</p>
                                 }
                             >
-                                <pre class="command">{move || install_command.get().unwrap_or_default()}</pre>
+                                <div class="copy-code">
+                                    <pre class="command">{move || install_command.get().unwrap_or_default()}</pre>
+                                    <div class="code-copy-group">
+                                        <Show when=move || command_copy_feedback.get().is_some()>
+                                            <span
+                                                class="copy-feedback"
+                                                class:copy-feedback-failed=move || {
+                                                    matches!(
+                                                        command_copy_feedback.get().map(|state| state.kind),
+                                                        Some(CopyFeedback::Failed),
+                                                    )
+                                                }
+                                            >
+                                                {move || copy_feedback_text(i18n, command_copy_feedback.get())}
+                                            </span>
+                                        </Show>
+                                        <button
+                                            type="button"
+                                            class="icon-copy"
+                                            aria-label=move || t_string!(i18n, actions.copy)
+                                            title=move || t_string!(i18n, actions.copy)
+                                            on:click=move |_| {
+                                                if let Some(command) = install_command.get() {
+                                                    copy_text(command, command_copy_feedback);
+                                                }
+                                            }
+                                        >
+                                            <span class="copy-icon" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                </div>
                             </Show>
                         </section>
 
@@ -439,11 +596,59 @@ fn GeneratorApp() -> impl IntoView {
 fn flash_text(i18n: leptos_i18n::I18nContext<Locale>, message: Option<FlashMessage>) -> String {
     match message {
         Some(FlashMessage::DownloadReady) => t_string!(i18n, flash.download_ready).to_string(),
-        Some(FlashMessage::CommandCopied) => t_string!(i18n, flash.command_copied).to_string(),
         Some(FlashMessage::DownloadFailed) => t_string!(i18n, flash.download_failed).to_string(),
-        Some(FlashMessage::ClipboardFailed) => t_string!(i18n, flash.clipboard_failed).to_string(),
         None => String::new(),
     }
+}
+
+fn copy_feedback_text(
+    i18n: leptos_i18n::I18nContext<Locale>,
+    feedback: Option<CopyFeedbackState>,
+) -> String {
+    match feedback.map(|state| state.kind) {
+        Some(CopyFeedback::Copied) => t_string!(i18n, actions.copied).to_string(),
+        Some(CopyFeedback::Failed) => t_string!(i18n, actions.copy_failed).to_string(),
+        None => String::new(),
+    }
+}
+
+fn copy_text(text: String, feedback: RwSignal<Option<CopyFeedbackState>>) {
+    if copy_with_selection_fallback(&text).is_ok() {
+        show_copy_feedback(feedback, CopyFeedback::Copied);
+        return;
+    }
+
+    spawn_local(async move {
+        let kind = match copy_with_clipboard_api(&text).await {
+            Ok(()) => CopyFeedback::Copied,
+            Err(()) => CopyFeedback::Failed,
+        };
+        show_copy_feedback(feedback, kind);
+    });
+}
+
+fn show_copy_feedback(feedback: RwSignal<Option<CopyFeedbackState>>, kind: CopyFeedback) {
+    let id = feedback
+        .get_untracked()
+        .map(|state| state.id.wrapping_add(1))
+        .unwrap_or(1);
+    feedback.set(Some(CopyFeedbackState { kind, id }));
+
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+    let callback = Closure::wrap(Box::new(move || {
+        if feedback.get_untracked().map(|state| state.id) == Some(id) {
+            feedback.set(None);
+        }
+    }) as Box<dyn FnMut()>);
+    window
+        .set_timeout_with_callback_and_timeout_and_arguments_0(
+            callback.as_ref().unchecked_ref(),
+            2200,
+        )
+        .ok();
+    callback.forget();
 }
 
 #[derive(Default)]
@@ -482,8 +687,23 @@ fn file_tree_note(i18n: leptos_i18n::I18nContext<Locale>, file: &GeneratedFile) 
         return Some(t_string!(i18n, tree.nvidia).to_string());
     }
 
-    if file.path.ends_with("/configuration.nix") && file.contents.contains("profile = \"china\"") {
-        return Some(t_string!(i18n, tree.china_mainland).to_string());
+    if file.path.ends_with("/configuration.nix") {
+        let mut notes = Vec::new();
+
+        if file.contents.contains("profile = \"china\"") {
+            notes.push(t_string!(i18n, tree.china_mainland).to_string());
+        }
+
+        if file
+            .contents
+            .contains("dotfiles.workstation.wechat.enable = true;")
+        {
+            notes.push(t_string!(i18n, tree.wechat).to_string());
+        }
+
+        if !notes.is_empty() {
+            return Some(notes.join(", "));
+        }
     }
 
     if file.path.ends_with("/disko-config.nix") {

@@ -1,14 +1,12 @@
 use std::io::{Cursor, Write};
 
-use serde_json::{json, Value};
 use sha_crypt::{sha512_crypt_b64, Sha512Params, ROUNDS_DEFAULT};
 use zip::write::SimpleFileOptions;
 
-const ROOT_FLAKE_LOCK: &str = include_str!("../../../flake.lock");
 pub const UPSTREAM_REV: &str = env!("DOTFILES_GENERATOR_UPSTREAM_REV");
-const UPSTREAM_LAST_MODIFIED: &str = env!("DOTFILES_GENERATOR_UPSTREAM_LAST_MODIFIED");
-const UPSTREAM_NAR_HASH: &str = env!("DOTFILES_GENERATOR_UPSTREAM_NAR_HASH");
 const DISK_PLACEHOLDER: &str = "/dev/disk/by-id/REPLACE_ME_BEFORE_INSTALL";
+pub const WECHAT_DEB_URL: &str = "https://pro-store-packages.uniontech.com/appstore/pool/appstore/c/com.tencent.wechat/com.tencent.wechat_4.1.1.4_amd64.deb";
+const WECHAT_PROXY_PLACEHOLDER: &str = "http://<lan-proxy-ip>:<port>";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum NetworkMode {
@@ -27,6 +25,9 @@ pub struct ProductSpec {
     pub git_email: String,
     pub disk_path: String,
     pub nvidia: bool,
+    pub wechat: bool,
+    pub wechat_proxy_url: String,
+    pub wechat_preflight_confirmed: bool,
     pub network_mode: NetworkMode,
 }
 
@@ -49,6 +50,9 @@ pub enum IssueCode {
     DiskMissing,
     DiskPathUnstable,
     ChinaNetwork,
+    WechatProxyMissing,
+    WechatProxyInvalid,
+    WechatPreflightUnconfirmed,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -78,6 +82,10 @@ impl ProductSpec {
 
     fn has_initial_password(&self) -> bool {
         !self.initial_password.is_empty()
+    }
+
+    fn requires_wechat_preflight(&self) -> bool {
+        self.network_mode == NetworkMode::China && self.wechat
     }
 }
 
@@ -123,6 +131,17 @@ pub fn derive_state(spec: &ProductSpec) -> DerivedState {
         notices.push(IssueCode::ChinaNetwork);
     }
 
+    if spec.requires_wechat_preflight() {
+        let proxy = spec.wechat_proxy_url.trim();
+        if proxy.is_empty() {
+            errors.push(IssueCode::WechatProxyMissing);
+        } else if !is_valid_proxy_url(proxy) {
+            errors.push(IssueCode::WechatProxyInvalid);
+        } else if !spec.wechat_preflight_confirmed {
+            errors.push(IssueCode::WechatPreflightUnconfirmed);
+        }
+    }
+
     let can_download = errors.is_empty();
     let can_install = can_download && disk_is_installable;
 
@@ -151,10 +170,6 @@ pub fn generate(spec: &ProductSpec) -> Result<GeneratedProject, String> {
         GeneratedFile {
             path: "flake.nix".to_owned(),
             contents: render_flake_nix(spec),
-        },
-        GeneratedFile {
-            path: "flake.lock".to_owned(),
-            contents: render_flake_lock()?,
         },
         GeneratedFile {
             path: format!("hosts/{host_name}/configuration.nix"),
@@ -244,7 +259,7 @@ fn render_configuration(spec: &ProductSpec) -> Result<String, String> {
     let host_name = spec.host_name.trim();
     let username = spec.username.trim();
     let login_config = render_login_config(spec)?;
-    let network_config = render_network_config(spec.network_mode);
+    let network_config = render_network_config(spec);
 
     Ok(format!(
         r#"{{ ... }}:
@@ -303,21 +318,27 @@ fn render_login_config(spec: &ProductSpec) -> Result<String, String> {
     Ok(lines.join("\n"))
 }
 
-fn render_network_config(mode: NetworkMode) -> String {
-    match mode {
-        NetworkMode::China => r#"  dotfiles.workstation.clash.enable = true;
-  dotfiles.nixNetwork = {
+fn render_network_config(spec: &ProductSpec) -> String {
+    let wechat = bool_literal(spec.wechat);
+
+    match spec.network_mode {
+        NetworkMode::China => format!(
+            r#"  dotfiles.workstation.clash.enable = true;
+  dotfiles.workstation.wechat.enable = {wechat};
+  dotfiles.nixNetwork = {{
     profile = "china";
-    proxy = {
+    proxy = {{
       enable = true;
       url = "http://127.0.0.1:7897";
-    };
-  };
+    }};
+  }};
 "#
-        .to_owned(),
-        NetworkMode::Global => r#"  dotfiles.workstation.clash.enable = false;
+        ),
+        NetworkMode::Global => format!(
+            r#"  dotfiles.workstation.clash.enable = false;
+  dotfiles.workstation.wechat.enable = {wechat};
 "#
-        .to_owned(),
+        ),
     }
 }
 
@@ -420,16 +441,51 @@ fn render_readme(spec: &ProductSpec, state: &DerivedState) -> String {
         "先把 hosts/<host>/disko-config.nix 中的目标磁盘占位符替换为 /dev/disk/by-id/... 后再运行安装命令。".to_owned()
     };
     let network_section = match spec.network_mode {
-        NetworkMode::China => {
-            r#"
+        NetworkMode::China if spec.wechat => {
+            let preflight_command = wechat_preflight_command(&spec.wechat_proxy_url);
+            format!(
+                r#"
+## 中国大陆网络模式
+
+本配置会安装 Clash Verge 和 WeChat，并让 `nix-daemon` 默认走 `http://127.0.0.1:7897`。
+首次启动后必须立刻配置 Clash 订阅；否则 `nix flake update` 和 `nixos-rebuild`
+无法正常拉取依赖。
+
+## WeChat 下载预检
+
+安装前请在运行 `nixos-anywhere` 的机器上执行：
+
+```bash
+{preflight_command}
+```
+
+该命令必须成功，否则构建会在下载 WeChat deb 包时失败。
+"#
+            )
+        }
+        NetworkMode::China => r#"
 ## 中国大陆网络模式
 
 本配置会安装 Clash Verge，并让 `nix-daemon` 默认走 `http://127.0.0.1:7897`。
 首次启动后必须立刻配置 Clash 订阅；否则 `nix flake update` 和 `nixos-rebuild`
 无法正常拉取依赖。
+
+## WeChat
+
+你已在生成器中取消安装 WeChat。新系统不会内置 WeChat 桌面客户端。
 "#
-        }
-        NetworkMode::Global => "",
+        .to_owned(),
+        NetworkMode::Global => String::new(),
+    };
+    let wechat_section = if spec.network_mode == NetworkMode::Global && spec.wechat {
+        r#"
+## WeChat
+
+本配置会安装 WeChat 桌面客户端。该包来自上游二进制源，若源站变更，构建可能需要
+等待上游 nixpkgs 更新。
+"#
+    } else {
+        ""
     };
 
     format!(
@@ -453,53 +509,13 @@ fn render_readme(spec: &ProductSpec, state: &DerivedState) -> String {
 {install_command}
 ```
 {network_section}
+{wechat_section}
 ## 磁盘风险
 
 危险：`disko` 会清空并重新分区目标系统盘，该磁盘上的所有现有数据都会被销毁。
 第一版不支持保留现有分区、双系统或迁移已有 Linux。
 "#
     )
-}
-
-fn render_flake_lock() -> Result<String, String> {
-    let mut lock: Value = serde_json::from_str(ROOT_FLAKE_LOCK).map_err(|err| err.to_string())?;
-    let last_modified = UPSTREAM_LAST_MODIFIED.parse::<u64>().unwrap_or(0);
-
-    let root_inputs = lock
-        .pointer("/nodes/root/inputs")
-        .cloned()
-        .ok_or_else(|| "root flake.lock missing root inputs".to_owned())?;
-    let nodes = lock
-        .get_mut("nodes")
-        .and_then(Value::as_object_mut)
-        .ok_or_else(|| "flake.lock missing nodes".to_owned())?;
-
-    nodes.insert(
-        "upstream".to_owned(),
-        json!({
-            "inputs": root_inputs,
-            "locked": {
-                "lastModified": last_modified,
-                "narHash": UPSTREAM_NAR_HASH,
-                "owner": "bioinformatist",
-                "repo": "dotfiles",
-                "rev": UPSTREAM_REV,
-                "type": "github"
-            },
-            "original": {
-                "owner": "bioinformatist",
-                "repo": "dotfiles",
-                "rev": UPSTREAM_REV,
-                "type": "github"
-            }
-        }),
-    );
-
-    lock["nodes"]["root"]["inputs"] = json!({
-        "upstream": "upstream"
-    });
-
-    serde_json::to_string_pretty(&lock).map_err(|err| err.to_string())
 }
 
 fn initial_password_hash(password: &str, salt: &str) -> Result<String, String> {
@@ -554,8 +570,53 @@ fn is_plausible_ssh_public_key(value: &str) -> bool {
             .all(|ch| ch.is_ascii_alphanumeric() || ch == '+' || ch == '/' || ch == '=')
 }
 
+fn is_valid_proxy_url(value: &str) -> bool {
+    let Some((scheme, rest)) = value.split_once("://") else {
+        return false;
+    };
+
+    if !matches!(scheme, "http" | "https" | "socks5" | "socks5h") {
+        return false;
+    }
+
+    if rest.is_empty()
+        || rest.contains('@')
+        || rest.contains('/')
+        || rest.contains('?')
+        || rest.contains('#')
+        || rest.contains(char::is_whitespace)
+    {
+        return false;
+    }
+
+    let Some((host, port)) = rest.rsplit_once(':') else {
+        return false;
+    };
+
+    !host.is_empty() && port.parse::<u16>().is_ok_and(|port| port > 0)
+}
+
 fn escape_nix_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn bool_literal(value: bool) -> &'static str {
+    if value {
+        "true"
+    } else {
+        "false"
+    }
+}
+
+pub fn wechat_preflight_command(proxy_url: &str) -> String {
+    let proxy = proxy_url.trim();
+    let proxy = if proxy.is_empty() {
+        WECHAT_PROXY_PLACEHOLDER
+    } else {
+        proxy
+    };
+
+    format!("curl --fail-with-body -L -A apt -x {proxy} -r 0-0 -o /tmp/wechat-preflight.deb {WECHAT_DEB_URL}")
 }
 
 #[cfg(test)]
@@ -575,6 +636,9 @@ mod tests {
             git_email: String::new(),
             disk_path: "/dev/disk/by-id/nvme-Test".to_owned(),
             nvidia: false,
+            wechat: false,
+            wechat_proxy_url: String::new(),
+            wechat_preflight_confirmed: false,
             network_mode: NetworkMode::Global,
         }
     }
@@ -611,6 +675,9 @@ mod tests {
     fn china_mode_generates_proxy_config() {
         let mut spec = base_spec();
         spec.network_mode = NetworkMode::China;
+        spec.wechat = true;
+        spec.wechat_proxy_url = "http://192.168.0.116:7890".to_owned();
+        spec.wechat_preflight_confirmed = true;
         let project = generate(&spec).expect("valid project");
         let config = project
             .files
@@ -621,6 +688,86 @@ mod tests {
             .as_str();
         assert!(config.contains("profile = \"china\""));
         assert!(config.contains("http://127.0.0.1:7897"));
+        assert!(config.contains("dotfiles.workstation.wechat.enable = true;"));
+    }
+
+    #[test]
+    fn china_mode_can_disable_wechat_without_proxy_preflight() {
+        let mut spec = base_spec();
+        spec.network_mode = NetworkMode::China;
+        spec.wechat = false;
+        let project = generate(&spec).expect("valid project");
+        let config = project
+            .files
+            .iter()
+            .find(|file| file.path.ends_with("configuration.nix"))
+            .expect("configuration")
+            .contents
+            .as_str();
+        assert!(config.contains("dotfiles.workstation.wechat.enable = false;"));
+    }
+
+    #[test]
+    fn china_wechat_requires_proxy_and_preflight_confirmation() {
+        let mut spec = base_spec();
+        spec.network_mode = NetworkMode::China;
+        spec.wechat = true;
+
+        let state = derive_state(&spec);
+        assert!(!state.can_download);
+        assert!(state.errors.contains(&IssueCode::WechatProxyMissing));
+        assert!(!state
+            .errors
+            .contains(&IssueCode::WechatPreflightUnconfirmed));
+
+        spec.wechat_proxy_url = "localhost:7890".to_owned();
+        spec.wechat_preflight_confirmed = true;
+        let state = derive_state(&spec);
+        assert!(!state.can_download);
+        assert!(state.errors.contains(&IssueCode::WechatProxyInvalid));
+
+        spec.wechat_proxy_url = "http://192.168.0.116:7890".to_owned();
+        spec.wechat_preflight_confirmed = false;
+        let state = derive_state(&spec);
+        assert!(!state.can_download);
+        assert!(state
+            .errors
+            .contains(&IssueCode::WechatPreflightUnconfirmed));
+    }
+
+    #[test]
+    fn wechat_preflight_command_uses_current_deb_url_and_proxy() {
+        let command = wechat_preflight_command("http://192.168.0.116:7890");
+        assert!(command.contains("http://192.168.0.116:7890"));
+        assert!(command.contains(WECHAT_DEB_URL));
+    }
+
+    #[test]
+    fn global_mode_disables_wechat_by_default() {
+        let project = generate(&base_spec()).expect("valid project");
+        let config = project
+            .files
+            .iter()
+            .find(|file| file.path.ends_with("configuration.nix"))
+            .expect("configuration")
+            .contents
+            .as_str();
+        assert!(config.contains("dotfiles.workstation.wechat.enable = false;"));
+    }
+
+    #[test]
+    fn global_mode_can_enable_wechat() {
+        let mut spec = base_spec();
+        spec.wechat = true;
+        let project = generate(&spec).expect("valid project");
+        let config = project
+            .files
+            .iter()
+            .find(|file| file.path.ends_with("configuration.nix"))
+            .expect("configuration")
+            .contents
+            .as_str();
+        assert!(config.contains("dotfiles.workstation.wechat.enable = true;"));
     }
 
     #[test]
@@ -703,21 +850,8 @@ mod tests {
     }
 
     #[test]
-    fn generated_lock_pins_only_upstream() {
-        let lock: Value = serde_json::from_str(&render_flake_lock().expect("flake.lock"))
-            .expect("valid flake.lock json");
-        assert_eq!(
-            lock.pointer("/nodes/root/inputs").expect("root inputs"),
-            &json!({ "upstream": "upstream" })
-        );
-        assert_ne!(
-            lock.pointer("/nodes/upstream/locked/narHash")
-                .and_then(Value::as_str),
-            Some("sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
-        );
-        assert!(lock
-            .pointer("/nodes/upstream/locked/rev")
-            .and_then(Value::as_str)
-            .is_some());
+    fn generated_project_does_not_include_flake_lock() {
+        let project = generate(&base_spec()).expect("valid project");
+        assert!(!project.files.iter().any(|file| file.path == "flake.lock"));
     }
 }

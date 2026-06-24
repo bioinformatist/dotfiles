@@ -43,11 +43,15 @@ let
   };
 in
 {
-  options.dotfiles.workstation.clash.enable =
-    lib.mkEnableOption "Clash Verge for workstation network proxying"
-    // {
+  options.dotfiles.workstation = {
+    clash.enable = lib.mkEnableOption "Clash Verge for workstation network proxying" // {
       default = false;
     };
+
+    wechat.enable = lib.mkEnableOption "WeChat desktop client" // {
+      default = true;
+    };
+  };
 
   config = lib.mkMerge [
     {
@@ -204,8 +208,7 @@ in
       };
 
       environment.systemPackages =
-        with pkgs;
-        [
+        (with pkgs; [
           wl-clipboard
           git
           ghostty
@@ -213,7 +216,6 @@ in
           dunst
           google-chrome
           hyprlock
-          wechat-uos-fcitx
           grim # Wayland screenshot backend
           slurp # Wayland region selector
           satty # Screenshot annotation editor (arrows, text, blur)
@@ -221,6 +223,9 @@ in
           jq # JSON processor (used by screenshot keybind to get active monitor)
           nwg-displays # GUI monitor layout tool (like Windows display settings)
           kdePackages.polkit-kde-agent-1
+        ])
+        ++ lib.optionals config.dotfiles.workstation.wechat.enable [
+          wechat-uos-fcitx
         ]
         ++ [
           inputs.swww.packages.${pkgs.stdenv.hostPlatform.system}.swww

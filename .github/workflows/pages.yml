@@ -30,8 +30,6 @@ jobs:
         run: |
           {
             echo "DOTFILES_GENERATOR_UPSTREAM_REV=$(git rev-parse HEAD)"
-            echo "DOTFILES_GENERATOR_UPSTREAM_LAST_MODIFIED=$(git log -1 --format=%ct)"
-            echo "DOTFILES_GENERATOR_UPSTREAM_NAR_HASH=$(nix flake metadata --json . | jq -r '.locked.narHash')"
           } >> "$GITHUB_ENV"
 
       - name: Build workstation generator
