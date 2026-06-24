@@ -1,0 +1,8 @@
+interface:
+  display_name: "Workstation Web UI"
+  short_description: "Develop and verify the workstation generator UI"
+  brand_color: "#FF9900"
+  default_prompt: "Use $workstation-web-ui to develop, preview, and verify the web/workstation product UI from the headless server."
+
+policy:
+  allow_implicit_invocation: true

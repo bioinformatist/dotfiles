@@ -132,6 +132,22 @@
         "type": "github"
       }
     },
+    "fieldcraft": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1782185875,
+        "narHash": "sha256-ZgUvqKZurWyueK1kc24Ta8Z7+QZWjz5u6ObI2L06cpI=",
+        "owner": "bioinformatist",
+        "repo": "fieldcraft",
+        "rev": "5767b21c515148b517b7b5f3791516924dd47d21",
+        "type": "github"
+      },
+      "original": {
+        "owner": "bioinformatist",
+        "repo": "fieldcraft",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -902,6 +918,7 @@
       "inputs": {
         "anyrun": "anyrun",
         "disko": "disko",
+        "fieldcraft": "fieldcraft",
         "home-manager": "home-manager",
         "hyprland": "hyprland",
         "impermanence": "impermanence",

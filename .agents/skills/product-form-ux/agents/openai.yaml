@@ -1,0 +1,8 @@
+interface:
+  display_name: "Product Form UX"
+  short_description: "Review form-heavy product interfaces"
+  brand_color: "#2E7D6B"
+  default_prompt: "Use $product-form-ux to review this form-heavy product UI and identify field feedback, flow, and output panel issues."
+
+policy:
+  allow_implicit_invocation: true

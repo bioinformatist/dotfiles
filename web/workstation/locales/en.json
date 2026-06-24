@@ -1,0 +1,80 @@
+{
+  "language_name": "English",
+  "app": {
+    "eyebrow": "NixOS workstation",
+    "title": "Configuration generator",
+    "upstream": "upstream",
+    "ready": "Ready to generate."
+  },
+  "language": {
+    "label": "Language"
+  },
+  "sections": {
+    "basics": "Basics",
+    "login": "Login",
+    "target": "Install target",
+    "network": "Network",
+    "git": "Git identity",
+    "package": "Generated package",
+    "command": "Install command",
+    "files": "Files"
+  },
+  "fields": {
+    "host_name": "hostName",
+    "username": "username",
+    "ssh_public_key": "SSH public key",
+    "initial_password": "Initial password",
+    "target_disk": "Target disk",
+    "nvidia": "Enable NVIDIA desktop patch",
+    "git_name": "Name",
+    "git_email": "Email"
+  },
+  "choices": {
+    "ssh": "SSH public key",
+    "password": "Initial password",
+    "china": "China Mainland",
+    "global": "Global"
+  },
+  "help": {
+    "login": "This configures the new NixOS user after installation. You still need root SSH access to the installer environment before running nixos-anywhere.",
+    "disk_intro": "On the target machine, run",
+    "disk_copy": "and copy the stable whole-disk path, for example",
+    "disk_avoid_prefix": ". Do not use",
+    "disk_or_partition": "or entries ending in",
+    "disk_suffix": ".",
+    "disk_risk": "DANGER: disko will erase and repartition this system disk. All existing data on that disk will be destroyed.",
+    "disk_missing": "You can still download the package, but the install command is unavailable until a target disk is set.",
+    "china_network": "China Mainland mode installs Clash Verge and forces nix-daemon through http://127.0.0.1:7897. Configure the Clash subscription immediately after first boot; without it, nix flake update and nixos-rebuild will not be able to fetch dependencies.",
+    "git": "Optional. Fill this in if the new user should have Git identity configured immediately."
+  },
+  "tree": {
+    "nvidia": "NVIDIA patch",
+    "china_mainland": "China Mainland proxy",
+    "disko": "destructive disk"
+  },
+  "validation": {
+    "host_name_invalid": "Use lowercase letters, numbers, and hyphens only. It cannot start or end with a hyphen.",
+    "username_invalid": "Use a lowercase Linux username: letters, numbers, underscores, and hyphens.",
+    "ssh_required": "Paste an SSH public key or switch to initial password.",
+    "password_required": "Enter an initial password or switch to SSH public key.",
+    "ssh_invalid": "This SSH public key does not look valid.",
+    "password_too_short": "Use at least 8 characters.",
+    "disk_unstable": "Use a stable /dev/disk/by-id/... path instead of /dev/sdX or /dev/nvmeXnY."
+  },
+  "actions": {
+    "download": "Download zip",
+    "copy_command": "Copy command"
+  },
+  "output": {
+    "package_ready": "The package can be downloaded.",
+    "package_blocked": "Fix the highlighted fields before downloading.",
+    "command_unavailable": "Set a stable /dev/disk/by-id/... target disk to enable the install command.",
+    "preview_unavailable": "A file preview appears after required fields are valid."
+  },
+  "flash": {
+    "download_ready": "Configuration package generated.",
+    "command_copied": "Install command copied.",
+    "download_failed": "The browser could not create the download.",
+    "clipboard_failed": "The browser clipboard API is unavailable."
+  }
+}

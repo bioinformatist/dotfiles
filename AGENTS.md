@@ -38,8 +38,8 @@ abstraction when changing shared modules, profiles, or flake outputs.
 - Secrets must go through sops-nix. See `docs/secret-management.md`.
 - Product web UI is Rust-first: prefer Rust/WASM for UI state, validation, rendering, file generation, archives, download, clipboard, and browser storage when mature Rust crates or `web-sys` bindings are enough. Keep JavaScript glue narrow and only for browser API gaps.
 - Do not add a product CLI user entrypoint, backend service, online Nix/ISO builder, remote installer, secret upload, private-key handling, token handling, or persisted password handling unless explicitly requested. Initial passwords may only be processed in-browser long enough to generate `initialHashedPassword`; never write plaintext passwords to generated files, URLs, logs, or browser storage.
-- Although this repo started as the `homePC` configuration, most current development and browser testing happens from a headless server whose downstream configuration lives in `/home/ysun/github.com/sctmes/dotfiles`. When using Playwright or testing product UI, assume an SSH/headless environment first; local browsers may be unavailable unless explicitly installed in the test shell.
-- For product UI browser debugging, use `nix develop .#workstation-web-browser` for the headless Chromium/CDP side; do not assume a graphical desktop browser is available.
+- For `web/workstation` product UI work, use the repo-local `$workstation-web-ui` skill. Most browser work happens from a headless server; user preview servers must bind to `0.0.0.0` and report a LAN URL, while `127.0.0.1` is only for same-host Playwright/CDP checks.
+- The repo-local Fieldcraft skill lives at `.agents/skills/product-form-ux` and is for form-heavy product UI review, not general visual styling. It is synced from the `fieldcraft` flake input; update it with `nix flake update fieldcraft` followed by `nix run .#sync-fieldcraft-skill`.
 - The repo currently exposes `homePC` as the maintained host configuration.
 - Changes are verified manually by the user after rebuild.
 - System rebuild command:

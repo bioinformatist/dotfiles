@@ -8,9 +8,12 @@ build = "build.rs"
 js-sys = "0.3"
 console_error_panic_hook = "0.1"
 leptos = { version = "0.8", features = ["csr"] }
+leptos_i18n = { version = "0.6", default-features = false, features = ["csr"] }
 serde_json = "1"
 sha-crypt = { version = "0.5", default-features = false, features = ["std"] }
+thaw = { version = "0.5.0-beta", features = ["csr"] }
 wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 
 [dependencies.web-sys]
@@ -22,6 +25,7 @@ features = [
   "Document",
   "Element",
   "HtmlAnchorElement",
+  "HtmlDocument",
   "HtmlElement",
   "HtmlInputElement",
   "HtmlTextAreaElement",
@@ -31,4 +35,5 @@ features = [
 ]
 
 [build-dependencies]
+leptos_i18n_build = { version = "0.6", default-features = false, features = ["csr"] }
 serde_json = "1"

@@ -35,7 +35,15 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Build workstation generator
-        run: nix develop ../..#workstation-web --command trunk build --release --public-url "/${{ github.event.repository.name }}/"
+        run: nix develop ../..#workstation-web --command trunk build --release --public-url /
+        working-directory: web/workstation
+
+      - name: Check Pages asset paths
+        run: |
+          if grep -n '/dotfiles/' dist/index.html; then
+            echo "Unexpected /dotfiles/ asset path in Pages build" >&2
+            exit 1
+          fi
         working-directory: web/workstation
 
       - uses: actions/configure-pages@v6

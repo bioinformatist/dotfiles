@@ -32,11 +32,23 @@ pub struct ProductSpec {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DerivedState {
-    pub errors: Vec<String>,
-    pub warnings: Vec<String>,
-    pub notices: Vec<String>,
+    pub errors: Vec<IssueCode>,
+    pub warnings: Vec<IssueCode>,
+    pub notices: Vec<IssueCode>,
     pub can_download: bool,
     pub can_install: bool,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum IssueCode {
+    HostNameInvalid,
+    UsernameInvalid,
+    LoginMethodMissing,
+    SshPublicKeyInvalid,
+    InitialPasswordTooShort,
+    DiskMissing,
+    DiskPathUnstable,
+    ChinaNetwork,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -75,41 +87,40 @@ pub fn derive_state(spec: &ProductSpec) -> DerivedState {
     let mut notices = Vec::new();
 
     if !is_valid_hostname(spec.host_name.trim()) {
-        errors
-            .push("hostName 只能包含小写字母、数字和连字符，且不能以连字符开头或结尾。".to_owned());
+        errors.push(IssueCode::HostNameInvalid);
     }
 
     if !is_valid_username(spec.username.trim()) {
-        errors.push("username 只能使用小写 Linux 用户名格式。".to_owned());
+        errors.push(IssueCode::UsernameInvalid);
     }
 
     if !spec.has_ssh_key() && !spec.has_initial_password() {
-        errors.push("SSH public key 和初始密码必须至少填写一个。".to_owned());
+        errors.push(IssueCode::LoginMethodMissing);
     }
 
     if spec.has_ssh_key() && !is_plausible_ssh_public_key(spec.ssh_public_key.trim()) {
-        errors.push("SSH public key 格式看起来不正确。".to_owned());
+        errors.push(IssueCode::SshPublicKeyInvalid);
     }
 
     if spec.has_initial_password() && spec.initial_password.len() < 8 {
-        errors.push("初始密码至少需要 8 个字符。".to_owned());
+        errors.push(IssueCode::InitialPasswordTooShort);
     }
 
     let disk_path = spec.normalized_disk_path();
     let disk_is_installable = match disk_path.as_deref() {
         None => {
-            warnings.push("未填写目标磁盘时仍可下载配置包，但安装命令不可用；安装前必须替换 disko-config.nix 中的占位符。".to_owned());
+            warnings.push(IssueCode::DiskMissing);
             false
         }
         Some(path) if path.starts_with("/dev/disk/by-id/") => true,
         Some(_) => {
-            errors.push("目标磁盘必须使用稳定的 /dev/disk/by-id/... 路径。".to_owned());
+            errors.push(IssueCode::DiskPathUnstable);
             false
         }
     };
 
     if spec.network_mode == NetworkMode::China {
-        notices.push("中国网络模式会安装 Clash Verge，并让 nix-daemon 默认走 http://127.0.0.1:7897；安装后需要先配置 Clash 订阅。".to_owned());
+        notices.push(IssueCode::ChinaNetwork);
     }
 
     let can_download = errors.is_empty();
@@ -127,7 +138,7 @@ pub fn derive_state(spec: &ProductSpec) -> DerivedState {
 pub fn generate(spec: &ProductSpec) -> Result<GeneratedProject, String> {
     let state = derive_state(spec);
     if !state.can_download {
-        return Err(state.errors.join("\n"));
+        return Err("configuration has validation errors".to_owned());
     }
 
     let host_name = spec.host_name.trim();
@@ -411,10 +422,11 @@ fn render_readme(spec: &ProductSpec, state: &DerivedState) -> String {
     let network_section = match spec.network_mode {
         NetworkMode::China => {
             r#"
-## 中国网络模式
+## 中国大陆网络模式
 
 本配置会安装 Clash Verge，并让 `nix-daemon` 默认走 `http://127.0.0.1:7897`。
-安装完成后请先配置 Clash 订阅，再执行后续 `nix flake update` 或 `nixos-rebuild`。
+首次启动后必须立刻配置 Clash 订阅；否则 `nix flake update` 和 `nixos-rebuild`
+无法正常拉取依赖。
 "#
         }
         NetworkMode::Global => "",
@@ -443,7 +455,8 @@ fn render_readme(spec: &ProductSpec, state: &DerivedState) -> String {
 {network_section}
 ## 磁盘风险
 
-`disko` 会清空并重新分区目标系统盘。第一版不支持保留现有分区、双系统或迁移已有 Linux。
+危险：`disko` 会清空并重新分区目标系统盘，该磁盘上的所有现有数据都会被销毁。
+第一版不支持保留现有分区、双系统或迁移已有 Linux。
 "#
     )
 }
@@ -572,7 +585,7 @@ mod tests {
         spec.ssh_public_key.clear();
         let state = derive_state(&spec);
         assert!(!state.can_download);
-        assert!(state.errors.iter().any(|msg| msg.contains("至少填写一个")));
+        assert!(state.errors.contains(&IssueCode::LoginMethodMissing));
     }
 
     #[test]
@@ -582,6 +595,7 @@ mod tests {
         let state = derive_state(&spec);
         assert!(state.can_download);
         assert!(!state.can_install);
+        assert!(state.warnings.contains(&IssueCode::DiskMissing));
     }
 
     #[test]
@@ -590,6 +604,7 @@ mod tests {
         spec.disk_path = "/dev/sda".to_owned();
         let state = derive_state(&spec);
         assert!(!state.can_download);
+        assert!(state.errors.contains(&IssueCode::DiskPathUnstable));
     }
 
     #[test]
@@ -657,6 +672,21 @@ mod tests {
         assert!(!flake.contains("github:NixOS/nixpkgs"));
         assert!(!flake.contains("github:nix-community/home-manager"));
         assert!(!flake.contains("github:nix-community/disko"));
+    }
+
+    #[test]
+    fn nvidia_desktop_patch_adds_upstream_module() {
+        let mut spec = base_spec();
+        spec.nvidia = true;
+        let project = generate(&spec).expect("valid project");
+        let flake = project
+            .files
+            .iter()
+            .find(|file| file.path == "flake.nix")
+            .expect("flake")
+            .contents
+            .as_str();
+        assert!(flake.contains("upstream.nixosModules.nvidiaDesktop"));
     }
 
     #[test]

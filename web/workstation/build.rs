@@ -1,7 +1,9 @@
 use std::env;
+use std::error::Error;
 use std::path::PathBuf;
 use std::process::Command;
 
+use leptos_i18n_build::{Config, TranslationsInfos};
 use serde_json::Value;
 
 fn repo_root() -> PathBuf {
@@ -40,9 +42,22 @@ fn metadata_number(metadata: Option<&Value>, pointer: &str) -> Option<String> {
         .map(|value| value.to_string())
 }
 
+fn generate_i18n() -> Result<(), Box<dyn Error>> {
+    println!("cargo:rerun-if-changed=locales");
+    let i18n_mod_directory =
+        PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR is set")).join("i18n");
+    let config = Config::new("en")?.add_locale("zh-CN")?;
+    let translations = TranslationsInfos::parse(config)?;
+    translations.emit_diagnostics();
+    translations.rerun_if_locales_changed();
+    translations.generate_i18n_module(i18n_mod_directory)?;
+    Ok(())
+}
+
 fn main() {
     println!("cargo:rerun-if-changed=../../flake.lock");
     println!("cargo:rerun-if-changed=../../.git/HEAD");
+    generate_i18n().expect("i18n code generation succeeds");
 
     let git_rev = command_output("git", &["rev-parse", "HEAD"]);
     let clean_metadata = git_rev.as_deref().and_then(|rev| {

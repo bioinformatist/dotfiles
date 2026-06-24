@@ -22,10 +22,15 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    fieldcraft = {
+      url = "github:bioinformatist/fieldcraft";
+      flake = false;
+    };
   };
 
   outputs =
     inputs@{
+      self,
       nixpkgs,
       disko,
       home-manager,
@@ -102,8 +107,34 @@
               overlays.modifications
             ];
           };
+          syncFieldcraftSkill = pkgs.writeShellApplication {
+            name = "sync-fieldcraft-skill";
+            runtimeInputs = with pkgs; [
+              coreutils
+              gitMinimal
+            ];
+            text = ''
+              root="$PWD"
+              if git_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+                root="$git_root"
+              fi
+
+              source="${inputs.fieldcraft}/skills/product-form-ux"
+              target="$root/.agents/skills/product-form-ux"
+
+              rm -rf "$target"
+              mkdir -p "$target"
+              cp -R "$source/." "$target/"
+              chmod -R u+w "$target"
+
+              echo "Synced Fieldcraft product-form-ux skill to $target"
+            '';
+          };
         in
-        import ./pkgs pkgs
+        (import ./pkgs pkgs)
+        // {
+          "sync-fieldcraft-skill" = syncFieldcraftSkill;
+        }
       );
 
       devShells = forAllSystems (
@@ -144,8 +175,15 @@
               # Trunk 0.21 parses NO_COLOR as a boolean and rejects the common
               # NO_COLOR=1 convention used by Codex shells.
               unset NO_COLOR
-              exec trunk serve --address 127.0.0.1 --port "''${PORT:-8080}" --open false "$@"
+              exec trunk serve --public-url "''${PUBLIC_URL:-/}" --address "''${ADDRESS:-127.0.0.1}" --port "''${PORT:-8080}" --open false "$@"
             '';
+          };
+          workstationWebFonts = pkgs.makeFontsConf {
+            fontDirectories = with pkgs; [
+              noto-fonts
+              noto-fonts-cjk-sans
+              noto-fonts-color-emoji
+            ];
           };
           workstationWebChrome = pkgs.writeShellApplication {
             name = "workstation-web-chrome";
@@ -154,7 +192,7 @@
               coreutils
             ];
             text = ''
-              export FONTCONFIG_FILE="${pkgs.fontconfig.out}/etc/fonts/fonts.conf"
+              export FONTCONFIG_FILE="${workstationWebFonts}"
 
               url="http://127.0.0.1:''${PORT:-8080}/"
               if [ "$#" -gt 0 ] && [[ "$1" != -* ]]; then
@@ -194,6 +232,7 @@
                 "$url"
             '';
           };
+          syncFieldcraftSkill = self.packages.${system}."sync-fieldcraft-skill";
         in
         {
           default = pkgs.mkShell {
@@ -210,11 +249,14 @@
               rustfmt
               trunk
               wasm-bindgen-cli
+              syncFieldcraftSkill
             ];
           };
 
           workstation-web = pkgs.mkShell {
-            packages = workstationWebPackages;
+            packages = workstationWebPackages ++ [
+              workstationWebServe
+            ];
           };
 
           workstation-web-browser = pkgs.mkShell {
@@ -224,6 +266,22 @@
               workstationWebChrome
             ];
           };
+        }
+      );
+
+      checks = forAllSystems (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+          };
+        in
+        {
+          fieldcraft-skill = pkgs.runCommand "fieldcraft-skill-check" { } ''
+            diff -ru "${inputs.fieldcraft}/skills/product-form-ux" ${./.agents/skills/product-form-ux}
+            mkdir -p "$out"
+            touch "$out/ok"
+          '';
         }
       );
 
