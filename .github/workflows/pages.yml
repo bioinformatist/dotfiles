@@ -22,9 +22,22 @@ jobs:
 
       - uses: cachix/install-nix-action@v31
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2.9.1
         with:
-          targets: wasm32-unknown-unknown
+          shared-key: workstation-web
+          workspaces: web/workstation -> target
+          cache-bin: "false"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cmd-format: nix develop ${{ github.workspace }}#workstation-web --command {0}
+
+      - name: Cache Trunk tools
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trunk
+          key: ${{ runner.os }}-trunk-tools-${{ hashFiles('flake.lock', 'web/workstation/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-trunk-tools-
 
       - name: Export upstream metadata
         run: |
