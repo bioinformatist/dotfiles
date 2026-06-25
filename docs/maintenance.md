@@ -20,8 +20,8 @@ Network behavior is declared in NixOS modules, not in a mutable home-directory f
 dotfiles.nixNetwork.profile = "china";
 ```
 
-That prepends the USTC Nix cache mirror while keeping the official `cache.nixos.org`
-cache as the fallback. The local proxy URL is declared in NixOS config:
+That uses the USTC Nix cache mirror instead of the official `cache.nixos.org`
+cache for binary substitutions. The local proxy URL is declared in NixOS config:
 
 ```nix
 dotfiles.nixNetwork.proxy = {

@@ -208,7 +208,7 @@ The update process involves **two types** of network requests, each requiring a 
 | **Binary cache download** | `nixos-rebuild` downloads pre-built packages from cache | Use **USTC mirror** (`--option substituters`) |
 
 `homePC` declares this through `dotfiles.nixNetwork.profile = "china"`:
-USTC is prepended to the Nix substituter list, while the official cache remains the fallback.
+USTC is used for Nix binary substitutions instead of keeping the official cache as a fallback.
 The local proxy URL is declared in NixOS config for Nix maintenance paths only:
 `nix-daemon` receives it directly, and `maint-*` commands read the same values
 from `/etc/dotfiles/nix-network.json`. It is not exported as a desktop/session-wide proxy environment.

@@ -8,8 +8,8 @@ use wasm_bindgen_futures::{spawn_local, JsFuture};
 use web_sys::{Blob, BlobPropertyBag, HtmlAnchorElement, HtmlDocument, HtmlTextAreaElement, Url};
 
 use crate::generator::{
-    derive_state, generate, wechat_preflight_command, zip_project, GeneratedFile, IssueCode,
-    NetworkMode, ProductSpec, UPSTREAM_REV,
+    derive_state, generate, install_command as generated_install_command, wechat_preflight_command,
+    zip_project, GeneratedFile, IssueCode, NetworkMode, ProductSpec, UPSTREAM_REV,
 };
 use crate::i18n::*;
 
@@ -149,14 +149,7 @@ fn GeneratorApp() -> impl IntoView {
     });
     let install_command = Memo::new(move |_| {
         let spec = spec();
-        if derive_state(&spec).can_install {
-            Some(format!(
-                "nix run github:nix-community/nixos-anywhere -- --flake .#{} root@<target-ip>",
-                spec.host_name.trim()
-            ))
-        } else {
-            None
-        }
+        generated_install_command(&spec)
     });
 
     let download_zip = move |_| {

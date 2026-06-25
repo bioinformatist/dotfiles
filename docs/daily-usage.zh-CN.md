@@ -210,7 +210,7 @@
 | **二进制缓存下载** | `nixos-rebuild` 从 cache 下载预编译包 | 使用 **USTC 镜像**（`--option substituters`） |
 
 `homePC` 通过 `dotfiles.nixNetwork.profile = "china"` 声明该策略：
-USTC 会被放到 Nix substituter 列表前面，同时保留官方 cache 作为 fallback。
+Nix 二进制替代会使用 USTC，而不是继续保留官方 cache 作为后备。
 本地代理 URL 也通过 NixOS 配置声明，但只作用于 Nix 维护路径：
 `nix-daemon` 会直接获得它，`maint-*` 命令会从 `/etc/dotfiles/nix-network.json`
 读取同一组值。它不会导出为桌面/session 级代理环境变量。

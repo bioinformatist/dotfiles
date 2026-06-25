@@ -10,13 +10,28 @@
 }:
 
 let
+  wechatDebReferer = "https://pro-store-packages.uniontech.com/";
   wechatPkgs = import inputs.nixpkgs-wechat {
     inherit (pkgs.stdenv.hostPlatform) system;
     config.allowUnfree = true;
   };
+  wechat-uos-with-referer = wechatPkgs.wechat-uos.override {
+    # UOS package storage rejects the WeChat deb intermittently without Referer.
+    fetchurl =
+      args:
+      wechatPkgs.fetchurl (
+        args
+        // {
+          curlOptsList = (args.curlOptsList or [ ]) ++ [
+            "-H"
+            "Referer: ${wechatDebReferer}"
+          ];
+        }
+      );
+  };
   wechat-uos-fcitx = pkgs.symlinkJoin {
     name = "wechat-uos-fcitx";
-    paths = [ wechatPkgs.wechat-uos ];
+    paths = [ wechat-uos-with-referer ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/wechat-uos \

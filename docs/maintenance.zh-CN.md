@@ -20,8 +20,8 @@
 dotfiles.nixNetwork.profile = "china";
 ```
 
-这会把 USTC Nix cache 镜像放在前面，同时保留官方 `cache.nixos.org`
-作为 fallback。本地代理 URL 也在 NixOS 配置中声明：
+这会使用 USTC Nix cache 镜像进行二进制替代，不再保留官方 `cache.nixos.org`
+作为后备。本地代理 URL 也在 NixOS 配置中声明：
 
 ```nix
 dotfiles.nixNetwork.proxy = {

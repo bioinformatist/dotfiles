@@ -6,7 +6,10 @@ use zip::write::SimpleFileOptions;
 pub const UPSTREAM_REV: &str = env!("DOTFILES_GENERATOR_UPSTREAM_REV");
 const DISK_PLACEHOLDER: &str = "/dev/disk/by-id/REPLACE_ME_BEFORE_INSTALL";
 pub const WECHAT_DEB_URL: &str = "https://pro-store-packages.uniontech.com/appstore/pool/appstore/c/com.tencent.wechat/com.tencent.wechat_4.1.1.4_amd64.deb";
+const WECHAT_DEB_REFERER: &str = "https://pro-store-packages.uniontech.com/";
 const WECHAT_PROXY_PLACEHOLDER: &str = "http://<lan-proxy-ip>:<port>";
+const CHINA_SUBSTITUTER: &str = "https://mirrors.ustc.edu.cn/nix-channels/store";
+const CHINA_NO_PROXY: &str = "mirrors.ustc.edu.cn,127.0.0.1,localhost";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum NetworkMode {
@@ -189,7 +192,7 @@ pub fn generate(spec: &ProductSpec) -> Result<GeneratedProject, String> {
         },
         GeneratedFile {
             path: "README.zh-CN.md".to_owned(),
-            contents: render_readme(spec, &state),
+            contents: render_readme(spec),
         },
     ];
 
@@ -427,16 +430,14 @@ fn render_home(spec: &ProductSpec) -> String {
     )
 }
 
-fn render_readme(spec: &ProductSpec, state: &DerivedState) -> String {
+fn render_readme(spec: &ProductSpec) -> String {
     let host_name = spec.host_name.trim();
     let username = spec.username.trim();
     let disk = spec
         .normalized_disk_path()
         .unwrap_or_else(|| DISK_PLACEHOLDER.to_owned());
-    let install_command = if state.can_install {
-        format!(
-            "nix run github:nix-community/nixos-anywhere -- --flake .#{host_name} root@<target-ip>"
-        )
+    let install_command = if let Some(command) = install_command(spec) {
+        command
     } else {
         "先把 hosts/<host>/disko-config.nix 中的目标磁盘占位符替换为 /dev/disk/by-id/... 后再运行安装命令。".to_owned()
     };
@@ -450,6 +451,8 @@ fn render_readme(spec: &ProductSpec, state: &DerivedState) -> String {
 本配置会安装 Clash Verge 和 WeChat，并让 `nix-daemon` 默认走 `http://127.0.0.1:7897`。
 首次启动后必须立刻配置 Clash 订阅；否则 `nix flake update` 和 `nixos-rebuild`
 无法正常拉取依赖。
+安装命令会让 `nixos-anywhere` 安装阶段优先使用 USTC Nix store 镜像，避免直连
+`cache.nixos.org`。
 
 ## WeChat 下载预检
 
@@ -469,6 +472,8 @@ fn render_readme(spec: &ProductSpec, state: &DerivedState) -> String {
 本配置会安装 Clash Verge，并让 `nix-daemon` 默认走 `http://127.0.0.1:7897`。
 首次启动后必须立刻配置 Clash 订阅；否则 `nix flake update` 和 `nixos-rebuild`
 无法正常拉取依赖。
+安装命令会让 `nixos-anywhere` 安装阶段优先使用 USTC Nix store 镜像，避免直连
+`cache.nixos.org`。
 
 ## WeChat
 
@@ -593,11 +598,19 @@ fn is_valid_proxy_url(value: &str) -> bool {
         return false;
     };
 
-    !host.is_empty() && port.parse::<u16>().is_ok_and(|port| port > 0)
+    !host.is_empty()
+        && host
+            .chars()
+            .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '.' | '-' | '_'))
+        && port.parse::<u16>().is_ok_and(|port| port > 0)
 }
 
 fn escape_nix_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 fn bool_literal(value: bool) -> &'static str {
@@ -616,7 +629,45 @@ pub fn wechat_preflight_command(proxy_url: &str) -> String {
         proxy
     };
 
-    format!("curl --fail-with-body -L -A apt -x {proxy} -r 0-0 -o /tmp/wechat-preflight.deb {WECHAT_DEB_URL}")
+    let proxy = shell_quote(proxy);
+    let url = shell_quote(WECHAT_DEB_URL);
+    format!(
+        "curl --fail-with-body -L -A apt -H 'Referer: {WECHAT_DEB_REFERER}' -x {proxy} -r 0-0 -o /tmp/wechat-preflight.deb {url}"
+    )
+}
+
+pub fn install_command(spec: &ProductSpec) -> Option<String> {
+    let state = derive_state(spec);
+    if !state.can_install {
+        return None;
+    }
+
+    let host_name = spec.host_name.trim();
+    match spec.network_mode {
+        NetworkMode::China => {
+            let proxy_env = if spec.wechat {
+                wechat_proxy_env(spec.wechat_proxy_url.trim())
+            } else {
+                String::new()
+            };
+            Some(format!(
+                "{proxy_env}nix run --option substituters {CHINA_SUBSTITUTER} github:nix-community/nixos-anywhere -- --option substituters {CHINA_SUBSTITUTER} --flake .#{host_name} root@<target-ip>"
+            ))
+        }
+        NetworkMode::Global => Some(format!(
+            "nix run github:nix-community/nixos-anywhere -- --flake .#{host_name} root@<target-ip>"
+        )),
+    }
+}
+
+fn wechat_proxy_env(proxy: &str) -> String {
+    let proxy_value = proxy;
+    let proxy = shell_quote(proxy_value);
+    let no_proxy = shell_quote(CHINA_NO_PROXY);
+    let nix_curl_flags = shell_quote(&format!("--proxy {proxy_value}"));
+    format!(
+        "HTTP_PROXY={proxy} HTTPS_PROXY={proxy} ALL_PROXY={proxy} http_proxy={proxy} https_proxy={proxy} all_proxy={proxy} NO_PROXY={no_proxy} no_proxy={no_proxy} NIX_CURL_FLAGS={nix_curl_flags} "
+    )
 }
 
 #[cfg(test)]
@@ -726,6 +777,20 @@ mod tests {
         assert!(!state.can_download);
         assert!(state.errors.contains(&IssueCode::WechatProxyInvalid));
 
+        for proxy in [
+            "http://host;touch:7890",
+            "http://host&touch:7890",
+            "http://host$:7890",
+            "http://`id`:7890",
+            "http://host':7890",
+            "http://host\":7890",
+        ] {
+            spec.wechat_proxy_url = proxy.to_owned();
+            let state = derive_state(&spec);
+            assert!(!state.can_download, "{proxy}");
+            assert!(state.errors.contains(&IssueCode::WechatProxyInvalid));
+        }
+
         spec.wechat_proxy_url = "http://192.168.0.116:7890".to_owned();
         spec.wechat_preflight_confirmed = false;
         let state = derive_state(&spec);
@@ -738,8 +803,48 @@ mod tests {
     #[test]
     fn wechat_preflight_command_uses_current_deb_url_and_proxy() {
         let command = wechat_preflight_command("http://192.168.0.116:7890");
-        assert!(command.contains("http://192.168.0.116:7890"));
-        assert!(command.contains(WECHAT_DEB_URL));
+        assert!(command.contains("-x 'http://192.168.0.116:7890'"));
+        assert!(command.contains("-H 'Referer: https://pro-store-packages.uniontech.com/'"));
+        assert!(command.contains(&format!("'{WECHAT_DEB_URL}'")));
+    }
+
+    #[test]
+    fn china_install_command_uses_ustc_for_nix_run_and_nixos_anywhere() {
+        let mut spec = base_spec();
+        spec.network_mode = NetworkMode::China;
+        let command = install_command(&spec).expect("install command");
+        assert!(command.starts_with(
+            "nix run --option substituters https://mirrors.ustc.edu.cn/nix-channels/store"
+        ));
+        assert!(command.contains(
+            "-- --option substituters https://mirrors.ustc.edu.cn/nix-channels/store --flake .#workstation"
+        ));
+        assert!(!command.contains("cache.nixos.org"));
+    }
+
+    #[test]
+    fn china_wechat_install_command_uses_verified_proxy_for_fetches() {
+        let mut spec = base_spec();
+        spec.network_mode = NetworkMode::China;
+        spec.wechat = true;
+        spec.wechat_proxy_url = "http://192.168.0.116:7890".to_owned();
+        spec.wechat_preflight_confirmed = true;
+        let command = install_command(&spec).expect("install command");
+        assert!(command.contains("HTTP_PROXY='http://192.168.0.116:7890'"));
+        assert!(command.contains("HTTPS_PROXY='http://192.168.0.116:7890'"));
+        assert!(command.contains("ALL_PROXY='http://192.168.0.116:7890'"));
+        assert!(command.contains("NO_PROXY='mirrors.ustc.edu.cn,127.0.0.1,localhost'"));
+        assert!(command.contains("NIX_CURL_FLAGS='--proxy http://192.168.0.116:7890'"));
+    }
+
+    #[test]
+    fn global_install_command_keeps_plain_nixos_anywhere_shape() {
+        let spec = base_spec();
+        let command = install_command(&spec).expect("install command");
+        assert_eq!(
+            command,
+            "nix run github:nix-community/nixos-anywhere -- --flake .#workstation root@<target-ip>"
+        );
     }
 
     #[test]

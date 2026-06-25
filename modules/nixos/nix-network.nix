@@ -42,7 +42,7 @@ in
 
       noProxy = lib.mkOption {
         type = lib.types.str;
-        default = "mirrors.ustc.edu.cn,cache.nixos.org,127.0.0.1,localhost";
+        default = "mirrors.ustc.edu.cn,127.0.0.1,localhost";
         description = "Comma-separated hosts that bypass the proxy.";
       };
     };
@@ -62,7 +62,7 @@ in
 
   config = lib.mkMerge [
     (lib.mkIf (cfg.profile == "china") {
-      nix.settings.substituters = lib.mkBefore chinaSubstituters;
+      nix.settings.substituters = lib.mkForce chinaSubstituters;
     })
     (lib.mkIf cfg.proxy.enable {
       assertions = [
