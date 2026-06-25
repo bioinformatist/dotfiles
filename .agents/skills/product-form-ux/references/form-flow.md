@@ -28,6 +28,25 @@ When a mode is selected, show only the fields and guidance for that mode:
 Keep hidden-mode errors out of the user's path unless they affect persisted
 data or a final action.
 
+## Sequential Blockers
+
+When one prerequisite blocks a later confirmation, show the current actionable
+blocker first. Do not show every downstream error before the upstream input is
+valid.
+
+For example, if a URL, credential, target, or mode choice is required before an
+option-specific check can make sense, first ask the user to fix that input. Show
+the downstream confirmation only after the prerequisite is usable.
+
+## Preview And Output Responsiveness
+
+If a checkbox, mode, or option changes generated output, the preview or output
+area should visibly reflect that change. If the generated output does not
+change, explain why.
+
+Otherwise a valid option can look broken because the user sees no visible
+response from the preview, command, file list, or generated artifact.
+
 ## Required Versus Optional
 
 Users should be able to tell what blocks progress:
@@ -39,9 +58,10 @@ Users should be able to tell what blocks progress:
 
 Avoid making the user infer blockers from disabled buttons alone.
 
-## Destructive Or Irreversible Choices
+## High-Risk Or Irreversible Choices
 
-For destructive setup flows, such as wiping a disk or replacing a system:
+For destructive or high-risk flows, such as wiping a disk, replacing a system,
+deleting data, or irreversible submission:
 
 - Put the warning near the target field.
 - Use a stable identifier, not a transient path, when the user must pick a
@@ -49,7 +69,9 @@ For destructive setup flows, such as wiping a disk or replacing a system:
 - Repeat the destructive consequence near the final action if the action can
   execute it.
 
-Do not bury destructive consequences in a generic help tooltip only.
+Use stronger treatment than ordinary help text while keeping the warning close
+to the field or action that can cause the result. Do not bury destructive
+consequences in a generic help tooltip only.
 
 ## Copy Discipline
 
@@ -60,3 +82,16 @@ Use standard UI copy for standard actions:
 
 Keep visible text specific and useful. Remove filler labels, decorative status
 phrases, and repeated explanatory paragraphs that do not change user action.
+
+## Successful Path Discipline
+
+The successful path ends after the final action's side effect is verified, not
+after the button becomes enabled:
+
+- Copy actions should produce the expected clipboard value.
+- Download actions should produce the expected file or archive.
+- Generate and export actions should produce artifacts that match the current
+  fields and options.
+
+Do not let a toast, optimistic state update, or lack of console errors stand in
+for the action result.

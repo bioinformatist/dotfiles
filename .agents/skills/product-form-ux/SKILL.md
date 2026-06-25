@@ -23,8 +23,12 @@ experience itself makes sense.
    defined.
 3. **Inspect the rendered UI when possible.** Use any available browser path:
    local browser, Playwright CLI, Playwright MCP, Browser Use, CI screenshots,
-   or headless Chromium. If no browser is available, do source-only review and
-   mark visual findings as lower confidence. See `references/browser-review.md`.
+   or headless Chromium. If no browser is available and the user did not require
+   screenshots or browser interaction, do source-only review and mark visual
+   findings as lower confidence. If the user explicitly requires screenshots or
+   browser evidence, report the missing browser path as a blocker unless the user
+   accepts a source-only fallback. See
+   `references/browser-review.md`.
 4. **Review against the form rules.** Use the four reference files only as
    needed:
    - `references/inline-feedback.md` for validation and contextual help.
@@ -51,11 +55,16 @@ experience itself makes sense.
   `aria-invalid` and `aria-describedby` when the framework supports it.
 - Put option-specific guidance next to that option. Do not duplicate it in a
   global status area unless it blocks a final action.
+- Keep option-owned checks, warnings, confirmations, and preflight commands next
+  to the option that owns them unless they are truly global.
 - Keep preview/output panels for outputs, generated files, commands, or logs.
   They should not become the main place users discover form mistakes.
+- Make meaningful option changes visible in preview or output areas, or explain
+  why the output does not change.
 - Disabled actions need a local reason near the action or the missing field.
 - Test at least one realistic invalid path, one recoverable warning path, and
-  one successful path.
+  one successful path. For final actions, verify the side effect, not just an
+  enabled button, toast, or console-clean click.
 
 ## Output Format For Reviews
 

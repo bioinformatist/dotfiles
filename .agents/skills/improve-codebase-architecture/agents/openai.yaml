@@ -1,0 +1,7 @@
+interface:
+  display_name: "Improve Codebase Architecture"
+  short_description: "Review dotfiles architecture with visual candidates"
+  default_prompt: "Use $improve-codebase-architecture to scan this dotfiles repo for architecture deepening opportunities."
+
+policy:
+  allow_implicit_invocation: false

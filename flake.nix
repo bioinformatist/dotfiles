@@ -26,6 +26,10 @@
       url = "github:bioinformatist/fieldcraft";
       flake = false;
     };
+    mattpocock-skills = {
+      url = "github:mattpocock/skills/v1.0.1";
+      flake = false;
+    };
   };
 
   outputs =
@@ -87,6 +91,150 @@
             }
           ];
         };
+      repoLocalSkills = [
+        {
+          name = "product-form-ux";
+          source = "${inputs.fieldcraft}/skills/product-form-ux";
+        }
+        {
+          name = "domain-modeling";
+          source = "${inputs.mattpocock-skills}/skills/engineering/domain-modeling";
+          openaiYaml = ''
+            interface:
+              display_name: "Domain Modeling"
+              short_description: "Sharpen dotfiles domain terms and ADRs"
+              default_prompt: "Use $domain-modeling to clarify dotfiles domain terms or record an ADR-worthy decision."
+
+            policy:
+              allow_implicit_invocation: true
+          '';
+        }
+        {
+          name = "grill-with-docs";
+          source = "${inputs.mattpocock-skills}/skills/engineering/grill-with-docs";
+          skillMd = ''
+            ---
+            name: grill-with-docs
+            description: Explicit-only dotfiles design interview that stress-tests a plan while maintaining domain docs. Use only when the user explicitly invokes grill-with-docs or asks to stress-test a dotfiles design with docs.
+            ---
+
+            # Grill With Docs
+
+            This repo-local wrapper expects `dotfiles.codex.mattPocockSkills.enable`
+            to stay enabled for `homePC`; that global skill subset provides the
+            `$grilling` dependency used by this workflow.
+
+            Run `$grilling` to stress-test the user's dotfiles design one question
+            at a time. Keep `$domain-modeling` active as decisions settle:
+
+            - Update `CONTEXT.md` when a durable dotfiles domain term is introduced
+              or sharpened.
+            - Offer an ADR only when the decision is hard to reverse, surprising
+              without context, and the result of a real tradeoff.
+            - Keep implementation work out of the grilling loop unless the user
+              explicitly asks to proceed.
+          '';
+          openaiYaml = ''
+            interface:
+              display_name: "Grill With Docs"
+              short_description: "Stress-test a plan and update domain docs"
+              default_prompt: "Use $grill-with-docs to interview a dotfiles design and update domain docs as decisions settle."
+
+            policy:
+              allow_implicit_invocation: false
+          '';
+        }
+        {
+          name = "improve-codebase-architecture";
+          source = "${inputs.mattpocock-skills}/skills/engineering/improve-codebase-architecture";
+          skillMd = ''
+            ---
+            name: improve-codebase-architecture
+            description: Explicit-only dotfiles architecture review that scans for deepening opportunities and writes a temporary visual report. Use only when the user explicitly invokes improve-codebase-architecture or asks for a dotfiles architecture review.
+            ---
+
+            # Improve Codebase Architecture
+
+            This repo-local wrapper expects `dotfiles.codex.mattPocockSkills.enable`
+            to stay enabled for `homePC`; that global skill subset provides the
+            `$codebase-design` and `$grilling` dependencies used by this workflow.
+
+            Surface architectural friction in this dotfiles repo and propose
+            deepening opportunities: changes that make modules smaller at the
+            interface and deeper in implementation.
+
+            ## Process
+
+            1. Read `CONTEXT.md` and any relevant ADRs before judging the code.
+               Use `$codebase-design` for the architecture vocabulary.
+            2. Explore with normal Codex tools. Use available multi-agent tooling
+               when it is actually present; otherwise inspect the code directly and
+               make distinct candidates yourself.
+            3. Write a self-contained HTML report under the OS temp directory:
+               `$TMPDIR` when set, otherwise `/tmp`, using
+               `architecture-review-<timestamp>.html`.
+            4. Tell the user the absolute report path. Open a GUI viewer only when
+               the user explicitly asks.
+            5. For each candidate include files, problem, solution, benefits,
+               before/after diagram, and recommendation strength.
+            6. End with the top recommendation, then ask which candidate the user
+               wants to explore.
+
+            After the user picks a candidate, use `$grilling` to walk the design
+            tree with them. Use `$domain-modeling` to update `CONTEXT.md` or offer
+            an ADR when the conversation produces durable domain terms or decisions.
+
+            See [HTML-REPORT.md](HTML-REPORT.md) for the report scaffold, diagram
+            patterns, and styling guidance.
+          '';
+          htmlReportMd = builtins.replaceStrings [ "/codebase-design" ] [ "$codebase-design" ] (
+            builtins.readFile "${inputs.mattpocock-skills}/skills/engineering/improve-codebase-architecture/HTML-REPORT.md"
+          );
+          openaiYaml = ''
+            interface:
+              display_name: "Improve Codebase Architecture"
+              short_description: "Review dotfiles architecture with visual candidates"
+              default_prompt: "Use $improve-codebase-architecture to scan this dotfiles repo for architecture deepening opportunities."
+
+            policy:
+              allow_implicit_invocation: false
+          '';
+        }
+      ];
+      syncRepoLocalSkillShell =
+        targetRoot:
+        let
+          syncOne =
+            skill:
+            ''
+              sync_skill "${skill.source}" "${skill.name}"
+            ''
+            + lib.optionalString (skill ? skillMd) ''
+              cp ${builtins.toFile "${skill.name}-SKILL.md" skill.skillMd} "$target/SKILL.md"
+            ''
+            + lib.optionalString (skill ? htmlReportMd) ''
+              cp ${builtins.toFile "${skill.name}-HTML-REPORT.md" skill.htmlReportMd} "$target/HTML-REPORT.md"
+            ''
+            + lib.optionalString (skill ? openaiYaml) ''
+              mkdir -p "$target/agents"
+              cat > "$target/agents/openai.yaml" <<'YAML'
+              ${skill.openaiYaml}YAML
+            '';
+        in
+        ''
+          sync_skill() {
+            source="$1"
+            name="$2"
+            target="${targetRoot}/.agents/skills/$name"
+
+            rm -rf "$target"
+            mkdir -p "$target"
+            cp -R "$source/." "$target/"
+            chmod -R u+w "$target"
+          }
+
+          ${lib.concatMapStringsSep "\n" syncOne repoLocalSkills}
+        '';
     in
     {
       inherit
@@ -106,6 +254,23 @@
               overlays.additions
               overlays.modifications
             ];
+          };
+          syncVendoredSkills = pkgs.writeShellApplication {
+            name = "sync-vendored-skills";
+            runtimeInputs = with pkgs; [
+              coreutils
+              gitMinimal
+            ];
+            text = ''
+              root="$PWD"
+              if git_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+                root="$git_root"
+              fi
+
+              ${syncRepoLocalSkillShell "$root"}
+
+              echo "Synced vendored repo-local skills to $root/.agents/skills"
+            '';
           };
           syncFieldcraftSkill = pkgs.writeShellApplication {
             name = "sync-fieldcraft-skill";
@@ -133,6 +298,7 @@
         in
         (import ./pkgs pkgs)
         // {
+          "sync-vendored-skills" = syncVendoredSkills;
           "sync-fieldcraft-skill" = syncFieldcraftSkill;
         }
       );
@@ -232,7 +398,7 @@
                 "$url"
             '';
           };
-          syncFieldcraftSkill = self.packages.${system}."sync-fieldcraft-skill";
+          syncVendoredSkills = self.packages.${system}."sync-vendored-skills";
         in
         {
           default = pkgs.mkShell {
@@ -249,7 +415,7 @@
               rustfmt
               trunk
               wasm-bindgen-cli
-              syncFieldcraftSkill
+              syncVendoredSkills
             ];
           };
 
@@ -275,10 +441,58 @@
           pkgs = import nixpkgs {
             inherit system;
           };
+          globalMattPocockSkillsEnabled =
+            self.nixosConfigurations.homePC.config.home-manager.users.ysun.dotfiles.codex.mattPocockSkills.enable;
         in
         {
-          fieldcraft-skill = pkgs.runCommand "fieldcraft-skill-check" { } ''
-            diff -ru "${inputs.fieldcraft}/skills/product-form-ux" ${./.agents/skills/product-form-ux}
+          repo-local-skills = pkgs.runCommand "repo-local-skills-check" { } ''
+            ${lib.optionalString (!globalMattPocockSkillsEnabled) ''
+              echo "repo-local Matt Pocock workflow skills require dotfiles.codex.mattPocockSkills.enable for homePC" >&2
+              exit 1
+            ''}
+
+            expected="$TMPDIR/expected"
+            mkdir -p "$expected"
+            ${syncRepoLocalSkillShell "$expected"}
+
+            for skill_dir in ${./.agents/skills}/*; do
+              test -d "$skill_dir" || continue
+              skill_name="$(basename "$skill_dir")"
+              test -f "$skill_dir/SKILL.md" || {
+                echo "$skill_name is missing SKILL.md" >&2
+                exit 1
+              }
+              test -f "$skill_dir/agents/openai.yaml" || {
+                echo "$skill_name is missing agents/openai.yaml" >&2
+                exit 1
+              }
+              grep -q "^name: $skill_name$" "$skill_dir/SKILL.md" || {
+                echo "$skill_name SKILL.md name does not match directory" >&2
+                exit 1
+              }
+              grep -q "^description: .*$" "$skill_dir/SKILL.md" || {
+                echo "$skill_name SKILL.md is missing description" >&2
+                exit 1
+              }
+            done
+
+            for stray_doc in $(find ${./.agents/skills} -mindepth 2 -maxdepth 2 \
+              \( -name README.md -o -name INSTALLATION_GUIDE.md -o -name QUICK_REFERENCE.md -o -name CHANGELOG.md \)); do
+              echo "unexpected auxiliary skill doc: $stray_doc" >&2
+              exit 1
+            done
+
+            if grep -R -n -E \
+              '(/codebase-design|/grilling|/domain-modeling|/improve-codebase-architecture|Agent tool|subagent_type|xdg-open <path>|open <path>|start <path>)' \
+              ${./.agents/skills}; then
+              echo "repo-local skills contain stale host-agent wording; adapt vendored skills for Codex first" >&2
+              exit 1
+            fi
+
+            ${lib.concatMapStringsSep "\n" (skill: ''
+              diff -ru "$expected/.agents/skills/${skill.name}" "${./.agents/skills}/${skill.name}"
+            '') repoLocalSkills}
+
             mkdir -p "$out"
             touch "$out/ok"
           '';

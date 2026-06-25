@@ -135,11 +135,11 @@
     "fieldcraft": {
       "flake": false,
       "locked": {
-        "lastModified": 1782185875,
-        "narHash": "sha256-ZgUvqKZurWyueK1kc24Ta8Z7+QZWjz5u6ObI2L06cpI=",
+        "lastModified": 1782308019,
+        "narHash": "sha256-D92kNyvF+Dd37z38ntk+DAdMB7ekVws5iq5g8JxBWf0=",
         "owner": "bioinformatist",
         "repo": "fieldcraft",
-        "rev": "5767b21c515148b517b7b5f3791516924dd47d21",
+        "rev": "8450e45985a78ae9152348fd7fd42131b9f13abd",
         "type": "github"
       },
       "original": {
@@ -714,6 +714,23 @@
         "type": "github"
       }
     },
+    "mattpocock-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781734059,
+        "narHash": "sha256-nuHQ+SG5UerKs334Yk5nsxHOncGXQKF1yVdnwwVpLZ8=",
+        "owner": "mattpocock",
+        "repo": "skills",
+        "rev": "2454c95dc305c158b21a0cdafeb728879dd0359a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mattpocock",
+        "ref": "v1.0.1",
+        "repo": "skills",
+        "type": "github"
+      }
+    },
     "nixgl": {
       "inputs": {
         "flake-utils": "flake-utils",
@@ -922,6 +939,7 @@
         "home-manager": "home-manager",
         "hyprland": "hyprland",
         "impermanence": "impermanence",
+        "mattpocock-skills": "mattpocock-skills",
         "nixpkgs": "nixpkgs_4",
         "nixpkgs-tools": "nixpkgs-tools",
         "nixpkgs-wechat": "nixpkgs-wechat",

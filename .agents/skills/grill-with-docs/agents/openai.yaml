@@ -1,0 +1,7 @@
+interface:
+  display_name: "Grill With Docs"
+  short_description: "Stress-test a plan and update domain docs"
+  default_prompt: "Use $grill-with-docs to interview a dotfiles design and update domain docs as decisions settle."
+
+policy:
+  allow_implicit_invocation: false

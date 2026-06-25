@@ -7,18 +7,24 @@
   ...
 }:
 let
+  # Codex tooling update policy:
+  # - Direct release pins below may be bumped here with their hashes.
+  # - MCP packages should come from nixpkgs-tools; avoid local overrides unless
+  #   fixing a concrete bug or security issue.
+  # - Flake-input skills are updated through their input plus sync/check commands.
   codexToolPkgs = inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-  codexVersion = "0.142.0";
+  codexVersion = "0.142.2";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
-  codexHash = "sha256-LjrLOaJ3/xHDFNgyz90kb66+6ia/Aa/46eEGQebeqAE=";
-  playwrightCliVersion = "0.1.13";
+  codexHash = "sha256-EskAXId46fdiOxe3fzy/VugFmAmsaAJ7NWDBqBOapOI=";
+  playwrightCliVersion = "0.1.14";
   playwrightCliSource = pkgs.fetchFromGitHub {
     owner = "microsoft";
     repo = "playwright-cli";
     rev = "v${playwrightCliVersion}";
-    hash = "sha256-hHK/GR5Drlt+e0L9kyNmn+ht1PCrVH6WrVbxGB1Wsxg=";
+    hash = "sha256-wLE04sfPMh43IzIp6/HKBjloy3iSSanSYdYtklc6lQ4=";
   };
+  mattPocockSkillsSource = inputs.mattpocock-skills;
   stopSlopRev = "8da1f030185bdfe8471220585162991eaeb970e9";
   stopSlopSource = pkgs.fetchFromGitHub {
     owner = "hardikpandya";
@@ -26,12 +32,12 @@ let
     rev = stopSlopRev;
     hash = "sha256-JMqlCRVEAfwG1TLMDpnamznkBfkmX6e2XyETTTH/TSE=";
   };
-  ponytailVersion = "4.7.0";
+  ponytailVersion = "4.8.3";
   ponytailSource = pkgs.fetchFromGitHub {
     owner = "DietrichGebert";
     repo = "ponytail";
     rev = "v${ponytailVersion}";
-    hash = "sha256-Q6vlkbTfBFrNFTxEwYeMe5ciOe6QdULegvExwT//gJs=";
+    hash = "sha256-4ZT89GA5xnomNBIzY8Kh1yYP0AC9SeVhv406DEKpE3A=";
   };
   ponytailSkillMd = pkgs.writeText "ponytail-SKILL.md" ''
     ---
@@ -118,6 +124,99 @@ let
     cp ${stopSlopSkillMd} "$out/SKILL.md"
     cp ${stopSlopOpenaiYaml} "$out/agents/openai.yaml"
   '';
+  mkMattPocockSkill =
+    {
+      name,
+      path,
+      description,
+      displayName,
+      shortDescription,
+      defaultPrompt,
+      allowImplicit ? true,
+      postPatch ? "",
+    }:
+    let
+      skillHeader = pkgs.writeText "${name}-SKILL-header.md" ''
+        ---
+        name: ${name}
+        description: ${description}
+        ---
+      '';
+      openaiYaml = pkgs.writeText "${name}-openai.yaml" ''
+        interface:
+          display_name: "${displayName}"
+          short_description: "${shortDescription}"
+          default_prompt: "${defaultPrompt}"
+        policy:
+          allow_implicit_invocation: ${if allowImplicit then "true" else "false"}
+      '';
+    in
+    pkgs.runCommand "codex-mattpocock-${name}-skill" { } ''
+      mkdir -p "$out"
+      cp -R ${mattPocockSkillsSource}/${path}/. "$out/"
+      chmod -R u+w "$out"
+
+      rm -f "$out/SKILL.md"
+      cat ${skillHeader} > "$out/SKILL.md"
+      awk '
+        BEGIN { dashes = 0 }
+        /^---$/ && dashes < 2 { dashes++; next }
+        dashes >= 2 { print }
+      ' ${mattPocockSkillsSource}/${path}/SKILL.md >> "$out/SKILL.md"
+
+      mkdir -p "$out/agents"
+      cp ${openaiYaml} "$out/agents/openai.yaml"
+
+      ${postPatch}
+    '';
+  mattPocockDiagnosingBugsSkill = mkMattPocockSkill {
+    name = "diagnosing-bugs";
+    path = "skills/engineering/diagnosing-bugs";
+    description = "Disciplined diagnosis loop for hard bugs, regressions, flaky failures, and performance problems with unclear cause. Use for root-cause debugging after a concrete symptom exists; do not use for routine implementation or speculative cleanup.";
+    displayName = "Diagnosing Bugs";
+    shortDescription = "Debug hard bugs with a tight feedback loop";
+    defaultPrompt = "Use $diagnosing-bugs to build a tight repro loop and diagnose this bug.";
+    postPatch = ''
+      substituteInPlace "$out/SKILL.md" \
+        --replace-fail 'hand off to the `/improve-codebase-architecture` skill with the specifics' \
+        'recommend a follow-up architecture review with the specifics'
+    '';
+  };
+  mattPocockTddSkill = mkMattPocockSkill {
+    name = "tdd";
+    path = "skills/engineering/tdd";
+    description = "Test-driven development with red-green-refactor and behavior-focused tests. Use when the user explicitly wants test-first work, a regression test before a fix, or integration tests that drive a feature through a public interface.";
+    displayName = "TDD";
+    shortDescription = "Drive changes through behavior tests";
+    defaultPrompt = "Use $tdd to implement this change through a red-green-refactor loop.";
+    postPatch = ''
+      substituteInPlace "$out/SKILL.md" \
+        --replace-fail 'run the `/codebase-design` skill for the vocabulary and the testability checks' \
+        'use `$codebase-design` for the vocabulary and testability checks'
+    '';
+  };
+  mattPocockCodebaseDesignSkill = mkMattPocockSkill {
+    name = "codebase-design";
+    path = "skills/engineering/codebase-design";
+    description = "Shared vocabulary for designing deep modules, interfaces, seams, adapters, leverage, and locality. Use when designing or reshaping module boundaries, making code more testable, or evaluating interface depth.";
+    displayName = "Codebase Design";
+    shortDescription = "Design deeper modules and cleaner seams";
+    defaultPrompt = "Use $codebase-design to evaluate this module interface and seam placement.";
+    postPatch = ''
+      substituteInPlace "$out/DESIGN-IT-TWICE.md" \
+        --replace-fail 'Spawn 3+ sub-agents in parallel using the Agent tool. Each must produce a **radically different** interface for the deepened module.' \
+        'When multi-agent tools are available, spawn 3+ sub-agents in parallel; otherwise produce 3 distinct designs yourself. Each must produce a **radically different** interface for the deepened module.'
+    '';
+  };
+  mattPocockGrillingSkill = mkMattPocockSkill {
+    name = "grilling";
+    path = "skills/productivity/grilling";
+    description = "Explicit-only interview loop for stress-testing a plan or design. Use only when the user asks to grill, interrogate, interview, or stress-test a plan before implementation.";
+    displayName = "Grilling";
+    shortDescription = "Stress-test a plan by asking one question at a time";
+    defaultPrompt = "Use $grilling to stress-test this plan before implementation.";
+    allowImplicit = false;
+  };
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "codex";
     version = codexVersion;
@@ -192,7 +291,7 @@ let
     fi
 
     export GITHUB_PERSONAL_ACCESS_TOKEN="$token"
-    exec ${pkgs.github-mcp-server}/bin/github-mcp-server stdio --toolsets context,issues,pull_requests,repos,users,orgs
+    exec ${codexToolPkgs.github-mcp-server}/bin/github-mcp-server stdio --toolsets context,issues,pull_requests,repos,users,orgs
   '';
 
   playwrightCli = pkgs.writeShellScriptBin "playwright-cli" ''
@@ -226,6 +325,16 @@ let
     Do not let Ponytail guidance remove trust-boundary validation, security
     controls, accessibility basics, data-loss prevention, or explicitly
     requested behavior.
+  '';
+  mattPocockAgentsText = lib.optionalString config.dotfiles.codex.mattPocockSkills.enable ''
+
+    ## Focused Engineering Loops
+
+    Use `$diagnosing-bugs` for hard bugs, regressions, flaky failures, or
+    performance problems with unclear cause. Use `$tdd` when the user asks for
+    test-first work or a regression test before a fix. Use `$codebase-design`
+    when designing module interfaces or seam placement. Use `$grilling` only
+    when the user explicitly asks to stress-test a plan.
   '';
 
   trustedProjectsToml = lib.concatMapStringsSep "\n\n" (path: ''
@@ -262,7 +371,7 @@ let
     command = "${githubMcpServer}/bin/github-mcp-server"
 
     [mcp_servers.context7]
-    command = "${pkgs.context7-mcp}/bin/context7-mcp"
+    command = "${codexToolPkgs.context7-mcp}/bin/context7-mcp"
     required = true
     startup_timeout_sec = 30
     tool_timeout_sec = 120
@@ -361,6 +470,12 @@ in
     description = "Whether to install Ponytail Codex skills for on-demand YAGNI and over-engineering review workflows.";
   };
 
+  options.dotfiles.codex.mattPocockSkills.enable = lib.mkOption {
+    type = lib.types.bool;
+    default = true;
+    description = "Whether to install a narrow global subset of Matt Pocock's engineering Codex skills.";
+  };
+
   config = {
     home.packages = [
       codexPkg
@@ -383,6 +498,22 @@ in
     };
     home.file.".agents/skills/ponytail-debt" = lib.mkIf config.dotfiles.codex.ponytail.enable {
       source = "${ponytailSource}/skills/ponytail-debt";
+    };
+    home.file.".agents/skills/diagnosing-bugs" =
+      lib.mkIf config.dotfiles.codex.mattPocockSkills.enable
+        {
+          source = mattPocockDiagnosingBugsSkill;
+        };
+    home.file.".agents/skills/tdd" = lib.mkIf config.dotfiles.codex.mattPocockSkills.enable {
+      source = mattPocockTddSkill;
+    };
+    home.file.".agents/skills/codebase-design" =
+      lib.mkIf config.dotfiles.codex.mattPocockSkills.enable
+        {
+          source = mattPocockCodebaseDesignSkill;
+        };
+    home.file.".agents/skills/grilling" = lib.mkIf config.dotfiles.codex.mattPocockSkills.enable {
+      source = mattPocockGrillingSkill;
     };
 
     # Codex keeps its own state under ~/.codex, which is ephemeral on this system.
@@ -468,7 +599,8 @@ in
       debugging that environment variable itself.
     ''
     + stopSlopAgentsText
-    + ponytailAgentsText;
+    + ponytailAgentsText
+    + mattPocockAgentsText;
 
     # Keep config.toml as a real writable file. Codex stores runtime state there
     # too, so activation overlays only the keys this module owns.

@@ -5,6 +5,33 @@ evidence path, not a required runtime mode. It may be local headed browser,
 Playwright CLI, Playwright MCP, Browser Use, CI screenshots, or headless
 Chromium.
 
+## Contents
+
+- Tooling requirements
+- Reuse mature tools
+- Minimum evidence set
+- Final action evidence
+- What to look for
+- Long technical content
+- Interactive help evidence
+- Multilingual forms
+- Source-only fallback
+- Session discipline
+
+## Tooling Requirements
+
+Fieldcraft does not install browser automation tools. Browser evidence requires
+one browser path supplied by the host agent environment:
+
+- Playwright CLI or Playwright MCP.
+- Browser Use or another browser-control integration.
+- Local Chromium, Chrome, Firefox, or another browser the agent can drive.
+- Existing CI screenshots, user screenshots, or saved browser traces.
+
+If the user explicitly asks for screenshots, interaction, or browser evidence,
+do not silently downgrade to source-only review. Report the missing browser path
+and continue source-only only when the user accepts that fallback.
+
 ## Reuse Mature Tools
 
 Do not reimplement browser automation or quality auditing in this skill:
@@ -34,6 +61,22 @@ When practical, capture:
 If the app has multiple steps, capture the transition between steps and the
 first error state after attempting to continue.
 
+## Final Action Evidence
+
+Treat final actions as successful only after verifying their side effect:
+
+- For copy actions, read the clipboard when available or paste into a temporary
+  field and compare the value.
+- For download actions, verify the browser download event, downloaded file, or
+  archive contents.
+- For generate or export actions, confirm the artifact matches the current form
+  state and changes when relevant options change.
+
+A toast, flash message, enabled button, clean console, or click handler call is
+not enough evidence that the action worked. For secure-context APIs such as the
+Clipboard API, test the same origin the user will use when practical; behavior
+can differ between `localhost`, LAN HTTP URLs, and HTTPS.
+
 ## What To Look For
 
 Check whether:
@@ -47,9 +90,43 @@ Check whether:
 - Field groups have clear accessible names.
 - Tabbing follows the visible flow.
 - Browser-rendered text, icons, and fonts actually load.
+- Final action success states match the actual copy, download, generate, export,
+  or submit result.
 
 If screenshots show missing fonts, broken assets, or tofu glyphs, mark visual
 judgment as lower confidence until the review environment is fixed.
+
+## Long Technical Content
+
+Check mobile and desktop overflow when forms render long technical content such
+as URLs, commands, paths, keys, identifiers, package names, or generated
+snippets. The page should not become wider than the viewport.
+
+Useful checks include:
+
+- Verify `document.body.scrollWidth <= window.innerWidth` after long content is
+  rendered.
+- Inspect code blocks, fieldsets, flex/grid children, and unbreakable inline
+  text.
+- Look for missing `min-width: 0`, wrapping rules, or local horizontal scrolling
+  on the content container.
+
+## Interactive Help Evidence
+
+For interactive help or popover-like content, verify that users can move from
+the trigger into the panel, select text, click controls, and use keyboard focus
+without the panel disappearing.
+
+## Multilingual Forms
+
+For multilingual form-heavy interfaces, check that:
+
+- the default locale is intentional;
+- validation text, help text, tooltips, copy feedback, and action labels are
+  translated;
+- fallback behavior is acceptable;
+- language switching does not reset user input unexpectedly;
+- generated technical identifiers remain unchanged when they should.
 
 ## Source-Only Fallback
 

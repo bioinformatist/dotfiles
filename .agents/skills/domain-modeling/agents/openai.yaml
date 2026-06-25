@@ -1,0 +1,7 @@
+interface:
+  display_name: "Domain Modeling"
+  short_description: "Sharpen dotfiles domain terms and ADRs"
+  default_prompt: "Use $domain-modeling to clarify dotfiles domain terms or record an ADR-worthy decision."
+
+policy:
+  allow_implicit_invocation: true

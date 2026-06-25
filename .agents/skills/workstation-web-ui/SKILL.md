@@ -1,6 +1,6 @@
 ---
 name: workstation-web-ui
-description: Develop, preview, debug, or verify the web/workstation Leptos/Trunk product UI in this repo, especially from a headless server where user preview must bind to the LAN and browser checks use headless Chromium/CDP.
+description: Develop, run, preview, debug, build, or browser-verify this repo's web/workstation Leptos/Trunk UI. Use for repo-specific Rust/WASM, Trunk, LAN preview, headless Chromium/CDP, and workstation-web verification tasks; use product-form-ux instead for general form UX judgment.
 ---
 
 # Workstation Web UI

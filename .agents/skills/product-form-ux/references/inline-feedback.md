@@ -39,6 +39,23 @@ Help text should sit next to the relevant field or option:
 Do not mix ordinary hints, blocking errors, and non-blocking notices in one
 undifferentiated status list.
 
+High-risk or irreversible warnings should be visually stronger than ordinary
+help text, but still local to the field, option, or final action that can cause
+the result.
+
+## Tooltips And Interactive Help
+
+Simple tooltips are for short explanatory text only. If the content includes
+selectable text, commands, links, buttons, or other actions, treat it as
+interactive help or popover-like content.
+
+Interactive help should:
+
+- remain open across hover and focus transitions;
+- avoid pointer gaps between trigger and panel;
+- be reachable by keyboard;
+- not disappear while the user selects text, copies commands, or clicks controls.
+
 ## Accessible Semantics
 
 When a field is invalid:
