@@ -451,8 +451,8 @@ fn render_readme(spec: &ProductSpec) -> String {
 本配置会安装 Clash Verge 和 WeChat，并让 `nix-daemon` 默认走 `http://127.0.0.1:7897`。
 首次启动后必须立刻配置 Clash 订阅；否则 `nix flake update` 和 `nixos-rebuild`
 无法正常拉取依赖。
-安装命令会让 `nixos-anywhere` 安装阶段优先使用 USTC Nix store 镜像，避免直连
-`cache.nixos.org`。
+安装命令会在本机通过 USTC Nix store 镜像构建 closure，再通过 SSH 复制到目标机，
+避免目标 installer 直连 `cache.nixos.org`。
 
 ## WeChat 下载预检
 
@@ -472,8 +472,8 @@ fn render_readme(spec: &ProductSpec) -> String {
 本配置会安装 Clash Verge，并让 `nix-daemon` 默认走 `http://127.0.0.1:7897`。
 首次启动后必须立刻配置 Clash 订阅；否则 `nix flake update` 和 `nixos-rebuild`
 无法正常拉取依赖。
-安装命令会让 `nixos-anywhere` 安装阶段优先使用 USTC Nix store 镜像，避免直连
-`cache.nixos.org`。
+安装命令会在本机通过 USTC Nix store 镜像构建 closure，再通过 SSH 复制到目标机，
+避免目标 installer 直连 `cache.nixos.org`。
 
 ## WeChat
 
@@ -650,8 +650,13 @@ pub fn install_command(spec: &ProductSpec) -> Option<String> {
             } else {
                 String::new()
             };
+            // nixos-anywhere only appends machine substituters as extra-substituters
+            // in the temporary installer environment, so cache.nixos.org remains
+            // available there. A target-side USTC mode would need an explicit
+            // installer nix.conf injection after kexec; local build plus copy is
+            // the deterministic China Mainland default for now.
             Some(format!(
-                "{proxy_env}nix run --option substituters {CHINA_SUBSTITUTER} github:nix-community/nixos-anywhere -- --option substituters {CHINA_SUBSTITUTER} --flake .#{host_name} root@<target-ip>"
+                "{proxy_env}nix run --option substituters {CHINA_SUBSTITUTER} github:nix-community/nixos-anywhere -- --build-on local --no-substitute-on-destination --option substituters {CHINA_SUBSTITUTER} --flake .#{host_name} root@<target-ip>"
             ))
         }
         NetworkMode::Global => Some(format!(
@@ -809,7 +814,7 @@ mod tests {
     }
 
     #[test]
-    fn china_install_command_uses_ustc_for_nix_run_and_nixos_anywhere() {
+    fn china_install_command_uses_ustc_and_disables_destination_substitution() {
         let mut spec = base_spec();
         spec.network_mode = NetworkMode::China;
         let command = install_command(&spec).expect("install command");
@@ -817,8 +822,11 @@ mod tests {
             "nix run --option substituters https://mirrors.ustc.edu.cn/nix-channels/store"
         ));
         assert!(command.contains(
-            "-- --option substituters https://mirrors.ustc.edu.cn/nix-channels/store --flake .#workstation"
+            "-- --build-on local --no-substitute-on-destination --option substituters https://mirrors.ustc.edu.cn/nix-channels/store --flake .#workstation"
         ));
+        assert!(!command
+            .split_whitespace()
+            .any(|part| part == "--substitute-on-destination"));
         assert!(!command.contains("cache.nixos.org"));
     }
 
@@ -845,6 +853,7 @@ mod tests {
             command,
             "nix run github:nix-community/nixos-anywhere -- --flake .#workstation root@<target-ip>"
         );
+        assert!(!command.contains("--no-substitute-on-destination"));
     }
 
     #[test]
