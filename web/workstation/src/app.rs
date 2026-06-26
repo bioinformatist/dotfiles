@@ -339,6 +339,7 @@ fn GeneratorApp() -> impl IntoView {
                                 />
                                 <span>{move || t_string!(i18n, fields.nvidia)}</span>
                             </label>
+                            <p class="field-notice">{move || t_string!(i18n, help.vm_scope)}</p>
                         </fieldset>
 
                         <fieldset>

@@ -507,6 +507,8 @@ fn render_readme(spec: &ProductSpec) -> String {
 
 表单中的 SSH public key 或初始密码用于安装完成后的新 NixOS 用户。
 运行 `nixos-anywhere` 前，你仍需要让目标机进入可 SSH 的 installer/Linux 环境，并能从当前机器登录 `root@<target-ip>`。
+安装命令会在目标 installer 环境中生成 `hosts/{host_name}/hardware-configuration.nix`，
+使 initrd 包含目标机器所需的磁盘控制器模块。
 
 ## 安装
 
@@ -519,6 +521,12 @@ fn render_readme(spec: &ProductSpec) -> String {
 
 危险：`disko` 会清空并重新分区目标系统盘，该磁盘上的所有现有数据都会被销毁。
 第一版不支持保留现有分区、双系统或迁移已有 Linux。
+
+## VM 支持边界
+
+本生成器面向真实 x86_64 UEFI workstation。VM 可用于测试安装流程，但桌面体验仅
+best-effort；虚拟化平台相关的显示、鼠标、剪贴板、GPU 加速和 Hyprland 渲染问题
+不在支持范围内。VM 测试请使用 OVMF/UEFI 和一块可清空的独立磁盘。
 "#
     )
 }
@@ -643,6 +651,8 @@ pub fn install_command(spec: &ProductSpec) -> Option<String> {
     }
 
     let host_name = spec.host_name.trim();
+    let hardware_config_arg =
+        format!("--generate-hardware-config nixos-generate-config ./hosts/{host_name}/hardware-configuration.nix");
     match spec.network_mode {
         NetworkMode::China => {
             let proxy_env = if spec.wechat {
@@ -656,11 +666,11 @@ pub fn install_command(spec: &ProductSpec) -> Option<String> {
             // installer nix.conf injection after kexec; local build plus copy is
             // the deterministic China Mainland default for now.
             Some(format!(
-                "{proxy_env}nix run --option substituters {CHINA_SUBSTITUTER} github:nix-community/nixos-anywhere -- --build-on local --no-substitute-on-destination --option substituters {CHINA_SUBSTITUTER} --flake .#{host_name} root@<target-ip>"
+                "{proxy_env}nix run --option substituters {CHINA_SUBSTITUTER} github:nix-community/nixos-anywhere -- --build-on local --no-substitute-on-destination --option substituters {CHINA_SUBSTITUTER} {hardware_config_arg} --flake .#{host_name} root@<target-ip>"
             ))
         }
         NetworkMode::Global => Some(format!(
-            "nix run github:nix-community/nixos-anywhere -- --flake .#{host_name} root@<target-ip>"
+            "nix run github:nix-community/nixos-anywhere -- {hardware_config_arg} --flake .#{host_name} root@<target-ip>"
         )),
     }
 }
@@ -822,7 +832,7 @@ mod tests {
             "nix run --option substituters https://mirrors.ustc.edu.cn/nix-channels/store"
         ));
         assert!(command.contains(
-            "-- --build-on local --no-substitute-on-destination --option substituters https://mirrors.ustc.edu.cn/nix-channels/store --flake .#workstation"
+            "-- --build-on local --no-substitute-on-destination --option substituters https://mirrors.ustc.edu.cn/nix-channels/store --generate-hardware-config nixos-generate-config ./hosts/workstation/hardware-configuration.nix --flake .#workstation"
         ));
         assert!(!command
             .split_whitespace()
@@ -851,7 +861,7 @@ mod tests {
         let command = install_command(&spec).expect("install command");
         assert_eq!(
             command,
-            "nix run github:nix-community/nixos-anywhere -- --flake .#workstation root@<target-ip>"
+            "nix run github:nix-community/nixos-anywhere -- --generate-hardware-config nixos-generate-config ./hosts/workstation/hardware-configuration.nix --flake .#workstation root@<target-ip>"
         );
         assert!(!command.contains("--no-substitute-on-destination"));
     }
@@ -933,6 +943,23 @@ mod tests {
         assert!(!flake.contains("github:NixOS/nixpkgs"));
         assert!(!flake.contains("github:nix-community/home-manager"));
         assert!(!flake.contains("github:nix-community/disko"));
+    }
+
+    #[test]
+    fn generated_readme_documents_hardware_config_and_vm_scope() {
+        let project = generate(&base_spec()).expect("valid project");
+        let readme = project
+            .files
+            .iter()
+            .find(|file| file.path == "README.zh-CN.md")
+            .expect("readme")
+            .contents
+            .as_str();
+        assert!(readme.contains("hardware-configuration.nix"));
+        assert!(readme.contains("initrd"));
+        assert!(readme.contains("VM 支持边界"));
+        assert!(readme.contains("OVMF/UEFI"));
+        assert!(readme.contains("Hyprland 渲染问题"));
     }
 
     #[test]

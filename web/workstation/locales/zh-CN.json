@@ -47,6 +47,7 @@
     "disk_suffix": "结尾的分区路径。",
     "disk_risk": "危险：disko 会清空并重新分区这个系统盘。该磁盘上的所有现有数据都会被销毁。",
     "disk_missing": "未填写目标磁盘时仍可下载配置包，但安装命令不可用。",
+    "vm_scope": "本生成器面向真实 x86_64 UEFI workstation。VM 可用于测试安装流程，但桌面体验仅 best-effort。请使用 OVMF/UEFI 和可清空的独立磁盘；虚拟化平台相关的显示、鼠标、剪贴板、GPU 加速和 Hyprland 渲染问题不在支持范围内。",
     "china_network": "中国大陆模式会安装 Clash Verge，并让 nix-daemon 默认走 http://127.0.0.1:7897。首次启动后必须立刻配置 Clash 订阅；否则 nix flake update 和 nixos-rebuild 无法正常拉取依赖。",
     "wechat_china": "中国大陆模式默认安装 WeChat。WeChat 包来自 UOS Debian 源，安装前必须确认运行 nixos-anywhere 的机器可以访问这个下载地址。",
     "wechat_china_disabled": "不会安装 WeChat。新系统不会内置 WeChat 桌面客户端，后续需要你自行处理。",

@@ -47,6 +47,7 @@
     "disk_suffix": ".",
     "disk_risk": "DANGER: disko will erase and repartition this system disk. All existing data on that disk will be destroyed.",
     "disk_missing": "You can still download the package, but the install command is unavailable until a target disk is set.",
+    "vm_scope": "This generator targets physical x86_64 UEFI workstations. VM installs are useful for testing the install flow, but VM desktop usability is best-effort only. Use OVMF/UEFI and a clean disk; hypervisor-specific graphics, cursor, clipboard, GPU acceleration, and Hyprland rendering issues are outside the supported scope.",
     "china_network": "China Mainland mode installs Clash Verge, then forces nix-daemon through http://127.0.0.1:7897. Configure the Clash subscription immediately after first boot; without it, nix flake update and nixos-rebuild will not be able to fetch dependencies.",
     "wechat_china": "Enabled by default for China Mainland. Because the WeChat package comes from a UOS Debian source, the install machine must be able to reach that URL before installation.",
     "wechat_china_disabled": "WeChat will not be installed. The new system will not include WeChat desktop unless you add it later.",
