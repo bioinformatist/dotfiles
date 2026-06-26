@@ -17,6 +17,7 @@ let
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
   codexHash = "sha256-EskAXId46fdiOxe3fzy/VugFmAmsaAJ7NWDBqBOapOI=";
+  codexNode = pkgs.nodejs_24;
   playwrightCliVersion = "0.1.14";
   playwrightCliSource = pkgs.fetchFromGitHub {
     owner = "microsoft";
@@ -297,9 +298,9 @@ let
   playwrightCli = pkgs.writeShellScriptBin "playwright-cli" ''
     set -euo pipefail
 
-    export PATH="${pkgs.nodejs_24}/bin:$PATH"
+    export PATH="${codexNode}/bin:$PATH"
     export npm_config_cache="''${XDG_CACHE_HOME:-$HOME/.cache}/npm"
-    exec ${pkgs.nodejs_24}/bin/npx -y @playwright/cli@${playwrightCliVersion} "$@"
+    exec ${codexNode}/bin/npx -y @playwright/cli@${playwrightCliVersion} "$@"
   '';
 
   trustedProjects = lib.unique config.dotfiles.codex.trustedProjects;
@@ -480,6 +481,7 @@ in
     home.packages = [
       codexPkg
       codexToolPkgs.mcp-nixos
+      codexNode
       playwrightCli
     ];
 
