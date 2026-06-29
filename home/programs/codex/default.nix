@@ -295,6 +295,25 @@ let
     exec ${codexToolPkgs.github-mcp-server}/bin/github-mcp-server stdio --toolsets context,issues,pull_requests,repos,users,orgs
   '';
 
+  context7AuthMcpServer = pkgs.writeShellScriptBin "context7-auth-mcp-server" ''
+    set -euo pipefail
+
+    api_key_file="${config.dotfiles.codex.context7ApiKeyFile}"
+    if [ ! -r "$api_key_file" ]; then
+      echo "Context7 API key file is not readable: $api_key_file" >&2
+      exit 1
+    fi
+
+    api_key="$(tr -d '\n' < "$api_key_file")"
+    if [ -z "$api_key" ]; then
+      echo "Context7 API key file is empty: $api_key_file" >&2
+      exit 1
+    fi
+
+    export CONTEXT7_API_KEY="$api_key"
+    exec ${codexToolPkgs.context7-mcp}/bin/context7-mcp
+  '';
+
   playwrightCli = pkgs.writeShellScriptBin "playwright-cli" ''
     set -euo pipefail
 
@@ -306,37 +325,6 @@ let
   trustedProjects = lib.unique config.dotfiles.codex.trustedProjects;
   writableRoots = lib.unique config.dotfiles.codex.writableRoots;
   writableRootsToml = builtins.toJSON writableRoots;
-  stopSlopAgentsText = lib.optionalString config.dotfiles.codex.stopSlop.enable ''
-
-    ## 6. Publishable Prose
-
-    Use `$stop-slop` as a final pass for English PR bodies, issue bodies,
-    release notes, README/docs text, public comments, and other publishable
-    prose. Preserve technical facts, quoted text, code blocks, command output,
-    identifiers, API names, and useful uncertainty.
-  '';
-  ponytailAgentsText = lib.optionalString config.dotfiles.codex.ponytail.enable ''
-
-    ## Minimalist Implementation
-
-    Use `$ponytail` skills only when the user asks for YAGNI, the simplest
-    viable implementation, or an over-engineering audit. Prefer
-    `$ponytail-review` / `$ponytail-audit` for complexity-focused review; they
-    do not replace correctness, security, regression, or test-coverage review.
-    Do not let Ponytail guidance remove trust-boundary validation, security
-    controls, accessibility basics, data-loss prevention, or explicitly
-    requested behavior.
-  '';
-  mattPocockAgentsText = lib.optionalString config.dotfiles.codex.mattPocockSkills.enable ''
-
-    ## Focused Engineering Loops
-
-    Use `$diagnosing-bugs` for hard bugs, regressions, flaky failures, or
-    performance problems with unclear cause. Use `$tdd` when the user asks for
-    test-first work or a regression test before a fix. Use `$codebase-design`
-    when designing module interfaces or seam placement. Use `$grilling` only
-    when the user explicitly asks to stress-test a plan.
-  '';
 
   trustedProjectsToml = lib.concatMapStringsSep "\n\n" (path: ''
     [projects."${path}"]
@@ -373,9 +361,17 @@ let
 
     [mcp_servers.context7]
     command = "${codexToolPkgs.context7-mcp}/bin/context7-mcp"
-    required = true
+    required = false
     startup_timeout_sec = 30
     tool_timeout_sec = 120
+    ${lib.optionalString (config.dotfiles.codex.context7ApiKeyFile != "") ''
+
+      [mcp_servers.context7_auth]
+      command = "${context7AuthMcpServer}/bin/context7-auth-mcp-server"
+      required = false
+      startup_timeout_sec = 30
+      tool_timeout_sec = 120
+    ''}
 
     [plugins."github@openai-curated"]
     enabled = true
@@ -459,10 +455,16 @@ in
     description = "Path to a GitHub token file used by the GitHub MCP server.";
   };
 
+  options.dotfiles.codex.context7ApiKeyFile = lib.mkOption {
+    type = lib.types.str;
+    default = "";
+    description = "Path to a Context7 API key file used by the authenticated fallback MCP server.";
+  };
+
   options.dotfiles.codex.stopSlop.enable = lib.mkOption {
     type = lib.types.bool;
     default = true;
-    description = "Whether to install the stop-slop Codex prose-editing skill and reference it from global AGENTS.md.";
+    description = "Whether to install the stop-slop Codex prose-editing skill.";
   };
 
   options.dotfiles.codex.ponytail.enable = lib.mkOption {
@@ -606,10 +608,20 @@ in
       Chromium, GCC, or xgcc for normal development, try a recent cache-hit lock
       before redesigning the shell. Do not implement dynamic nixpkgs fallback in
       `flake.nix`; keep lock selection explicit.
-    ''
-    + stopSlopAgentsText
-    + ponytailAgentsText
-    + mattPocockAgentsText;
+
+      ## 6. Capability Routing
+
+      Use installed skills for reusable workflows; keep workflow details in
+      skill descriptions and `SKILL.md`, not in this global file.
+
+      Use the anonymous `context7` MCP server first for current library,
+      framework, SDK, API, CLI, or cloud-service docs. If it is rate-limited,
+      unavailable, or missing a needed result, retry with `context7_auth` when
+      that per-user authenticated fallback server is configured.
+
+      Treat GitHub and Context7 tokens as per-user secrets. Never route one
+      user's token or API key to another user's Codex configuration.
+    '';
 
     # Keep config.toml as a real writable file. Codex stores runtime state there
     # too, so activation overlays only the keys this module owns.

@@ -58,6 +58,10 @@
   sops.secrets."github-mcp-token" = {
     owner = "ysun";
   };
+  sops.secrets."context7-api-key" = {
+    owner = "ysun";
+    mode = "0400";
+  };
   # ZeroClaw secrets — fill via: sudo SOPS_AGE_KEY_FILE=... sops set secrets/secrets.yaml
   sops.secrets."zeroclaw-telegram-token" = {
     owner = "ysun";
@@ -160,6 +164,8 @@
   home-manager.backupFileExtension = "backup";
   home-manager.users.ysun.dotfiles.codex.githubTokenFile =
     config.sops.secrets."github-mcp-token".path;
+  home-manager.users.ysun.dotfiles.codex.context7ApiKeyFile =
+    config.sops.secrets."context7-api-key".path;
 
   # --- Gaming ---
   programs.steam = {
