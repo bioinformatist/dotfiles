@@ -599,6 +599,13 @@ in
       Run `nix eval`, `nix check`, and `nix build` directly; Codex already sets
       `XDG_CACHE_HOME`, so do not add an `env XDG_CACHE_HOME=...` prefix unless
       debugging that environment variable itself.
+
+      When adding or updating a repo-local devShell, prefer a pinned lock that
+      has been verified to enter quickly with the machine's configured
+      substituters. If a fresh lock triggers large local builds such as
+      Chromium, GCC, or xgcc for normal development, try a recent cache-hit lock
+      before redesigning the shell. Do not implement dynamic nixpkgs fallback in
+      `flake.nix`; keep lock selection explicit.
     ''
     + stopSlopAgentsText
     + ponytailAgentsText
