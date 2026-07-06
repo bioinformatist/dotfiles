@@ -8,9 +8,6 @@ in
 {
   imports = [
     ../../home/tui
-    (import ../../home/tui/yazelix {
-      yazelix = inputs.yazelix;
-    })
   ];
 
   programs = {

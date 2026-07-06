@@ -14,7 +14,6 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    yazelix.url = "github:luccahuguet/yazelix";
     hyprland.url = "github:hyprwm/Hyprland";
     swww.url = "github:LGFae/swww";
     impermanence.url = "github:nix-community/impermanence";

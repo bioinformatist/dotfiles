@@ -2,7 +2,6 @@
 
 {
   pkgs,
-  yazelix ? inputs.yazelix,
   ...
 }:
 
@@ -14,9 +13,6 @@ in
     ./core.nix
     ./shell
     ./tui
-    (import ./tui/yazelix {
-      inherit yazelix;
-    })
     ./desktop
     (import ./programs/workstation.nix { inherit inputs; })
   ];
