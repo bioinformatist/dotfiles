@@ -83,6 +83,7 @@ jobs:
       HOSTS: homePC linglong
       CHINA_SUBSTITUTER: https://mirrors.ustc.edu.cn/nix-channels/store
       NIXPKGS_ALLOW_UNFREE: "1"
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Plan leaf run
@@ -186,7 +187,6 @@ jobs:
       - name: Publish leaf PR
         if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
           GLOBAL_STATUS: ${{ steps.global_gate.outputs.status }}
           CHINA_STATUS: ${{ steps.china_gate.outputs.status }}
         shell: bash
