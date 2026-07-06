@@ -1,4 +1,4 @@
-def dotfiles-maint-codex-github-plugin [] {
+def dotfiles-codex-github-plugin [] {
   let result = (^codex plugin list --marketplace openai-curated | complete)
   let output = $"($result.stdout)\n($result.stderr)"
   let rows = ($output | lines | where {|line| $line =~ '^github@openai-curated\s+installed, enabled\b' })
@@ -11,7 +11,7 @@ def dotfiles-maint-codex-github-plugin [] {
   }
 }
 
-def maint-codex [--check-only] {
+def codex-doctor [--check-only] {
   mut failed = false
 
   let version = (^codex --version | complete)
@@ -25,7 +25,7 @@ def maint-codex [--check-only] {
   }
 
   if $version.exit_code == 0 {
-    mut plugin_status = (dotfiles-maint-codex-github-plugin)
+    mut plugin_status = (dotfiles-codex-github-plugin)
     if ($plugin_status.commandOk and $plugin_status.enabled) {
       print $"github plugin: ($plugin_status.line)"
     } else if $check_only {
@@ -40,7 +40,7 @@ def maint-codex [--check-only] {
       if $err != "" { print $err }
       if $install.exit_code != 0 { $failed = true }
 
-      $plugin_status = (dotfiles-maint-codex-github-plugin)
+      $plugin_status = (dotfiles-codex-github-plugin)
       if ($plugin_status.commandOk and $plugin_status.enabled) {
         print $"github plugin: ($plugin_status.line)"
       } else {
@@ -59,6 +59,6 @@ def maint-codex [--check-only] {
   }
 
   if $failed {
-    error make { msg: "Codex maintenance checks failed." }
+    error make { msg: "Codex environment checks failed." }
   }
 }

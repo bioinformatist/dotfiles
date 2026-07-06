@@ -202,7 +202,7 @@ This section covers the normal workflow for **updating all packages** on an alre
 
 > **Shell Note**: This section runs on the configured system using **Nushell**. The syntax differs from bash.
 >
-> **Maintenance Note**: The preferred day-to-day workflow now lives in the dedicated [Maintenance Guide](maintenance.md). Use this section as background for networking and manual rebuild commands; use `maintenance.md` for the actual maintenance command set.
+> **Maintenance Note**: The preferred day-to-day workflow now lives in the dedicated [Maintenance Guide](maintenance.md). Use this section as background for networking and manual full-refresh commands; day-to-day maintenance only runs `maint-switch`.
 
 ### China Network Note
 
@@ -219,10 +219,10 @@ The local proxy URL is declared in NixOS config for Nix maintenance paths only:
 `nix-daemon` receives it directly, and `maint-*` commands read the same values
 from `/etc/dotfiles/nix-network.json`. It is not exported as a desktop/session-wide proxy environment.
 
-### Step 1: Manually Update Flake Inputs (`flake.lock`)
+### Manually Update Flake Inputs (`flake.lock`)
 
 This fetches the latest versions of all dependencies from GitHub (nixpkgs, home-manager, hyprland, etc.).
-It is now mainly a **manual full-refresh workflow**, not the preferred day-to-day maintenance path.
+It is a **manual full-refresh workflow**, not the preferred day-to-day maintenance path.
 
 ```nu
 cd /path/to/dotfiles   # e.g., ~/github.com/bioinformatist/dotfiles
@@ -235,29 +235,25 @@ with-env (dotfiles-maint-config) {
 
 This modifies `flake.lock` — you should commit it afterward.
 
-### Step 2: Rebuild & Switch
-
-Apply the updated packages to the running system.
-
-```nu
-# Rebuild the maintained workstation host.
-maint-switch
-```
-
-### Step 3: Commit the Lock File
+### Commit the Lock File Locally
 
 ```nu
 git add flake.lock
 git commit -m "chore: update flake inputs"
-git push
 ```
 
-### (Optional) Preview Changes Before Switching
+### Rebuild & Switch
 
-Use the maintenance helper to dry-run the target system before activation:
+Day-to-day maintenance runs `maint-switch`, which pulls with `git pull --ff-only`, then gates, builds, and switches the complete system closure. After a manual full refresh has already been committed locally, use `--no-pull` to switch that commit.
 
 ```nu
-maint-check
+maint-switch --no-pull
+```
+
+After the switch succeeds, push the reviewed commit:
+
+```nu
+git push
 ```
 
 ---
@@ -274,7 +270,7 @@ The system follows a **Nix maintenance-scoped localhost proxy** strategy:
 | **WiFi** | `NetworkManager` |
 | **Nix Maintenance Proxy** | Points to `http://127.0.0.1:7897`; scoped to `nix-daemon` and `maint-*` commands |
 | **Clash Verge** | Handles actual upstream routing (LAN proxy, airport, hotspot, etc.) |
-| **Nix Substituters** | USTC mirror before the official cache; Cachix entries are declared separately |
+| **Nix Substituters** | Maintained physical hosts use the USTC mirror without the official cache fallback |
 
 ### Setting up an Upstream LAN Proxy
 

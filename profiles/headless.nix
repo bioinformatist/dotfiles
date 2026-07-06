@@ -17,6 +17,7 @@ in
       "flakes"
     ];
     download-buffer-size = 1024 * 1024 * 1024;
+    http-connections = lib.mkDefault 8;
   };
 
   time.timeZone = "Asia/Shanghai";

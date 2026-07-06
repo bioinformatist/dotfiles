@@ -1,0 +1,253 @@
+name: Maintenance Leaf Updates
+
+on:
+  workflow_dispatch:
+    inputs:
+      leaf:
+        description: Leaf to update, or all eligible leaves
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - anyrun
+          - nixpkgs-tools
+          - wechat
+          - codex
+          - zeroclaw
+          - hyprland
+          - sops-nix
+          - impermanence
+          - disko
+          - base
+  schedule:
+    - cron: "17 20 * * *"
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - leaf: anyrun
+            policy: tools
+            inputs: anyrun
+            hook: ""
+          - leaf: nixpkgs-tools
+            policy: tools
+            inputs: nixpkgs-tools
+            hook: ""
+          - leaf: wechat
+            policy: tools
+            inputs: nixpkgs-wechat
+            hook: ""
+          - leaf: codex
+            policy: tools
+            inputs: ""
+            hook: codex-release
+          - leaf: zeroclaw
+            policy: tools
+            inputs: ""
+            hook: zeroclaw-release
+          - leaf: hyprland
+            policy: desktop
+            inputs: hyprland
+            hook: ""
+          - leaf: sops-nix
+            policy: infra
+            inputs: sops-nix
+            hook: ""
+          - leaf: impermanence
+            policy: infra
+            inputs: impermanence
+            hook: ""
+          - leaf: disko
+            policy: infra
+            inputs: disko
+            hook: ""
+          - leaf: base
+            policy: core
+            inputs: nixpkgs home-manager
+            hook: ""
+    concurrency:
+      group: maintenance-leaf-${{ matrix.leaf }}
+      cancel-in-progress: false
+    env:
+      REQUESTED_LEAF: ${{ github.event.inputs.leaf || 'all' }}
+      HOSTS: homePC linglong
+      CHINA_SUBSTITUTER: https://mirrors.ustc.edu.cn/nix-channels/store
+      NIXPKGS_ALLOW_UNFREE: "1"
+
+    steps:
+      - name: Plan leaf run
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          run_leaf=true
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$REQUESTED_LEAF" != "all" && "$REQUESTED_LEAF" != "${{ matrix.leaf }}" ]]; then
+              run_leaf=false
+            fi
+          else
+            case "${{ matrix.policy }}" in
+              tools)
+                ;;
+              desktop)
+                [[ "$(date -u +%u)" == "6" ]] || run_leaf=false
+                ;;
+              infra|core)
+                [[ "$(date -u +%d)" == "01" ]] || run_leaf=false
+                ;;
+              *)
+                echo "Unknown policy: ${{ matrix.policy }}" >&2
+                exit 1
+                ;;
+            esac
+          fi
+
+          echo "run=${run_leaf}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v5
+        if: steps.plan.outputs.run == 'true'
+        with:
+          fetch-depth: 0
+
+      - uses: cachix/install-nix-action@v31
+        if: steps.plan.outputs.run == 'true'
+
+      - name: Configure git
+        if: steps.plan.outputs.run == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update leaf
+        if: steps.plan.outputs.run == 'true'
+        shell: bash
+        run: |
+          bash scripts/maint/update-leaf.sh \
+            "${{ matrix.leaf }}" \
+            "${{ matrix.inputs }}" \
+            "${{ matrix.hook }}"
+
+      - name: Check for changes
+        if: steps.plan.outputs.run == 'true'
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Global dry-run
+        if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
+        id: global_gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          status=pass
+          read -r -a hosts <<< "$HOSTS"
+          for host in "${hosts[@]}"; do
+            if ! nix build --dry-run -L ".#nixosConfigurations.${host}.config.system.build.toplevel"; then
+              status=fail
+            fi
+          done
+
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+
+      - name: China cache dry-run
+        if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
+        id: china_gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          status=pass
+          read -r -a hosts <<< "$HOSTS"
+          if ! bash scripts/maint/china-cache-gate.sh "${hosts[@]}"; then
+            status=miss
+          fi
+
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish leaf PR
+        if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GLOBAL_STATUS: ${{ steps.global_gate.outputs.status }}
+          CHINA_STATUS: ${{ steps.china_gate.outputs.status }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          leaf="${{ matrix.leaf }}"
+          policy="${{ matrix.policy }}"
+          branch="maint/${leaf}"
+          title="chore(maint): update ${leaf}"
+          body="$(mktemp)"
+          eligible=false
+          if [[ "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" ]]; then
+            eligible=true
+          fi
+
+          cat > "$body" <<BODY
+          ## Maintenance leaf
+
+          - Leaf: \`${leaf}\`
+          - Policy: \`${policy}\`
+          - Global dry-run: \`${GLOBAL_STATUS}\`
+          - China cache dry-run: \`${CHINA_STATUS}\`
+
+          This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
+
+          Auto-merge is only attempted when both dry-runs pass. A China cache miss means this update is visible for manual review, but should not enter \`main\` yet.
+          BODY
+
+          gh label create maintenance --color "0E8A16" --description "Automated maintenance PR" --force
+          gh label create "policy-${policy}" --color "5319E7" --description "Maintenance policy ${policy}" --force
+          gh label create "global-pass" --color "0E8A16" --description "Global dry-run passed" --force
+          gh label create "global-fail" --color "D93F0B" --description "Global dry-run failed" --force
+          gh label create "china-cache-pass" --color "0E8A16" --description "USTC-only cache gate passed" --force
+          gh label create "china-cache-miss" --color "D93F0B" --description "USTC-only cache gate missed" --force
+
+          git switch -c "$branch"
+          git add -A
+          git commit -m "$title"
+          git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" || true
+          git push --force-with-lease origin "$branch"
+
+          pr="$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')"
+          create_args=(--head "$branch" --base main --title "$title" --body-file "$body")
+          if [[ "$eligible" != "true" ]]; then
+            create_args+=(--draft)
+          fi
+
+          if [[ -z "$pr" ]]; then
+            gh pr create "${create_args[@]}"
+            pr="$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')"
+          else
+            gh pr edit "$pr" --title "$title" --body-file "$body"
+          fi
+
+          gh pr edit "$pr" \
+            --remove-label "global-pass,global-fail,china-cache-pass,china-cache-miss" || true
+          gh pr edit "$pr" \
+            --add-label "maintenance,policy-${policy},global-${GLOBAL_STATUS},china-cache-${CHINA_STATUS}"
+
+          if [[ "$eligible" == "true" ]]; then
+            gh pr ready "$pr" || true
+            gh pr merge "$pr" --auto --squash || true
+          fi

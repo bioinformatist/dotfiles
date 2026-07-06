@@ -2,26 +2,23 @@
 
 #### 中文 | [English](maintenance.md)
 
-本指南说明这套系统的**推荐维护流程**：
+推荐的日常维护入口仍然只有一个：
 
-- 日常工具尽量保持较新
-- 尽量避免本地编译
-- 将 `hyprland` 和 `nixpkgs` 视为单独、高风险的更新类别
+```nu
+maint-switch
+```
 
-下面的命令都由 [home/shell/nushell/config.nu](/home/ysun/github.com/bioinformatist/dotfiles/home/shell/nushell/config.nu) 中定义的 Nushell 函数提供。
+但更新提议不再由本机脚本生成。leaf 级更新由 GitHub Actions 维护固定 PR 队列；本机只消费已经进入 `main` 的状态，并做最后的中国大陆缓存门控和系统切换。
 
 ## 声明式网络配置
 
-网络行为由 NixOS 模块声明，不再依赖 home 目录里的可变配置文件。
-
-`homePC` 默认选择中国大陆网络 profile：
+`homePC` 和 `linglong` 默认选择中国大陆网络 profile：
 
 ```nix
 dotfiles.nixNetwork.profile = "china";
 ```
 
-这会使用 USTC Nix cache 镜像进行二进制替代，不再保留官方 `cache.nixos.org`
-作为后备。本地代理 URL 也在 NixOS 配置中声明：
+这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。本地代理 URL 也在 NixOS 配置中声明：
 
 ```nix
 dotfiles.nixNetwork.proxy = {
@@ -30,171 +27,92 @@ dotfiles.nixNetwork.proxy = {
 };
 ```
 
-该代理有意限制在 Nix 维护路径内：它会注入 `nix-daemon`，同时写入
-`/etc/dotfiles/nix-network.json` 供 `maint-*` 命令读取。不应将其视为
-GUI 应用的桌面/session 级代理。
+该代理只作用于 Nix 维护路径：它会注入 `nix-daemon`，同时写入 `/etc/dotfiles/nix-network.json` 供 `maint-switch` 读取。它不是桌面/session 级代理。
 
-如果离开中国大陆并希望使用全球网络 profile，把 profile 改成 `"global"` 后 rebuild。
+## GitHub Leaf PR 队列
 
-## 原则
+`.github/workflows/maintenance-leaf.yml` 负责提出更新。每个 leaf 使用固定分支和固定 PR：
 
-- 不要把 `nix flake update` 当成日常一把梭的更新命令。
-- 工具层更新应与 `hyprland` 更新分开。
-- `hyprland` 更新应与系统底座（`nixpkgs` / `home-manager`）更新分开。
-- Home Manager 的 release 分支应与当前 Nixpkgs 的 release 号对齐。本系统可以使用
-  `nixos-unstable`，但如果 Nixpkgs 报告 `26.05`，Home Manager 就应使用
-  `release-26.05`，而不是 `master`。不要用
-  `home.enableNixpkgsReleaseCheck = false` 消掉 release mismatch warning。
-- 每次都先执行 `maint-check`，再决定是否执行 `maint-switch`。
-- 如果 `maint-check` 检测到 `will be built`，优先选择暂缓更新，而不是本地编译。
+| Leaf | Policy | 更新内容 |
+|---|---|---|
+| `anyrun` | `tools` | `anyrun` flake input |
+| `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
+| `wechat` | `tools` | `nixpkgs-wechat` flake input |
+| `codex` | `tools` | Codex release pin |
+| `zeroclaw` | `tools` | ZeroClaw release pin |
+| `hyprland` | `desktop` | `hyprland` flake input |
+| `sops-nix` | `infra` | `sops-nix` flake input |
+| `impermanence` | `infra` | `impermanence` flake input |
+| `disko` | `infra` | `disko` flake input |
+| `base` | `core` | `nixpkgs`、`home-manager` |
 
-## 更新命令
+默认调度：
 
-### `maint-update-tools`
+| Policy | 调度 |
+|---|---|
+| `tools` | 每天 |
+| `desktop` | 每周六 UTC |
+| `infra` | 每月 1 日 UTC |
+| `core` | 每月 1 日 UTC |
 
-更新相对低风险的工具层：
+每个 leaf 最多一个 open PR；下一次尝试会更新同一个 `maint/<leaf>` 分支，不会开新 PR。暂时不设置全局 open PR 上限。
 
-- flake input：`nixpkgs-wechat`，用于微信
-- flake input：`anyrun`，用于 Anyrun
-- 本地声明的 Codex release pin： [home/programs/codex/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/codex/default.nix)
-- 本地声明的 ZeroClaw release pin： [home/programs/zeroclaw/default.nix](/home/ysun/github.com/bioinformatist/dotfiles/home/programs/zeroclaw/default.nix)
+PR 会跑两类 dry-run：
 
-当你主要想让二进制友好的工具保持较新时，应优先使用这个入口。微信使用独立的 nixpkgs input，因此可以单独更新。Anyrun 使用自己的上游 flake input，因此可以独立更新并使用上游 binary cache。Yazi 跟随 `nixpkgs-tools`。
+- `global-*`：GitHub runner 默认网络下的基本 dry-run。
+- `china-cache-*`：强制只使用 `https://mirrors.ustc.edu.cn/nix-channels/store`，并清空 `extra-substituters`。
 
-```nu
-maint-update-tools
-```
+只有 `global-pass` 且 `china-cache-pass` 的 PR 才会尝试 auto-merge。`global-pass` 但 `china-cache-miss` 的 PR 只保留为人工可见的候选，不进入 `main`。
 
-### `maint-update-infra`
+## 本机 `maint-switch`
 
-更新低频基础设施输入：
+`maint-switch` 做的事情很少：
 
-- `sops-nix`
-- `impermanence`
-- `disko`
+1. 要求本地 repo clean。
+2. 默认执行 `git pull --ff-only`。
+3. 对当前 `main` 状态做完整系统 dry-run。
+4. 如果 dry-run 显示重型本地构建或未批准的本地 derivation，停止。
+5. 构建目标 system closure。
+6. 根据 kernel/NVIDIA 风险选择 `boot` 或 `switch` 激活。
 
-这一路径可能触发本地 helper 程序构建，所以应放在基础设施维护窗口中执行，而不是日常工具刷新。
+默认阻断标记包括：
 
-```nu
-maint-update-infra
-```
+- `linux-`、`nvidia-x11`、`mesa-`、`systemd-`
+- `hyprland` 和 `hypr*` 相关组件
+- `gcc-`、`xgcc`、`rustc-`、`cargo-vendor`
+- `chromium`、`electron`
+- `serenityos-emoji-font`、`nanoemoji`
 
-### `maint-update-hyprland`
+允许列表刻意很窄：`hm_*`、`home-manager-path`、`home-manager-generation`、`user-environment`、`system-units`、`etc`、`activate`、`nixos-system-*` 这类 NixOS/Home Manager glue 可以本地构建。其他本地构建即使没有命中阻断标记，也会被当作缓存未命中处理。
 
-只更新独立的 `hyprland` flake input。
+## 并发策略
 
-```nu
-maint-update-hyprland
-```
-
-### `maint-update-base`
-
-只更新系统底座输入：
-
-- `nixpkgs`
-- `home-manager`
-
-这是风险最高的一类更新，因为它最容易牵动新的内核 / NVIDIA 组合。更新这一层时，Home Manager 分支应与目标系统报告的 Nixpkgs release 对齐，例如 `26.05` Nixpkgs 对应 `release-26.05`。
-
-```nu
-maint-update-base
-```
-
-### `maint-check`
-
-对下面这个目标执行 dry-run 构建：
+`maint-switch` 使用 Nix 自己的并发控制，不在脚本层手写并发下载。命令级默认参数是：
 
 ```text
-.#nixosConfigurations.homePC.config.system.build.toplevel
+max-jobs = 4
+cores = 2
 ```
 
-然后在输出最后追加一段 summary。
+HTTP 下载连接数是 Nix daemon 的 restricted setting，不能可靠地由普通用户在 `maint-switch` 里用 `--option` 覆盖；因此系统配置里声明：
+
+```text
+http-connections = 8
+```
+
+## 手动全量刷新
+
+`nix flake update` 仍可用于人工维护窗口中的全量刷新，但它不是日常入口，也不享受 leaf 级 PR 队列的隔离。
 
 ```nu
-maint-check
+with-env (dotfiles-maint-config) {
+  nix flake update
+}
+
+git diff
+git add flake.lock
+git commit -m "chore: update flake inputs"
+maint-switch --no-pull
 ```
 
-summary 只关注两类信息：
-
-- 是否检测到 `will be built`
-- 是否命中高风险标记，例如 `nvidia-x11`、`linux-`、`hyprland`
-
-如果检测到 `will be built`，summary 会明确提示**不建议继续重建**。
-
-### `maint-switch`
-
-基于当前仓库状态构建目标系统，然后选择安全的激活方式。
-
-```nu
-maint-switch
-```
-
-`maint-switch` 不会隐式更新任何 input；它只应用当前仓库里已经记录好的状态。
-
-激活前，它会比较目标系统和当前 booted system：
-
-- 如果 booted kernel 会变化，执行 `nixos-rebuild --no-reexec boot --store-path ...` 并提示重启。
-- 如果 NVIDIA userspace 会变化，同样执行 `nixos-rebuild --no-reexec boot --store-path ...` 并提示重启。
-- 否则才执行 `nixos-rebuild --no-reexec switch --store-path ...`。
-
-构建和 GitHub 拉取发生在提权前，并使用 `maint-*` 作用域内的代理环境。
-root 只激活已经构建好的 system closure，因此 `maint-switch` 不需要通过
-`sudo` 传递代理变量。
-
-这样可以避免在正在运行的 Wayland 会话中热切换到 kernel / NVIDIA /
-Hyprland 混合版本状态。
-
-## 典型工作流
-
-### 工具层刷新
-
-当你主要关心 Codex、ZeroClaw、微信、Anyrun 这类二进制友好的工具 pin 时，使用。Yazi 跟随 `nixpkgs-tools`。
-
-```nu
-maint-update-tools
-maint-check
-maint-switch
-```
-
-如果 `maint-check` 检测到 `will be built`，就停在这一步，不要继续。
-
-### 基础设施刷新
-
-当你明确想更新 secrets、持久化或分区相关基础设施时，使用：
-
-```nu
-maint-update-infra
-maint-check
-maint-switch
-```
-
-如果 `maint-check` 显示你暂时不想接受的本地 helper 构建，就停在这一步。
-
-### Hyprland 刷新
-
-当你明确想跟进 Hyprland 时，使用：
-
-```nu
-maint-update-hyprland
-maint-check
-maint-switch
-```
-
-如果检查结果里出现大量 `hypr*` 本地构建，就先停下，等 cache 更成熟再试。
-
-### 系统底座刷新
-
-当你明确想更新 `nixpkgs` / `home-manager` 时，使用：
-
-```nu
-maint-update-base
-maint-check
-maint-switch
-```
-
-如果检查结果里出现 `nvidia-x11`、`linux-` 或其他重型组件进入 `will be built`，而你暂时不想接受这些更新，就先取消这次更新。如果继续，`maint-switch` 会在 kernel 或 NVIDIA 变化时自动使用 boot activation，而不是热切换。
-
-## 说明
-
-- 这些维护函数默认面向当前这台 `homePC`。
-- Nix cache 与代理行为属于 NixOS 声明式配置。
+`maint-switch` 要求 checkout clean；因此手动全量刷新需要先提交，再用 `--no-pull` 针对本地提交执行缓存门控和切换。

@@ -19,13 +19,33 @@ in
     riskMarkers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
-      description = "Strings maint-check highlights when they appear in dry-run output.";
+      description = "Strings maint-switch treats as heavy local build markers in dry-run output.";
     };
 
-    updateGroups = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.listOf lib.types.str);
+    allowedLocalBuildMarkers = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [
+        "hm_"
+        "home-manager-path"
+        "home-manager-files"
+        "home-manager-generation"
+        "user-environment"
+        "unit-home-manager-"
+        "-nix.conf.drv"
+        "X-Restart-Triggers-nix-daemon"
+        "unit-nix-daemon"
+        "-system-units.drv"
+        "-etc.drv"
+        "-activate.drv"
+        "nixos-system-"
+      ];
+      description = "Strings maint-switch allows in locally built NixOS/Home Manager glue derivations.";
+    };
+
+    parallel = lib.mkOption {
+      type = lib.types.attrs;
       default = { };
-      description = "Named flake input groups used by maint-update commands.";
+      description = "Moderate Nix concurrency settings used by maint-switch.";
     };
 
   };
@@ -34,8 +54,9 @@ in
     programs.nushell = {
       enable = true;
       configFile.text = ''
-        source ${./maint-codex.nu}
+        source ${./codex-doctor.nu}
         source ${./headless-config.nu}
+        source ${./maint.nu}
       '';
       loginFile.text = "";
       shellAliases = {
@@ -49,7 +70,8 @@ in
           repo
           host
           riskMarkers
-          updateGroups
+          allowedLocalBuildMarkers
+          parallel
           ;
       };
     };

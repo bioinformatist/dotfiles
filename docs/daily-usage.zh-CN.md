@@ -202,7 +202,7 @@
 
 > **Shell 说明**：本节在已配置好的系统上操作，使用 **Nushell**。语法有所不同。
 >
-> **维护说明**：现在推荐的日常维护流程已迁移到独立的 [维护指南](maintenance.zh-CN.md)。本节保留网络背景和手动 rebuild 命令；实际维护命令请优先参考 `maintenance.zh-CN.md`。
+> **维护说明**：现在推荐的日常维护流程已迁移到独立的 [维护指南](maintenance.zh-CN.md)。本节保留网络背景和手动全量刷新命令；日常只运行 `maint-switch`。
 
 ### 中国大陆网络须知
 
@@ -219,10 +219,10 @@ Nix 二进制替代会使用 USTC，而不是继续保留官方 cache 作为后�
 `nix-daemon` 会直接获得它，`maint-*` 命令会从 `/etc/dotfiles/nix-network.json`
 读取同一组值。它不会导出为桌面/session 级代理环境变量。
 
-### 第 1 步：手动更新 Flake 输入（`flake.lock`）
+### 手动更新 Flake 输入（`flake.lock`）
 
 此命令会从 GitHub 拉取所有依赖的最新版本（nixpkgs、home-manager、hyprland 等）。
-它现在主要用于**手动全量刷新**，不再是推荐的日常维护入口。
+它用于**手动全量刷新**，不再是推荐的日常维护入口。
 
 ```nu
 cd /path/to/dotfiles   # 例如 ~/github.com/bioinformatist/dotfiles
@@ -235,29 +235,25 @@ with-env (dotfiles-maint-config) {
 
 此操作会修改 `flake.lock` 文件——之后应提交该文件。
 
-### 第 2 步：重建并切换
-
-将更新后的软件包应用到运行中的系统。
-
-```nu
-# 重建当前维护的工作站主机
-maint-switch
-```
-
-### 第 3 步：提交锁文件
+### 本地提交锁文件
 
 ```nu
 git add flake.lock
 git commit -m "chore: update flake inputs"
-git push
 ```
 
-### （可选）切换前预览变更
+### 重建并切换
 
-使用维护 helper 在激活前 dry-run 目标系统：
+日常维护直接运行 `maint-switch`，它会先 `git pull --ff-only`，再做缓存门控、构建和切换完整系统 closure。手动全量刷新已经在本地提交后，使用 `--no-pull` 针对该提交切换。
 
 ```nu
-maint-check
+maint-switch --no-pull
+```
+
+切换成功后再推送已验证的提交：
+
+```nu
+git push
 ```
 
 ---
@@ -274,7 +270,7 @@ maint-check
 | **WiFi** | `NetworkManager` |
 | **Nix 维护代理** | 指向 `http://127.0.0.1:7897`；仅作用于 `nix-daemon` 和 `maint-*` 命令 |
 | **Clash Verge** | 处理实际上游路由（局域网代理、机场、热点等） |
-| **Nix Substituters** | USTC 镜像在官方 cache 之前；Cachix 条目单独声明 |
+| **Nix Substituters** | 当前维护的物理主机使用 USTC 镜像，不保留官方 cache fallback |
 
 ### 设置上游局域网代理
 
