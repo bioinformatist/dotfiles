@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# ═══ System Resources Monitor ═══
-# Polls CPU, RAM, and dual GPU (nvidia-smi).
+# System resources monitor.
+# Polls CPU, RAM, and GPU telemetry when the driver exposes it.
 # Called by defpoll every 3 seconds.
 
 # CPU usage (1-second average from /proc/stat diff)
@@ -18,11 +18,9 @@ RAM_USED=$(echo "$RAM_INFO" | awk '{print $1}')
 RAM_TOTAL=$(echo "$RAM_INFO" | awk '{print $2}')
 RAM_PCT=$(awk "BEGIN {printf \"%d\", (($RAM_TOTAL > 0) ? $RAM_USED*100/$RAM_TOTAL : 0)}")
 
-# GPU usage — dual RTX 3090 via nvidia-smi
-GPU_DATA=$(nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total \
-  --format=csv,noheader,nounits 2>/dev/null)
-
-if [ -n "$GPU_DATA" ]; then
+# GPU usage: prefer NVIDIA's query interface, then fall back to AMD DRM sysfs.
+if GPU_DATA=$(nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total \
+  --format=csv,noheader,nounits 2>/dev/null) && [ -n "$GPU_DATA" ]; then
   GPU_JSON=$(echo "$GPU_DATA" | while IFS=', ' read -r idx util mem_used mem_total; do
     mem_pct=$(awk "BEGIN {printf \"%d\", (($mem_total > 0) ? $mem_used*100/$mem_total : 0)}")
     jq -cn \
@@ -34,7 +32,49 @@ if [ -n "$GPU_DATA" ]; then
       '{idx: $idx, util: $util, mem_used: $mem_used, mem_total: $mem_total, mem_pct: $mem_pct}'
   done | jq -s '.')
 else
-  GPU_JSON="[]"
+  GPU_JSON=$(
+    idx=0
+    for device in /sys/class/drm/card*/device; do
+      [ -e "$device/vendor" ] || continue
+
+      card=$(basename "$(dirname "$device")")
+      case "$card" in
+        card*[!0-9]*)
+          continue
+          ;;
+      esac
+
+      vendor=$(cat "$device/vendor" 2>/dev/null || true)
+      [ "$vendor" = "0x1002" ] || continue
+
+      util=0
+      if [ -r "$device/gpu_busy_percent" ]; then
+        util=$(cat "$device/gpu_busy_percent" 2>/dev/null || printf '0')
+      fi
+      case "$util" in
+        ''|*[!0-9]*) util=0 ;;
+      esac
+
+      mem_used=0
+      mem_total=0
+      if [ -r "$device/mem_info_vram_used" ]; then
+        mem_used=$(($(cat "$device/mem_info_vram_used" 2>/dev/null || printf '0') / 1024 / 1024))
+      fi
+      if [ -r "$device/mem_info_vram_total" ]; then
+        mem_total=$(($(cat "$device/mem_info_vram_total" 2>/dev/null || printf '0') / 1024 / 1024))
+      fi
+      mem_pct=$(awk "BEGIN {printf \"%d\", (($mem_total > 0) ? $mem_used*100/$mem_total : 0)}")
+
+      jq -cn \
+        --argjson idx "$idx" \
+        --argjson util "$util" \
+        --argjson mem_used "$mem_used" \
+        --argjson mem_total "$mem_total" \
+        --argjson mem_pct "$mem_pct" \
+        '{idx: $idx, util: $util, mem_used: $mem_used, mem_total: $mem_total, mem_pct: $mem_pct}'
+      idx=$((idx + 1))
+    done | jq -s '.'
+  )
 fi
 
 jq -cn \

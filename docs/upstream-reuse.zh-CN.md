@@ -9,7 +9,7 @@
 - `profiles.headless`
 - `profiles.ai-serving`
 - `profiles.workstation`
-- `nixosModules.{headless,ai-serving,nixNetwork,nvidiaDesktop,workstation}`
+- `nixosModules.{headless,ai-serving,amdMobile,nixNetwork,nvidiaDesktop,workstation}`
 - `homeManagerModules.{core,tui,codex,devHeadless,workstation}`
 - `lib.{versions,mkWorkstationSystem}`
 - `overlays`
@@ -61,12 +61,14 @@
 - ZeroClaw、D2R、公司 SSH、业务服务
 
 NVIDIA 桌面机器应额外叠加 `nixosModules.nvidiaDesktop`。
+AMD 便携桌面机器可额外叠加 `nixosModules.amdMobile`。
 
 ## 当前本仓库主机组合
 
 本仓库里的个人主机继续通过额外本地模块保持完整能力：
 
 - `homePC`：`profiles.workstation` + 中国网络/代理设置 + Clash Verge + NVIDIA 桌面集成 + 个人 Home Manager 层
+- `linglong`：`profiles.workstation` + 中国网络/代理设置 + Clash Verge + AMD/mobile 集成 + 轻量个人 Home Manager 层
 
 ## 下游示例
 

@@ -129,25 +129,3 @@ sudo cp /mnt/persist/var/lib/sops-nix/key.txt /mnt/var/lib/sops-nix/key.txt
 
 4.  **在 GitHub 上注册公钥**：
     将 `.pub` 文件的内容添加到 [GitHub > Settings > SSH keys](https://github.com/settings/keys)。
-
-## 7. 管理 Clash 订阅链接
-Clash 代理订阅链接以加密密钥的形式存储，以便安全地进行版本控制。
-
-1.  **添加/更新订阅链接**：
-    ```bash
-    sops secrets/secrets.yaml
-    ```
-    添加或更新 `clash-subscription-url` 字段：
-    ```yaml
-    clash-subscription-url: "https://your-provider.com/subscribe?token=xxxxx"
-    ```
-
-2.  **运行时访问**：
-    执行 `nixos-rebuild switch` 后，解密后的订阅链接可在以下路径获取：
-    ```
-    /run/secrets/clash-subscription-url
-    ```
-    此文件位于 `tmpfs` 上，仅 `ysun` 用户可访问。
-
-3.  **首次导入**：
-    参见 [日常使用 § 从 sops 导入订阅](./daily-usage.zh-CN.md) 中关于将订阅导入 Clash Verge GUI 的逐步说明。

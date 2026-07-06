@@ -35,6 +35,7 @@
     powerOnBoot = true;
     settings.General.Experimental = true; # Enable battery display etc.
   };
+  services.colord.enable = true;
 
   # --- Sops secrets (host-specific paths) ---
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
@@ -51,9 +52,6 @@
   sops.secrets."sctmes-ops-ssh-key" = {
     owner = "ysun";
     path = "/home/ysun/.ssh/id_ed25519_sctmes_ops";
-  };
-  sops.secrets."clash-subscription-url" = {
-    owner = "ysun";
   };
   sops.secrets."github-mcp-token" = {
     owner = "ysun";

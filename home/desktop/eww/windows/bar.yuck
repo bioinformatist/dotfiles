@@ -35,6 +35,7 @@
       (notifications)
       (network :monitor_id monitor_id)
       (bluetooth :monitor_id monitor_id)
+      (battery)
       (audio :monitor_id monitor_id)
       (power :monitor_id monitor_id))))
 

@@ -16,6 +16,7 @@
 ;; ─── Phase 2: System Modules ───────────────────────────
 (include "./modules/audio.yuck")
 (include "./modules/bluetooth.yuck")
+(include "./modules/battery.yuck")
 (include "./modules/network.yuck")
 (include "./modules/power.yuck")
 (include "./modules/sysinfo.yuck")

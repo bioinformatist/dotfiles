@@ -1,0 +1,172 @@
+{
+  inputs,
+  pkgs,
+  lib,
+  ...
+}:
+{
+  imports = [
+    (import ../../home/workstation.nix { inherit inputs; })
+  ];
+
+  home.pointerCursor = {
+    name = "Bibata-Modern-Classic";
+    package = pkgs.bibata-cursors;
+    size = 24;
+    gtk.enable = true;
+    x11.enable = true;
+  };
+
+  services.dunst = {
+    enable = true;
+    settings = {
+      global = {
+        origin = "bottom-right";
+        offset = "20x20";
+        width = "(0, 380)";
+        height = 200;
+        gap_size = 8;
+        frame_width = 1;
+        frame_color = "#00dd36";
+        corner_radius = 10;
+        separator_height = 2;
+        separator_color = "frame";
+        padding = 12;
+        horizontal_padding = 12;
+        text_icon_padding = 10;
+        progress_bar = true;
+        progress_bar_height = 8;
+        progress_bar_frame_width = 1;
+        progress_bar_min_width = 150;
+        progress_bar_max_width = 300;
+        progress_bar_corner_radius = 4;
+        font = "JetBrainsMono Nerd Font 11, Noto Sans CJK SC 11";
+        markup = "full";
+        format = "<b>%s</b>\\n%b";
+        alignment = "left";
+        vertical_alignment = "center";
+        line_height = 0;
+        ellipsize = "middle";
+        icon_position = "left";
+        min_icon_size = 32;
+        max_icon_size = 64;
+        enable_recursive_icon_lookup = true;
+        follow = "mouse";
+        stack_duplicates = true;
+        hide_duplicate_count = false;
+        show_indicators = true;
+        sticky_history = true;
+        history_length = 30;
+        show_age_threshold = 60;
+        layer = "overlay";
+        mouse_left_click = "close_current";
+        mouse_middle_click = "do_action, close_current";
+        mouse_right_click = "close_all";
+      };
+
+      urgency_low = {
+        background = "#050505F0";
+        foreground = "#00aa28";
+        frame_color = "#005515";
+        timeout = 5;
+      };
+
+      urgency_normal = {
+        background = "#050808F0";
+        foreground = "#00ff41";
+        frame_color = "#00dd36";
+        timeout = 8;
+      };
+
+      urgency_critical = {
+        background = "#1a0008F0";
+        foreground = "#ff2244";
+        frame_color = "#ff2244";
+        timeout = 0;
+      };
+    };
+  };
+
+  dotfiles.codex.trustedProjects = [
+    "/home/ysun/github.com/bioinformatist/dotfiles"
+  ];
+
+  xdg.dataFile = {
+    "fcitx5/rime/default.custom.yaml".text = ''
+      patch:
+        schema_list:
+          - schema: luna_pinyin    # Mandarin Pinyin (Simplified)
+          - schema: jyut6ping3     # Cantonese Jyutping (Traditional)
+        menu:
+          page_size: 9
+        ascii_composer:
+          switch_key:
+            Shift_L: commit_code
+            Shift_R: noop
+    '';
+
+    "fcitx5/rime/luna_pinyin.custom.yaml".text = ''
+      patch:
+        switches:
+          - name: ascii_mode
+            reset: 0
+          - name: full_shape
+            reset: 0
+          - name: simplification
+            reset: 1
+          - name: ascii_punct
+            reset: 0
+    '';
+
+    "fcitx5/rime/jyut6ping3.custom.yaml".text = ''
+      patch:
+        switches:
+          - name: ascii_mode
+            reset: 0
+          - name: full_shape
+            reset: 0
+          - name: simplification
+            reset: 0
+          - name: ascii_punct
+            reset: 0
+    '';
+  };
+
+  home.activation.rimeInstallation = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    RIME_DIR="$HOME/.local/share/fcitx5/rime"
+    if [ ! -f "$RIME_DIR/installation.yaml" ]; then
+      mkdir -p "$RIME_DIR"
+      printf '%s\n' 'installation_id: "nixos-ysun"' 'sync_dir: "/home/ysun/github.com/bioinformatist/dotfiles/rime-sync"' > "$RIME_DIR/installation.yaml"
+    fi
+  '';
+
+  programs.git = {
+    enable = true;
+    signing.format = "openpgp";
+    settings = {
+      user.name = "Yu Sun";
+      user.email = "ysun@sctmes.com";
+    };
+  };
+
+  # OpenSSH rejects Nix-store-backed symlinked user config on this tmpfs/persist
+  # layout, so write a real 0600 file instead of using programs.ssh.
+  home.activation.sshConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        mkdir -p "$HOME/.ssh"
+        chmod 700 "$HOME/.ssh"
+        rm -f "$HOME/.ssh/config"
+        install -m 600 /dev/stdin "$HOME/.ssh/config" <<'EOF'
+    Host 116 bigdick 192.168.0.116
+      IdentitiesOnly yes
+      User ysun
+      HostName 192.168.0.116
+      IdentityFile ~/.ssh/id_ed25519_sctmes_ops
+      UpdateHostKeys no
+    EOF
+  '';
+
+  home.file.".ssh/id_ed25519_sctmes_ops.pub".text =
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtt7b+dw26OWbwowudCyFf+HwR6Phh/8pUA0DnA26tV ysun@sctmes-ops\n";
+
+  services.ssh-agent.enable = true;
+}

@@ -6,18 +6,18 @@ An overview of applications, keybindings, and day-to-day workflows configured in
 
 ## 🖥️ Host Configuration
 
-This repository currently manages the `homePC` workstation configuration.
+This repository currently manages the `homePC` workstation and `linglong` keyboard PC configurations.
 
-| Property | `homePC` |
-| :--- | :--- |
-| **Hostname** | `homePC` |
-| **Architecture** | `x86_64-linux` |
-| **User** | `ysun` |
-| **Boot** | systemd-boot |
-| **Root FS** | Ephemeral (`tmpfs`), persistent at `/persist` |
-| **Networking** | `NetworkManager` |
-| **GPU** | Hardware accelerated |
-| **Timezone** | `Asia/Shanghai` |
+| Property | `homePC` | `linglong` |
+| :--- | :--- | :--- |
+| **Hostname** | `homePC` | `linglong` |
+| **Architecture** | `x86_64-linux` | `x86_64-linux` |
+| **User** | `ysun` | `ysun` |
+| **Boot** | systemd-boot | systemd-boot |
+| **Root FS** | Ephemeral (`tmpfs`), persistent at `/persist` | Ephemeral (`tmpfs`), persistent at `/persist` |
+| **Networking** | `NetworkManager` | `NetworkManager` |
+| **GPU** | NVIDIA hardware acceleration | AMD hardware acceleration |
+| **Timezone** | `Asia/Shanghai` | `Asia/Shanghai` |
 
 ### NixOS Infrastructure Modules
 
@@ -35,13 +35,15 @@ This repository currently manages the `homePC` workstation configuration.
 | Path | Purpose |
 | :--- | :--- |
 | `/var/log` | System logs |
+| `/var/lib/alsa` | ALSA mixer and sound-card state |
 | `/var/lib/bluetooth` | Bluetooth device pairings |
 | `/var/lib/nixos` | NixOS state (UIDs/GIDs) |
 | `/var/lib/systemd/coredump` | Crash dumps |
-| `/etc/NetworkManager/system-connections` | Saved Wi-Fi / VPN profiles (`homePC` only) |
-| `/var/lib/NetworkManager` | NetworkManager runtime state (`homePC` only) |
+| `/etc/NetworkManager/system-connections` | Saved Wi-Fi / VPN profiles |
+| `/var/lib/NetworkManager` | NetworkManager runtime state |
 | `/var/lib/sops-nix` | Age key for secret decryption |
 | `/var/lib/colord` | Color profile calibration data |
+| `/var/lib/upower` | Battery and power-device history (`linglong` only) |
 | `/etc/machine-id` | Stable machine identity (required by systemd / journald) |
 | `/etc/ssh/ssh_host_*` | SSH host keys (prevent known_hosts warnings after reboot) |
 
@@ -50,24 +52,28 @@ This repository currently manages the `homePC` workstation configuration.
 | Path | Purpose |
 | :--- | :--- |
 | `~/github.com` | All source code and dotfiles |
+| `~/.config/nix` | Per-user Nix config |
 | `~/.config/sops` | Age private key for sops secret decryption |
 | `~/.config/nushell` | Nushell user config (env.nu, config.nu) |
 | `~/.config/gh` | GitHub CLI auth state |
 | `~/.config/google-chrome` | Chrome profile (bookmarks, passwords, extensions) |
+| `~/.codex` | Codex config, auth, history, and MCP server state |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge proxy profiles and settings |
 | `~/.local/share/fcitx5` | Rime user dictionary and learned words |
-| `~/.local/share/TelegramDesktop` | Telegram login session and chat cache (`homePC` only) |
+| `~/.local/share/TelegramDesktop` | Telegram login session and chat cache |
 | `~/.local/share/Steam` | Steam games, Proton prefixes, save data (`homePC` only) |
 | `~/.cargo/registry` | Cargo crate cache (speeds up Rust builds) (`homePC` only) |
 | `~/.xwechat` | WeChat login and device session state |
 | `~/xwechat_files` | WeChat chat history and files |
-| `~/Downloads` | Downloads (`homePC` only) |
-| `~/Documents` | Documents (`homePC` only) |
+| `~/Downloads` | Downloads |
+| `~/Documents` | Documents |
+| `~/.cache/eww` | Eww cache, including weather-location cache |
+| `~/.cache/fontconfig` | Font cache for GTK/Pango application startup |
 | `~/.ssh/known_hosts` | SSH known hosts (persisted as file, not directory — see note in config) |
 | `~/.config/hypr/monitors.conf` | Monitor layout written by nwg-displays |
-| `~/.zeroclaw/active_workspace.toml` | ZeroClaw workspace marker |
-| `~/.zeroclaw/estop-state.json` | ZeroClaw emergency stop state |
-| `~/.zeroclaw/memory.sqlite` | ZeroClaw conversation memory database |
+| `~/.zeroclaw/active_workspace.toml` | ZeroClaw workspace marker (`homePC` only) |
+| `~/.zeroclaw/estop-state.json` | ZeroClaw emergency stop state (`homePC` only) |
+| `~/.zeroclaw/memory.sqlite` | ZeroClaw conversation memory database (`homePC` only) |
 
 Everything else is wiped on reboot.
 
@@ -207,7 +213,7 @@ The update process involves **two types** of network requests, each requiring a 
 | **GitHub source fetching** | `nix flake update` pulls flake inputs (HTTPS tarballs) | Requires a **proxy**; USTC mirror cannot help |
 | **Binary cache download** | `nixos-rebuild` downloads pre-built packages from cache | Use **USTC mirror** (`--option substituters`) |
 
-`homePC` declares this through `dotfiles.nixNetwork.profile = "china"`:
+The maintained physical hosts declare this through `dotfiles.nixNetwork.profile = "china"`:
 USTC is used for Nix binary substitutions instead of keeping the official cache as a fallback.
 The local proxy URL is declared in NixOS config for Nix maintenance paths only:
 `nix-daemon` receives it directly, and `maint-*` commands read the same values
@@ -293,24 +299,15 @@ For example, `192.168.0.116:7890`:
     ```
 5.  Select this profile to activate it. The system will automatically route traffic through it via the localhost interface.
 
-### Importing a Subscription from Sops (First-Time)
+### Clash Profile Persistence
 
-The subscription URL is stored encrypted in the repository via sops-nix (see [Secret Management § Clash Subscription](./secret-management.md)). After `nixos-rebuild switch`, import it into Clash Verge:
-
-1.  Read the decrypted URL:
-    ```bash
-    cat /run/secrets/clash-subscription-url
-    ```
-2.  Launch **Clash Verge** (`SUPER + SHIFT + P`).
-3.  Go to the **Profiles** page.
-4.  Paste the URL into the input box at the top and click **Import**.
-5.  Click the imported profile to **activate** it.
-
-> This only needs to be done once per machine. The profile data is persisted at `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` and survives reboots. Clash Verge will also auto-update the subscription periodically.
+Clash Verge profile data is persisted at `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` and survives reboots. Remote subscription links are no longer managed by this repository; configure profiles in the Clash Verge GUI using the currently supported provider flow.
 
 ---
 
-## 🎮 Gaming
+## 🎮 Gaming (`homePC` Only)
+
+The gaming workflow is configured only on `homePC`. `linglong` intentionally excludes Steam, GameMode, D2R, and the D2R Eww module.
 
 ### Battle.net Installation (Steam + Proton)
 
@@ -396,7 +393,7 @@ In Battle.net → D2R **Game Settings → Additional command line arguments**:
 This system uses an **ephemeral root** approach. Only specific directories are persisted between reboots — see the Persisted Paths table above.
 
 ### Software Rendering (VM Only)
-In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1`. The physical machine (`homePC`) does not include this setting.
+In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1`. The maintained physical hosts (`homePC` and `linglong`) do not include this setting.
 
 ### Fcitx5 Not Responding After Unclean Shutdown (Ctrl+Space Broken)
 
@@ -419,7 +416,7 @@ open /run/secrets/github-mcp-token | str trim | ^gh auth login --with-token
 ^gh config set git_protocol ssh --host github.com
 ```
 
-On `homePC`, `~/.config/gh` is persisted so this login survives reboot. Do not manage `~/.config/gh/hosts.yml` with Nix or sops; `gh` owns and migrates that file itself.
+On `homePC` and `linglong`, `~/.config/gh` is persisted so this login survives reboot. Do not manage `~/.config/gh/hosts.yml` with Nix or sops; `gh` owns and migrates that file itself.
 
 
 ### Sops Bootstrapping (First Time)

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+battery=""
+for supply in /sys/class/power_supply/*; do
+  [ -e "$supply/type" ] || continue
+  if [ "$(cat "$supply/type" 2>/dev/null)" = "Battery" ]; then
+    battery="$supply"
+    break
+  fi
+done
+
+if [ -z "$battery" ]; then
+  jq -cn '{present: false, percentage: 0, state: "unknown", icon: "󰂎", class: "icon-battery"}'
+  exit 0
+fi
+
+capacity=$(cat "$battery/capacity" 2>/dev/null || printf '0')
+case "$capacity" in
+  ''|*[!0-9]*) capacity=0 ;;
+esac
+
+status=$(cat "$battery/status" 2>/dev/null || printf 'Unknown')
+state=$(printf '%s' "$status" | tr '[:upper:]' '[:lower:]')
+
+icon="󰁹"
+class="icon-battery"
+case "$state" in
+  charging)
+    icon="󰂄"
+    class="icon-battery-charging"
+    ;;
+  full)
+    icon="󰁹"
+    ;;
+  discharging)
+    if [ "$capacity" -le 10 ]; then
+      icon="󰂎"
+      class="icon-battery-critical"
+    elif [ "$capacity" -le 25 ]; then
+      icon="󰁻"
+      class="icon-battery-low"
+    fi
+    ;;
+esac
+
+jq -cn \
+  --argjson percentage "$capacity" \
+  --arg state "$state" \
+  --arg icon "$icon" \
+  --arg class "$class" \
+  '{present: true, percentage: $percentage, state: $state, icon: $icon, class: $class}'

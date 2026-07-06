@@ -44,6 +44,7 @@ let
     # Phase 2: modules
     "eww/modules/audio.yuck".source = ./eww/modules/audio.yuck;
     "eww/modules/bluetooth.yuck".source = ./eww/modules/bluetooth.yuck;
+    "eww/modules/battery.yuck".source = ./eww/modules/battery.yuck;
     "eww/modules/network.yuck".source = ./eww/modules/network.yuck;
     "eww/modules/power.yuck".source = ./eww/modules/power.yuck;
     "eww/modules/sysinfo.yuck".source = ./eww/modules/sysinfo.yuck;
@@ -83,6 +84,7 @@ let
         "set-audio-device"
         "set-vol"
         "get-bluetooth"
+        "get-battery"
         "bt-toggle"
         "bt-pair"
         "get-network"

@@ -62,6 +62,7 @@
         {
           hostDir,
           username,
+          homeModule ? ./users/${username}/home.nix,
         }:
         let
           specialArgs = {
@@ -87,7 +88,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.extraSpecialArgs = inputs // specialArgs;
-              home-manager.users.${username} = import ./users/${username}/home.nix;
+              home-manager.users.${username} = import homeModule;
             }
           ];
         };
@@ -508,6 +509,11 @@
         homePC = mkHost {
           hostDir = "workstation";
           username = "ysun";
+        };
+        linglong = mkHost {
+          hostDir = "linglong";
+          username = "ysun";
+          homeModule = ./users/ysun/linglong-home.nix;
         };
       };
 

@@ -6,18 +6,18 @@
 
 ## 🖥️ 主机配置
 
-本仓库目前维护 `homePC` 工作站配置。
+本仓库目前维护 `homePC` 工作站和 `linglong` 玲珑键盘电脑配置。
 
-| 属性 | `homePC` |
-| :--- | :--- |
-| **主机名** | `homePC` |
-| **架构** | `x86_64-linux` |
-| **用户** | `ysun` |
-| **引导** | systemd-boot |
-| **根文件系统** | 临时（`tmpfs`），持久化于 `/persist` |
-| **网络** | `NetworkManager` |
-| **GPU** | 硬件加速 |
-| **时区** | `Asia/Shanghai` |
+| 属性 | `homePC` | `linglong` |
+| :--- | :--- | :--- |
+| **主机名** | `homePC` | `linglong` |
+| **架构** | `x86_64-linux` | `x86_64-linux` |
+| **用户** | `ysun` | `ysun` |
+| **引导** | systemd-boot | systemd-boot |
+| **根文件系统** | 临时（`tmpfs`），持久化于 `/persist` | 临时（`tmpfs`），持久化于 `/persist` |
+| **网络** | `NetworkManager` | `NetworkManager` |
+| **GPU** | NVIDIA 硬件加速 | AMD 硬件加速 |
+| **时区** | `Asia/Shanghai` | `Asia/Shanghai` |
 
 ### NixOS 基础设施模块
 
@@ -30,20 +30,20 @@
 
 ### 持久化路径（Impermanence）
 
-**系统级**：`/var/log`、`/var/lib/bluetooth`、`/var/lib/nixos`、`/var/lib/systemd/coredump`、`/etc/NetworkManager/system-connections`、`/var/lib/sops-nix`、`/var/lib/colord`、`/etc/machine-id`、SSH 主机密钥。`homePC` 额外持久化 `/var/lib/NetworkManager`。
-
 **系统级**：
 
 | 路径 | 用途 |
 | :--- | :--- |
 | `/var/log` | 系统日志 |
+| `/var/lib/alsa` | ALSA 混音器和声卡状态 |
 | `/var/lib/bluetooth` | 蓝牙设备配对信息 |
 | `/var/lib/nixos` | NixOS 状态（UID/GID 映射） |
 | `/var/lib/systemd/coredump` | 崩溃转储文件 |
-| `/etc/NetworkManager/system-connections` | 已保存的 Wi-Fi / VPN 配置（仅 `homePC`） |
-| `/var/lib/NetworkManager` | NetworkManager 运行时状态（仅 `homePC`） |
+| `/etc/NetworkManager/system-connections` | 已保存的 Wi-Fi / VPN 配置 |
+| `/var/lib/NetworkManager` | NetworkManager 运行时状态 |
 | `/var/lib/sops-nix` | 用于解密 secrets 的 Age 密钥 |
 | `/var/lib/colord` | 颜色配置文件校准数据 |
+| `/var/lib/upower` | 电池和电源设备历史（仅 `linglong`） |
 | `/etc/machine-id` | 机器唯一标识（systemd / journald 所需） |
 | `/etc/ssh/ssh_host_*` | SSH 主机密钥（避免重启后 known_hosts 警告） |
 
@@ -52,24 +52,28 @@
 | 路径 | 用途 |
 | :--- | :--- |
 | `~/github.com` | 所有源码和 dotfiles |
+| `~/.config/nix` | 用户级 Nix 配置 |
 | `~/.config/sops` | sops 解密所需的 Age 私钥 |
 | `~/.config/nushell` | Nushell 用户配置（env.nu、config.nu） |
 | `~/.config/gh` | GitHub CLI 登录状态 |
 | `~/.config/google-chrome` | Chrome 配置（书签、密码、扩展） |
+| `~/.codex` | Codex 配置、认证、历史和 MCP server 状态 |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge 代理配置和设置 |
 | `~/.local/share/fcitx5` | Rime 用户词典和学习数据 |
-| `~/.local/share/TelegramDesktop` | Telegram 登录会话和聊天缓存（仅 `homePC`） |
+| `~/.local/share/TelegramDesktop` | Telegram 登录会话和聊天缓存 |
 | `~/.local/share/Steam` | Steam 游戏、Proton 前缀、存档（仅 `homePC`） |
 | `~/.cargo/registry` | Cargo 包缓存（加速 Rust 构建，仅 `homePC`） |
 | `~/.xwechat` | 微信登录和设备会话状态 |
 | `~/xwechat_files` | 微信聊天记录和文件 |
-| `~/Downloads` | 下载目录（仅 `homePC`） |
-| `~/Documents` | 文档目录（仅 `homePC`） |
+| `~/Downloads` | 下载目录 |
+| `~/Documents` | 文档目录 |
+| `~/.cache/eww` | Eww 缓存，包括天气位置缓存 |
+| `~/.cache/fontconfig` | GTK/Pango 应用启动用字体缓存 |
 | `~/.ssh/known_hosts` | SSH 已知主机（以文件而非目录形式持久化，详见配置注释） |
 | `~/.config/hypr/monitors.conf` | nwg-displays 写入的显示器布局 |
-| `~/.zeroclaw/active_workspace.toml` | ZeroClaw 工作区标记 |
-| `~/.zeroclaw/estop-state.json` | ZeroClaw 紧急停止状态 |
-| `~/.zeroclaw/memory.sqlite` | ZeroClaw 对话记忆数据库 |
+| `~/.zeroclaw/active_workspace.toml` | ZeroClaw 工作区标记（仅 `homePC`） |
+| `~/.zeroclaw/estop-state.json` | ZeroClaw 紧急停止状态（仅 `homePC`） |
+| `~/.zeroclaw/memory.sqlite` | ZeroClaw 对话记忆数据库（仅 `homePC`） |
 
 其他所有内容在重启时清除。
 
@@ -209,7 +213,7 @@
 | **GitHub 源码获取** | `nix flake update` 拉取 flake inputs（HTTPS tarball） | 必须走**代理**，USTC 镜像无法加速 |
 | **二进制缓存下载** | `nixos-rebuild` 从 cache 下载预编译包 | 使用 **USTC 镜像**（`--option substituters`） |
 
-`homePC` 通过 `dotfiles.nixNetwork.profile = "china"` 声明该策略：
+当前维护的物理主机通过 `dotfiles.nixNetwork.profile = "china"` 声明该策略：
 Nix 二进制替代会使用 USTC，而不是继续保留官方 cache 作为后备。
 本地代理 URL 也通过 NixOS 配置声明，但只作用于 Nix 维护路径：
 `nix-daemon` 会直接获得它，`maint-*` 命令会从 `/etc/dotfiles/nix-network.json`
@@ -295,24 +299,15 @@ maint-check
     ```
 5.  选择此配置文件激活。系统将自动通过本地回环接口路由流量。
 
-### 从 sops 导入订阅（新机器首次设置）
+### Clash 配置持久化
 
-订阅链接通过 sops-nix 加密存储在仓库中（参见 [密钥管理指南 § Clash 订阅](./secret-management.zh-CN.md)）。执行 `nixos-rebuild switch` 后，将其导入 Clash Verge：
-
-1.  读取解密后的订阅链接：
-    ```bash
-    cat /run/secrets/clash-subscription-url
-    ```
-2.  启动 **Clash Verge**（`SUPER + SHIFT + P`）。
-3.  进入 **Profiles** 页面。
-4.  将链接粘贴到顶部输入框并点击 **Import**。
-5.  点击导入的配置文件以**激活**。
-
-> 每台机器只需执行一次。配置文件数据持久化在 `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` 中，重启后保留。Clash Verge 也会按设定间隔自动更新订阅。
+Clash Verge 的配置文件数据持久化在 `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` 中，重启后保留。远程订阅链接不再通过本仓库托管；需要时请在 Clash Verge GUI 中按当前服务商支持的方式配置。
 
 ---
 
-## 🎮 游戏
+## 🎮 游戏（仅 `homePC`）
+
+游戏工作流只在 `homePC` 上配置。`linglong` 有意不包含 Steam、GameMode、D2R 和 D2R Eww 模块。
 
 ### Battle.net 安装（Steam + Proton）
 
@@ -411,7 +406,7 @@ d2r-bat ProjectDiablo2/setup.bat
 本系统采用**临时根文件系统**方案。仅特定目录在重启之间保持持久化，详见上方"持久化路径"表格。
 
 ### 软件渲染（仅 VM）
-在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染。物理机（`homePC`）不包含此设置。
+在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染。当前维护的物理主机（`homePC` 和 `linglong`）不包含此设置。
 
 ### Fcitx5 非正常关机后无响应（Ctrl+Space 失效）
 
@@ -434,7 +429,7 @@ open /run/secrets/github-mcp-token | str trim | ^gh auth login --with-token
 ^gh config set git_protocol ssh --host github.com
 ```
 
-在 `homePC` 上，`~/.config/gh` 已持久化，因此这次登录会跨重启保留。不要用 Nix 或 sops 管理 `~/.config/gh/hosts.yml`；这个文件由 `gh` 自己维护和迁移。
+在 `homePC` 和 `linglong` 上，`~/.config/gh` 已持久化，因此这次登录会跨重启保留。不要用 Nix 或 sops 管理 `~/.config/gh/hosts.yml`；这个文件由 `gh` 自己维护和迁移。
 
 
 ### Sops 首次引导

@@ -1,0 +1,20 @@
+;; Battery module. Desktop hosts without a battery hide it automatically.
+
+(defpoll battery-status
+  :interval "30s"
+  :initial '{"present":false,"percentage":0,"state":"unknown","icon":"󰂎","class":"icon-battery"}'
+  `~/.config/eww/scripts/get-battery`)
+
+(defwidget battery []
+  (box
+    :visible {battery-status.present}
+    :orientation "h"
+    :space-evenly false
+    :spacing 6
+    (label
+      :class {battery-status.class}
+      :tooltip "Battery"
+      :text {battery-status.icon})
+    (label
+      :class "module-value"
+      :text "${battery-status.percentage}%")))

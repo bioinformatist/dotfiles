@@ -42,7 +42,7 @@ abstraction when changing shared modules, profiles, or flake outputs.
 - Repo-local skills live at `.agents/skills`. Externally vendored skills are synced with `nix run .#sync-vendored-skills` and checked by `.#checks.x86_64-linux.repo-local-skills`.
 - When changing Codex skill integration, review all three surfaces: upstream source, generated repo-local files under `.agents/skills`, and Home Manager installed skill sources from `home.programs.codex`. `quick_validate.py` only checks skill shape; it does not prove Codex semantics are adapted. Grep for stale host-agent wording such as `/codebase-design`, `/grilling`, `/domain-modeling`, `/improve-codebase-architecture`, `Agent tool`, `subagent_type`, and automatic GUI-open instructions.
 - The repo-local Fieldcraft skill lives at `.agents/skills/product-form-ux` and is for form-heavy product UI review, not general visual styling.
-- The repo currently exposes `homePC` as the maintained host configuration.
+- The repo currently exposes `homePC` and `linglong` as maintained host configurations.
 - Changes are verified manually by the user after rebuild.
 - System rebuild command:
   ```nushell

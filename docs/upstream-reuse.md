@@ -9,7 +9,7 @@ Downstream repositories should only consume these flake outputs:
 - `profiles.headless`
 - `profiles.ai-serving`
 - `profiles.workstation`
-- `nixosModules.{headless,ai-serving,nixNetwork,nvidiaDesktop,workstation}`
+- `nixosModules.{headless,ai-serving,amdMobile,nixNetwork,nvidiaDesktop,workstation}`
 - `homeManagerModules.{core,tui,codex,devHeadless,workstation}`
 - `lib.{versions,mkWorkstationSystem}`
 - `overlays`
@@ -61,12 +61,14 @@ It does not include:
 - ZeroClaw, D2R, company SSH, or business services
 
 NVIDIA desktop hosts should explicitly add `nixosModules.nvidiaDesktop`.
+AMD mobile desktop hosts can explicitly add `nixosModules.amdMobile`.
 
 ## Current host composition
 
 The personal hosts in this repo stay full-featured by composing extra local modules:
 
 - `homePC`: `profiles.workstation` + China network/proxy settings + Clash Verge + NVIDIA desktop integration + personal Home Manager layer
+- `linglong`: `profiles.workstation` + China network/proxy settings + Clash Verge + AMD/mobile integration + lightweight personal Home Manager layer
 
 ## Downstream example
 
