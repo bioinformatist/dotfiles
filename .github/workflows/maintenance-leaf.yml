@@ -54,12 +54,12 @@ jobs:
             policy: tools
             inputs: ""
             hook: codex-release
-            direct_fetch_markers: "-codex-"
+            direct_fetch_markers: "-codex-x86_64-unknown-linux-musl.tar.gz -codex-0."
           - leaf: zeroclaw
             policy: tools
             inputs: ""
             hook: zeroclaw-release
-            direct_fetch_markers: "-zeroclaw-"
+            direct_fetch_markers: "-zeroclaw-x86_64-unknown-linux-gnu.tar.gz -zeroclaw-0."
           - leaf: hyprland
             policy: desktop
             inputs: hyprland

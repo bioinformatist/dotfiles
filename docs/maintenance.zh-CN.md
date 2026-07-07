@@ -87,7 +87,7 @@ China gate 会把更新后的 leaf 和 `main` 做差分比较。已有的未命�
 - `chromium`、`electron`
 - `serenityos-emoji-font`、`nanoemoji`
 
-允许列表刻意很窄：`hm_*`、`home-manager-path`、`home-manager-generation`、`user-environment`、`system-units`、`etc`、`activate`、`nixos-system-*` 这类 NixOS/Home Manager glue 可以本地构建。Codex 和 ZeroClaw 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建即使没有命中阻断标记，也会被当作门控失败处理。
+允许列表只覆盖生成式 glue 和轻量包装：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex 和 ZeroClaw 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
 
 ## 并发策略
 

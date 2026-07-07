@@ -87,7 +87,7 @@ Default blocking markers include:
 - `chromium`, `electron`
 - `serenityos-emoji-font`, `nanoemoji`
 
-The allowlist is intentionally narrow: locally built NixOS/Home Manager glue such as `hm_*`, `home-manager-path`, `home-manager-generation`, `user-environment`, `system-units`, `etc`, `activate`, and `nixos-system-*` may proceed. Declared fixed-output direct release fetches for Codex and ZeroClaw may also proceed through the configured maintenance proxy. Other local builds are treated as gate failures even if their names do not match the blocking markers.
+The allowlist is intentionally limited to generated glue and lightweight wrappers: Home Manager files/generations, NixOS unit/restart/activation files, generated manifests, repo-local Codex skill packaging, and declared MCP wrapper derivations may proceed. Declared fixed-output direct release fetches for Codex and ZeroClaw may also proceed through the configured maintenance proxy. Other local builds are treated as gate failures, and heavy components such as kernel, Mesa, systemd packages, Hyprland packages, GCC/Rust toolchains, Chromium/Electron, and large font pipelines remain blocked.
 
 ## Concurrency
 

@@ -71,14 +71,39 @@ allowed_markers=(
   "home-manager-files"
   "home-manager-generation"
   "user-environment"
+  "user-units"
+  "X-Restart-Triggers-"
+  "unit-"
   "unit-home-manager-"
   "-nix.conf.drv"
   "X-Restart-Triggers-nix-daemon"
   "unit-nix-daemon"
+  "-activation-script.drv"
+  "-dbus-1.drv"
+  "-dry-activate.drv"
+  "-hwdb.bin.drv"
+  "-manifest-for-users.json.drv"
+  "-manifest.json.drv"
+  "-system-generators.drv"
+  "-system-path.drv"
+  "-system-shutdown.drv"
   "-system-units.drv"
+  "-tmpfiles.d.drv"
+  "-udev-rules.drv"
+  "-user-generators.drv"
+  "-users-groups.json.drv"
   "-etc.drv"
   "-activate.drv"
   "nixos-system-"
+  "-openai.yaml.drv"
+  "-SKILL-header.md.drv"
+  "-SKILL.md.drv"
+  "-skill.drv"
+  "-source.drv"
+  "-codex-config.toml.drv"
+  "-context7-auth-mcp-server.drv"
+  "-github-mcp-server.drv"
+  "-playwright-cli.drv"
 )
 
 contains_marker() {
@@ -132,10 +157,12 @@ gate_host() {
 
   local drv
   for drv in "${derivations[@]}"; do
-    if contains_marker "$drv" "${risk_markers[@]}"; then
+    if contains_marker "$drv" "${allowed_markers[@]}"; then
+      continue
+    elif contains_marker "$drv" "${risk_markers[@]}"; then
       record_blocked "$host" "$drv"
       blocked_count=$((blocked_count + 1))
-    elif ! contains_marker "$drv" "${allowed_markers[@]}"; then
+    else
       record_blocked "$host" "$drv"
       blocked_count=$((blocked_count + 1))
     fi

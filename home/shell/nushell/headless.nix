@@ -30,14 +30,39 @@ in
         "home-manager-files"
         "home-manager-generation"
         "user-environment"
+        "user-units"
+        "X-Restart-Triggers-"
+        "unit-"
         "unit-home-manager-"
         "-nix.conf.drv"
         "X-Restart-Triggers-nix-daemon"
         "unit-nix-daemon"
+        "-activation-script.drv"
+        "-dbus-1.drv"
+        "-dry-activate.drv"
+        "-hwdb.bin.drv"
+        "-manifest-for-users.json.drv"
+        "-manifest.json.drv"
+        "-system-generators.drv"
+        "-system-path.drv"
+        "-system-shutdown.drv"
         "-system-units.drv"
+        "-tmpfiles.d.drv"
+        "-udev-rules.drv"
+        "-user-generators.drv"
+        "-users-groups.json.drv"
         "-etc.drv"
         "-activate.drv"
         "nixos-system-"
+        "-openai.yaml.drv"
+        "-SKILL-header.md.drv"
+        "-SKILL.md.drv"
+        "-skill.drv"
+        "-source.drv"
+        "-codex-config.toml.drv"
+        "-context7-auth-mcp-server.drv"
+        "-github-mcp-server.drv"
+        "-playwright-cli.drv"
       ];
       description = "Strings maint-switch allows in locally built NixOS/Home Manager glue derivations.";
     };
@@ -45,8 +70,10 @@ in
     allowedDirectFetchMarkers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [
-        "-codex-"
-        "-zeroclaw-"
+        "-codex-x86_64-unknown-linux-musl.tar.gz"
+        "-codex-0."
+        "-zeroclaw-x86_64-unknown-linux-gnu.tar.gz"
+        "-zeroclaw-0."
       ];
       description = "Strings maint-switch allows as declared fixed-output direct release fetches.";
     };

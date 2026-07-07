@@ -74,21 +74,48 @@ def dotfiles-maint-allowed-local-build-markers [] {
     "home-manager-files"
     "home-manager-generation"
     "user-environment"
+    "user-units"
+    "X-Restart-Triggers-"
+    "unit-"
     "unit-home-manager-"
     "-nix.conf.drv"
     "X-Restart-Triggers-nix-daemon"
     "unit-nix-daemon"
+    "-activation-script.drv"
+    "-dbus-1.drv"
+    "-dry-activate.drv"
+    "-hwdb.bin.drv"
+    "-manifest-for-users.json.drv"
+    "-manifest.json.drv"
+    "-system-generators.drv"
+    "-system-path.drv"
+    "-system-shutdown.drv"
     "-system-units.drv"
+    "-tmpfiles.d.drv"
+    "-udev-rules.drv"
+    "-user-generators.drv"
+    "-users-groups.json.drv"
     "-etc.drv"
     "-activate.drv"
     "nixos-system-"
+    "-openai.yaml.drv"
+    "-SKILL-header.md.drv"
+    "-SKILL.md.drv"
+    "-skill.drv"
+    "-source.drv"
+    "-codex-config.toml.drv"
+    "-context7-auth-mcp-server.drv"
+    "-github-mcp-server.drv"
+    "-playwright-cli.drv"
   ]
 }
 
 def dotfiles-maint-allowed-direct-fetch-markers [] {
   (dotfiles-maint-settings).allowedDirectFetchMarkers? | default [
-    "-codex-"
-    "-zeroclaw-"
+    "-codex-x86_64-unknown-linux-musl.tar.gz"
+    "-codex-0."
+    "-zeroclaw-x86_64-unknown-linux-gnu.tar.gz"
+    "-zeroclaw-0."
   ]
 }
 
@@ -162,11 +189,6 @@ def dotfiles-maint-dry-run [attr: string markers: list<string>] {
     | each {|line| $line | str trim }
     | where {|line| ($line | str starts-with "/nix/store/") and ($line | str ends-with ".drv") }
   )
-  let built_derivation_text = ($built_derivations | str join "\n")
-  let matched_markers = (
-    $markers
-    | where {|marker| $built_derivation_text | str contains $marker }
-  )
   let allowed_markers = (dotfiles-maint-allowed-local-build-markers)
   let allowed_direct_fetch_markers = (dotfiles-maint-allowed-direct-fetch-markers)
   let direct_fetch_derivations = (
@@ -175,7 +197,16 @@ def dotfiles-maint-dry-run [attr: string markers: list<string>] {
   )
   let blocked_derivations = (
     $built_derivations
-    | where {|derivation| (dotfiles-maint-derivation-matches $derivation $allowed_markers | is-empty) and (dotfiles-maint-derivation-matches $derivation $allowed_direct_fetch_markers | is-empty) }
+    | where {|derivation|
+      let local_allowed = (not (dotfiles-maint-derivation-matches $derivation $allowed_markers | is-empty))
+      let direct_allowed = (not (dotfiles-maint-derivation-matches $derivation $allowed_direct_fetch_markers | is-empty))
+      not ($local_allowed or $direct_allowed)
+    }
+  )
+  let blocked_derivation_text = ($blocked_derivations | str join "\n")
+  let matched_markers = (
+    $markers
+    | where {|marker| $blocked_derivation_text | str contains $marker }
   )
   let result = {
     exitCode: $exit_code
