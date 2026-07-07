@@ -37,10 +37,11 @@ def dotfiles-maint-policy [] {
 def dotfiles-maint-list-setting [name: string] {
   let settings = (dotfiles-maint-settings)
   let configured = ($settings | get -o $name)
+  let policy = (dotfiles-maint-policy | get -o $name | default [])
   if $configured != null {
-    $configured
+    $configured | append $policy | uniq
   } else {
-    dotfiles-maint-policy | get -o $name | default []
+    $policy
   }
 }
 
