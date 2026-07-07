@@ -4,7 +4,11 @@ set -euo pipefail
 china_substituter="${CHINA_SUBSTITUTER:-https://mirrors.ustc.edu.cn/nix-channels/store}"
 report_only=false
 blocked_output=""
+direct_output=""
 hosts=()
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd -- "${script_dir}/../.." && pwd)"
+policy_file="${repo_root}/scripts/maint/policy.json"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -18,6 +22,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --output=*|--blocked-output=*)
       blocked_output="${1#*=}"
+      shift
+      ;;
+    --direct-output)
+      direct_output="$2"
+      shift 2
+      ;;
+    --direct-output=*)
+      direct_output="${1#*=}"
       shift
       ;;
     --)
@@ -44,70 +56,23 @@ if [[ -n "$blocked_output" ]]; then
   : > "$blocked_output"
 fi
 
-risk_markers=(
-  "nvidia-x11"
-  "linux-"
-  "mesa-"
-  "systemd-"
-  "hyprland"
-  "hyprlang"
-  "hyprutils"
-  "hyprgraphics"
-  "hyprwayland-scanner"
-  "hyprwire"
-  "gcc-"
-  "xgcc"
-  "rustc-"
-  "cargo-vendor"
-  "chromium"
-  "electron"
-  "serenityos-emoji-font"
-  "nanoemoji"
-)
+if [[ -n "$direct_output" ]]; then
+  : > "$direct_output"
+fi
 
-allowed_markers=(
-  "hm_"
-  "home-manager-path"
-  "home-manager-files"
-  "home-manager-generation"
-  "user-environment"
-  "user-units"
-  "X-Restart-Triggers-"
-  "unit-"
-  "unit-home-manager-"
-  "-nix.conf.drv"
-  "X-Restart-Triggers-nix-daemon"
-  "unit-nix-daemon"
-  "-activation-script.drv"
-  "-dbus-1.drv"
-  "-dry-activate.drv"
-  "-hwdb.bin.drv"
-  "-manifest-for-users.json.drv"
-  "-manifest.json.drv"
-  "-system-generators.drv"
-  "-system-path.drv"
-  "-system-shutdown.drv"
-  "-system-units.drv"
-  "-tmpfiles.d.drv"
-  "-udev-rules.drv"
-  "-user-generators.drv"
-  "-users-groups.json.drv"
-  "-etc-"
-  "-etc.drv"
-  "-ensure-all-wrappers-paths-exist.drv"
-  "-boot.json.drv"
-  "-activate.drv"
-  "nixos-system-"
-  "-openai.yaml.drv"
-  "-SKILL-header.md.drv"
-  "-SKILL.md.drv"
-  "-skill.drv"
-  "-source.drv"
-  "-codex-config.toml.drv"
-  "-context7-auth-mcp-server.drv"
-  "-github-mcp-server.drv"
-  "-playwright-cli.drv"
-)
+read_policy_list() {
+  local attr="$1"
+  local -n target="$2"
+
+  mapfile -t target < <(
+    nix eval --raw --impure --expr \
+      "builtins.concatStringsSep \"\\n\" (builtins.fromJSON (builtins.readFile ${policy_file})).${attr}"
+  )
+}
+
+read_policy_list riskMarkers risk_markers
+read_policy_list allowedLocalBuildMarkers allowed_markers
+read_policy_list allowedDirectFetchMarkers allowed_direct_markers
 
 contains_marker() {
   local text="$1"
@@ -127,6 +92,17 @@ record_blocked() {
 
   if [[ -n "$blocked_output" ]]; then
     printf '%s\t%s\n' "$host" "$drv" >> "$blocked_output"
+  else
+    printf '  %s\t%s\n' "$host" "$drv" >&2
+  fi
+}
+
+record_direct() {
+  local host="$1"
+  local drv="$2"
+
+  if [[ -n "$direct_output" ]]; then
+    printf '%s\t%s\n' "$host" "$drv" >> "$direct_output"
   else
     printf '  %s\t%s\n' "$host" "$drv" >&2
   fi
@@ -162,6 +138,8 @@ gate_host() {
   for drv in "${derivations[@]}"; do
     if contains_marker "$drv" "${allowed_markers[@]}"; then
       continue
+    elif contains_marker "$drv" "${allowed_direct_markers[@]}"; then
+      record_direct "$host" "$drv"
     elif contains_marker "$drv" "${risk_markers[@]}"; then
       record_blocked "$host" "$drv"
       blocked_count=$((blocked_count + 1))
@@ -196,6 +174,10 @@ done
 
 if [[ -n "$blocked_output" ]]; then
   sort -u "$blocked_output" -o "$blocked_output"
+fi
+
+if [[ -n "$direct_output" ]]; then
+  sort -u "$direct_output" -o "$direct_output"
 fi
 
 if [[ "$failed" -ne 0 ]]; then

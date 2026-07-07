@@ -19,6 +19,26 @@ def dotfiles-maint-host [] {
   (dotfiles-maint-settings).host
 }
 
+def dotfiles-maint-policy [] {
+  let repo = (dotfiles-maint-settings).repo
+  let policy_file = ($repo | path join "scripts" "maint" "policy.json")
+  if ($policy_file | path exists) {
+    open $policy_file
+  } else {
+    {}
+  }
+}
+
+def dotfiles-maint-list-setting [name: string] {
+  let settings = (dotfiles-maint-settings)
+  let configured = ($settings | get -o $name)
+  if $configured != null {
+    $configured
+  } else {
+    dotfiles-maint-policy | get -o $name | default []
+  }
+}
+
 def dotfiles-maint-network-config [] {
   let config_file = "/etc/dotfiles/nix-network.json"
   if ($config_file | path exists) {
@@ -45,81 +65,15 @@ def dotfiles-maint-has-proxy-env [] {
 }
 
 def dotfiles-maint-risk-markers [] {
-  (dotfiles-maint-settings).riskMarkers? | default [
-    "nvidia-x11"
-    "linux-"
-    "mesa-"
-    "systemd-"
-    "hyprland"
-    "hyprlang"
-    "hyprutils"
-    "hyprgraphics"
-    "hyprwayland-scanner"
-    "hyprwire"
-    "gcc-"
-    "xgcc"
-    "rustc-"
-    "cargo-vendor"
-    "chromium"
-    "electron"
-    "serenityos-emoji-font"
-    "nanoemoji"
-  ]
+  dotfiles-maint-list-setting "riskMarkers"
 }
 
 def dotfiles-maint-allowed-local-build-markers [] {
-  (dotfiles-maint-settings).allowedLocalBuildMarkers? | default [
-    "hm_"
-    "home-manager-path"
-    "home-manager-files"
-    "home-manager-generation"
-    "user-environment"
-    "user-units"
-    "X-Restart-Triggers-"
-    "unit-"
-    "unit-home-manager-"
-    "-nix.conf.drv"
-    "X-Restart-Triggers-nix-daemon"
-    "unit-nix-daemon"
-    "-activation-script.drv"
-    "-dbus-1.drv"
-    "-dry-activate.drv"
-    "-hwdb.bin.drv"
-    "-manifest-for-users.json.drv"
-    "-manifest.json.drv"
-    "-system-generators.drv"
-    "-system-path.drv"
-    "-system-shutdown.drv"
-    "-system-units.drv"
-    "-tmpfiles.d.drv"
-    "-udev-rules.drv"
-    "-user-generators.drv"
-    "-users-groups.json.drv"
-    "-etc-"
-    "-etc.drv"
-    "-ensure-all-wrappers-paths-exist.drv"
-    "-boot.json.drv"
-    "-activate.drv"
-    "nixos-system-"
-    "-openai.yaml.drv"
-    "-SKILL-header.md.drv"
-    "-SKILL.md.drv"
-    "-skill.drv"
-    "-source.drv"
-    "-codex-config.toml.drv"
-    "-context7-auth-mcp-server.drv"
-    "-github-mcp-server.drv"
-    "-playwright-cli.drv"
-  ]
+  dotfiles-maint-list-setting "allowedLocalBuildMarkers"
 }
 
 def dotfiles-maint-allowed-direct-fetch-markers [] {
-  (dotfiles-maint-settings).allowedDirectFetchMarkers? | default [
-    "-codex-x86_64-unknown-linux-musl.tar.gz"
-    "-codex-0."
-    "-zeroclaw-x86_64-unknown-linux-gnu.tar.gz"
-    "-zeroclaw-0."
-  ]
+  dotfiles-maint-list-setting "allowedDirectFetchMarkers"
 }
 
 def dotfiles-maint-parallel [] {

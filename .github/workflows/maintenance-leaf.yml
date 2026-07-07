@@ -39,52 +39,42 @@ jobs:
             policy: tools
             inputs: anyrun
             hook: ""
-            direct_fetch_markers: ""
           - leaf: nixpkgs-tools
             policy: tools
             inputs: nixpkgs-tools
             hook: ""
-            direct_fetch_markers: ""
           - leaf: wechat
             policy: tools
             inputs: nixpkgs-wechat
             hook: ""
-            direct_fetch_markers: ""
           - leaf: codex
             policy: tools
             inputs: ""
             hook: codex-release
-            direct_fetch_markers: "-codex-x86_64-unknown-linux-musl.tar.gz -codex-0."
           - leaf: zeroclaw
             policy: tools
             inputs: ""
             hook: zeroclaw-release
-            direct_fetch_markers: "-zeroclaw-x86_64-unknown-linux-gnu.tar.gz -zeroclaw-0."
           - leaf: hyprland
             policy: desktop
             inputs: hyprland
             hook: ""
-            direct_fetch_markers: ""
           - leaf: sops-nix
             policy: infra
             inputs: sops-nix
             hook: ""
-            direct_fetch_markers: ""
           - leaf: impermanence
             policy: infra
             inputs: impermanence
             hook: ""
-            direct_fetch_markers: ""
           - leaf: disko
             policy: infra
             inputs: disko
             hook: ""
-            direct_fetch_markers: ""
           - leaf: base
             policy: core
             inputs: nixpkgs home-manager
             hook: ""
-            direct_fetch_markers: ""
     concurrency:
       group: maintenance-leaf-${{ matrix.leaf }}
       cancel-in-progress: false
@@ -151,6 +141,7 @@ jobs:
           bash scripts/maint/china-gate.sh \
             --report-only \
             --output "$RUNNER_TEMP/china-base.blocked" \
+            --direct-output "$RUNNER_TEMP/china-base.direct" \
             "${hosts[@]}"
 
       - name: Update leaf
@@ -194,8 +185,6 @@ jobs:
       - name: China gate
         if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
         id: china_gate
-        env:
-          DIRECT_FETCH_MARKERS: ${{ matrix.direct_fetch_markers }}
         shell: bash
         run: |
           set -euo pipefail
@@ -205,9 +194,11 @@ jobs:
           if ! bash scripts/maint/china-gate.sh \
             --report-only \
             --output "$RUNNER_TEMP/china-head.blocked" \
+            --direct-output "$RUNNER_TEMP/china-head.direct" \
             "${hosts[@]}"; then
             status=miss
             : > "$RUNNER_TEMP/china-new.blocked"
+            : > "$RUNNER_TEMP/china-new.direct"
             : > "$RUNNER_TEMP/china-direct.allowed"
             : > "$RUNNER_TEMP/china-unapproved.blocked"
           else
@@ -215,10 +206,18 @@ jobs:
               "$RUNNER_TEMP/china-base.blocked" \
               "$RUNNER_TEMP/china-head.blocked" \
               > "$RUNNER_TEMP/china-new.blocked"
+            comm -13 \
+              "$RUNNER_TEMP/china-base.direct" \
+              "$RUNNER_TEMP/china-head.direct" \
+              > "$RUNNER_TEMP/china-new.direct"
 
             : > "$RUNNER_TEMP/china-direct.allowed"
-            : > "$RUNNER_TEMP/china-unapproved.blocked"
-            read -r -a direct_markers <<< "$DIRECT_FETCH_MARKERS" || true
+            cp "$RUNNER_TEMP/china-new.blocked" "$RUNNER_TEMP/china-unapproved.blocked"
+            leaf="${{ matrix.leaf }}"
+            mapfile -t direct_markers < <(
+              nix eval --raw --impure --expr \
+                "let policy = builtins.fromJSON (builtins.readFile ./scripts/maint/policy.json); in builtins.concatStringsSep \"\\n\" (policy.leafDirectFetchMarkers.\"${leaf}\" or [])"
+            )
 
             while IFS=$'\t' read -r host drv; do
               [[ -n "${host}${drv}" ]] || continue
@@ -236,7 +235,7 @@ jobs:
               else
                 printf '%s\t%s\n' "$host" "$drv" >> "$RUNNER_TEMP/china-unapproved.blocked"
               fi
-            done < "$RUNNER_TEMP/china-new.blocked"
+            done < "$RUNNER_TEMP/china-new.direct"
 
             if [[ -s "$RUNNER_TEMP/china-unapproved.blocked" ]]; then
               status=miss
@@ -291,7 +290,7 @@ jobs:
           - China gate: \`${CHINA_STATUS}\`
           - New blocked derivations: \`${CHINA_NEW_BLOCKED_COUNT}\`
           - Declared direct fetches: \`${CHINA_DIRECT_FETCH_COUNT}\`
-          - Unapproved local derivations: \`${CHINA_UNAPPROVED_COUNT}\`
+          - Unapproved derivations: \`${CHINA_UNAPPROVED_COUNT}\`
 
           This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
 
@@ -316,7 +315,7 @@ jobs:
           }
 
           append_records "Declared direct fetches" "$RUNNER_TEMP/china-direct.allowed"
-          append_records "Unapproved local derivations" "$RUNNER_TEMP/china-unapproved.blocked"
+          append_records "Unapproved derivations" "$RUNNER_TEMP/china-unapproved.blocked"
 
           gh label create maintenance --color "0E8A16" --description "Automated maintenance PR" --force
           gh label create "policy-${policy}" --color "5319E7" --description "Maintenance policy ${policy}" --force

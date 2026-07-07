@@ -66,6 +66,10 @@ PRs run two dry-runs:
 
 The China gate compares the updated leaf against `main`. Existing misses do not automatically fail every leaf PR. Newly introduced unapproved local builds fail the gate; newly introduced fixed-output release fetches are allowed only for leaves that declare that route, currently Codex and ZeroClaw.
 
+Gate marker policy is shared through `scripts/maint/policy.json`; local
+`maint-switch`, the generated `maint.nuon`, and the GitHub China gate consume
+the same marker lists.
+
 Only PRs with both `global-pass` and `china-gate-pass` attempt auto-merge. A PR with `global-pass` but `china-gate-miss` remains visible for manual review, but should not enter `main`.
 
 ## Local `maint-switch`

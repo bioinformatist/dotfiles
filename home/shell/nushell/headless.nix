@@ -1,6 +1,7 @@
 { config, lib, ... }:
 let
   cfg = config.dotfiles.maint;
+  maintPolicy = builtins.fromJSON (builtins.readFile ../../../scripts/maint/policy.json);
 in
 {
   options.dotfiles.maint = {
@@ -18,66 +19,19 @@ in
 
     riskMarkers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ ];
+      default = maintPolicy.riskMarkers;
       description = "Strings maint-switch treats as heavy local build markers in dry-run output.";
     };
 
     allowedLocalBuildMarkers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [
-        "hm_"
-        "home-manager-path"
-        "home-manager-files"
-        "home-manager-generation"
-        "user-environment"
-        "user-units"
-        "X-Restart-Triggers-"
-        "unit-"
-        "unit-home-manager-"
-        "-nix.conf.drv"
-        "X-Restart-Triggers-nix-daemon"
-        "unit-nix-daemon"
-        "-activation-script.drv"
-        "-dbus-1.drv"
-        "-dry-activate.drv"
-        "-hwdb.bin.drv"
-        "-manifest-for-users.json.drv"
-        "-manifest.json.drv"
-        "-system-generators.drv"
-        "-system-path.drv"
-        "-system-shutdown.drv"
-        "-system-units.drv"
-        "-tmpfiles.d.drv"
-        "-udev-rules.drv"
-        "-user-generators.drv"
-        "-users-groups.json.drv"
-        "-etc-"
-        "-etc.drv"
-        "-ensure-all-wrappers-paths-exist.drv"
-        "-boot.json.drv"
-        "-activate.drv"
-        "nixos-system-"
-        "-openai.yaml.drv"
-        "-SKILL-header.md.drv"
-        "-SKILL.md.drv"
-        "-skill.drv"
-        "-source.drv"
-        "-codex-config.toml.drv"
-        "-context7-auth-mcp-server.drv"
-        "-github-mcp-server.drv"
-        "-playwright-cli.drv"
-      ];
+      default = maintPolicy.allowedLocalBuildMarkers;
       description = "Strings maint-switch allows in locally built NixOS/Home Manager glue derivations.";
     };
 
     allowedDirectFetchMarkers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [
-        "-codex-x86_64-unknown-linux-musl.tar.gz"
-        "-codex-0."
-        "-zeroclaw-x86_64-unknown-linux-gnu.tar.gz"
-        "-zeroclaw-0."
-      ];
+      default = maintPolicy.allowedDirectFetchMarkers;
       description = "Strings maint-switch allows as declared fixed-output direct release fetches.";
     };
 
