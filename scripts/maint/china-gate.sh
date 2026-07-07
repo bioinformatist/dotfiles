@@ -94,6 +94,8 @@ allowed_markers=(
   "-users-groups.json.drv"
   "-etc-"
   "-etc.drv"
+  "-ensure-all-wrappers-paths-exist.drv"
+  "-boot.json.drv"
   "-activate.drv"
   "nixos-system-"
   "-openai.yaml.drv"
