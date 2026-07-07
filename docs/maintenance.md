@@ -79,6 +79,17 @@ misses: broad generated-glue markers such as `unit-`, `-etc-`, and
 release-tarball leaves must be declared explicitly before their direct fetches
 are allowed.
 
+If a local gate blocks a clearly generated NixOS/Home Manager glue derivation,
+such as environment-file or activation glue, treat it as policy drift. Update
+`scripts/maint/policy.json` narrowly and let downstream repositories inherit or
+forward that policy. Do not bypass the gate, and do not add heavy components to
+the allowlist.
+
+Network failures should be diagnosed by fetch path. Nix binary substitution,
+GitHub release/direct fetches, npm registry or node-gyp downloads, Cargo
+registries, and runtime proxies are different paths; a fix for one should not be
+silently generalized to the others.
+
 Only PRs with both `global-pass` and `china-gate-pass` attempt auto-merge. A PR with `global-pass` but `china-gate-miss` remains visible for manual review, but should not enter `main`.
 
 ## Local `maint-switch`

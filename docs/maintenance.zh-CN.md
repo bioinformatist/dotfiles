@@ -78,6 +78,15 @@ marker policy 是经验性边界，应该在真实 miss 中持续收紧：`unit-
 derivation，就应收紧；新的 release tarball leaf 也必须显式声明后才允许
 direct fetch。
 
+如果本机 gate 拦住的是明确的 NixOS/Home Manager 生成式 glue derivation，
+例如环境文件或 activation glue，应把它当作 policy 漂移处理：窄幅更新
+`scripts/maint/policy.json`，再让下游仓库继承或转发该 policy。不要绕过 gate，
+也不要把重组件加入 allowlist。
+
+网络失败需要按 fetch 路径拆分诊断。Nix 二进制替代、GitHub release/direct fetch、
+npm registry 或 node-gyp 下载、Cargo registry、运行时代理是不同路径；一个路径
+的修复不应被默默推广到其他路径。
+
 只有 `global-pass` 且 `china-gate-pass` 的 PR 才会尝试 auto-merge。`global-pass` 但 `china-gate-miss` 的 PR 只保留为人工可见的候选，不进入 `main`。
 
 ## 本机 `maint-switch`
