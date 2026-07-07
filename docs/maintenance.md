@@ -68,7 +68,15 @@ The China gate compares the updated leaf against `main`. Existing misses do not 
 
 Gate marker policy is shared through `scripts/maint/policy.json`; local
 `maint-switch`, the generated `maint.nuon`, and the GitHub China gate consume
-the same marker lists.
+the same marker lists. The leaf queue itself stays in
+`.github/workflows/maintenance-leaf.yml`; leaf names, policy groups, schedules,
+flake inputs, and update hooks are workflow orchestration, not gate policy.
+
+The marker policy is intentionally empirical. It should be refined from real
+misses: broad generated-glue markers such as `unit-`, `-etc-`, and
+`nixos-system-` may be tightened if they misclassify a derivation, and new
+release-tarball leaves must be declared explicitly before their direct fetches
+are allowed.
 
 Only PRs with both `global-pass` and `china-gate-pass` attempt auto-merge. A PR with `global-pass` but `china-gate-miss` remains visible for manual review, but should not enter `main`.
 

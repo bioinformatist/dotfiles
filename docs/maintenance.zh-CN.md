@@ -68,7 +68,14 @@ China gate 会把更新后的 leaf 和 `main` 做差分比较。已有的未命�
 
 门控 marker policy 统一放在 `scripts/maint/policy.json`；本机
 `maint-switch`、生成的 `maint.nuon` 和 GitHub China gate 都读取同一组
-marker。
+marker。leaf 队列本身继续保留在 `.github/workflows/maintenance-leaf.yml`；
+leaf 名称、policy 分组、调度、flake input 和 update hook 属于 workflow
+编排，不属于 gate policy。
+
+marker policy 是经验性边界，应该在真实 miss 中持续收紧：`unit-`、
+`-etc-`、`nixos-system-` 这类较宽的生成式 glue marker 如果误分类
+derivation，就应收紧；新的 release tarball leaf 也必须显式声明后才允许
+direct fetch。
 
 只有 `global-pass` 且 `china-gate-pass` 的 PR 才会尝试 auto-merge。`global-pass` 但 `china-gate-miss` 的 PR 只保留为人工可见的候选，不进入 `main`。
 
