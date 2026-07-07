@@ -91,6 +91,17 @@ Only PRs with both `global-pass` and `china-gate-pass` attempt auto-merge. A PR 
 5. Build the target system closure.
 6. Activate with `boot` or `switch` depending on kernel/NVIDIA runtime risk.
 
+By default, `maint-switch` uses the repo path generated in
+`~/.config/dotfiles/maint.nuon`. For maintenance from a clean worktree, pass an
+explicit repo path and skip the built-in pull:
+
+```nu
+maint-switch --repo /tmp/dotfiles-clean --no-pull
+```
+
+Use this for host-local auto-generated data such as Rime sync files. Do not make
+a Rime-only commit just to satisfy the clean-checkout gate.
+
 Default blocking markers include:
 
 - `linux-`, `nvidia-x11`, `mesa-`, `systemd-`

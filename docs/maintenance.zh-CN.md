@@ -90,6 +90,17 @@ direct fetch。
 5. 构建目标 system closure。
 6. 根据 kernel/NVIDIA 风险选择 `boot` 或 `switch` 激活。
 
+默认情况下，`maint-switch` 使用 `~/.config/dotfiles/maint.nuon` 里生成的
+repo 路径。需要从 clean worktree 维护时，可以显式传入 repo 路径并跳过内置
+pull：
+
+```nu
+maint-switch --repo /tmp/dotfiles-clean --no-pull
+```
+
+这适用于 Rime sync 文件这类主机本地自动生成数据；不要为了通过 clean-checkout
+门控而创建 Rime-only commit。
+
 默认阻断标记包括：
 
 - `linux-`、`nvidia-x11`、`mesa-`、`systemd-`

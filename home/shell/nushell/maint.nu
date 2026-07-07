@@ -12,7 +12,12 @@ def dotfiles-maint-settings [] {
 }
 
 def dotfiles-maint-repo [] {
-  (dotfiles-maint-settings).repo
+  let override = ($env | get -o DOTFILES_MAINT_REPO | default "")
+  if $override != "" {
+    $override
+  } else {
+    (dotfiles-maint-settings).repo
+  }
 }
 
 def dotfiles-maint-host [] {
@@ -20,7 +25,7 @@ def dotfiles-maint-host [] {
 }
 
 def dotfiles-maint-policy [] {
-  let repo = (dotfiles-maint-settings).repo
+  let repo = (dotfiles-maint-repo)
   let policy_file = ($repo | path join "scripts" "maint" "policy.json")
   if ($policy_file | path exists) {
     open $policy_file
@@ -276,40 +281,43 @@ def dotfiles-maint-switch-risk [target: string] {
 
 # Daily local entry point: consume the already-reviewed main branch state, gate it
 # against the machine's cache policy, then activate one complete system closure.
-def maint-switch [--no-pull] {
-  if not (dotfiles-maint-repo-clean) {
-    error make { msg: "Repository has local changes; commit or stash them before maint-switch." }
-  }
+def maint-switch [--no-pull, --repo: string] {
+  let repo_env = if $repo == null { {} } else { { DOTFILES_MAINT_REPO: $repo } }
+  with-env $repo_env {
+    if not (dotfiles-maint-repo-clean) {
+      error make { msg: "Repository has local changes; commit or stash them before maint-switch." }
+    }
 
-  let before = (dotfiles-maint-current-rev)
-  if not $no_pull {
-    dotfiles-maint-pull
-  }
+    let before = (dotfiles-maint-current-rev)
+    if not $no_pull {
+      dotfiles-maint-pull
+    }
 
-  if not (dotfiles-maint-repo-clean) {
-    error make { msg: "Repository has local changes after pull; resolve them before maint-switch." }
-  }
+    if not (dotfiles-maint-repo-clean) {
+      error make { msg: "Repository has local changes after pull; resolve them before maint-switch." }
+    }
 
-  let after = (dotfiles-maint-current-rev)
-  if $before != $after {
-    print $"Updated checkout: ($before) -> ($after)"
-  }
+    let after = (dotfiles-maint-current-rev)
+    if $before != $after {
+      print $"Updated checkout: ($before) -> ($after)"
+    }
 
-  dotfiles-maint-gate-current-system
+    dotfiles-maint-gate-current-system
 
-  let attr = (dotfiles-maint-toplevel-attr)
+    let attr = (dotfiles-maint-toplevel-attr)
 
-  print "Building target system closure..."
-  let target = (dotfiles-maint-build-toplevel $attr)
-  let risk = (dotfiles-maint-switch-risk $target)
+    print "Building target system closure..."
+    let target = (dotfiles-maint-build-toplevel $attr)
+    let risk = (dotfiles-maint-switch-risk $target)
 
-  if $risk.requiresBoot {
-    print "Detected runtime-sensitive changes; using boot activation instead of hot switch."
-    if $risk.kernelChanged { print "risk: booted kernel differs from target kernel" }
-    if $risk.nvidiaChanged { print "risk: NVIDIA userspace differs from current system" }
-    print "Next step after this finishes: reboot into the new generation."
-    ^sudo nixos-rebuild --no-reexec boot --store-path $target
-  } else {
-    ^sudo nixos-rebuild --no-reexec switch --store-path $target
+    if $risk.requiresBoot {
+      print "Detected runtime-sensitive changes; using boot activation instead of hot switch."
+      if $risk.kernelChanged { print "risk: booted kernel differs from target kernel" }
+      if $risk.nvidiaChanged { print "risk: NVIDIA userspace differs from current system" }
+      print "Next step after this finishes: reboot into the new generation."
+      ^sudo nixos-rebuild --no-reexec boot --store-path $target
+    } else {
+      ^sudo nixos-rebuild --no-reexec switch --store-path $target
+    }
   }
 }
