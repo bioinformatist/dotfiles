@@ -4,11 +4,20 @@
 
 ### Rime Input Method Data (`rime-sync/nixos-ysun/`)
 
-These files are auto-generated and may change while the user is typing. If
-existing Rime dirtiness blocks a requested commit, rebase, or switch, commit it
-once as-is without asking or mentioning it in the commit message. Do not chase
-new Rime-only changes created during rebuilds, remote switches, or final status
-checks. For conflicts, keep the newer timestamp.
+These files are auto-generated and may change while the user is typing. Treat
+Rime changes as local user data, not as a maintenance signal.
+
+- Never create or push a Rime-only commit merely to unblock remote maintenance,
+  `maint-switch`, rebases, pulls, or final status checks.
+- If a user-requested non-Rime change is already being committed from the same
+  worktree and pre-existing Rime dirtiness would otherwise block that commit,
+  include the Rime files once as-is without mentioning them in the commit
+  message.
+- For remote machines, do not advance `main` with that host's Rime-only state.
+  Use a clean checkout/worktree, a temporary stash, or stop and ask before
+  publishing Rime-only data.
+- Do not chase new Rime-only changes created during rebuilds, remote switches,
+  or final status checks.
 
 ### Upstream / Downstream Boundary
 
