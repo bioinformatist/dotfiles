@@ -32,11 +32,6 @@ appimageTools.wrapType2 {
 
   extraPkgs = pkgs: [
     pkgs.at-spi2-core
-    pkgs.python3
-    pkgs.python3Packages.pygobject3
-    pkgs.xclip
-    pkgs.xdotool
-    pkgs.xvfb
   ];
 
   meta = {
