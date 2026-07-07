@@ -34,12 +34,14 @@ def dotfiles-maint-config [] {
 
 def dotfiles-maint-has-proxy-env [] {
   let proxy_env = (dotfiles-maint-config)
-  (($proxy_env.HTTP_PROXY? | default "") != "")
-    or (($proxy_env.HTTPS_PROXY? | default "") != "")
-    or (($proxy_env.ALL_PROXY? | default "") != "")
-    or (($proxy_env.http_proxy? | default "") != "")
-    or (($proxy_env.https_proxy? | default "") != "")
-    or (($proxy_env.all_proxy? | default "") != "")
+  [
+    ($proxy_env.HTTP_PROXY? | default "")
+    ($proxy_env.HTTPS_PROXY? | default "")
+    ($proxy_env.ALL_PROXY? | default "")
+    ($proxy_env.http_proxy? | default "")
+    ($proxy_env.https_proxy? | default "")
+    ($proxy_env.all_proxy? | default "")
+  ] | any {|value| $value != "" }
 }
 
 def dotfiles-maint-risk-markers [] {
@@ -173,10 +175,7 @@ def dotfiles-maint-dry-run [attr: string markers: list<string>] {
   )
   let blocked_derivations = (
     $built_derivations
-    | where {|derivation|
-      (dotfiles-maint-derivation-matches $derivation $allowed_markers | is-empty)
-        and (dotfiles-maint-derivation-matches $derivation $allowed_direct_fetch_markers | is-empty)
-    }
+    | where {|derivation| (dotfiles-maint-derivation-matches $derivation $allowed_markers | is-empty) and (dotfiles-maint-derivation-matches $derivation $allowed_direct_fetch_markers | is-empty) }
   )
   let result = {
     exitCode: $exit_code
