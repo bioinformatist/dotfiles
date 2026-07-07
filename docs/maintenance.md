@@ -57,6 +57,8 @@ Default cadence:
 
 Each leaf has at most one open PR. The next attempt updates the same `maint/<leaf>` branch instead of opening another PR. There is intentionally no global open PR limit.
 
+Repository setup: keep the default workflow token permission at `read`, but enable GitHub Actions' "Allow GitHub Actions to create and approve pull requests" setting. That setting is required for fixed leaf PR creation and is separate from enabling auto-merge.
+
 PRs run two dry-runs:
 
 - `global-*`: basic dry-run under the GitHub runner's default network.

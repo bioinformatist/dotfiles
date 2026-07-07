@@ -57,6 +57,8 @@ dotfiles.nixNetwork.proxy = {
 
 每个 leaf 最多一个 open PR；下一次尝试会更新同一个 `maint/<leaf>` 分支，不会开新 PR。暂时不设置全局 open PR 上限。
 
+仓库设置：默认 workflow token 权限保持 `read`，但需要打开 GitHub Actions 的 "Allow GitHub Actions to create and approve pull requests"。这是创建固定 leaf PR 的前提，和启用 auto-merge 不是同一个开关。
+
 PR 会跑两类 dry-run：
 
 - `global-*`：GitHub runner 默认网络下的基本 dry-run。

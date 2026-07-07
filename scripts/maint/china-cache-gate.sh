@@ -68,8 +68,10 @@ gate_host() {
     --option substituters "$china_substituter" \
     --option extra-substituters "" \
     ".#nixosConfigurations.${host}.config.system.build.toplevel" \
-    2>&1 | tee "$output"; then
+    >"$output" \
+    2>&1; then
     echo "dry-run failed for ${host}" >&2
+    cat "$output" >&2
     rm -f "$output"
     return 1
   fi
