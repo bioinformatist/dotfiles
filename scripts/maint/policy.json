@@ -42,6 +42,7 @@
     "-system-path.drv",
     "-system-shutdown.drv",
     "-system-units.drv",
+    "-set-environment.drv",
     "-tmpfiles.d.drv",
     "-udev-rules.drv",
     "-user-generators.drv",
