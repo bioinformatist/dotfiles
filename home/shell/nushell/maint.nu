@@ -95,6 +95,7 @@ def dotfiles-maint-allowed-local-build-markers [] {
     "-udev-rules.drv"
     "-user-generators.drv"
     "-users-groups.json.drv"
+    "-etc-"
     "-etc.drv"
     "-activate.drv"
     "nixos-system-"
