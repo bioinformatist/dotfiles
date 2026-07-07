@@ -49,6 +49,15 @@ case "$hook" in
       "codexVersion" \
       "codexHash"
     ;;
+  orca-release)
+    update_release_pin \
+      "stablyai/orca" \
+      "v" \
+      "orca-linux.AppImage" \
+      "pkgs/orca-ide.nix" \
+      "orcaVersion" \
+      "orcaHash"
+    ;;
   zeroclaw-release)
     update_release_pin \
       "zeroclaw-labs/zeroclaw" \

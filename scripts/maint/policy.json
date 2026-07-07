@@ -60,11 +60,13 @@
     "-codex-config.toml.drv",
     "-context7-auth-mcp-server.drv",
     "-github-mcp-server.drv",
-    "-playwright-cli.drv"
+    "-playwright-cli.drv",
+    "-orca-ide-"
   ],
   "allowedDirectFetchMarkers": [
     "-codex-x86_64-unknown-linux-musl.tar.gz",
     "-codex-0.",
+    "-orca-linux.AppImage",
     "-zeroclaw-x86_64-unknown-linux-gnu.tar.gz",
     "-zeroclaw-0."
   ],
@@ -72,6 +74,9 @@
     "codex": [
       "-codex-x86_64-unknown-linux-musl.tar.gz",
       "-codex-0."
+    ],
+    "orca": [
+      "-orca-linux.AppImage"
     ],
     "zeroclaw": [
       "-zeroclaw-x86_64-unknown-linux-gnu.tar.gz",

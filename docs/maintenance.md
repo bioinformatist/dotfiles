@@ -39,6 +39,7 @@ This proxy is intentionally scoped to Nix maintenance paths. It is injected into
 | `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
 | `wechat` | `tools` | `nixpkgs-wechat` flake input |
 | `codex` | `tools` | Codex release pin |
+| `orca` | `tools` | Orca ADE AppImage release pin |
 | `zeroclaw` | `tools` | ZeroClaw release pin |
 | `hyprland` | `desktop` | `hyprland` flake input |
 | `sops-nix` | `infra` | `sops-nix` flake input |
@@ -64,7 +65,7 @@ PRs run two dry-runs:
 - `global-*`: basic dry-run under the GitHub runner's default network.
 - `china-gate-*`: China-network gate using `https://mirrors.ustc.edu.cn/nix-channels/store` with `extra-substituters` cleared.
 
-The China gate compares the updated leaf against `main`. Existing misses do not automatically fail every leaf PR. Newly introduced unapproved local builds fail the gate; newly introduced fixed-output release fetches are allowed only for leaves that declare that route, currently Codex and ZeroClaw.
+The China gate compares the updated leaf against `main`. Existing misses do not automatically fail every leaf PR. Newly introduced unapproved local builds fail the gate; newly introduced fixed-output release fetches are allowed only for leaves that declare that route, currently Codex, Orca, and ZeroClaw.
 
 Gate marker policy is shared through `scripts/maint/policy.json`; local
 `maint-switch`, the generated `maint.nuon`, and the GitHub China gate consume
@@ -110,7 +111,7 @@ Default blocking markers include:
 - `chromium`, `electron`
 - `serenityos-emoji-font`, `nanoemoji`
 
-The allowlist is intentionally limited to generated glue and lightweight wrappers: Home Manager files/generations, NixOS unit/restart/activation files, generated manifests, repo-local Codex skill packaging, and declared MCP wrapper derivations may proceed. Declared fixed-output direct release fetches for Codex and ZeroClaw may also proceed through the configured maintenance proxy. Other local builds are treated as gate failures, and heavy components such as kernel, Mesa, systemd packages, Hyprland packages, GCC/Rust toolchains, Chromium/Electron, and large font pipelines remain blocked.
+The allowlist is intentionally limited to generated glue and lightweight wrappers: Home Manager files/generations, NixOS unit/restart/activation files, generated manifests, repo-local Codex skill packaging, and declared MCP wrapper derivations may proceed. Declared fixed-output direct release fetches for Codex, Orca, and ZeroClaw may also proceed through the configured maintenance proxy. Other local builds are treated as gate failures, and heavy components such as kernel, Mesa, systemd packages, Hyprland packages, GCC/Rust toolchains, Chromium/Electron, and large font pipelines remain blocked.
 
 ## Concurrency
 

@@ -39,6 +39,7 @@ dotfiles.nixNetwork.proxy = {
 | `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
 | `wechat` | `tools` | `nixpkgs-wechat` flake input |
 | `codex` | `tools` | Codex release pin |
+| `orca` | `tools` | Orca ADE AppImage release pin |
 | `zeroclaw` | `tools` | ZeroClaw release pin |
 | `hyprland` | `desktop` | `hyprland` flake input |
 | `sops-nix` | `infra` | `sops-nix` flake input |
@@ -64,7 +65,7 @@ PR 会跑两类 dry-run：
 - `global-*`：GitHub runner 默认网络下的基本 dry-run。
 - `china-gate-*`：强制只使用 `https://mirrors.ustc.edu.cn/nix-channels/store`，并清空 `extra-substituters` 的中国大陆网络门控。
 
-China gate 会把更新后的 leaf 和 `main` 做差分比较。已有的未命中不会让每个 leaf PR 都失败；新增的未批准本地构建会失败；新增的固定输出 release 直连 fetch 只有在 leaf 明确声明该路线时才允许，目前是 Codex 和 ZeroClaw。
+China gate 会把更新后的 leaf 和 `main` 做差分比较。已有的未命中不会让每个 leaf PR 都失败；新增的未批准本地构建会失败；新增的固定输出 release 直连 fetch 只有在 leaf 明确声明该路线时才允许，目前是 Codex、Orca 和 ZeroClaw。
 
 门控 marker policy 统一放在 `scripts/maint/policy.json`；本机
 `maint-switch`、生成的 `maint.nuon` 和 GitHub China gate 都读取同一组
@@ -109,7 +110,7 @@ maint-switch --repo /tmp/dotfiles-clean --no-pull
 - `chromium`、`electron`
 - `serenityos-emoji-font`、`nanoemoji`
 
-允许列表只覆盖生成式 glue 和轻量包装：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex 和 ZeroClaw 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
+允许列表只覆盖生成式 glue 和轻量包装：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex、Orca 和 ZeroClaw 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
 
 ## 并发策略
 
