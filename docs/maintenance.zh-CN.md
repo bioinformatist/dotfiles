@@ -8,7 +8,7 @@
 maint-switch
 ```
 
-但更新提议不再由本机脚本生成。leaf 级更新由 GitHub Actions 维护固定 PR 队列；本机只消费已经进入 `main` 的状态，并做最后的中国大陆缓存门控和系统切换。
+但更新提议不再由本机脚本生成。leaf 级更新由 GitHub Actions 维护固定 PR 队列；本机只消费已经进入 `main` 的状态，并做最后的中国大陆网络门控和系统切换。
 
 ## 声明式网络配置
 
@@ -62,9 +62,11 @@ dotfiles.nixNetwork.proxy = {
 PR 会跑两类 dry-run：
 
 - `global-*`：GitHub runner 默认网络下的基本 dry-run。
-- `china-cache-*`：强制只使用 `https://mirrors.ustc.edu.cn/nix-channels/store`，并清空 `extra-substituters`。
+- `china-gate-*`：强制只使用 `https://mirrors.ustc.edu.cn/nix-channels/store`，并清空 `extra-substituters` 的中国大陆网络门控。
 
-只有 `global-pass` 且 `china-cache-pass` 的 PR 才会尝试 auto-merge。`global-pass` 但 `china-cache-miss` 的 PR 只保留为人工可见的候选，不进入 `main`。
+China gate 会把更新后的 leaf 和 `main` 做差分比较。已有的未命中不会让每个 leaf PR 都失败；新增的未批准本地构建会失败；新增的固定输出 release 直连 fetch 只有在 leaf 明确声明该路线时才允许，目前是 Codex 和 ZeroClaw。
+
+只有 `global-pass` 且 `china-gate-pass` 的 PR 才会尝试 auto-merge。`global-pass` 但 `china-gate-miss` 的 PR 只保留为人工可见的候选，不进入 `main`。
 
 ## 本机 `maint-switch`
 
@@ -85,7 +87,7 @@ PR 会跑两类 dry-run：
 - `chromium`、`electron`
 - `serenityos-emoji-font`、`nanoemoji`
 
-允许列表刻意很窄：`hm_*`、`home-manager-path`、`home-manager-generation`、`user-environment`、`system-units`、`etc`、`activate`、`nixos-system-*` 这类 NixOS/Home Manager glue 可以本地构建。其他本地构建即使没有命中阻断标记，也会被当作缓存未命中处理。
+允许列表刻意很窄：`hm_*`、`home-manager-path`、`home-manager-generation`、`user-environment`、`system-units`、`etc`、`activate`、`nixos-system-*` 这类 NixOS/Home Manager glue 可以本地构建。Codex 和 ZeroClaw 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建即使没有命中阻断标记，也会被当作门控失败处理。
 
 ## 并发策略
 
@@ -117,4 +119,4 @@ git commit -m "chore: update flake inputs"
 maint-switch --no-pull
 ```
 
-`maint-switch` 要求 checkout clean；因此手动全量刷新需要先提交，再用 `--no-pull` 针对本地提交执行缓存门控和切换。
+`maint-switch` 要求 checkout clean；因此手动全量刷新需要先提交，再用 `--no-pull` 针对本地提交执行网络门控和切换。

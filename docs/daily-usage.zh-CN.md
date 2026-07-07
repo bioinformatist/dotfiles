@@ -244,7 +244,7 @@ git commit -m "chore: update flake inputs"
 
 ### 重建并切换
 
-日常维护直接运行 `maint-switch`，它会先 `git pull --ff-only`，再做缓存门控、构建和切换完整系统 closure。手动全量刷新已经在本地提交后，使用 `--no-pull` 针对该提交切换。
+日常维护直接运行 `maint-switch`，它会先 `git pull --ff-only`，再做网络门控、构建和切换完整系统 closure。手动全量刷新已经在本地提交后，使用 `--no-pull` 针对该提交切换。
 
 ```nu
 maint-switch --no-pull

@@ -42,6 +42,15 @@ in
       description = "Strings maint-switch allows in locally built NixOS/Home Manager glue derivations.";
     };
 
+    allowedDirectFetchMarkers = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [
+        "-codex-"
+        "-zeroclaw-"
+      ];
+      description = "Strings maint-switch allows as declared fixed-output direct release fetches.";
+    };
+
     parallel = lib.mkOption {
       type = lib.types.attrs;
       default = { };
@@ -71,6 +80,7 @@ in
           host
           riskMarkers
           allowedLocalBuildMarkers
+          allowedDirectFetchMarkers
           parallel
           ;
       };

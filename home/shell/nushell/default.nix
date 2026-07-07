@@ -46,6 +46,10 @@ let
     "-activate.drv"
     "nixos-system-"
   ];
+  allowedDirectFetchMarkers = [
+    "-codex-"
+    "-zeroclaw-"
+  ];
 in
 {
   programs.nushell = {
@@ -70,5 +74,6 @@ in
     };
     riskMarkers = riskMarkers;
     allowedLocalBuildMarkers = allowedLocalBuildMarkers;
+    allowedDirectFetchMarkers = allowedDirectFetchMarkers;
   };
 }

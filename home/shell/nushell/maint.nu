@@ -32,6 +32,16 @@ def dotfiles-maint-config [] {
   (dotfiles-maint-network-config).proxyEnv? | default {}
 }
 
+def dotfiles-maint-has-proxy-env [] {
+  let proxy_env = (dotfiles-maint-config)
+  (($proxy_env.HTTP_PROXY? | default "") != "")
+    or (($proxy_env.HTTPS_PROXY? | default "") != "")
+    or (($proxy_env.ALL_PROXY? | default "") != "")
+    or (($proxy_env.http_proxy? | default "") != "")
+    or (($proxy_env.https_proxy? | default "") != "")
+    or (($proxy_env.all_proxy? | default "") != "")
+}
+
 def dotfiles-maint-risk-markers [] {
   (dotfiles-maint-settings).riskMarkers? | default [
     "nvidia-x11"
@@ -70,6 +80,13 @@ def dotfiles-maint-allowed-local-build-markers [] {
     "-etc.drv"
     "-activate.drv"
     "nixos-system-"
+  ]
+}
+
+def dotfiles-maint-allowed-direct-fetch-markers [] {
+  (dotfiles-maint-settings).allowedDirectFetchMarkers? | default [
+    "-codex-"
+    "-zeroclaw-"
   ]
 }
 
@@ -149,15 +166,24 @@ def dotfiles-maint-dry-run [attr: string markers: list<string>] {
     | where {|marker| $built_derivation_text | str contains $marker }
   )
   let allowed_markers = (dotfiles-maint-allowed-local-build-markers)
+  let allowed_direct_fetch_markers = (dotfiles-maint-allowed-direct-fetch-markers)
+  let direct_fetch_derivations = (
+    $built_derivations
+    | where {|derivation| not (dotfiles-maint-derivation-matches $derivation $allowed_direct_fetch_markers | is-empty) }
+  )
   let blocked_derivations = (
     $built_derivations
-    | where {|derivation| (dotfiles-maint-derivation-matches $derivation $allowed_markers | is-empty) }
+    | where {|derivation|
+      (dotfiles-maint-derivation-matches $derivation $allowed_markers | is-empty)
+        and (dotfiles-maint-derivation-matches $derivation $allowed_direct_fetch_markers | is-empty)
+    }
   )
   let result = {
     exitCode: $exit_code
     built: $built
     builtDerivations: $built_derivations
     matchedMarkers: $matched_markers
+    directFetchDerivations: $direct_fetch_derivations
     blockedDerivations: $blocked_derivations
     output: $output
   }
@@ -183,10 +209,20 @@ def dotfiles-maint-print-dry-run-summary [label: string result: record] {
     $result.blockedDerivations | first 20 | each {|derivation| print $"  ($derivation)" }
   }
 
+  if (($result.directFetchDerivations? | default []) | is-empty) {
+    print "declared direct fetches: none detected"
+  } else {
+    print "declared direct fetches:"
+    $result.directFetchDerivations | first 20 | each {|derivation| print $"  ($derivation)" }
+  }
+
+  let has_direct_fetch = (not (($result.directFetchDerivations? | default []) | is-empty))
   if $result.exitCode != 0 {
     print "summary: dry-run failed; inspect the output above."
   } else if (not ($result.matchedMarkers | is-empty)) or (not (($result.blockedDerivations? | default []) | is-empty)) {
     print "summary: heavy or unapproved local builds detected; not switching."
+  } else if $has_direct_fetch {
+    print "summary: only approved glue builds or declared direct fetches detected; continuing through the maintenance proxy."
   } else if $result.built {
     print "summary: only unblocked local build steps detected; continuing."
   } else {
@@ -212,6 +248,12 @@ def dotfiles-maint-gate-current-system [] {
   if not (($result.blockedDerivations? | default []) | is-empty) {
     error make {
       msg: $"Current system would build unapproved local derivations: (($result.blockedDerivations | first 5 | str join ', '))"
+    }
+  }
+
+  if (not (($result.directFetchDerivations? | default []) | is-empty)) and (not (dotfiles-maint-has-proxy-env)) {
+    error make {
+      msg: "Current system needs declared direct release fetches, but no maintenance proxy is configured."
     }
   }
 }

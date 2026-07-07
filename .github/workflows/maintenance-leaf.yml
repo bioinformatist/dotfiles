@@ -39,42 +39,52 @@ jobs:
             policy: tools
             inputs: anyrun
             hook: ""
+            direct_fetch_markers: ""
           - leaf: nixpkgs-tools
             policy: tools
             inputs: nixpkgs-tools
             hook: ""
+            direct_fetch_markers: ""
           - leaf: wechat
             policy: tools
             inputs: nixpkgs-wechat
             hook: ""
+            direct_fetch_markers: ""
           - leaf: codex
             policy: tools
             inputs: ""
             hook: codex-release
+            direct_fetch_markers: "-codex-"
           - leaf: zeroclaw
             policy: tools
             inputs: ""
             hook: zeroclaw-release
+            direct_fetch_markers: "-zeroclaw-"
           - leaf: hyprland
             policy: desktop
             inputs: hyprland
             hook: ""
+            direct_fetch_markers: ""
           - leaf: sops-nix
             policy: infra
             inputs: sops-nix
             hook: ""
+            direct_fetch_markers: ""
           - leaf: impermanence
             policy: infra
             inputs: impermanence
             hook: ""
+            direct_fetch_markers: ""
           - leaf: disko
             policy: infra
             inputs: disko
             hook: ""
+            direct_fetch_markers: ""
           - leaf: base
             policy: core
             inputs: nixpkgs home-manager
             hook: ""
+            direct_fetch_markers: ""
     concurrency:
       group: maintenance-leaf-${{ matrix.leaf }}
       cancel-in-progress: false
@@ -131,6 +141,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Base China gate
+        if: steps.plan.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          read -r -a hosts <<< "$HOSTS"
+          bash scripts/maint/china-gate.sh \
+            --report-only \
+            --output "$RUNNER_TEMP/china-base.blocked" \
+            "${hosts[@]}"
+
       - name: Update leaf
         if: steps.plan.outputs.run == 'true'
         shell: bash
@@ -169,26 +191,83 @@ jobs:
 
           echo "status=${status}" >> "$GITHUB_OUTPUT"
 
-      - name: China cache dry-run
+      - name: China gate
         if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
         id: china_gate
+        env:
+          DIRECT_FETCH_MARKERS: ${{ matrix.direct_fetch_markers }}
         shell: bash
         run: |
           set -euo pipefail
 
           status=pass
           read -r -a hosts <<< "$HOSTS"
-          if ! bash scripts/maint/china-cache-gate.sh "${hosts[@]}"; then
+          if ! bash scripts/maint/china-gate.sh \
+            --report-only \
+            --output "$RUNNER_TEMP/china-head.blocked" \
+            "${hosts[@]}"; then
             status=miss
+            : > "$RUNNER_TEMP/china-new.blocked"
+            : > "$RUNNER_TEMP/china-direct.allowed"
+            : > "$RUNNER_TEMP/china-unapproved.blocked"
+          else
+            comm -13 \
+              "$RUNNER_TEMP/china-base.blocked" \
+              "$RUNNER_TEMP/china-head.blocked" \
+              > "$RUNNER_TEMP/china-new.blocked"
+
+            : > "$RUNNER_TEMP/china-direct.allowed"
+            : > "$RUNNER_TEMP/china-unapproved.blocked"
+            read -r -a direct_markers <<< "$DIRECT_FETCH_MARKERS" || true
+
+            while IFS=$'\t' read -r host drv; do
+              [[ -n "${host}${drv}" ]] || continue
+
+              allowed_direct=false
+              for marker in "${direct_markers[@]}"; do
+                if [[ -n "$marker" && "$drv" == *"$marker"* ]]; then
+                  allowed_direct=true
+                  break
+                fi
+              done
+
+              if [[ "$allowed_direct" == "true" ]]; then
+                printf '%s\t%s\n' "$host" "$drv" >> "$RUNNER_TEMP/china-direct.allowed"
+              else
+                printf '%s\t%s\n' "$host" "$drv" >> "$RUNNER_TEMP/china-unapproved.blocked"
+              fi
+            done < "$RUNNER_TEMP/china-new.blocked"
+
+            if [[ -s "$RUNNER_TEMP/china-unapproved.blocked" ]]; then
+              status=miss
+            fi
           fi
 
-          echo "status=${status}" >> "$GITHUB_OUTPUT"
+          direct_fetch=false
+          if [[ -s "$RUNNER_TEMP/china-direct.allowed" ]]; then
+            direct_fetch=true
+          fi
+
+          new_blocked_count="$(wc -l < "$RUNNER_TEMP/china-new.blocked")"
+          direct_fetch_count="$(wc -l < "$RUNNER_TEMP/china-direct.allowed")"
+          unapproved_count="$(wc -l < "$RUNNER_TEMP/china-unapproved.blocked")"
+          {
+            echo "status=${status}"
+            echo "direct_fetch=${direct_fetch}"
+            echo "new_blocked_count=${new_blocked_count//[[:space:]]/}"
+            echo "direct_fetch_count=${direct_fetch_count//[[:space:]]/}"
+            echo "unapproved_count=${unapproved_count//[[:space:]]/}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Publish leaf PR
         if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
         env:
           GLOBAL_STATUS: ${{ steps.global_gate.outputs.status }}
           CHINA_STATUS: ${{ steps.china_gate.outputs.status }}
+          CHINA_DIRECT_FETCH: ${{ steps.china_gate.outputs.direct_fetch }}
+          CHINA_NEW_BLOCKED_COUNT: ${{ steps.china_gate.outputs.new_blocked_count }}
+          CHINA_DIRECT_FETCH_COUNT: ${{ steps.china_gate.outputs.direct_fetch_count }}
+          CHINA_UNAPPROVED_COUNT: ${{ steps.china_gate.outputs.unapproved_count }}
         shell: bash
         run: |
           set -euo pipefail
@@ -209,19 +288,43 @@ jobs:
           - Leaf: \`${leaf}\`
           - Policy: \`${policy}\`
           - Global dry-run: \`${GLOBAL_STATUS}\`
-          - China cache dry-run: \`${CHINA_STATUS}\`
+          - China gate: \`${CHINA_STATUS}\`
+          - New blocked derivations: \`${CHINA_NEW_BLOCKED_COUNT}\`
+          - Declared direct fetches: \`${CHINA_DIRECT_FETCH_COUNT}\`
+          - Unapproved local derivations: \`${CHINA_UNAPPROVED_COUNT}\`
 
           This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
 
-          Auto-merge is only attempted when both dry-runs pass. A China cache miss means this update is visible for manual review, but should not enter \`main\` yet.
+          Auto-merge is only attempted when the global dry-run and China gate both pass. The China gate compares this update against \`main\`: USTC cache hits are preferred, and declared direct release fetches are allowed, but newly introduced unapproved local builds keep the PR out of \`main\`.
           BODY
+
+          append_records() {
+            local title="$1"
+            local file="$2"
+
+            [[ -s "$file" ]] || return 0
+            {
+              echo ""
+              echo "### ${title}"
+              echo '```text'
+              sed -n '1,20p' "$file"
+              if [[ "$(wc -l < "$file")" -gt 20 ]]; then
+                echo "... truncated ..."
+              fi
+              echo '```'
+            } >> "$body"
+          }
+
+          append_records "Declared direct fetches" "$RUNNER_TEMP/china-direct.allowed"
+          append_records "Unapproved local derivations" "$RUNNER_TEMP/china-unapproved.blocked"
 
           gh label create maintenance --color "0E8A16" --description "Automated maintenance PR" --force
           gh label create "policy-${policy}" --color "5319E7" --description "Maintenance policy ${policy}" --force
           gh label create "global-pass" --color "0E8A16" --description "Global dry-run passed" --force
           gh label create "global-fail" --color "D93F0B" --description "Global dry-run failed" --force
-          gh label create "china-cache-pass" --color "0E8A16" --description "USTC-only cache gate passed" --force
-          gh label create "china-cache-miss" --color "D93F0B" --description "USTC-only cache gate missed" --force
+          gh label create "china-gate-pass" --color "0E8A16" --description "China-network maintenance gate passed" --force
+          gh label create "china-gate-miss" --color "D93F0B" --description "China-network maintenance gate missed" --force
+          gh label create "direct-fetch" --color "FBCA04" --description "Update includes declared direct release fetches" --force
 
           git switch -c "$branch"
           git add -A
@@ -243,11 +346,17 @@ jobs:
           fi
 
           gh pr edit "$pr" \
-            --remove-label "global-pass,global-fail,china-cache-pass,china-cache-miss" || true
-          gh pr edit "$pr" \
-            --add-label "maintenance,policy-${policy},global-${GLOBAL_STATUS},china-cache-${CHINA_STATUS}"
+            --remove-label "global-pass,global-fail,china-cache-pass,china-cache-miss,china-gate-pass,china-gate-miss,direct-fetch" || true
+
+          labels="maintenance,policy-${policy},global-${GLOBAL_STATUS},china-gate-${CHINA_STATUS}"
+          if [[ "$CHINA_DIRECT_FETCH" == "true" ]]; then
+            labels="${labels},direct-fetch"
+          fi
+          gh pr edit "$pr" --add-label "$labels"
 
           if [[ "$eligible" == "true" ]]; then
             gh pr ready "$pr" || true
             gh pr merge "$pr" --auto --squash || true
+          else
+            gh pr ready "$pr" --undo || true
           fi
