@@ -101,6 +101,7 @@
         ".config/nushell"
         ".config/gh"
         ".config/google-chrome"
+        ".config/orca"
         ".codex"
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5"

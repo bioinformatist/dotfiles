@@ -57,7 +57,7 @@ This repository currently manages the `homePC` workstation and `linglong` keyboa
 | `~/.config/nushell` | Nushell user config (env.nu, config.nu) |
 | `~/.config/gh` | GitHub CLI auth state |
 | `~/.config/google-chrome` | Chrome profile (bookmarks, passwords, extensions) |
-| `~/.config/orca` | Orca IDE config, projects, sessions, and managed agent state (`homePC` only) |
+| `~/.config/orca` | Orca IDE config, projects, sessions, and managed agent state |
 | `~/.codex` | Codex config, auth, history, and MCP server state |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge proxy profiles and settings |
 | `~/.local/share/fcitx5` | Rime user dictionary and learned words |
@@ -89,6 +89,7 @@ Everything else is wiped on reboot.
 | **Hyprland** | `inputs.hyprland` (flake) | Dynamic tiling Wayland compositor, launched via UWSM |
 | **Ghostty** | `pkgs.ghostty` | Modern GPU-accelerated terminal emulator (Zig), native GTK on Linux |
 | **Google Chrome** | `pkgs.google-chrome` | Web browser |
+| **Orca** | `pkgs.orca-ide` | AI development environment |
 | **Clash Verge** | `programs.clash-verge` (NixOS module) | GUI proxy client (network flexibility) |
 | **Eww** | `pkgs.eww` + Home Manager | Desktop widgets and status bar |
 | **Dunst** | Home Manager service | Notification daemon |

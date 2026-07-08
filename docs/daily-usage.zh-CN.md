@@ -57,7 +57,7 @@
 | `~/.config/nushell` | Nushell 用户配置（env.nu、config.nu） |
 | `~/.config/gh` | GitHub CLI 登录状态 |
 | `~/.config/google-chrome` | Chrome 配置（书签、密码、扩展） |
-| `~/.config/orca` | Orca IDE 配置、项目、会话和托管 agent 状态（仅 `homePC`） |
+| `~/.config/orca` | Orca IDE 配置、项目、会话和托管 agent 状态 |
 | `~/.codex` | Codex 配置、认证、历史和 MCP server 状态 |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge 代理配置和设置 |
 | `~/.local/share/fcitx5` | Rime 用户词典和学习数据 |
@@ -89,6 +89,7 @@
 | **Hyprland** | `inputs.hyprland`（flake） | 动态平铺 Wayland 合成器，通过 UWSM 启动 |
 | **Ghostty** | `pkgs.ghostty` | 现代 GPU 加速终端模拟器（Zig），Linux 上原生 GTK |
 | **Google Chrome** | `pkgs.google-chrome` | Web 浏览器 |
+| **Orca** | `pkgs.orca-ide` | AI 开发环境 |
 | **Clash Verge** | `programs.clash-verge`（NixOS 模块） | GUI 代理客户端（灵活网络管理） |
 | **Eww** | `pkgs.eww` + Home Manager | 桌面小部件和状态栏 |
 | **Dunst** | Home Manager 服务 | 通知守护进程 |

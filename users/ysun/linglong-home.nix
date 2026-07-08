@@ -1,4 +1,5 @@
 {
+  pkgs,
   ...
 }:
 {
@@ -7,4 +8,8 @@
   ];
 
   dotfiles.hyprland.noHardwareCursors = false;
+
+  home.packages = [
+    pkgs.orca-ide
+  ];
 }
