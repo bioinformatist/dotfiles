@@ -65,7 +65,10 @@ PR 会跑两类 dry-run：
 - `global-*`：GitHub runner 默认网络下的基本 dry-run。
 - `china-gate-*`：强制只使用 `https://mirrors.ustc.edu.cn/nix-channels/store`，并清空 `extra-substituters` 的中国大陆网络门控。
 
-China gate 会把更新后的 leaf 和 `main` 做差分比较。已有的未命中不会让每个 leaf PR 都失败；新增的未批准本地构建会失败；新增的固定输出 release 直连 fetch 只有在 leaf 明确声明该路线时才允许，目前是 Codex、Orca 和 ZeroClaw。
+China gate 会同时记录更新后 head closure 的完整结果，以及相对 `main`
+的差分。已有 miss 会和这个 leaf 新引入的 miss 分开展示，但 auto-merge
+要求完整 head closure 中没有未批准本地构建。新增的固定输出 release 直连
+fetch 只有在 leaf 明确声明该路线时才允许，目前是 Codex、Orca 和 ZeroClaw。
 
 门控 marker policy 统一放在 `scripts/maint/policy.json`；本机
 `maint-switch`、生成的 `maint.nuon` 和 GitHub China gate 都读取同一组
@@ -87,7 +90,10 @@ direct fetch。
 npm registry 或 node-gyp 下载、Cargo registry、运行时代理是不同路径；一个路径
 的修复不应被默默推广到其他路径。
 
-只有 `global-pass` 且 `china-gate-pass` 的 PR 才会尝试 auto-merge。`global-pass` 但 `china-gate-miss` 的 PR 只保留为人工可见的候选，不进入 `main`。
+只有 `global-pass` 且 `china-gate-pass` 的 PR 才会尝试 auto-merge。
+`china-gate-pass` 表示完整 head closure 中没有未批准本地构建；PR 正文中的
+delta 记录只用于诊断。`global-pass` 但 `china-gate-miss` 的 PR 只保留为
+人工可见的候选，不进入 `main`。
 
 ## 本机 `maint-switch`
 

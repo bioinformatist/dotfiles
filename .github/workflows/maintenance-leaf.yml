@@ -196,6 +196,8 @@ jobs:
 
           status=pass
           read -r -a hosts <<< "$HOSTS"
+          : > "$RUNNER_TEMP/china-head.blocked"
+          : > "$RUNNER_TEMP/china-head.direct"
           if ! bash scripts/maint/china-gate.sh \
             --report-only \
             --output "$RUNNER_TEMP/china-head.blocked" \
@@ -245,6 +247,10 @@ jobs:
             if [[ -s "$RUNNER_TEMP/china-unapproved.blocked" ]]; then
               status=miss
             fi
+
+            if [[ -s "$RUNNER_TEMP/china-head.blocked" ]]; then
+              status=miss
+            fi
           fi
 
           direct_fetch=false
@@ -252,12 +258,14 @@ jobs:
             direct_fetch=true
           fi
 
+          head_blocked_count="$(wc -l < "$RUNNER_TEMP/china-head.blocked")"
           new_blocked_count="$(wc -l < "$RUNNER_TEMP/china-new.blocked")"
           direct_fetch_count="$(wc -l < "$RUNNER_TEMP/china-direct.allowed")"
           unapproved_count="$(wc -l < "$RUNNER_TEMP/china-unapproved.blocked")"
           {
             echo "status=${status}"
             echo "direct_fetch=${direct_fetch}"
+            echo "head_blocked_count=${head_blocked_count//[[:space:]]/}"
             echo "new_blocked_count=${new_blocked_count//[[:space:]]/}"
             echo "direct_fetch_count=${direct_fetch_count//[[:space:]]/}"
             echo "unapproved_count=${unapproved_count//[[:space:]]/}"
@@ -269,6 +277,7 @@ jobs:
           GLOBAL_STATUS: ${{ steps.global_gate.outputs.status }}
           CHINA_STATUS: ${{ steps.china_gate.outputs.status }}
           CHINA_DIRECT_FETCH: ${{ steps.china_gate.outputs.direct_fetch }}
+          CHINA_HEAD_BLOCKED_COUNT: ${{ steps.china_gate.outputs.head_blocked_count }}
           CHINA_NEW_BLOCKED_COUNT: ${{ steps.china_gate.outputs.new_blocked_count }}
           CHINA_DIRECT_FETCH_COUNT: ${{ steps.china_gate.outputs.direct_fetch_count }}
           CHINA_UNAPPROVED_COUNT: ${{ steps.china_gate.outputs.unapproved_count }}
@@ -293,13 +302,14 @@ jobs:
           - Policy: \`${policy}\`
           - Global dry-run: \`${GLOBAL_STATUS}\`
           - China gate: \`${CHINA_STATUS}\`
+          - Head blocked derivations: \`${CHINA_HEAD_BLOCKED_COUNT}\`
           - New blocked derivations: \`${CHINA_NEW_BLOCKED_COUNT}\`
           - Declared direct fetches: \`${CHINA_DIRECT_FETCH_COUNT}\`
           - Unapproved derivations: \`${CHINA_UNAPPROVED_COUNT}\`
 
           This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
 
-          Auto-merge is only attempted when the global dry-run and China gate both pass. The China gate compares this update against \`main\`: USTC cache hits are preferred, and declared direct release fetches are allowed, but newly introduced unapproved local builds keep the PR out of \`main\`.
+          Auto-merge is only attempted when the global dry-run passes and the China gate has no unapproved local builds in the full head closure. The body still shows the delta against \`main\` so existing misses are visible separately from misses introduced by this leaf.
           BODY
 
           append_records() {
@@ -319,6 +329,8 @@ jobs:
             } >> "$body"
           }
 
+          append_records "Head blocked derivations" "$RUNNER_TEMP/china-head.blocked"
+          append_records "New blocked derivations" "$RUNNER_TEMP/china-new.blocked"
           append_records "Declared direct fetches" "$RUNNER_TEMP/china-direct.allowed"
           append_records "Unapproved derivations" "$RUNNER_TEMP/china-unapproved.blocked"
 
