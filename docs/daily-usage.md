@@ -57,6 +57,7 @@ This repository currently manages the `homePC` workstation and `linglong` keyboa
 | `~/.config/nushell` | Nushell user config (env.nu, config.nu) |
 | `~/.config/gh` | GitHub CLI auth state |
 | `~/.config/google-chrome` | Chrome profile (bookmarks, passwords, extensions) |
+| `~/.config/orca` | Orca IDE config, projects, sessions, and managed agent state (`homePC` only) |
 | `~/.codex` | Codex config, auth, history, and MCP server state |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge proxy profiles and settings |
 | `~/.local/share/fcitx5` | Rime user dictionary and learned words |

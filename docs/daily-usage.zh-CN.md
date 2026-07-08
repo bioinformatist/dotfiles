@@ -57,6 +57,7 @@
 | `~/.config/nushell` | Nushell 用户配置（env.nu、config.nu） |
 | `~/.config/gh` | GitHub CLI 登录状态 |
 | `~/.config/google-chrome` | Chrome 配置（书签、密码、扩展） |
+| `~/.config/orca` | Orca IDE 配置、项目、会话和托管 agent 状态（仅 `homePC`） |
 | `~/.codex` | Codex 配置、认证、历史和 MCP server 状态 |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge 代理配置和设置 |
 | `~/.local/share/fcitx5` | Rime 用户词典和学习数据 |
