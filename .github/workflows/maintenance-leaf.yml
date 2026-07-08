@@ -247,10 +247,6 @@ jobs:
             if [[ -s "$RUNNER_TEMP/china-unapproved.blocked" ]]; then
               status=miss
             fi
-
-            if [[ -s "$RUNNER_TEMP/china-head.blocked" ]]; then
-              status=miss
-            fi
           fi
 
           direct_fetch=false
@@ -290,8 +286,13 @@ jobs:
           branch="maint/${leaf}"
           title="chore(maint): update ${leaf}"
           body="$(mktemp)"
+          manual_merge=false
+          if [[ "$leaf" == "nixpkgs-tools" ]]; then
+            manual_merge=true
+          fi
+
           eligible=false
-          if [[ "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" ]]; then
+          if [[ "$manual_merge" != "true" && "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" ]]; then
             eligible=true
           fi
 
@@ -306,10 +307,11 @@ jobs:
           - New blocked derivations: \`${CHINA_NEW_BLOCKED_COUNT}\`
           - Declared direct fetches: \`${CHINA_DIRECT_FETCH_COUNT}\`
           - Unapproved derivations: \`${CHINA_UNAPPROVED_COUNT}\`
+          - Auto-merge eligible: \`${eligible}\`
 
           This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
 
-          Auto-merge is only attempted when the global dry-run passes and the China gate has no unapproved local builds in the full head closure. The body still shows the delta against \`main\` so existing misses are visible separately from misses introduced by this leaf.
+          Auto-merge is only attempted when the global dry-run passes and this leaf introduces no unapproved China-gate misses. The full head closure is shown for diagnosis because a cold GitHub runner can expose existing cache misses that should not block every leaf PR.
           BODY
 
           append_records() {

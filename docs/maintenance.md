@@ -67,9 +67,10 @@ PRs run two dry-runs:
 
 The China gate records both the full updated head closure and the delta against
 `main`. Existing misses are shown separately from misses introduced by the leaf,
-but auto-merge requires the full head closure to have no unapproved local
-builds. Newly introduced fixed-output release fetches are allowed only for
-leaves that declare that route, currently Codex, Orca, and ZeroClaw.
+but the PR gate is based on the delta so a cold GitHub runner does not freeze
+every leaf on unrelated cache misses already present on `main`. Newly introduced
+fixed-output release fetches are allowed only for leaves that declare that route,
+currently Codex, Orca, and ZeroClaw.
 
 Gate marker policy is shared through `scripts/maint/policy.json`; local
 `maint-switch`, the generated `maint.nuon`, and the GitHub China gate consume
@@ -94,11 +95,12 @@ GitHub release/direct fetches, npm registry or node-gyp downloads, Cargo
 registries, and runtime proxies are different paths; a fix for one should not be
 silently generalized to the others.
 
-Only PRs with both `global-pass` and `china-gate-pass` attempt auto-merge.
-`china-gate-pass` means the full head closure has no unapproved local builds;
-delta records in the PR body are for diagnosis. A PR with `global-pass` but
-`china-gate-miss` remains visible for manual review, but should not enter
-`main`.
+Only PRs with both `global-pass` and delta-based `china-gate-pass` attempt
+auto-merge. The PR body also records full-head misses for diagnosis, but those
+do not block every leaf by themselves. Broad baseline leaves that can change many
+tools, currently `nixpkgs-tools`, remain manual even when the delta gate passes.
+A PR with `global-pass` but `china-gate-miss` remains visible for manual review,
+but should not enter `main`.
 
 ## Local `maint-switch`
 
