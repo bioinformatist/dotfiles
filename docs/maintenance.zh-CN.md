@@ -61,7 +61,7 @@ dotfiles.nixNetwork.proxy = {
 仓库设置：默认 workflow token 权限保持 `read`，但需要打开 GitHub Actions 的
 "Allow GitHub Actions to create and approve pull requests"。同时需要启用仓库
 auto-merge。默认分支应通过 ruleset 保护：要求 PR，并要求 `maintenance gate`
-状态检查。
+状态检查，且启用 strict up-to-date checks。
 
 PR 会跑两类 dry-run：
 
@@ -76,7 +76,9 @@ China gate 会同时记录更新后 head closure 的完整结果，以及相对 
 
 门控 marker policy 统一放在 `scripts/maint/policy.json`；本机
 `maint-switch`、生成的 `maint.nuon` 和 GitHub China gate 都读取同一组
-marker。leaf 队列本身继续保留在 `.github/workflows/maintenance-leaf.yml`；
+marker。GitHub leaf workflow 和 required gate workflow 共享
+`scripts/maint/evaluate-china-gate.sh` 里的 head-vs-base China gate 评估，
+避免 PR 元数据和 required `maintenance gate` 状态漂移。leaf 队列本身继续保留在 `.github/workflows/maintenance-leaf.yml`；
 leaf 名称、policy 分组、调度、flake input 和 update hook 属于 workflow
 编排，不属于 gate policy。
 
@@ -99,6 +101,11 @@ GitHub auto-merge。PR 正文仍记录 delta miss 供归因，但生成的
 `maintenance gate` 状态来自完整更新后的 head，因此 `main` 不会自动前进到
 本机 `maint-switch` 会拒绝的状态。`global-pass` 但 `china-gate-miss` 的 PR
 只保留为人工可见的候选，不进入 `main`。
+
+如果 `main` 已经因为 cache 漂移而被 gate 拦住，gate 或 marker policy
+修复可能无法通过正在被它修复的同一个 gate 合入。这种窄场景可以使用 admin
+bootstrap：临时关闭 main ruleset，只合入 gate 或 policy 修复，然后立刻恢复
+ruleset。不要用这条路径合入包版本更新。
 
 `.github/workflows/maintenance-gate.yml` 也支持 `merge_group` 事件。当前没有
 真正启用 GitHub Merge Queue，因为 GitHub 只把该功能提供给组织拥有的 public
