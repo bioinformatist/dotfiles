@@ -2,8 +2,6 @@
 set -euo pipefail
 
 leaf="${1:?leaf name is required}"
-inputs="${2:-}"
-hook="${3:-}"
 
 replace_nix_string() {
   local file="$1"
@@ -51,16 +49,8 @@ update_release_pin() {
   echo "Updated ${leaf} to ${version}"
 }
 
-if [[ -n "$inputs" ]]; then
-  read -r -a input_args <<<"$inputs"
-  echo "Updating flake inputs for ${leaf}: ${inputs}"
-  nix flake update "${input_args[@]}"
-fi
-
-case "$hook" in
-  "")
-    ;;
-  codex-release)
+case "$leaf" in
+  codex)
     update_release_pin \
       "openai/codex" \
       "rust-v" \
@@ -69,7 +59,7 @@ case "$hook" in
       "codexVersion" \
       "codexHash"
     ;;
-  orca-release)
+  orca)
     update_release_pin \
       "stablyai/orca" \
       "v" \
@@ -78,7 +68,7 @@ case "$hook" in
       "orcaVersion" \
       "orcaHash"
     ;;
-  zeroclaw-release)
+  zeroclaw)
     update_release_pin \
       "zeroclaw-labs/zeroclaw" \
       "v" \
@@ -88,7 +78,7 @@ case "$hook" in
       "zeroclawHash"
     ;;
   *)
-    echo "Unknown maintenance hook for ${leaf}: ${hook}" >&2
+    echo "Unknown release-pin leaf: ${leaf}" >&2
     exit 1
     ;;
 esac

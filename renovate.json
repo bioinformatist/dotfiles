@@ -1,0 +1,64 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["nix"],
+  "timezone": "UTC",
+  "prConcurrentLimit": 0,
+  "prHourlyLimit": 0,
+  "dependencyDashboard": true,
+  "lockFileMaintenance": {
+    "enabled": false
+  },
+  "nix": {
+    "enabled": true,
+    "managerFilePatterns": ["/^flake\\.nix$/"]
+  },
+  "labels": ["maintenance"],
+  "packageRules": [
+    {
+      "description": "Keep Nix input PRs one dependency at a time so the China gate can attribute cache misses.",
+      "matchManagers": ["nix"],
+      "automerge": true,
+      "automergeType": "pr",
+      "semanticCommits": "enabled",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "maint",
+      "commitMessageTopic": "{{depName}}",
+      "addLabels": ["flake-input"]
+    },
+    {
+      "description": "Fast-moving tool inputs may be proposed daily.",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["anyrun", "nixpkgs-tools", "nixpkgs-wechat"],
+      "schedule": ["* 20-23 * * *"],
+      "addLabels": ["policy-tools"]
+    },
+    {
+      "description": "Fast-moving desktop inputs are checked weekly.",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["hyprland"],
+      "schedule": ["* * * * 6"],
+      "addLabels": ["policy-desktop"]
+    },
+    {
+      "description": "Infrastructure inputs are checked monthly.",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["sops-nix", "impermanence", "disko"],
+      "schedule": ["* * 1 * *"],
+      "addLabels": ["policy-infra"]
+    },
+    {
+      "description": "Core platform inputs are checked monthly.",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["nixpkgs", "home-manager"],
+      "schedule": ["* * 1 * *"],
+      "addLabels": ["policy-core"]
+    },
+    {
+      "description": "Leave these root inputs out of automated maintenance until they are promoted to an explicit policy.",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["fieldcraft", "mattpocock-skills", "swww"],
+      "enabled": false
+    }
+  ]
+}

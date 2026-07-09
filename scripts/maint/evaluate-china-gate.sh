@@ -169,7 +169,10 @@ direct_fetch_count="$(line_count "$direct_allowed")"
 head_unapproved_count="$(line_count "$head_unapproved")"
 new_unapproved_count="$(line_count "$new_unapproved")"
 status=pass
-if [[ -s "$head_unapproved" ]]; then
+# Leaf gates are intentionally delta-based: existing full-head misses are
+# baseline debt for diagnosis, but unrelated leaves should only be blocked by
+# newly introduced unapproved misses.
+if [[ -s "$new_unapproved" ]]; then
   status=miss
 fi
 direct_fetch=false
