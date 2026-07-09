@@ -58,7 +58,10 @@ dotfiles.nixNetwork.proxy = {
 
 每个 leaf 最多一个 open PR；下一次尝试会更新同一个 `maint/<leaf>` 分支，不会开新 PR。暂时不设置全局 open PR 上限。
 
-仓库设置：默认 workflow token 权限保持 `read`，但需要打开 GitHub Actions 的 "Allow GitHub Actions to create and approve pull requests"。这是创建固定 leaf PR 的前提，和启用 auto-merge 不是同一个开关。
+仓库设置：默认 workflow token 权限保持 `read`，但需要打开 GitHub Actions 的
+"Allow GitHub Actions to create and approve pull requests"。同时需要启用仓库
+auto-merge。默认分支应通过 ruleset 保护：要求 PR、要求 `maintenance gate`
+状态检查，并使用 GitHub Merge Queue。
 
 PR 会跑两类 dry-run：
 
@@ -91,11 +94,13 @@ direct fetch。
 npm registry 或 node-gyp 下载、Cargo registry、运行时代理是不同路径；一个路径
 的修复不应被默默推广到其他路径。
 
-只有 `global-pass` 且基于 delta 的 `china-gate-pass` 的 PR 才会尝试
-auto-merge。PR 正文仍记录完整 head miss 供诊断，但这些既有 miss 本身不
-阻塞每个 leaf。会改变大量工具基线的宽 leaf 仍保持手动处理，目前是
-`nixpkgs-tools`。`global-pass` 但 `china-gate-miss` 的 PR 只保留为人工可见
-的候选，不进入 `main`。
+只有 `global-pass` 且基于 delta 的 `china-gate-pass` 的 PR 才有资格进入
+GitHub Merge Queue。PR 正文仍记录完整 head miss 供诊断，但这些既有 miss
+本身不阻塞每个 leaf。生成的 leaf PR 会写入 `maintenance gate` 状态，
+`.github/workflows/maintenance-gate.yml` 也会在 merge group 上重新运行同名
+gate，因此 `main` 由排队后的状态保护，而不是依赖后续某台机器上的
+`maint-switch` 再判一次。`global-pass` 但 `china-gate-miss` 的 PR 只保留为
+人工可见的候选，不进入 `main`。
 
 ## 本机 `maint-switch`
 

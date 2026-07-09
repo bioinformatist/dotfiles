@@ -28,6 +28,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  statuses: write
 
 jobs:
   update:
@@ -286,13 +287,9 @@ jobs:
           branch="maint/${leaf}"
           title="chore(maint): update ${leaf}"
           body="$(mktemp)"
-          manual_merge=false
-          if [[ "$leaf" == "nixpkgs-tools" ]]; then
-            manual_merge=true
-          fi
 
           eligible=false
-          if [[ "$manual_merge" != "true" && "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" ]]; then
+          if [[ "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" ]]; then
             eligible=true
           fi
 
@@ -311,7 +308,7 @@ jobs:
 
           This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
 
-          Auto-merge is only attempted when the global dry-run passes and this leaf introduces no unapproved China-gate misses. The full head closure is shown for diagnosis because a cold GitHub runner can expose existing cache misses that should not block every leaf PR.
+          Eligible PRs are handed to GitHub Merge Queue after the global dry-run passes and this leaf introduces no unapproved China-gate misses. The required \`maintenance gate\` check also runs on merge groups, so \`main\` only accepts changes that pass the policy gate on the queued state. The full head closure is shown for diagnosis because a cold GitHub runner can expose existing cache misses that should not block every leaf PR.
           BODY
 
           append_records() {
@@ -372,9 +369,21 @@ jobs:
           fi
           gh pr edit "$pr" --add-label "$labels"
 
+          gate_state=failure
+          if [[ "$eligible" == "true" ]]; then
+            gate_state=success
+          fi
+          gh api \
+            --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/$(git rev-parse HEAD)" \
+            -f state="$gate_state" \
+            -f context="maintenance gate" \
+            -f description="global=${GLOBAL_STATUS}, china=${CHINA_STATUS}, unapproved=${CHINA_UNAPPROVED_COUNT}" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
           if [[ "$eligible" == "true" ]]; then
             gh pr ready "$pr" || true
-            gh pr merge "$pr" --auto --squash || true
+            gh pr merge "$pr" --auto
           else
             gh pr ready "$pr" --undo || true
           fi

@@ -1,0 +1,145 @@
+name: Maintenance Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  merge_group:
+    types:
+      - checks_requested
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: maintenance gate
+    runs-on: ubuntu-latest
+    env:
+      HOSTS: homePC linglong
+      CHINA_SUBSTITUTER: https://mirrors.ustc.edu.cn/nix-channels/store
+      NIXPKGS_ALLOW_UNFREE: "1"
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Global dry-run
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          read -r -a hosts <<< "$HOSTS"
+          for host in "${hosts[@]}"; do
+            nix build --dry-run -L ".#nixosConfigurations.${host}.config.system.build.toplevel"
+          done
+
+      - name: China delta gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          read -r -a hosts <<< "$HOSTS"
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+
+          git fetch origin main:refs/remotes/origin/main
+          git worktree add --detach "$tmp/base" origin/main
+
+          bash "$tmp/base/scripts/maint/china-gate.sh" \
+            --report-only \
+            --output "$tmp/china-base.blocked" \
+            --direct-output "$tmp/china-base.direct" \
+            "${hosts[@]}"
+
+          bash scripts/maint/china-gate.sh \
+            --report-only \
+            --output "$tmp/china-head.blocked" \
+            --direct-output "$tmp/china-head.direct" \
+            "${hosts[@]}"
+
+          comm -13 "$tmp/china-base.blocked" "$tmp/china-head.blocked" > "$tmp/china-new.blocked"
+          comm -13 "$tmp/china-base.direct" "$tmp/china-head.direct" > "$tmp/china-new.direct"
+
+          : > "$tmp/china-direct.allowed"
+          cp "$tmp/china-new.blocked" "$tmp/china-unapproved.blocked"
+
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
+            leaf="${GITHUB_HEAD_REF#maint/}"
+            mapfile -t direct_markers < <(
+              jq -r --arg leaf "$leaf" '.leafDirectFetchMarkers[$leaf][]?' scripts/maint/policy.json
+            )
+          else
+            mapfile -t direct_markers < <(
+              jq -r '.allowedDirectFetchMarkers[]' scripts/maint/policy.json
+            )
+          fi
+
+          while IFS=$'\t' read -r host drv; do
+            [[ -n "${host}${drv}" ]] || continue
+
+            allowed_direct=false
+            for marker in "${direct_markers[@]}"; do
+              if [[ -n "$marker" && "$drv" == *"$marker"* ]]; then
+                allowed_direct=true
+                break
+              fi
+            done
+
+            if [[ "$allowed_direct" == "true" ]]; then
+              printf '%s\t%s\n' "$host" "$drv" >> "$tmp/china-direct.allowed"
+            else
+              printf '%s\t%s\n' "$host" "$drv" >> "$tmp/china-unapproved.blocked"
+            fi
+          done < "$tmp/china-new.direct"
+
+          head_blocked_count="$(wc -l < "$tmp/china-head.blocked")"
+          new_blocked_count="$(wc -l < "$tmp/china-new.blocked")"
+          direct_fetch_count="$(wc -l < "$tmp/china-direct.allowed")"
+          unapproved_count="$(wc -l < "$tmp/china-unapproved.blocked")"
+
+          {
+            echo "## Maintenance gate"
+            echo ""
+            echo "- Head blocked derivations: \`${head_blocked_count//[[:space:]]/}\`"
+            echo "- New blocked derivations: \`${new_blocked_count//[[:space:]]/}\`"
+            echo "- Declared direct fetches: \`${direct_fetch_count//[[:space:]]/}\`"
+            echo "- Unapproved derivations: \`${unapproved_count//[[:space:]]/}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          append_records() {
+            local title="$1"
+            local file="$2"
+
+            [[ -s "$file" ]] || return 0
+            {
+              echo ""
+              echo "### ${title}"
+              echo '```text'
+              sed -n '1,20p' "$file"
+              if [[ "$(wc -l < "$file")" -gt 20 ]]; then
+                echo "... truncated ..."
+              fi
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          append_records "Head blocked derivations" "$tmp/china-head.blocked"
+          append_records "New blocked derivations" "$tmp/china-new.blocked"
+          append_records "Declared direct fetches" "$tmp/china-direct.allowed"
+          append_records "Unapproved derivations" "$tmp/china-unapproved.blocked"
+
+          if [[ -s "$tmp/china-unapproved.blocked" ]]; then
+            echo "China gate found unapproved derivations:" >&2
+            sed -n '1,20p' "$tmp/china-unapproved.blocked" >&2
+            exit 1
+          fi
