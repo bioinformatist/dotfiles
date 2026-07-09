@@ -58,7 +58,6 @@
     "-SKILL-header.md.drv",
     "-SKILL.md.drv",
     "-skill.drv",
-    "-source.drv",
     "-codex-config.toml.drv",
     "-context7-auth-mcp-server.drv",
     "-github-mcp-server.drv",

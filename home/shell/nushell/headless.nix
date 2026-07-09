@@ -1,7 +1,6 @@
 { config, lib, ... }:
 let
   cfg = config.dotfiles.maint;
-  maintPolicy = builtins.fromJSON (builtins.readFile ../../../scripts/maint/policy.json);
 in
 {
   options.dotfiles.maint = {
@@ -19,20 +18,20 @@ in
 
     riskMarkers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = maintPolicy.riskMarkers;
-      description = "Strings maint-switch treats as heavy local build markers in dry-run output.";
+      default = [ ];
+      description = "Extra strings maint-switch treats as heavy local build markers in dry-run output.";
     };
 
     allowedLocalBuildMarkers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = maintPolicy.allowedLocalBuildMarkers;
-      description = "Strings maint-switch allows in locally built NixOS/Home Manager glue derivations.";
+      default = [ ];
+      description = "Extra strings maint-switch allows in locally built NixOS/Home Manager glue derivations.";
     };
 
     allowedDirectFetchMarkers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = maintPolicy.allowedDirectFetchMarkers;
-      description = "Strings maint-switch allows as declared fixed-output direct release fetches.";
+      default = [ ];
+      description = "Extra strings maint-switch allows as declared fixed-output direct release fetches.";
     };
 
     parallel = lib.mkOption {
@@ -62,11 +61,11 @@ in
         inherit (cfg)
           repo
           host
-          riskMarkers
-          allowedLocalBuildMarkers
-          allowedDirectFetchMarkers
           parallel
           ;
+        extraRiskMarkers = cfg.riskMarkers;
+        extraAllowedLocalBuildMarkers = cfg.allowedLocalBuildMarkers;
+        extraAllowedDirectFetchMarkers = cfg.allowedDirectFetchMarkers;
       };
     };
   };

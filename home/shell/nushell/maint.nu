@@ -34,15 +34,11 @@ def dotfiles-maint-policy [] {
   }
 }
 
-def dotfiles-maint-list-setting [name: string] {
+def dotfiles-maint-list-setting [name: string, extra_name: string] {
   let settings = (dotfiles-maint-settings)
-  let configured = ($settings | get -o $name)
   let policy = (dotfiles-maint-policy | get -o $name | default [])
-  if $configured != null {
-    $configured | append $policy | uniq
-  } else {
-    $policy
-  }
+  let extra = ($settings | get -o $extra_name | default [])
+  $policy | append $extra | uniq
 }
 
 def dotfiles-maint-network-config [] {
@@ -71,15 +67,15 @@ def dotfiles-maint-has-proxy-env [] {
 }
 
 def dotfiles-maint-risk-markers [] {
-  dotfiles-maint-list-setting "riskMarkers"
+  dotfiles-maint-list-setting "riskMarkers" "extraRiskMarkers"
 }
 
 def dotfiles-maint-allowed-local-build-markers [] {
-  dotfiles-maint-list-setting "allowedLocalBuildMarkers"
+  dotfiles-maint-list-setting "allowedLocalBuildMarkers" "extraAllowedLocalBuildMarkers"
 }
 
 def dotfiles-maint-allowed-direct-fetch-markers [] {
-  dotfiles-maint-list-setting "allowedDirectFetchMarkers"
+  dotfiles-maint-list-setting "allowedDirectFetchMarkers" "extraAllowedDirectFetchMarkers"
 }
 
 def dotfiles-maint-parallel [] {

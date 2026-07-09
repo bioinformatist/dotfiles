@@ -23,7 +23,16 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HOSTS: homePC linglong
-      CHINA_SUBSTITUTER: https://mirrors.ustc.edu.cn/nix-channels/store
+      CHINA_SUBSTITUTERS: >-
+        https://mirrors.ustc.edu.cn/nix-channels/store
+        https://anyrun.cachix.org
+        https://hyprland.cachix.org
+      DECLARED_EXTRA_SUBSTITUTERS: >-
+        https://anyrun.cachix.org
+        https://hyprland.cachix.org
+      CHINA_EXTRA_TRUSTED_PUBLIC_KEYS: >-
+        anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s=
+        hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
       NIXPKGS_ALLOW_UNFREE: "1"
 
     steps:
@@ -40,7 +49,12 @@ jobs:
 
           read -r -a hosts <<< "$HOSTS"
           for host in "${hosts[@]}"; do
-            nix build --dry-run -L ".#nixosConfigurations.${host}.config.system.build.toplevel"
+            nix build \
+              --dry-run \
+              -L \
+              --option extra-substituters "$DECLARED_EXTRA_SUBSTITUTERS" \
+              --option extra-trusted-public-keys "$CHINA_EXTRA_TRUSTED_PUBLIC_KEYS" \
+              ".#nixosConfigurations.${host}.config.system.build.toplevel"
           done
 
       - name: China gate
