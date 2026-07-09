@@ -61,9 +61,14 @@ mix multiple leaves into one PR and weaken cache-miss attribution.
 
 | Leaf | Policy | What it updates |
 |---|---|---|
-| `codex` | `tools` | Codex release pin |
-| `orca` | `tools` | Orca ADE AppImage release pin |
+| `codex` | `tools-fast` | Codex release pin |
+| `orca` | `tools-fast` | Orca ADE AppImage release pin |
 | `zeroclaw` | `tools` | ZeroClaw release pin |
+
+Codex and Orca are checked every four hours because they are interactive tools
+where a new release should reach machines quickly. ZeroClaw remains daily. The
+release-pin workflow checks the upstream release first and only runs the dry-run
+and China gate when that check actually changes files.
 
 Each release-pin leaf has at most one open PR. The next attempt updates the same `maint/<leaf>` branch instead of opening another PR. There is intentionally no global open PR limit for Renovate or release-pin maintenance PRs.
 

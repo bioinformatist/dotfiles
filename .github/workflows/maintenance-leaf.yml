@@ -14,7 +14,8 @@ on:
           - orca
           - zeroclaw
   schedule:
-    - cron: "17 20 * * *"
+    - cron: "17 */4 * * *"
+    - cron: "23 20 * * *"
 
 permissions:
   contents: write
@@ -29,9 +30,9 @@ jobs:
       matrix:
         include:
           - leaf: codex
-            policy: tools
+            policy: tools-fast
           - leaf: orca
-            policy: tools
+            policy: tools-fast
           - leaf: zeroclaw
             policy: tools
     concurrency:
@@ -65,6 +66,25 @@ jobs:
             if [[ "$REQUESTED_LEAF" != "all" && "$REQUESTED_LEAF" != "${{ matrix.leaf }}" ]]; then
               run_leaf=false
             fi
+          else
+            case "${{ github.event.schedule }}" in
+              "17 */4 * * *")
+                case "${{ matrix.leaf }}" in
+                  codex|orca)
+                    ;;
+                  *)
+                    run_leaf=false
+                    ;;
+                esac
+                ;;
+              "23 20 * * *")
+                [[ "${{ matrix.leaf }}" == "zeroclaw" ]] || run_leaf=false
+                ;;
+              *)
+                echo "Unknown maintenance schedule: ${{ github.event.schedule }}" >&2
+                exit 1
+                ;;
+            esac
           fi
 
           echo "run=${run_leaf}" >> "$GITHUB_OUTPUT"
@@ -83,19 +103,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Base China gate
-        if: steps.plan.outputs.run == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          read -r -a hosts <<< "$HOSTS"
-          bash scripts/maint/china-gate.sh \
-            --report-only \
-            --output "$RUNNER_TEMP/china-base.blocked" \
-            --direct-output "$RUNNER_TEMP/china-base.direct" \
-            "${hosts[@]}"
 
       - name: Update leaf
         if: steps.plan.outputs.run == 'true'
@@ -137,6 +144,22 @@ jobs:
           fi
 
           echo "manual_review=${manual_review}" >> "$GITHUB_OUTPUT"
+
+      - name: Base China gate
+        if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          base_worktree="$RUNNER_TEMP/base"
+          git worktree add --detach "$base_worktree" HEAD
+
+          read -r -a hosts <<< "$HOSTS"
+          bash "$base_worktree/scripts/maint/china-gate.sh" \
+            --report-only \
+            --output "$RUNNER_TEMP/china-base.blocked" \
+            --direct-output "$RUNNER_TEMP/china-base.direct" \
+            "${hosts[@]}"
 
       - name: Global dry-run
         if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
