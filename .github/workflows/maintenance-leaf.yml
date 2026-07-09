@@ -209,6 +209,7 @@ jobs:
             : > "$RUNNER_TEMP/china-new.direct"
             : > "$RUNNER_TEMP/china-direct.allowed"
             : > "$RUNNER_TEMP/china-unapproved.blocked"
+            : > "$RUNNER_TEMP/china-new-unapproved.blocked"
           else
             comm -13 \
               "$RUNNER_TEMP/china-base.blocked" \
@@ -220,7 +221,8 @@ jobs:
               > "$RUNNER_TEMP/china-new.direct"
 
             : > "$RUNNER_TEMP/china-direct.allowed"
-            cp "$RUNNER_TEMP/china-new.blocked" "$RUNNER_TEMP/china-unapproved.blocked"
+            cp "$RUNNER_TEMP/china-head.blocked" "$RUNNER_TEMP/china-unapproved.blocked"
+            cp "$RUNNER_TEMP/china-new.blocked" "$RUNNER_TEMP/china-new-unapproved.blocked"
             leaf="${{ matrix.leaf }}"
             mapfile -t direct_markers < <(
               nix eval --raw --impure --expr \
@@ -242,6 +244,7 @@ jobs:
                 printf '%s\t%s\n' "$host" "$drv" >> "$RUNNER_TEMP/china-direct.allowed"
               else
                 printf '%s\t%s\n' "$host" "$drv" >> "$RUNNER_TEMP/china-unapproved.blocked"
+                printf '%s\t%s\n' "$host" "$drv" >> "$RUNNER_TEMP/china-new-unapproved.blocked"
               fi
             done < "$RUNNER_TEMP/china-new.direct"
 
@@ -258,14 +261,16 @@ jobs:
           head_blocked_count="$(wc -l < "$RUNNER_TEMP/china-head.blocked")"
           new_blocked_count="$(wc -l < "$RUNNER_TEMP/china-new.blocked")"
           direct_fetch_count="$(wc -l < "$RUNNER_TEMP/china-direct.allowed")"
-          unapproved_count="$(wc -l < "$RUNNER_TEMP/china-unapproved.blocked")"
+          head_unapproved_count="$(wc -l < "$RUNNER_TEMP/china-unapproved.blocked")"
+          new_unapproved_count="$(wc -l < "$RUNNER_TEMP/china-new-unapproved.blocked")"
           {
             echo "status=${status}"
             echo "direct_fetch=${direct_fetch}"
             echo "head_blocked_count=${head_blocked_count//[[:space:]]/}"
             echo "new_blocked_count=${new_blocked_count//[[:space:]]/}"
             echo "direct_fetch_count=${direct_fetch_count//[[:space:]]/}"
-            echo "unapproved_count=${unapproved_count//[[:space:]]/}"
+            echo "head_unapproved_count=${head_unapproved_count//[[:space:]]/}"
+            echo "new_unapproved_count=${new_unapproved_count//[[:space:]]/}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Publish leaf PR
@@ -277,7 +282,8 @@ jobs:
           CHINA_HEAD_BLOCKED_COUNT: ${{ steps.china_gate.outputs.head_blocked_count }}
           CHINA_NEW_BLOCKED_COUNT: ${{ steps.china_gate.outputs.new_blocked_count }}
           CHINA_DIRECT_FETCH_COUNT: ${{ steps.china_gate.outputs.direct_fetch_count }}
-          CHINA_UNAPPROVED_COUNT: ${{ steps.china_gate.outputs.unapproved_count }}
+          CHINA_HEAD_UNAPPROVED_COUNT: ${{ steps.china_gate.outputs.head_unapproved_count }}
+          CHINA_NEW_UNAPPROVED_COUNT: ${{ steps.china_gate.outputs.new_unapproved_count }}
         shell: bash
         run: |
           set -euo pipefail
@@ -289,7 +295,7 @@ jobs:
           body="$(mktemp)"
 
           eligible=false
-          if [[ "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" ]]; then
+          if [[ "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" && "$CHINA_HEAD_UNAPPROVED_COUNT" == "0" ]]; then
             eligible=true
           fi
 
@@ -303,12 +309,13 @@ jobs:
           - Head blocked derivations: \`${CHINA_HEAD_BLOCKED_COUNT}\`
           - New blocked derivations: \`${CHINA_NEW_BLOCKED_COUNT}\`
           - Declared direct fetches: \`${CHINA_DIRECT_FETCH_COUNT}\`
-          - Unapproved derivations: \`${CHINA_UNAPPROVED_COUNT}\`
+          - Head unapproved derivations: \`${CHINA_HEAD_UNAPPROVED_COUNT}\`
+          - New unapproved derivations: \`${CHINA_NEW_UNAPPROVED_COUNT}\`
           - Auto-merge eligible: \`${eligible}\`
 
           This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
 
-          Eligible PRs are handed to GitHub auto-merge after the global dry-run passes and this leaf introduces no unapproved China-gate misses. The required \`maintenance gate\` check is set on generated leaf PRs and can also run on merge groups if this repository is later moved to an owner type that supports GitHub Merge Queue. The full head closure is shown for diagnosis because a cold GitHub runner can expose existing cache misses that should not block every leaf PR.
+          Eligible PRs are handed to GitHub auto-merge only after the global dry-run passes and the full updated head has no unapproved China-gate misses. Delta counts are still shown for attribution, but the required \`maintenance gate\` mirrors local \`maint-switch\`: if the updated head would be blocked locally, it must not enter \`main\` automatically.
           BODY
 
           append_records() {
@@ -331,7 +338,8 @@ jobs:
           append_records "Head blocked derivations" "$RUNNER_TEMP/china-head.blocked"
           append_records "New blocked derivations" "$RUNNER_TEMP/china-new.blocked"
           append_records "Declared direct fetches" "$RUNNER_TEMP/china-direct.allowed"
-          append_records "Unapproved derivations" "$RUNNER_TEMP/china-unapproved.blocked"
+          append_records "Head unapproved derivations" "$RUNNER_TEMP/china-unapproved.blocked"
+          append_records "New unapproved derivations" "$RUNNER_TEMP/china-new-unapproved.blocked"
 
           gh label create maintenance --color "0E8A16" --description "Automated maintenance PR" --force
           gh label create "policy-${policy}" --color "5319E7" --description "Maintenance policy ${policy}" --force
@@ -378,7 +386,7 @@ jobs:
             "repos/${GITHUB_REPOSITORY}/statuses/$(git rev-parse HEAD)" \
             -f state="$gate_state" \
             -f context="maintenance gate" \
-            -f description="global=${GLOBAL_STATUS}, china=${CHINA_STATUS}, unapproved=${CHINA_UNAPPROVED_COUNT}" \
+            -f description="global=${GLOBAL_STATUS}, china=${CHINA_STATUS}, head_unapproved=${CHINA_HEAD_UNAPPROVED_COUNT}" \
             -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
           if [[ "$eligible" == "true" ]]; then

@@ -43,7 +43,7 @@ jobs:
             nix build --dry-run -L ".#nixosConfigurations.${host}.config.system.build.toplevel"
           done
 
-      - name: China delta gate
+      - name: China gate
         shell: bash
         run: |
           set -euo pipefail
@@ -71,7 +71,8 @@ jobs:
           comm -13 "$tmp/china-base.direct" "$tmp/china-head.direct" > "$tmp/china-new.direct"
 
           : > "$tmp/china-direct.allowed"
-          cp "$tmp/china-new.blocked" "$tmp/china-unapproved.blocked"
+          cp "$tmp/china-head.blocked" "$tmp/china-unapproved.blocked"
+          cp "$tmp/china-new.blocked" "$tmp/china-new-unapproved.blocked"
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
             leaf="${GITHUB_HEAD_REF#maint/}"
@@ -99,13 +100,15 @@ jobs:
               printf '%s\t%s\n' "$host" "$drv" >> "$tmp/china-direct.allowed"
             else
               printf '%s\t%s\n' "$host" "$drv" >> "$tmp/china-unapproved.blocked"
+              printf '%s\t%s\n' "$host" "$drv" >> "$tmp/china-new-unapproved.blocked"
             fi
           done < "$tmp/china-new.direct"
 
           head_blocked_count="$(wc -l < "$tmp/china-head.blocked")"
           new_blocked_count="$(wc -l < "$tmp/china-new.blocked")"
           direct_fetch_count="$(wc -l < "$tmp/china-direct.allowed")"
-          unapproved_count="$(wc -l < "$tmp/china-unapproved.blocked")"
+          head_unapproved_count="$(wc -l < "$tmp/china-unapproved.blocked")"
+          new_unapproved_count="$(wc -l < "$tmp/china-new-unapproved.blocked")"
 
           {
             echo "## Maintenance gate"
@@ -113,7 +116,8 @@ jobs:
             echo "- Head blocked derivations: \`${head_blocked_count//[[:space:]]/}\`"
             echo "- New blocked derivations: \`${new_blocked_count//[[:space:]]/}\`"
             echo "- Declared direct fetches: \`${direct_fetch_count//[[:space:]]/}\`"
-            echo "- Unapproved derivations: \`${unapproved_count//[[:space:]]/}\`"
+            echo "- Head unapproved derivations: \`${head_unapproved_count//[[:space:]]/}\`"
+            echo "- New unapproved derivations: \`${new_unapproved_count//[[:space:]]/}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
           append_records() {
@@ -136,10 +140,11 @@ jobs:
           append_records "Head blocked derivations" "$tmp/china-head.blocked"
           append_records "New blocked derivations" "$tmp/china-new.blocked"
           append_records "Declared direct fetches" "$tmp/china-direct.allowed"
-          append_records "Unapproved derivations" "$tmp/china-unapproved.blocked"
+          append_records "Head unapproved derivations" "$tmp/china-unapproved.blocked"
+          append_records "New unapproved derivations" "$tmp/china-new-unapproved.blocked"
 
           if [[ -s "$tmp/china-unapproved.blocked" ]]; then
-            echo "China gate found unapproved derivations:" >&2
+            echo "China gate found head unapproved derivations:" >&2
             sed -n '1,20p' "$tmp/china-unapproved.blocked" >&2
             exit 1
           fi
