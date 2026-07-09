@@ -61,9 +61,11 @@ leaf 混进同一个 PR，削弱 cache miss 归因。
 
 | Leaf | Policy | 更新内容 |
 |---|---|---|
-| `codex` | `tools` | Codex release pin |
-| `orca` | `tools` | Orca ADE AppImage release pin |
+| `codex` | `tools-fast` | Codex release pin |
+| `orca` | `tools-fast` | Orca ADE AppImage release pin |
 | `zeroclaw` | `tools` | ZeroClaw release pin |
+
+Codex 和 Orca 每 4 小时检查一次，因为它们是交互式工具，新 release 应该更快进入机器。ZeroClaw 仍然每天一次。release-pin workflow 会先检查上游 release；只有这一步实际改动文件时，才继续跑 dry-run 和 China gate。
 
 每个 release-pin leaf 最多一个 open PR；下一次尝试会更新同一个 `maint/<leaf>` 分支，不会开新 PR。Renovate 和 release-pin 维护 PR 暂时都不设置全局 open PR 上限。
 
