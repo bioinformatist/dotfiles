@@ -18,7 +18,7 @@ maint-switch
 dotfiles.nixNetwork.profile = "china";
 ```
 
-这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。本地代理 URL 也在 NixOS 配置中声明：
+这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。workstation 模块也窄幅声明了 Anyrun 和 Hyprland 的额外 Cachix substituter，因为这些快速变动的桌面输入确实有可用的上游缓存。本地代理 URL 也在 NixOS 配置中声明：
 
 ```nix
 dotfiles.nixNetwork.proxy = {
@@ -65,8 +65,8 @@ auto-merge。默认分支应通过 ruleset 保护：要求 PR，并要求 `maint
 
 PR 会跑两类 dry-run：
 
-- `global-*`：GitHub runner 默认网络下的基本 dry-run。
-- `china-gate-*`：强制只使用 `https://mirrors.ustc.edu.cn/nix-channels/store`，并清空 `extra-substituters` 的中国大陆网络门控。
+- `global-*`：GitHub runner 默认网络下的基本 dry-run，同时显式加入 Anyrun 和 Hyprland Cachix。
+- `china-gate-*`：使用声明式中国维护 cache 集合：USTC 加 Anyrun/Hyprland Cachix，并清空未声明的 `extra-substituters`。
 
 China gate 会同时记录更新后 head closure 的完整结果，以及相对 `main`
 的差分。delta miss 只用于归因；auto-merge 准入以完整更新后的 head 为准。
@@ -75,8 +75,9 @@ China gate 会同时记录更新后 head closure 的完整结果，以及相对 
 只有在 leaf 明确声明该路线时才允许，目前是 Codex、Orca 和 ZeroClaw。
 
 门控 marker policy 统一放在 `scripts/maint/policy.json`；本机
-`maint-switch`、生成的 `maint.nuon` 和 GitHub China gate 都读取同一组
-marker。GitHub leaf workflow 和 required gate workflow 共享
+`maint-switch` 和 GitHub China gate 都从当前 repo checkout 读取同一组
+marker。生成的 `maint.nuon` 只保存 repo 路径、host、并发和可选 extra marker
+这类机器本地设置，不再 snapshot 主 marker policy，因此 repo 里的 policy 收紧会在下一次 switch 前生效。GitHub leaf workflow 和 required gate workflow 共享
 `scripts/maint/evaluate-china-gate.sh` 里的 head-vs-base China gate 评估，
 避免 PR 元数据和 required `maintenance gate` 状态漂移。leaf 队列本身继续保留在 `.github/workflows/maintenance-leaf.yml`；
 leaf 名称、policy 分组、调度、flake input 和 update hook 属于 workflow
@@ -97,9 +98,10 @@ npm registry 或 node-gyp 下载、Cargo registry、运行时代理是不同路�
 的修复不应被默默推广到其他路径。
 
 只有 `global-pass` 且 full-head `china-gate-pass` 的 PR 才有资格进入
-GitHub auto-merge。PR 正文仍记录 delta miss 供归因，但生成的
-`maintenance gate` 状态来自完整更新后的 head，因此 `main` 不会自动前进到
-本机 `maint-switch` 会拒绝的状态。`global-pass` 但 `china-gate-miss` 的 PR
+GitHub auto-merge。PR 正文仍记录 delta miss 供归因。leaf workflow 不再发布
+自己的 required status；唯一 required 的 `maintenance gate` check 来自
+`.github/workflows/maintenance-gate.yml`，因此 `main` 不会自动前进到本机
+`maint-switch` 会拒绝的状态。`global-pass` 但 `china-gate-miss` 的 PR
 只保留为人工可见的候选，不进入 `main`。
 
 如果 `main` 已经因为 cache 漂移而被 gate 拦住，gate 或 marker policy

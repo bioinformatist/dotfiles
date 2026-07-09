@@ -5,6 +5,26 @@ leaf="${1:?leaf name is required}"
 inputs="${2:-}"
 hook="${3:-}"
 
+replace_nix_string() {
+  local file="$1"
+  local name="$2"
+  local value="$3"
+  local pattern="${name} = \"[^\"]+\";"
+  local replacement="${name} = \"${value}\";"
+
+  if ! grep -Eq "$pattern" "$file"; then
+    echo "Could not find ${name} assignment in ${file}" >&2
+    exit 1
+  fi
+
+  sed -i -E "s|${pattern}|${replacement}|" "$file"
+
+  if ! grep -Fqx "  ${replacement}" "$file" && ! grep -Fqx "${replacement}" "$file"; then
+    echo "Failed to update ${name} in ${file}" >&2
+    exit 1
+  fi
+}
+
 update_release_pin() {
   local repo_slug="$1"
   local tag_prefix="$2"
@@ -26,8 +46,8 @@ update_release_pin() {
   digest_hex="${digest#sha256:}"
   hash="$(nix hash convert --hash-algo sha256 --from base16 --to sri "$digest_hex")"
 
-  sed -i -E "s|${version_name} = \"[^\"]+\";|${version_name} = \"${version}\";|" "$file"
-  sed -i -E "s|${hash_name} = \"sha256-[^\"]+\";|${hash_name} = \"${hash}\";|" "$file"
+  replace_nix_string "$file" "$version_name" "$version"
+  replace_nix_string "$file" "$hash_name" "$hash"
   echo "Updated ${leaf} to ${version}"
 }
 

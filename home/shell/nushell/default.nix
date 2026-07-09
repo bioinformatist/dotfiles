@@ -11,7 +11,6 @@ let
     else
       osConfig.networking.hostName;
   repo = "${config.home.homeDirectory}/github.com/bioinformatist/dotfiles";
-  maintPolicy = builtins.fromJSON (builtins.readFile ../../../scripts/maint/policy.json);
 in
 {
   programs.nushell = {
@@ -34,10 +33,5 @@ in
       maxJobs = 4;
       cores = 2;
     };
-    inherit (maintPolicy)
-      riskMarkers
-      allowedLocalBuildMarkers
-      allowedDirectFetchMarkers
-      ;
   };
 }

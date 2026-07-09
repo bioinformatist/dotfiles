@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-china_substituter="${CHINA_SUBSTITUTER:-https://mirrors.ustc.edu.cn/nix-channels/store}"
+default_china_substituters="https://mirrors.ustc.edu.cn/nix-channels/store https://anyrun.cachix.org https://hyprland.cachix.org"
+default_china_extra_trusted_public_keys="anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s= hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+china_substituters="${CHINA_SUBSTITUTERS:-${CHINA_SUBSTITUTER:-$default_china_substituters}}"
+china_extra_trusted_public_keys="${CHINA_EXTRA_TRUSTED_PUBLIC_KEYS:-$default_china_extra_trusted_public_keys}"
 report_only=false
 blocked_output=""
 direct_output=""
@@ -114,12 +117,13 @@ gate_host() {
   local blocked_count=0
   output="$(mktemp)"
 
-  echo "Checking ${host} against ${china_substituter}"
+  echo "Checking ${host} against ${china_substituters}"
   if ! nix build \
     --dry-run \
     -L \
-    --option substituters "$china_substituter" \
+    --option substituters "$china_substituters" \
     --option extra-substituters "" \
+    --option extra-trusted-public-keys "$china_extra_trusted_public_keys" \
     ".#nixosConfigurations.${host}.config.system.build.toplevel" \
     >"$output" \
     2>&1; then
