@@ -58,7 +58,7 @@ Default cadence:
 
 Each leaf has at most one open PR. The next attempt updates the same `maint/<leaf>` branch instead of opening another PR. There is intentionally no global open PR limit.
 
-Repository setup: keep the default workflow token permission at `read`, but enable GitHub Actions' "Allow GitHub Actions to create and approve pull requests" setting. Enable repository auto-merge as well. The default branch should be protected by a ruleset that requires pull requests, requires the `maintenance gate` status check, and uses GitHub Merge Queue.
+Repository setup: keep the default workflow token permission at `read`, but enable GitHub Actions' "Allow GitHub Actions to create and approve pull requests" setting. Enable repository auto-merge as well. The default branch should be protected by a ruleset that requires pull requests and requires the `maintenance gate` status check.
 
 PRs run two dry-runs:
 
@@ -96,12 +96,18 @@ registries, and runtime proxies are different paths; a fix for one should not be
 silently generalized to the others.
 
 Only PRs with both `global-pass` and delta-based `china-gate-pass` are eligible
-for GitHub Merge Queue. The PR body also records full-head misses for diagnosis,
+for GitHub auto-merge. The PR body also records full-head misses for diagnosis,
 but those do not block every leaf by themselves. The `maintenance gate` status is
-set on generated leaf PRs and is also re-run by `.github/workflows/maintenance-gate.yml`
-on merge groups, so `main` is guarded by the queued state rather than by a later
-local `maint-switch`. A PR with `global-pass` but `china-gate-miss` remains
-visible for manual review, but should not enter `main`.
+set on generated leaf PRs, so `main` is guarded by the required check rather than
+by a later local `maint-switch`. A PR with `global-pass` but `china-gate-miss`
+remains visible for manual review, but should not enter `main`.
+
+`.github/workflows/maintenance-gate.yml` also supports the `merge_group` event.
+GitHub Merge Queue is not currently enabled here because GitHub only offers it
+for public repositories owned by organizations, or private organization
+repositories on Enterprise Cloud. If this repository is moved to an organization
+owner later, enable Merge Queue in the main ruleset and keep the same
+`maintenance gate` check.
 
 ## Local `maint-switch`
 
