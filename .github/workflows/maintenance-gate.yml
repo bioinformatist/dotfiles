@@ -67,83 +67,20 @@ jobs:
             --direct-output "$tmp/china-head.direct" \
             "${hosts[@]}"
 
-          comm -13 "$tmp/china-base.blocked" "$tmp/china-head.blocked" > "$tmp/china-new.blocked"
-          comm -13 "$tmp/china-base.direct" "$tmp/china-head.direct" > "$tmp/china-new.direct"
-
-          : > "$tmp/china-direct.allowed"
-          cp "$tmp/china-head.blocked" "$tmp/china-unapproved.blocked"
-          cp "$tmp/china-new.blocked" "$tmp/china-new-unapproved.blocked"
-
+          eval_args=(
+            --base-blocked "$tmp/china-base.blocked"
+            --base-direct "$tmp/china-base.direct"
+            --head-blocked "$tmp/china-head.blocked"
+            --head-direct "$tmp/china-head.direct"
+            --output-dir "$tmp"
+            --summary "$GITHUB_STEP_SUMMARY"
+            --fail-on-miss
+          )
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
-            leaf="${GITHUB_HEAD_REF#maint/}"
-            mapfile -t direct_markers < <(
-              jq -r --arg leaf "$leaf" '.leafDirectFetchMarkers[$leaf][]?' scripts/maint/policy.json
-            )
-          else
-            mapfile -t direct_markers < <(
-              jq -r '.allowedDirectFetchMarkers[]' scripts/maint/policy.json
-            )
+            eval_args+=(--leaf "${GITHUB_HEAD_REF#maint/}")
           fi
 
-          while IFS=$'\t' read -r host drv; do
-            [[ -n "${host}${drv}" ]] || continue
-
-            allowed_direct=false
-            for marker in "${direct_markers[@]}"; do
-              if [[ -n "$marker" && "$drv" == *"$marker"* ]]; then
-                allowed_direct=true
-                break
-              fi
-            done
-
-            if [[ "$allowed_direct" == "true" ]]; then
-              printf '%s\t%s\n' "$host" "$drv" >> "$tmp/china-direct.allowed"
-            else
-              printf '%s\t%s\n' "$host" "$drv" >> "$tmp/china-unapproved.blocked"
-              printf '%s\t%s\n' "$host" "$drv" >> "$tmp/china-new-unapproved.blocked"
-            fi
-          done < "$tmp/china-new.direct"
-
-          head_blocked_count="$(wc -l < "$tmp/china-head.blocked")"
-          new_blocked_count="$(wc -l < "$tmp/china-new.blocked")"
-          direct_fetch_count="$(wc -l < "$tmp/china-direct.allowed")"
-          head_unapproved_count="$(wc -l < "$tmp/china-unapproved.blocked")"
-          new_unapproved_count="$(wc -l < "$tmp/china-new-unapproved.blocked")"
-
-          {
-            echo "## Maintenance gate"
-            echo ""
-            echo "- Head blocked derivations: \`${head_blocked_count//[[:space:]]/}\`"
-            echo "- New blocked derivations: \`${new_blocked_count//[[:space:]]/}\`"
-            echo "- Declared direct fetches: \`${direct_fetch_count//[[:space:]]/}\`"
-            echo "- Head unapproved derivations: \`${head_unapproved_count//[[:space:]]/}\`"
-            echo "- New unapproved derivations: \`${new_unapproved_count//[[:space:]]/}\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-          append_records() {
-            local title="$1"
-            local file="$2"
-
-            [[ -s "$file" ]] || return 0
-            {
-              echo ""
-              echo "### ${title}"
-              echo '```text'
-              sed -n '1,20p' "$file"
-              if [[ "$(wc -l < "$file")" -gt 20 ]]; then
-                echo "... truncated ..."
-              fi
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-          }
-
-          append_records "Head blocked derivations" "$tmp/china-head.blocked"
-          append_records "New blocked derivations" "$tmp/china-new.blocked"
-          append_records "Declared direct fetches" "$tmp/china-direct.allowed"
-          append_records "Head unapproved derivations" "$tmp/china-unapproved.blocked"
-          append_records "New unapproved derivations" "$tmp/china-new-unapproved.blocked"
-
-          if [[ -s "$tmp/china-unapproved.blocked" ]]; then
+          if ! bash scripts/maint/evaluate-china-gate.sh "${eval_args[@]}"; then
             echo "China gate found head unapproved derivations:" >&2
             sed -n '1,20p' "$tmp/china-unapproved.blocked" >&2
             exit 1

@@ -58,7 +58,7 @@ Default cadence:
 
 Each leaf has at most one open PR. The next attempt updates the same `maint/<leaf>` branch instead of opening another PR. There is intentionally no global open PR limit.
 
-Repository setup: keep the default workflow token permission at `read`, but enable GitHub Actions' "Allow GitHub Actions to create and approve pull requests" setting. Enable repository auto-merge as well. The default branch should be protected by a ruleset that requires pull requests and requires the `maintenance gate` status check.
+Repository setup: keep the default workflow token permission at `read`, but enable GitHub Actions' "Allow GitHub Actions to create and approve pull requests" setting. Enable repository auto-merge as well. The default branch should be protected by a ruleset that requires pull requests and requires the `maintenance gate` status check with strict up-to-date checks enabled.
 
 PRs run two dry-runs:
 
@@ -75,7 +75,10 @@ Orca, and ZeroClaw.
 
 Gate marker policy is shared through `scripts/maint/policy.json`; local
 `maint-switch`, the generated `maint.nuon`, and the GitHub China gate consume
-the same marker lists. The leaf queue itself stays in
+the same marker lists. GitHub's leaf workflow and required gate workflow share
+the head-vs-base China gate evaluation in
+`scripts/maint/evaluate-china-gate.sh`, so PR metadata and the required
+`maintenance gate` status do not drift apart. The leaf queue itself stays in
 `.github/workflows/maintenance-leaf.yml`; leaf names, policy groups, schedules,
 flake inputs, and update hooks are workflow orchestration, not gate policy.
 
@@ -102,6 +105,12 @@ the `maintenance gate` status is set from the full updated head so `main` cannot
 advance into a state that local `maint-switch` would reject. A PR with
 `global-pass` but `china-gate-miss` remains visible for manual review, but should
 not enter `main`.
+
+If `main` is already blocked by cache drift, a fix to the gate or marker policy
+can be impossible to merge through the same gate it is repairing. In that narrow
+case, use an admin bootstrap: temporarily disable the main ruleset, merge only
+the gate or policy fix, and immediately restore the ruleset. Do not use this
+path for package/version updates.
 
 `.github/workflows/maintenance-gate.yml` also supports the `merge_group` event.
 GitHub Merge Queue is not currently enabled here because GitHub only offers it

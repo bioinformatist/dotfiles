@@ -195,7 +195,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          status=pass
           read -r -a hosts <<< "$HOSTS"
           : > "$RUNNER_TEMP/china-head.blocked"
           : > "$RUNNER_TEMP/china-head.direct"
@@ -204,74 +203,45 @@ jobs:
             --output "$RUNNER_TEMP/china-head.blocked" \
             --direct-output "$RUNNER_TEMP/china-head.direct" \
             "${hosts[@]}"; then
-            status=miss
             : > "$RUNNER_TEMP/china-new.blocked"
             : > "$RUNNER_TEMP/china-new.direct"
             : > "$RUNNER_TEMP/china-direct.allowed"
             : > "$RUNNER_TEMP/china-unapproved.blocked"
             : > "$RUNNER_TEMP/china-new-unapproved.blocked"
-          else
-            comm -13 \
-              "$RUNNER_TEMP/china-base.blocked" \
-              "$RUNNER_TEMP/china-head.blocked" \
-              > "$RUNNER_TEMP/china-new.blocked"
-            comm -13 \
-              "$RUNNER_TEMP/china-base.direct" \
-              "$RUNNER_TEMP/china-head.direct" \
-              > "$RUNNER_TEMP/china-new.direct"
-
-            : > "$RUNNER_TEMP/china-direct.allowed"
-            cp "$RUNNER_TEMP/china-head.blocked" "$RUNNER_TEMP/china-unapproved.blocked"
-            cp "$RUNNER_TEMP/china-new.blocked" "$RUNNER_TEMP/china-new-unapproved.blocked"
-            leaf="${{ matrix.leaf }}"
-            mapfile -t direct_markers < <(
-              nix eval --raw --impure --expr \
-                "let policy = builtins.fromJSON (builtins.readFile ./scripts/maint/policy.json); in builtins.concatStringsSep \"\\n\" (policy.leafDirectFetchMarkers.\"${leaf}\" or [])"
-            )
-
-            while IFS=$'\t' read -r host drv; do
-              [[ -n "${host}${drv}" ]] || continue
-
-              allowed_direct=false
-              for marker in "${direct_markers[@]}"; do
-                if [[ -n "$marker" && "$drv" == *"$marker"* ]]; then
-                  allowed_direct=true
-                  break
-                fi
-              done
-
-              if [[ "$allowed_direct" == "true" ]]; then
-                printf '%s\t%s\n' "$host" "$drv" >> "$RUNNER_TEMP/china-direct.allowed"
-              else
-                printf '%s\t%s\n' "$host" "$drv" >> "$RUNNER_TEMP/china-unapproved.blocked"
-                printf '%s\t%s\n' "$host" "$drv" >> "$RUNNER_TEMP/china-new-unapproved.blocked"
-              fi
-            done < "$RUNNER_TEMP/china-new.direct"
-
-            if [[ -s "$RUNNER_TEMP/china-unapproved.blocked" ]]; then
-              status=miss
-            fi
+            {
+              echo "status=miss"
+              echo "direct_fetch=false"
+              echo "head_blocked_count=0"
+              echo "new_blocked_count=0"
+              echo "direct_fetch_count=0"
+              echo "head_unapproved_count=0"
+              echo "new_unapproved_count=0"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
-          direct_fetch=false
-          if [[ -s "$RUNNER_TEMP/china-direct.allowed" ]]; then
-            direct_fetch=true
-          fi
+          bash scripts/maint/evaluate-china-gate.sh \
+            --base-blocked "$RUNNER_TEMP/china-base.blocked" \
+            --base-direct "$RUNNER_TEMP/china-base.direct" \
+            --head-blocked "$RUNNER_TEMP/china-head.blocked" \
+            --head-direct "$RUNNER_TEMP/china-head.direct" \
+            --output-dir "$RUNNER_TEMP" \
+            --leaf "${{ matrix.leaf }}" \
+            --github-output "$GITHUB_OUTPUT"
 
-          head_blocked_count="$(wc -l < "$RUNNER_TEMP/china-head.blocked")"
-          new_blocked_count="$(wc -l < "$RUNNER_TEMP/china-new.blocked")"
-          direct_fetch_count="$(wc -l < "$RUNNER_TEMP/china-direct.allowed")"
-          head_unapproved_count="$(wc -l < "$RUNNER_TEMP/china-unapproved.blocked")"
-          new_unapproved_count="$(wc -l < "$RUNNER_TEMP/china-new-unapproved.blocked")"
-          {
-            echo "status=${status}"
-            echo "direct_fetch=${direct_fetch}"
-            echo "head_blocked_count=${head_blocked_count//[[:space:]]/}"
-            echo "new_blocked_count=${new_blocked_count//[[:space:]]/}"
-            echo "direct_fetch_count=${direct_fetch_count//[[:space:]]/}"
-            echo "head_unapproved_count=${head_unapproved_count//[[:space:]]/}"
-            echo "new_unapproved_count=${new_unapproved_count//[[:space:]]/}"
-          } >> "$GITHUB_OUTPUT"
+      - name: Close unchanged leaf PR
+        if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          branch="maint/${{ matrix.leaf }}"
+          pr="$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')"
+          if [[ -n "$pr" ]]; then
+            gh pr close "$pr" \
+              --comment "No changes remain for this fixed leaf; closing the stale maintenance PR."
+            git push origin --delete "$branch" || true
+          fi
 
       - name: Publish leaf PR
         if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
