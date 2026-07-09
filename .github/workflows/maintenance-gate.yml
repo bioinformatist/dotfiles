@@ -95,7 +95,7 @@ jobs:
           fi
 
           if ! bash scripts/maint/evaluate-china-gate.sh "${eval_args[@]}"; then
-            echo "China gate found head unapproved derivations:" >&2
-            sed -n '1,20p' "$tmp/china-unapproved.blocked" >&2
+            echo "China gate found new unapproved derivations:" >&2
+            sed -n '1,20p' "$tmp/china-new-unapproved.blocked" >&2
             exit 1
           fi

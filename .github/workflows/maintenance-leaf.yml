@@ -10,17 +10,9 @@ on:
         type: choice
         options:
           - all
-          - anyrun
-          - nixpkgs-tools
-          - wechat
           - codex
           - orca
           - zeroclaw
-          - hyprland
-          - sops-nix
-          - impermanence
-          - disko
-          - base
   schedule:
     - cron: "17 20 * * *"
 
@@ -36,50 +28,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - leaf: anyrun
-            policy: tools
-            inputs: anyrun
-            hook: ""
-          - leaf: nixpkgs-tools
-            policy: tools
-            inputs: nixpkgs-tools
-            hook: ""
-          - leaf: wechat
-            policy: tools
-            inputs: nixpkgs-wechat
-            hook: ""
           - leaf: codex
             policy: tools
-            inputs: ""
-            hook: codex-release
           - leaf: orca
             policy: tools
-            inputs: ""
-            hook: orca-release
           - leaf: zeroclaw
             policy: tools
-            inputs: ""
-            hook: zeroclaw-release
-          - leaf: hyprland
-            policy: desktop
-            inputs: hyprland
-            hook: ""
-          - leaf: sops-nix
-            policy: infra
-            inputs: sops-nix
-            hook: ""
-          - leaf: impermanence
-            policy: infra
-            inputs: impermanence
-            hook: ""
-          - leaf: disko
-            policy: infra
-            inputs: disko
-            hook: ""
-          - leaf: base
-            policy: core
-            inputs: nixpkgs home-manager
-            hook: ""
     concurrency:
       group: maintenance-leaf-${{ matrix.leaf }}
       cancel-in-progress: false
@@ -111,21 +65,6 @@ jobs:
             if [[ "$REQUESTED_LEAF" != "all" && "$REQUESTED_LEAF" != "${{ matrix.leaf }}" ]]; then
               run_leaf=false
             fi
-          else
-            case "${{ matrix.policy }}" in
-              tools)
-                ;;
-              desktop)
-                [[ "$(date -u +%u)" == "6" ]] || run_leaf=false
-                ;;
-              infra|core)
-                [[ "$(date -u +%d)" == "01" ]] || run_leaf=false
-                ;;
-              *)
-                echo "Unknown policy: ${{ matrix.policy }}" >&2
-                exit 1
-                ;;
-            esac
           fi
 
           echo "run=${run_leaf}" >> "$GITHUB_OUTPUT"
@@ -162,10 +101,7 @@ jobs:
         if: steps.plan.outputs.run == 'true'
         shell: bash
         run: |
-          bash scripts/maint/update-leaf.sh \
-            "${{ matrix.leaf }}" \
-            "${{ matrix.inputs }}" \
-            "${{ matrix.hook }}"
+          bash scripts/maint/update-leaf.sh "${{ matrix.leaf }}"
 
       - name: Check for changes
         if: steps.plan.outputs.run == 'true'
@@ -178,6 +114,29 @@ jobs:
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Check maintenance-sensitive changes
+        if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
+        id: sensitive
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          : > "$RUNNER_TEMP/maintenance-sensitive.files"
+          {
+            git diff --name-only
+            git ls-files --others --exclude-standard
+          } | sort -u > "$RUNNER_TEMP/changed.files"
+          grep -E '^(\.github/workflows/maintenance-.*\.yml|scripts/maint/(policy\.json|.*\.sh)|renovate\.json)$' \
+            "$RUNNER_TEMP/changed.files" \
+            > "$RUNNER_TEMP/maintenance-sensitive.files" || true
+
+          manual_review=false
+          if [[ -s "$RUNNER_TEMP/maintenance-sensitive.files" ]]; then
+            manual_review=true
+          fi
+
+          echo "manual_review=${manual_review}" >> "$GITHUB_OUTPUT"
 
       - name: Global dry-run
         if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
@@ -211,11 +170,15 @@ jobs:
           read -r -a hosts <<< "$HOSTS"
           : > "$RUNNER_TEMP/china-head.blocked"
           : > "$RUNNER_TEMP/china-head.direct"
+          : > "$RUNNER_TEMP/china-gate.failure.log"
+          china_gate_log="$RUNNER_TEMP/china-gate.log"
           if ! bash scripts/maint/china-gate.sh \
             --report-only \
             --output "$RUNNER_TEMP/china-head.blocked" \
             --direct-output "$RUNNER_TEMP/china-head.direct" \
-            "${hosts[@]}"; then
+            "${hosts[@]}" \
+            2>&1 | tee "$china_gate_log"; then
+            cp "$china_gate_log" "$RUNNER_TEMP/china-gate.failure.log"
             : > "$RUNNER_TEMP/china-new.blocked"
             : > "$RUNNER_TEMP/china-new.direct"
             : > "$RUNNER_TEMP/china-direct.allowed"
@@ -223,6 +186,7 @@ jobs:
             : > "$RUNNER_TEMP/china-new-unapproved.blocked"
             {
               echo "status=miss"
+              echo "hard_failure=true"
               echo "direct_fetch=false"
               echo "head_blocked_count=0"
               echo "new_blocked_count=0"
@@ -233,6 +197,7 @@ jobs:
             exit 0
           fi
 
+          echo "hard_failure=false" >> "$GITHUB_OUTPUT"
           bash scripts/maint/evaluate-china-gate.sh \
             --base-blocked "$RUNNER_TEMP/china-base.blocked" \
             --base-direct "$RUNNER_TEMP/china-base.direct" \
@@ -261,12 +226,14 @@ jobs:
         env:
           GLOBAL_STATUS: ${{ steps.global_gate.outputs.status }}
           CHINA_STATUS: ${{ steps.china_gate.outputs.status }}
+          CHINA_HARD_FAILURE: ${{ steps.china_gate.outputs.hard_failure }}
           CHINA_DIRECT_FETCH: ${{ steps.china_gate.outputs.direct_fetch }}
           CHINA_HEAD_BLOCKED_COUNT: ${{ steps.china_gate.outputs.head_blocked_count }}
           CHINA_NEW_BLOCKED_COUNT: ${{ steps.china_gate.outputs.new_blocked_count }}
           CHINA_DIRECT_FETCH_COUNT: ${{ steps.china_gate.outputs.direct_fetch_count }}
           CHINA_HEAD_UNAPPROVED_COUNT: ${{ steps.china_gate.outputs.head_unapproved_count }}
           CHINA_NEW_UNAPPROVED_COUNT: ${{ steps.china_gate.outputs.new_unapproved_count }}
+          MANUAL_REVIEW: ${{ steps.sensitive.outputs.manual_review }}
         shell: bash
         run: |
           set -euo pipefail
@@ -278,7 +245,7 @@ jobs:
           body="$(mktemp)"
 
           eligible=false
-          if [[ "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" && "$CHINA_HEAD_UNAPPROVED_COUNT" == "0" ]]; then
+          if [[ "$MANUAL_REVIEW" != "true" && "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" && "$CHINA_NEW_UNAPPROVED_COUNT" == "0" ]]; then
             eligible=true
           fi
 
@@ -289,16 +256,18 @@ jobs:
           - Policy: \`${policy}\`
           - Global dry-run: \`${GLOBAL_STATUS}\`
           - China gate: \`${CHINA_STATUS}\`
+          - China gate hard failure: \`${CHINA_HARD_FAILURE}\`
           - Head blocked derivations: \`${CHINA_HEAD_BLOCKED_COUNT}\`
           - New blocked derivations: \`${CHINA_NEW_BLOCKED_COUNT}\`
           - Declared direct fetches: \`${CHINA_DIRECT_FETCH_COUNT}\`
           - Head unapproved derivations: \`${CHINA_HEAD_UNAPPROVED_COUNT}\`
           - New unapproved derivations: \`${CHINA_NEW_UNAPPROVED_COUNT}\`
+          - Manual review required: \`${MANUAL_REVIEW}\`
           - Auto-merge eligible: \`${eligible}\`
 
           This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
 
-          Eligible PRs are handed to GitHub auto-merge only after the global dry-run passes and the full updated head has no unapproved China-gate misses. Delta counts are still shown for attribution, but the required \`maintenance gate\` mirrors local \`maint-switch\`: if the updated head would be blocked locally, it must not enter \`main\` automatically.
+          Eligible PRs are handed to GitHub auto-merge only after the global dry-run passes, this leaf introduces no unapproved China-gate misses, and the update does not modify maintenance policy, gate scripts, maintenance workflows, or Renovate config. Full-head misses are shown as baseline debt from a cold runner, but they do not block unrelated leaf PRs by themselves.
           BODY
 
           append_records() {
@@ -323,6 +292,8 @@ jobs:
           append_records "Declared direct fetches" "$RUNNER_TEMP/china-direct.allowed"
           append_records "Head unapproved derivations" "$RUNNER_TEMP/china-unapproved.blocked"
           append_records "New unapproved derivations" "$RUNNER_TEMP/china-new-unapproved.blocked"
+          append_records "China gate failure log" "$RUNNER_TEMP/china-gate.failure.log"
+          append_records "Maintenance-sensitive files" "$RUNNER_TEMP/maintenance-sensitive.files"
 
           gh label create maintenance --color "0E8A16" --description "Automated maintenance PR" --force
           gh label create "policy-${policy}" --color "5319E7" --description "Maintenance policy ${policy}" --force
@@ -331,6 +302,7 @@ jobs:
           gh label create "china-gate-pass" --color "0E8A16" --description "China-network maintenance gate passed" --force
           gh label create "china-gate-miss" --color "D93F0B" --description "China-network maintenance gate missed" --force
           gh label create "direct-fetch" --color "FBCA04" --description "Update includes declared direct release fetches" --force
+          gh label create "manual-review" --color "D93F0B" --description "Maintenance update requires manual review" --force
 
           git switch -c "$branch"
           git add -A
@@ -352,11 +324,14 @@ jobs:
           fi
 
           gh pr edit "$pr" \
-            --remove-label "global-pass,global-fail,china-cache-pass,china-cache-miss,china-gate-pass,china-gate-miss,direct-fetch" || true
+            --remove-label "global-pass,global-fail,china-cache-pass,china-cache-miss,china-gate-pass,china-gate-miss,direct-fetch,manual-review" || true
 
           labels="maintenance,policy-${policy},global-${GLOBAL_STATUS},china-gate-${CHINA_STATUS}"
           if [[ "$CHINA_DIRECT_FETCH" == "true" ]]; then
             labels="${labels},direct-fetch"
+          fi
+          if [[ "$MANUAL_REVIEW" == "true" ]]; then
+            labels="${labels},manual-review"
           fi
           gh pr edit "$pr" --add-label "$labels"
 
