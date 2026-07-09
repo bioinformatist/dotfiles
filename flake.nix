@@ -518,16 +518,17 @@
 
       homeConfigurations =
         let
+          mkHomePkgs = import nixpkgs {
+            system = "x86_64-linux";
+            overlays = [
+              overlays.additions
+              overlays.modifications
+            ];
+          };
           mkHome =
             username:
             home-manager.lib.homeManagerConfiguration {
-              pkgs = import nixpkgs {
-                system = "x86_64-linux";
-                overlays = [
-                  overlays.additions
-                  overlays.modifications
-                ];
-              };
+              pkgs = mkHomePkgs;
               extraSpecialArgs = inputs // {
                 inherit username;
               };
@@ -535,9 +536,21 @@
                 ./home/shared.nix
               ];
             };
+          mkHeadlessHome =
+            username:
+            home-manager.lib.homeManagerConfiguration {
+              pkgs = mkHomePkgs;
+              extraSpecialArgs = inputs // {
+                inherit username;
+              };
+              modules = [
+                homeManagerModules.devHeadless
+              ];
+            };
         in
         {
           "ysun@homePC" = mkHome "ysun";
+          "ci@headless" = mkHeadlessHome "ci";
         };
     };
 }

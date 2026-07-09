@@ -80,6 +80,10 @@ PR 会跑两类 dry-run：
 - `global-*`：GitHub runner 默认网络下的基本 dry-run，同时显式加入 Anyrun 和 Hyprland Cachix。
 - `china-gate-*`：使用声明式中国维护 cache 集合：USTC 加 Anyrun/Hyprland Cachix，并清空未声明的 `extra-substituters`。
 
+required gate 还会 dry-run 一个合成的 `ci@headless` Home Manager 配置。这个配置
+消费 downstream 仓库使用的导出 headless 开发模块，因此共享工具输入不仅要对
+`homePC` 和 `linglong` 安全，也要对可复用 headless consumer 保持 cache-safe。
+
 China gate 会同时记录更新后 head closure 的完整结果，以及相对 `main`
 的差分。auto-merge 准入以 delta 为准：GitHub 冷 runner 暴露出来的无关
 full-head miss 是诊断用 baseline debt，不应冻结每个 leaf PR。固定输出 release

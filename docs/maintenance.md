@@ -79,6 +79,11 @@ PRs run two dry-runs:
 - `global-*`: basic dry-run under the GitHub runner's default network, plus the declared Anyrun and Hyprland Cachix caches.
 - `china-gate-*`: China-network gate using the declared maintenance cache set: USTC plus the Anyrun and Hyprland Cachix caches, with undeclared `extra-substituters` cleared.
 
+The required gate also dry-runs the synthetic `ci@headless` Home Manager
+configuration. That configuration consumes the exported headless development
+modules used by downstream repositories, so shared tool inputs must stay
+cache-safe for reusable headless consumers as well as `homePC` and `linglong`.
+
 The China gate records both the full updated head closure and the delta against
 `main`. Auto-merge eligibility is based on the delta: unrelated full-head misses
 from a cold GitHub runner are diagnostic baseline debt and must not freeze every

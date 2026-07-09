@@ -57,6 +57,71 @@ jobs:
               ".#nixosConfigurations.${host}.config.system.build.toplevel"
           done
 
+      - name: Headless module China gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          output="$(mktemp)"
+          if ! nix build \
+            --dry-run \
+            -L \
+            --option substituters "$CHINA_SUBSTITUTERS" \
+            --option extra-substituters "" \
+            --option extra-trusted-public-keys "$CHINA_EXTRA_TRUSTED_PUBLIC_KEYS" \
+            '.#homeConfigurations."ci@headless".activationPackage' \
+            >"$output" \
+            2>&1; then
+            cat "$output" >&2
+            exit 1
+          fi
+
+          mapfile -t derivations < <(
+            awk '/^[[:space:]]*\/nix\/store\/.*\.drv$/ { sub(/^[[:space:]]+/, ""); print }' "$output" | sort -u
+          )
+          rm -f "$output"
+
+          mapfile -t allowed_markers < <(jq -r '.allowedLocalBuildMarkers[]' scripts/maint/policy.json)
+          mapfile -t direct_markers < <(jq -r '.allowedDirectFetchMarkers[]' scripts/maint/policy.json)
+
+          contains_marker() {
+            local text="$1"
+            shift
+            local marker
+            for marker in "$@"; do
+              if [[ "$text" == *"$marker"* ]]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          blocked=()
+          direct=()
+          for drv in "${derivations[@]}"; do
+            if contains_marker "$drv" "${allowed_markers[@]}"; then
+              continue
+            elif contains_marker "$drv" "${direct_markers[@]}"; then
+              direct+=("$drv")
+            else
+              blocked+=("$drv")
+            fi
+          done
+
+          if [[ "${#direct[@]}" -gt 0 ]]; then
+            {
+              echo "### Headless module declared direct fetches"
+              echo
+              printf '  %s\n' "${direct[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [[ "${#blocked[@]}" -gt 0 ]]; then
+            echo "Headless module gate found unapproved local derivations:" >&2
+            printf '  %s\n' "${blocked[@]:0:20}" >&2
+            exit 1
+          fi
+
       - name: China gate
         shell: bash
         run: |
