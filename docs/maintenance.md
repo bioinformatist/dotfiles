@@ -66,11 +66,12 @@ PRs run two dry-runs:
 - `china-gate-*`: China-network gate using `https://mirrors.ustc.edu.cn/nix-channels/store` with `extra-substituters` cleared.
 
 The China gate records both the full updated head closure and the delta against
-`main`. Existing misses are shown separately from misses introduced by the leaf,
-but the PR gate is based on the delta so a cold GitHub runner does not freeze
-every leaf on unrelated cache misses already present on `main`. Newly introduced
-fixed-output release fetches are allowed only for leaves that declare that route,
-currently Codex, Orca, and ZeroClaw.
+`main`. Delta misses are shown for attribution, but auto-merge eligibility is
+based on the full updated head. This keeps the GitHub gate aligned with local
+`maint-switch`: if the complete current system would be blocked locally, the PR
+must not enter `main` automatically. Newly introduced fixed-output release
+fetches are allowed only for leaves that declare that route, currently Codex,
+Orca, and ZeroClaw.
 
 Gate marker policy is shared through `scripts/maint/policy.json`; local
 `maint-switch`, the generated `maint.nuon`, and the GitHub China gate consume
@@ -95,12 +96,12 @@ GitHub release/direct fetches, npm registry or node-gyp downloads, Cargo
 registries, and runtime proxies are different paths; a fix for one should not be
 silently generalized to the others.
 
-Only PRs with both `global-pass` and delta-based `china-gate-pass` are eligible
-for GitHub auto-merge. The PR body also records full-head misses for diagnosis,
-but those do not block every leaf by themselves. The `maintenance gate` status is
-set on generated leaf PRs, so `main` is guarded by the required check rather than
-by a later local `maint-switch`. A PR with `global-pass` but `china-gate-miss`
-remains visible for manual review, but should not enter `main`.
+Only PRs with both `global-pass` and full-head `china-gate-pass` are eligible
+for GitHub auto-merge. The PR body also records delta misses for diagnosis, but
+the `maintenance gate` status is set from the full updated head so `main` cannot
+advance into a state that local `maint-switch` would reject. A PR with
+`global-pass` but `china-gate-miss` remains visible for manual review, but should
+not enter `main`.
 
 `.github/workflows/maintenance-gate.yml` also supports the `merge_group` event.
 GitHub Merge Queue is not currently enabled here because GitHub only offers it

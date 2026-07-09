@@ -69,10 +69,10 @@ PR 会跑两类 dry-run：
 - `china-gate-*`：强制只使用 `https://mirrors.ustc.edu.cn/nix-channels/store`，并清空 `extra-substituters` 的中国大陆网络门控。
 
 China gate 会同时记录更新后 head closure 的完整结果，以及相对 `main`
-的差分。已有 miss 会和这个 leaf 新引入的 miss 分开展示，但 PR gate 以
-delta 为准，避免 GitHub 冷 runner 因 `main` 上已有的无关 cache miss 冻住
-所有 leaf。新增的固定输出 release 直连 fetch 只有在 leaf 明确声明该路线时
-才允许，目前是 Codex、Orca 和 ZeroClaw。
+的差分。delta miss 只用于归因；auto-merge 准入以完整更新后的 head 为准。
+这样 GitHub gate 和本机 `maint-switch` 保持一致：如果完整当前系统会在本机
+被拦住，对应 PR 就不能自动进入 `main`。新增的固定输出 release 直连 fetch
+只有在 leaf 明确声明该路线时才允许，目前是 Codex、Orca 和 ZeroClaw。
 
 门控 marker policy 统一放在 `scripts/maint/policy.json`；本机
 `maint-switch`、生成的 `maint.nuon` 和 GitHub China gate 都读取同一组
@@ -94,12 +94,11 @@ direct fetch。
 npm registry 或 node-gyp 下载、Cargo registry、运行时代理是不同路径；一个路径
 的修复不应被默默推广到其他路径。
 
-只有 `global-pass` 且基于 delta 的 `china-gate-pass` 的 PR 才有资格进入
-GitHub auto-merge。PR 正文仍记录完整 head miss 供诊断，但这些既有 miss
-本身不阻塞每个 leaf。生成的 leaf PR 会写入 `maintenance gate` 状态，因此
-`main` 由 required check 保护，而不是依赖后续某台机器上的 `maint-switch`
-再判一次。`global-pass` 但 `china-gate-miss` 的 PR 只保留为人工可见的候选，
-不进入 `main`。
+只有 `global-pass` 且 full-head `china-gate-pass` 的 PR 才有资格进入
+GitHub auto-merge。PR 正文仍记录 delta miss 供归因，但生成的
+`maintenance gate` 状态来自完整更新后的 head，因此 `main` 不会自动前进到
+本机 `maint-switch` 会拒绝的状态。`global-pass` 但 `china-gate-miss` 的 PR
+只保留为人工可见的候选，不进入 `main`。
 
 `.github/workflows/maintenance-gate.yml` 也支持 `merge_group` 事件。当前没有
 真正启用 GitHub Merge Queue，因为 GitHub 只把该功能提供给组织拥有的 public
