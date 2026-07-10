@@ -38,6 +38,7 @@
     "-hwdb.bin.drv",
     "-manifest-for-users.json.drv",
     "-manifest.json.drv",
+    "-hm-session-vars.sh.drv",
     "-persistence-run-create-directories.drv",
     "-system-generators.drv",
     "-system-path.drv",
