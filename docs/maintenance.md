@@ -92,6 +92,9 @@ The required gate also dry-runs the synthetic `ci@headless` Home Manager
 configuration. That configuration consumes the exported headless development
 modules used by downstream repositories, so shared tool inputs must stay
 cache-safe for reusable headless consumers as well as `homePC` and `linglong`.
+This check is folded into the same base-vs-head China gate; once the synthetic
+profile exists on `main`, new headless-only cache misses block the PR while
+existing baseline debt remains diagnostic.
 
 The China gate records both the full updated head closure and the delta against
 `main`. Auto-merge eligibility is based on the delta: unrelated full-head misses

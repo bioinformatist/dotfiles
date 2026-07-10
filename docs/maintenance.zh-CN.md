@@ -86,6 +86,9 @@ PR 会跑两类 dry-run：
 required gate 还会 dry-run 一个合成的 `ci@headless` Home Manager 配置。这个配置
 消费 downstream 仓库使用的导出 headless 开发模块，因此共享工具输入不仅要对
 `homePC` 和 `linglong` 安全，也要对可复用 headless consumer 保持 cache-safe。
+这项检查并入同一套 base-vs-head China gate；当 synthetic profile 已经进入
+`main` 后，新的 headless-only cache miss 会阻塞 PR，既有 baseline debt 只作为
+诊断信息保留。
 
 China gate 会同时记录更新后 head closure 的完整结果，以及相对 `main`
 的差分。auto-merge 准入以 delta 为准：GitHub 冷 runner 暴露出来的无关
