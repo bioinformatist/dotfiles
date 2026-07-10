@@ -156,8 +156,10 @@ jobs:
           git worktree add --detach "$base_worktree" HEAD
 
           read -r -a hosts <<< "$HOSTS"
-          bash "$base_worktree/scripts/maint/china-gate.sh" \
+          bash scripts/maint/china-gate.sh \
             --report-only \
+            --flake-root "$base_worktree" \
+            --policy-file "$base_worktree/scripts/maint/policy.json" \
             --output "$RUNNER_TEMP/china-base.blocked" \
             --direct-output "$RUNNER_TEMP/china-base.direct" \
             "${hosts[@]}"

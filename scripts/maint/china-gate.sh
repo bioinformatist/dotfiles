@@ -9,9 +9,11 @@ report_only=false
 blocked_output=""
 direct_output=""
 hosts=()
+homes=()
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "${script_dir}/../.." && pwd)"
-policy_file="${repo_root}/scripts/maint/policy.json"
+flake_root="$repo_root"
+policy_file=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -35,6 +37,30 @@ while [[ $# -gt 0 ]]; do
       direct_output="${1#*=}"
       shift
       ;;
+    --flake-root)
+      flake_root="$2"
+      shift 2
+      ;;
+    --flake-root=*)
+      flake_root="${1#*=}"
+      shift
+      ;;
+    --policy-file)
+      policy_file="$2"
+      shift 2
+      ;;
+    --policy-file=*)
+      policy_file="${1#*=}"
+      shift
+      ;;
+    --home)
+      homes+=("$2")
+      shift 2
+      ;;
+    --home=*)
+      homes+=("${1#*=}")
+      shift
+      ;;
     --)
       shift
       hosts+=("$@")
@@ -51,7 +77,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ ${#hosts[@]} -eq 0 ]]; then
+flake_root="$(cd -- "$flake_root" && pwd)"
+if [[ -z "$policy_file" ]]; then
+  policy_file="${flake_root}/scripts/maint/policy.json"
+fi
+
+if [[ ${#hosts[@]} -eq 0 && ${#homes[@]} -eq 0 ]]; then
   hosts=(homePC linglong)
 fi
 
@@ -111,23 +142,24 @@ record_direct() {
   fi
 }
 
-gate_host() {
-  local host="$1"
+gate_attr() {
+  local label="$1"
+  local attr="$2"
   local output
   local blocked_count=0
   output="$(mktemp)"
 
-  echo "Checking ${host} against ${china_substituters}"
+  echo "Checking ${label} against ${china_substituters}"
   if ! nix build \
     --dry-run \
     -L \
     --option substituters "$china_substituters" \
     --option extra-substituters "" \
     --option extra-trusted-public-keys "$china_extra_trusted_public_keys" \
-    ".#nixosConfigurations.${host}.config.system.build.toplevel" \
+    "$attr" \
     >"$output" \
     2>&1; then
-    echo "dry-run failed for ${host}" >&2
+    echo "dry-run failed for ${label}" >&2
     cat "$output" >&2
     rm -f "$output"
     return 2
@@ -143,28 +175,41 @@ gate_host() {
     if contains_marker "$drv" "${allowed_markers[@]}"; then
       continue
     elif contains_marker "$drv" "${allowed_direct_markers[@]}"; then
-      record_direct "$host" "$drv"
+      record_direct "$label" "$drv"
     elif contains_marker "$drv" "${risk_markers[@]}"; then
-      record_blocked "$host" "$drv"
+      record_blocked "$label" "$drv"
       blocked_count=$((blocked_count + 1))
     else
-      record_blocked "$host" "$drv"
+      record_blocked "$label" "$drv"
       blocked_count=$((blocked_count + 1))
     fi
   done
 
   if [[ "$blocked_count" -gt 0 ]]; then
-    echo "china gate found ${blocked_count} blocked local derivations for ${host}"
+    echo "china gate found ${blocked_count} blocked local derivations for ${label}"
     return 1
   fi
 
-  echo "china gate passed for ${host}"
+  echo "china gate passed for ${label}"
 }
 
 failed=0
 blocked=0
 for host in "${hosts[@]}"; do
-  if gate_host "$host"; then
+  if gate_attr "$host" "${flake_root}#nixosConfigurations.${host}.config.system.build.toplevel"; then
+    continue
+  else
+    code=$?
+    if [[ "$code" -eq 2 ]]; then
+      failed=1
+    else
+      blocked=1
+    fi
+  fi
+done
+
+for home in "${homes[@]}"; do
+  if gate_attr "$home" "${flake_root}#homeConfigurations.\"${home}\".activationPackage"; then
     continue
   else
     code=$?

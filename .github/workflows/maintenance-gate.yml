@@ -69,85 +69,23 @@ jobs:
           git fetch origin main:refs/remotes/origin/main
           git worktree add --detach "$tmp/base" origin/main
 
-          bash "$tmp/base/scripts/maint/china-gate.sh" \
+          bash scripts/maint/china-gate.sh \
             --report-only \
+            --flake-root "$tmp/base" \
+            --policy-file "$tmp/base/scripts/maint/policy.json" \
             --output "$tmp/china-base.blocked" \
             --direct-output "$tmp/china-base.direct" \
+            --home 'ci@headless' \
             "${hosts[@]}"
 
           bash scripts/maint/china-gate.sh \
             --report-only \
+            --flake-root . \
+            --policy-file scripts/maint/policy.json \
             --output "$tmp/china-head.blocked" \
             --direct-output "$tmp/china-head.direct" \
+            --home 'ci@headless' \
             "${hosts[@]}"
-
-          mapfile -t allowed_markers < <(jq -r '.allowedLocalBuildMarkers[]' scripts/maint/policy.json)
-          mapfile -t direct_markers < <(jq -r '.allowedDirectFetchMarkers[]' scripts/maint/policy.json)
-
-          contains_marker() {
-            local text="$1"
-            shift
-            local marker
-            for marker in "$@"; do
-              if [[ "$text" == *"$marker"* ]]; then
-                return 0
-              fi
-            done
-            return 1
-          }
-
-          append_headless_gate() {
-            local flake_ref="$1"
-            local blocked_output="$2"
-            local direct_output="$3"
-            local output
-            output="$(mktemp)"
-
-            if ! nix build \
-              --dry-run \
-              -L \
-              --option substituters "$CHINA_SUBSTITUTERS" \
-              --option extra-substituters "" \
-              --option extra-trusted-public-keys "$CHINA_EXTRA_TRUSTED_PUBLIC_KEYS" \
-              "${flake_ref}#homeConfigurations.\"ci@headless\".activationPackage" \
-              >"$output" \
-              2>&1; then
-              cat "$output" >&2
-              rm -f "$output"
-              exit 1
-            fi
-
-            mapfile -t derivations < <(
-              awk '/^[[:space:]]*\/nix\/store\/.*\.drv$/ { sub(/^[[:space:]]+/, ""); print }' "$output" | sort -u
-            )
-            rm -f "$output"
-
-            local drv
-            for drv in "${derivations[@]}"; do
-              if contains_marker "$drv" "${allowed_markers[@]}"; then
-                continue
-              elif contains_marker "$drv" "${direct_markers[@]}"; then
-                printf 'ci@headless\t%s\n' "$drv" >> "$direct_output"
-              else
-                printf 'ci@headless\t%s\n' "$drv" >> "$blocked_output"
-              fi
-            done
-          }
-
-          if nix eval --raw "$tmp/base#homeConfigurations.\"ci@headless\".config.home.username" >/dev/null 2>&1; then
-            append_headless_gate "$tmp/base" "$tmp/china-base.blocked" "$tmp/china-base.direct"
-            append_headless_gate "." "$tmp/china-head.blocked" "$tmp/china-head.direct"
-            sort -u "$tmp/china-base.blocked" -o "$tmp/china-base.blocked"
-            sort -u "$tmp/china-base.direct" -o "$tmp/china-base.direct"
-            sort -u "$tmp/china-head.blocked" -o "$tmp/china-head.blocked"
-            sort -u "$tmp/china-head.direct" -o "$tmp/china-head.direct"
-          else
-            {
-              echo "## Headless maintenance gate"
-              echo
-              echo "\`ci@headless\` is not present on the base branch yet, so this bootstrap PR skips the headless delta gate."
-            } >> "$GITHUB_STEP_SUMMARY"
-          fi
 
           eval_args=(
             --base-blocked "$tmp/china-base.blocked"

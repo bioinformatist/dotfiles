@@ -115,6 +115,12 @@ schedules live in `renovate.json`; release-pin leaves stay in
 `.github/workflows/maintenance-leaf.yml`. These are workflow orchestration, not
 gate policy.
 
+Base and head dry-runs also share `scripts/maint/china-gate.sh`, but each run
+receives an explicit flake root and its matching policy file. This prevents the
+workflow checkout directory or a policy change in the PR from silently
+reclassifying the base closure. The same classifier covers host configurations
+and `ci@headless`.
+
 The marker policy is intentionally empirical. It should be refined from real
 misses: broad generated-glue markers such as `unit-`, `-etc-`, and
 `nixos-system-` may be tightened if they misclassify a derivation, and new
