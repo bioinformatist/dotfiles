@@ -72,7 +72,16 @@ and China gate when that check actually changes files.
 
 Each release-pin leaf has at most one open PR. The next attempt updates the same `maint/<leaf>` branch instead of opening another PR. There is intentionally no global open PR limit for Renovate or release-pin maintenance PRs.
 
-Repository setup: install/enable the Renovate GitHub App for this repository. Keep the default workflow token permission at `read`, but enable GitHub Actions' "Allow GitHub Actions to create and approve pull requests" setting for the release-pin workflow. Enable repository auto-merge as well. The default branch should be protected by a ruleset that requires pull requests and requires the `maintenance gate` status check with strict up-to-date checks enabled.
+Repository setup: install/enable the Renovate GitHub App for this repository.
+Keep the default workflow token permission at `read`, and add a repo-scoped
+fine-grained PAT as the `MAINTENANCE_PAT` repository secret. The release-pin
+workflow uses that token to push `maint/<leaf>` branches and create/update PRs,
+so the required `pull_request` maintenance gate runs automatically instead of
+waiting for manual workflow approval. If the secret is missing, the workflow
+falls back to `GITHUB_TOKEN`, but those generated PR checks may require manual
+approval. Enable repository auto-merge as well. The default branch should be
+protected by a ruleset that requires pull requests and requires the
+`maintenance gate` status check with strict up-to-date checks enabled.
 
 PRs run two dry-runs:
 

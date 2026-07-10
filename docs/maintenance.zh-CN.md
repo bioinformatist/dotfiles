@@ -70,10 +70,13 @@ Codex 和 Orca 每 4 小时检查一次，因为它们是交互式工具，新 r
 每个 release-pin leaf 最多一个 open PR；下一次尝试会更新同一个 `maint/<leaf>` 分支，不会开新 PR。Renovate 和 release-pin 维护 PR 暂时都不设置全局 open PR 上限。
 
 仓库设置：为本仓库安装/启用 Renovate GitHub App。默认 workflow token 权限保持
-`read`，但 release-pin workflow 需要打开 GitHub Actions 的 "Allow GitHub
-Actions to create and approve pull requests"。同时需要启用仓库 auto-merge。
-默认分支应通过 ruleset 保护：要求 PR，并要求 `maintenance gate` 状态检查，
-且启用 strict up-to-date checks。
+`read`，并添加一个只授权本仓库的 fine-grained PAT，作为 `MAINTENANCE_PAT`
+repository secret。release-pin workflow 会用这个 token push `maint/<leaf>` 分支
+并创建/更新 PR，这样 required `pull_request` maintenance gate 会自动运行，不会
+卡在手动批准 workflow 的状态。如果缺少这个 secret，workflow 会回退到
+`GITHUB_TOKEN`，但生成的 PR checks 可能需要人工批准。还需要启用仓库
+auto-merge。默认分支应通过 ruleset 保护：要求 PR，并要求 `maintenance gate`
+状态检查，且启用 strict up-to-date checks。
 
 PR 会跑两类 dry-run：
 
