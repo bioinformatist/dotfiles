@@ -52,6 +52,7 @@
     "-etc-",
     "-etc.drv",
     "-ensure-all-wrappers-paths-exist.drv",
+    "-helix-25.07.1.drv",
     "-boot.json.drv",
     "-activate.drv",
     "nixos-system-",
