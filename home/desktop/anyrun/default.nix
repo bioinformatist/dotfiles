@@ -22,7 +22,18 @@ let
     if [ "$term_flag" = "term" ]; then
       printf '%s\n' "$*"
     else
-      printf 'uwsm-app -s a -- %s\n' "$*"
+      case "$1" in
+        orca-ide)
+          # Electron helpers can outlive a scope and block a clean relaunch.
+          # UWSM recommends a service so systemd tracks and cleans up MainPID.
+          # https://github.com/stablyai/orca/issues/3191
+          # https://github.com/Vladimir-csp/uwsm/issues/181
+          printf 'uwsm-app -s a -t service -- %s\n' "$*"
+          ;;
+        *)
+          printf 'uwsm-app -s a -- %s\n' "$*"
+          ;;
+      esac
     fi
   '';
 in
