@@ -48,18 +48,13 @@ abstraction when changing shared modules, profiles, or flake outputs.
 - When executing Nushell snippets through Codex tools, do not rely on the tool's shell selection alone. Invoke Nushell explicitly as `nu -c '...'`, otherwise the command may still be interpreted by `/bin/sh`.
 - This repo contains unfree packages. For full flake checks, run `env NIXPKGS_ALLOW_UNFREE=1 nix flake check --impure --allow-import-from-derivation`; do not treat plain `nix flake check` failing on `mudfish` as a code regression.
 - Proxy boundary is a hard contract: `dotfiles.nixNetwork.proxy` may only feed `nix-daemon` and `/etc/dotfiles/nix-network.json` for `maint-*`; build/fetch before `sudo`, activate with `nixos-rebuild --no-reexec ... --store-path`, and never reintroduce `networking.proxy.default`, desktop/session proxy exports, or `sudo --preserve-env` proxy tunneling.
-- `scripts/maint/policy.json` is the source of truth for `maint-switch` and China gate markers. If a gate blocks a clearly generated NixOS/Home Manager glue derivation, update this policy narrowly and let downstreams inherit or forward it; do not bypass the gate or allowlist heavy components.
-- Renovate owns root flake input update PRs; `.github/workflows/maintenance-leaf.yml` only owns release-pin leaves such as Codex, Orca, and ZeroClaw.
-- Maintenance leaf gates are delta-based: existing full-head China-cache misses are diagnostic baseline debt and must not block unrelated leaf PRs. Do not change this to full-head blocking unless the user explicitly changes the policy.
-- Maintenance policy, gate script, maintenance workflow, and Renovate config changes require manual review; do not auto-merge them through generated leaf maintenance.
+- Renovate owns root flake input update PRs.
+- Changes to `renovate.json` require manual review. Do not auto-merge them
+  through generated leaf maintenance.
 - Diagnose network failures by fetch path: Nix substituters, GitHub release/direct fetches, npm registry or node-gyp, Cargo registries, and runtime proxies are separate paths and should not be collapsed into one generic proxy fix.
 - Secrets must go through sops-nix. See `docs/secret-management.md`.
-- Product web UI is Rust-first: prefer Rust/WASM for UI state, validation, rendering, file generation, archives, download, clipboard, and browser storage when mature Rust crates or `web-sys` bindings are enough. Keep JavaScript glue narrow and only for browser API gaps.
-- Do not add a product CLI user entrypoint, backend service, online Nix/ISO builder, remote installer, secret upload, private-key handling, token handling, or persisted password handling unless explicitly requested. Initial passwords may only be processed in-browser long enough to generate `initialHashedPassword`; never write plaintext passwords to generated files, URLs, logs, or browser storage.
-- For `web/workstation` product UI work, use the repo-local `$workstation-web-ui` skill. Most browser work happens from a headless server; user preview servers must bind to `0.0.0.0` and report a LAN URL, while `127.0.0.1` is only for same-host Playwright/CDP checks.
 - Repo-local skills live at `.agents/skills`. Externally vendored skills are synced with `nix run .#sync-vendored-skills` and checked by `.#checks.x86_64-linux.repo-local-skills`.
 - When changing Codex skill integration, review all three surfaces: upstream source, generated repo-local files under `.agents/skills`, and Home Manager installed skill sources from `home.programs.codex`. `quick_validate.py` only checks skill shape; it does not prove Codex semantics are adapted. Grep for stale host-agent wording such as `/codebase-design`, `/grilling`, `/domain-modeling`, `/improve-codebase-architecture`, `Agent tool`, `subagent_type`, and automatic GUI-open instructions.
-- The repo-local Fieldcraft skill lives at `.agents/skills/product-form-ux` and is for form-heavy product UI review, not general visual styling.
 - The repo currently exposes `homePC` and `linglong` as maintained host configurations.
 - Changes are verified manually by the user after rebuild.
 - System rebuild command:

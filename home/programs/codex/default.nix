@@ -40,46 +40,6 @@ let
     rev = "v${ponytailVersion}";
     hash = "sha256-4ZT89GA5xnomNBIzY8Kh1yYP0AC9SeVhv406DEKpE3A=";
   };
-  ponytailSkillMd = pkgs.writeText "ponytail-SKILL.md" ''
-    ---
-    name: ponytail
-    description: On-demand minimalist implementation assistant. Use only when the user explicitly asks for Ponytail, YAGNI, the simplest viable implementation, stdlib/native-first implementation, or a minimal solution. Do not use as an always-on coding style, persistent mode, prose editor, or substitute for correctness/security review.
-    license: MIT
-    upstream: https://github.com/DietrichGebert/ponytail/tree/v${ponytailVersion}
-    ---
-
-    # Ponytail
-
-    Use this skill as a bounded YAGNI and minimal-implementation pass. It is
-    intentionally not persistent: apply it to the current task only, unless the
-    user explicitly asks again.
-
-    ## Ladder
-
-    Prefer the first option that actually satisfies the request:
-
-    1. Skip work that does not need to exist.
-    2. Use the standard library when it covers the need.
-    3. Use native platform features before custom code or new dependencies.
-    4. Use already-installed dependencies before adding new ones.
-    5. Keep the implementation as small and direct as the real requirement allows.
-
-    ## Boundaries
-
-    Do not remove trust-boundary validation, security controls, accessibility
-    basics, data-loss prevention, edge-case correctness, required checks, or
-    explicitly requested behavior. If the smallest implementation has a known
-    ceiling, say what triggers the larger version.
-
-    For over-engineering review, prefer `$ponytail-review` or
-    `$ponytail-audit`; those are complexity-only passes and do not replace a
-    normal correctness/security review.
-  '';
-  ponytailSkill = pkgs.runCommand "codex-ponytail-skill" { } ''
-    mkdir -p "$out"
-    cp ${ponytailSource}/LICENSE "$out/LICENSE"
-    cp ${ponytailSkillMd} "$out/SKILL.md"
-  '';
   stopSlopSkillMd = pkgs.writeText "stop-slop-SKILL.md" ''
     ---
     name: stop-slop
@@ -334,6 +294,7 @@ let
   codexConfigToml = pkgs.writeText "codex-config.toml" ''
     model = "gpt-5.6-sol"
     model_reasoning_effort = "low"
+    model_verbosity = "medium"
     plan_mode_reasoning_effort = "medium"
     personality = "pragmatic"
     sandbox_mode = "workspace-write"
@@ -472,7 +433,7 @@ in
   options.dotfiles.codex.ponytail.enable = lib.mkOption {
     type = lib.types.bool;
     default = true;
-    description = "Whether to install Ponytail Codex skills for on-demand YAGNI and over-engineering review workflows.";
+    description = "Whether to install Ponytail Codex skills for over-engineering review and debt workflows.";
   };
 
   options.dotfiles.codex.mattPocockSkills.enable = lib.mkOption {
@@ -492,9 +453,6 @@ in
     home.file.".agents/skills/playwright-cli".source = "${playwrightCliSource}/skills/playwright-cli";
     home.file.".agents/skills/stop-slop" = lib.mkIf config.dotfiles.codex.stopSlop.enable {
       source = stopSlopSkill;
-    };
-    home.file.".agents/skills/ponytail" = lib.mkIf config.dotfiles.codex.ponytail.enable {
-      source = ponytailSkill;
     };
     home.file.".agents/skills/ponytail-review" = lib.mkIf config.dotfiles.codex.ponytail.enable {
       source = "${ponytailSource}/skills/ponytail-review";
@@ -528,76 +486,30 @@ in
     home.file.".codex/AGENTS.md".text = ''
       # AGENTS.md
 
-      Behavioral guidelines to reduce common LLM coding mistakes. Merge with
-      project-specific instructions as needed.
+      Apply these defaults across repositories. Closer project instructions
+      override them.
 
-      Tradeoff: These guidelines bias toward caution over speed. For trivial
-      tasks, use judgment.
+      ## Working Style
 
-      ## 1. Think Before Coding
+      - Clarify material ambiguity before implementation. For minor ambiguity,
+        state the assumption and proceed.
+      - Prefer the smallest complete change that satisfies the request and
+        matches existing repository patterns.
+      - Do not modify, revert, or reformat unrelated work.
+      - Complete implementation and proportionate verification unless the user
+        asks only for analysis or a plan.
 
-      Don't assume. Don't hide confusion. Surface tradeoffs.
+      ## Communication
 
-      Before implementing:
+      - Be concise for routine status updates, but make decisions self-contained.
+      - On first use, briefly define uncommon names, terms, model variants, and
+        project-specific concepts needed to understand the conclusion.
+      - For a recommendation or solution, include the relevant context,
+        mechanism, main tradeoff, and concrete verification or next action.
+      - Do not make the user ask follow-up questions merely to discover what a
+        proposed component is or why it is needed.
 
-      - State your assumptions explicitly. If uncertain, ask.
-      - If multiple interpretations exist, present them; don't pick silently.
-      - If a simpler approach exists, say so. Push back when warranted.
-      - If something is unclear, stop. Name what's confusing. Ask.
-
-      ## 2. Simplicity First
-
-      Minimum code that solves the problem. Nothing speculative.
-
-      - No features beyond what was asked.
-      - No abstractions for single-use code.
-      - No "flexibility" or "configurability" that wasn't requested.
-      - No error handling for impossible scenarios.
-      - If you write 200 lines and it could be 50, rewrite it.
-
-      Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes,
-      simplify.
-
-      ## 3. Surgical Changes
-
-      Touch only what you must. Clean up only your own mess.
-
-      When editing existing code:
-
-      - Don't "improve" adjacent code, comments, or formatting.
-      - Don't refactor things that aren't broken.
-      - Match existing style, even if you'd do it differently.
-      - If you notice unrelated dead code, mention it; don't delete it.
-
-      When your changes create orphans:
-
-      - Remove imports, variables, or functions that your changes made unused.
-      - Don't remove pre-existing dead code unless asked.
-
-      The test: Every changed line should trace directly to the user's request.
-
-      ## 4. Goal-Driven Execution
-
-      Define success criteria. Loop until verified.
-
-      Transform tasks into verifiable goals:
-
-      - "Add validation" -> "Write tests for invalid inputs, then make them pass"
-      - "Fix the bug" -> "Write a test that reproduces it, then make it pass"
-      - "Refactor X" -> "Ensure tests pass before and after"
-
-      For multi-step tasks, state a brief plan:
-
-      ```text
-      1. [Step] -> verify: [check]
-      2. [Step] -> verify: [check]
-      3. [Step] -> verify: [check]
-      ```
-
-      Strong success criteria let you loop independently. Weak criteria ("make it
-      work") require constant clarification.
-
-      ## 5. Git And Nix
+      ## Git And Nix
 
       Write commit messages in Conventional Commits format: `<type>: <summary>`.
       Run `nix eval`, `nix check`, and `nix build` directly; Codex already sets
@@ -617,7 +529,7 @@ in
       before redesigning the shell. Do not implement dynamic nixpkgs fallback in
       `flake.nix`; keep lock selection explicit.
 
-      ## 6. Capability Routing
+      ## Capability Routing
 
       Use installed skills for reusable workflows; keep workflow details in
       skill descriptions and `SKILL.md`, not in this global file.
