@@ -332,11 +332,13 @@ let
   '') trustedProjects;
 
   codexConfigToml = pkgs.writeText "codex-config.toml" ''
-    model = "gpt-5.5"
-    model_reasoning_effort = "medium"
+    model = "gpt-5.6-sol"
+    model_reasoning_effort = "low"
+    plan_mode_reasoning_effort = "medium"
     personality = "pragmatic"
     sandbox_mode = "workspace-write"
     approval_policy = "on-request"
+    web_search = "live"
 
     [sandbox_workspace_write]
     writable_roots = ${writableRootsToml}
@@ -345,7 +347,7 @@ let
     memories = true
     hooks = true
 
-    [notices]
+    [notice]
     hide_rate_limit_model_nudge = true
 
     [tui]
