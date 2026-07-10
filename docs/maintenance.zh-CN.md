@@ -106,6 +106,10 @@ marker。生成的 `maint.nuon` 只保存 repo 路径、host、并发和可选 e
 `.github/workflows/maintenance-leaf.yml`。这些属于 workflow 编排，不属于 gate
 policy。
 
+base 和 head dry-run 也共用 `scripts/maint/china-gate.sh`，但每次运行都会显式传入
+对应的 flake root 和 policy 文件。这样 workflow 的当前工作目录或 PR 内的 policy
+变更就不会悄悄重新分类 base closure；host 配置与 `ci@headless` 使用同一分类实现。
+
 marker policy 是经验性边界，应该在真实 miss 中持续收紧：`unit-`、
 `-etc-`、`nixos-system-` 这类较宽的生成式 glue marker 如果误分类
 derivation，就应收紧；新的 release tarball leaf 也必须显式声明后才允许
