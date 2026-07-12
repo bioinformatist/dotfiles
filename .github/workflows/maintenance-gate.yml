@@ -42,77 +42,6 @@ jobs:
 
       - uses: cachix/install-nix-action@v31
 
-      - name: Resolve baseline identity
-        id: identity
-        shell: bash
-        env:
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
-        run: |
-          set -euo pipefail
-
-          case "$GITHUB_EVENT_NAME" in
-            pull_request)
-              base_sha="$PR_BASE_SHA"
-              ;;
-            merge_group)
-              base_sha="$MERGE_GROUP_BASE_SHA"
-              ;;
-            workflow_dispatch)
-              git fetch origin main:refs/remotes/origin/main
-              base_sha="$(git rev-parse 'refs/remotes/origin/main^{commit}')"
-              ;;
-            *)
-              echo "Unsupported event: $GITHUB_EVENT_NAME" >&2
-              exit 2
-              ;;
-          esac
-
-          [[ "$base_sha" =~ ^[0-9a-f]{40}$ ]]
-          git cat-file -e "${base_sha}^{commit}"
-
-          nix_version="$(nix --version)"
-          nix_version_key="$(printf '%s' "$nix_version" | sha256sum | cut -c1-16)"
-          {
-            echo "base_sha=${base_sha}"
-            echo "nix_version=${nix_version}"
-            echo "key=china-baseline-v1-${RUNNER_OS}-${RUNNER_ARCH}-${nix_version_key}-${base_sha}"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Restore China baseline
-        id: baseline_restore
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ runner.temp }}/china-baseline
-          key: ${{ steps.identity.outputs.key }}
-          fail-on-cache-miss: false
-          lookup-only: false
-
-      - name: Validate China baseline
-        id: baseline
-        shell: bash
-        env:
-          BASE_SHA: ${{ steps.identity.outputs.base_sha }}
-          NIX_VERSION: ${{ steps.identity.outputs.nix_version }}
-          CACHE_HIT: ${{ steps.baseline_restore.outputs.cache-hit }}
-        run: |
-          set -euo pipefail
-
-          valid=false
-          if [[ "$CACHE_HIT" == "true" ]] && bash scripts/maint/china-baseline-cache.sh \
-            validate \
-            "$RUNNER_TEMP/china-baseline" \
-            "$BASE_SHA" \
-            "$NIX_VERSION" \
-            "$RUNNER_OS" \
-            "$RUNNER_ARCH"; then
-            valid=true
-          else
-            rm -rf "$RUNNER_TEMP/china-baseline"
-          fi
-
-          echo "valid=${valid}" >> "$GITHUB_OUTPUT"
-
       - name: Global dry-run
         shell: bash
         run: |
@@ -130,57 +59,37 @@ jobs:
 
       - name: China gate
         shell: bash
-        env:
-          BASE_SHA: ${{ steps.identity.outputs.base_sha }}
-          BASELINE_VALID: ${{ steps.baseline.outputs.valid }}
         run: |
           set -euo pipefail
 
           read -r -a hosts <<< "$HOSTS"
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
-          cache_dir="$RUNNER_TEMP/china-baseline"
-          mkdir -p "$cache_dir"
 
-          base_started="$SECONDS"
-          if [[ "$BASELINE_VALID" == "true" ]]; then
-            baseline_source=cache
-          else
-            baseline_source=fallback
-            git worktree add --detach "$tmp/base" "$BASE_SHA"
-            env \
-              -u CHINA_SUBSTITUTERS \
-              -u CHINA_SUBSTITUTER \
-              -u CHINA_EXTRA_TRUSTED_PUBLIC_KEYS \
-              bash "$tmp/base/scripts/maint/china-gate.sh" \
-                --report-only \
-                --flake-root "$tmp/base" \
-                --policy-file "$tmp/base/scripts/maint/policy.json" \
-                --output "$cache_dir/china-base.blocked" \
-                --direct-output "$cache_dir/china-base.direct" \
-                --home 'ci@headless' \
-                "${hosts[@]}"
-          fi
-          base_seconds=$((SECONDS - base_started))
+          git fetch origin main:refs/remotes/origin/main
+          git worktree add --detach "$tmp/base" origin/main
 
-          head_started="$SECONDS"
-          env \
-            -u CHINA_SUBSTITUTERS \
-            -u CHINA_SUBSTITUTER \
-            -u CHINA_EXTRA_TRUSTED_PUBLIC_KEYS \
-            bash scripts/maint/china-gate.sh \
-              --report-only \
-              --flake-root . \
-              --policy-file scripts/maint/policy.json \
-              --output "$tmp/china-head.blocked" \
-              --direct-output "$tmp/china-head.direct" \
-              --home 'ci@headless' \
-              "${hosts[@]}"
-          head_seconds=$((SECONDS - head_started))
+          bash scripts/maint/china-gate.sh \
+            --report-only \
+            --flake-root "$tmp/base" \
+            --policy-file "$tmp/base/scripts/maint/policy.json" \
+            --output "$tmp/china-base.blocked" \
+            --direct-output "$tmp/china-base.direct" \
+            --home 'ci@headless' \
+            "${hosts[@]}"
+
+          bash scripts/maint/china-gate.sh \
+            --report-only \
+            --flake-root . \
+            --policy-file scripts/maint/policy.json \
+            --output "$tmp/china-head.blocked" \
+            --direct-output "$tmp/china-head.direct" \
+            --home 'ci@headless' \
+            "${hosts[@]}"
 
           eval_args=(
-            --base-blocked "$cache_dir/china-base.blocked"
-            --base-direct "$cache_dir/china-base.direct"
+            --base-blocked "$tmp/china-base.blocked"
+            --base-direct "$tmp/china-base.direct"
             --head-blocked "$tmp/china-head.blocked"
             --head-direct "$tmp/china-head.direct"
             --output-dir "$tmp"
@@ -190,16 +99,6 @@ jobs:
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
             eval_args+=(--leaf "${GITHUB_HEAD_REF#maint/}")
           fi
-
-          {
-            echo ""
-            echo "## China baseline cache"
-            echo ""
-            echo "- Base SHA: \`${BASE_SHA}\`"
-            echo "- Source: \`${baseline_source}\`"
-            echo "- Base preparation: \`${base_seconds}s\`"
-            echo "- Head report: \`${head_seconds}s\`"
-          } >> "$GITHUB_STEP_SUMMARY"
 
           if ! bash scripts/maint/evaluate-china-gate.sh "${eval_args[@]}"; then
             echo "China gate found new unapproved derivations:" >&2

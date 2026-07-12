@@ -121,13 +121,6 @@ workflow checkout directory or a policy change in the PR from silently
 reclassifying the base closure. The same classifier covers host configurations
 and `ci@headless`.
 
-After each trusted push to `main`, `.github/workflows/maintenance-baseline.yml`
-computes and caches the sorted China-gate baseline reports for that exact commit.
-The required PR gate restores only an exact base-SHA/Nix-version match, validates
-the report manifest and checksums, and otherwise recomputes the base normally.
-PR and merge-queue runs never write the trusted baseline cache, and no Nix store
-paths or evaluation caches are restored into the gate.
-
 The marker policy is intentionally empirical. It should be refined from real
 misses: broad generated-glue markers such as `unit-`, `-etc-`, and
 `nixos-system-` may be tightened if they misclassify a derivation, and new
