@@ -110,6 +110,12 @@ base 和 head dry-run 也共用 `scripts/maint/china-gate.sh`，但每次运行�
 对应的 flake root 和 policy 文件。这样 workflow 的当前工作目录或 PR 内的 policy
 变更就不会悄悄重新分类 base closure；host 配置与 `ci@headless` 使用同一分类实现。
 
+每次可信的 `main` push 后，`.github/workflows/maintenance-baseline.yml` 都会为该精确
+commit 计算并缓存排序后的 China gate baseline report。required PR gate 只恢复 base
+SHA 与 Nix 版本完全匹配的 cache，并校验 manifest 和文件哈希；未命中或校验失败时
+仍正常重算 base。PR 与 merge queue 不会写入可信 baseline cache，gate 也不会恢复
+Nix store path 或 evaluation cache。
+
 marker policy 是经验性边界，应该在真实 miss 中持续收紧：`unit-`、
 `-etc-`、`nixos-system-` 这类较宽的生成式 glue marker 如果误分类
 derivation，就应收紧；新的 release tarball leaf 也必须显式声明后才允许

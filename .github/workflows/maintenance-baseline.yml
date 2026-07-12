@@ -1,0 +1,78 @@
+name: Maintenance Baseline Cache
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maintenance-baseline-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  warm:
+    name: warm China baseline
+    runs-on: ubuntu-latest
+    env:
+      HOSTS: homePC linglong
+      NIXPKGS_ALLOW_UNFREE: "1"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Resolve cache identity
+        id: identity
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          nix_version="$(nix --version)"
+          nix_version_key="$(printf '%s' "$nix_version" | sha256sum | cut -c1-16)"
+          {
+            echo "base_sha=${GITHUB_SHA}"
+            echo "nix_version=${nix_version}"
+            echo "key=china-baseline-v1-${RUNNER_OS}-${RUNNER_ARCH}-${nix_version_key}-${GITHUB_SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Compute China baseline
+        shell: bash
+        env:
+          BASE_SHA: ${{ steps.identity.outputs.base_sha }}
+          NIX_VERSION: ${{ steps.identity.outputs.nix_version }}
+        run: |
+          set -euo pipefail
+
+          cache_dir="$RUNNER_TEMP/china-baseline"
+          mkdir -p "$cache_dir"
+          read -r -a hosts <<< "$HOSTS"
+          env \
+            -u CHINA_SUBSTITUTERS \
+            -u CHINA_SUBSTITUTER \
+            -u CHINA_EXTRA_TRUSTED_PUBLIC_KEYS \
+            bash scripts/maint/china-gate.sh \
+              --report-only \
+              --flake-root . \
+              --policy-file scripts/maint/policy.json \
+              --output "$cache_dir/china-base.blocked" \
+              --direct-output "$cache_dir/china-base.direct" \
+              --home 'ci@headless' \
+              "${hosts[@]}"
+
+          bash scripts/maint/china-baseline-cache.sh \
+            create \
+            "$cache_dir" \
+            "$BASE_SHA" \
+            "$NIX_VERSION" \
+            "$RUNNER_OS" \
+            "$RUNNER_ARCH"
+
+      - name: Save China baseline
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/china-baseline
+          key: ${{ steps.identity.outputs.key }}
