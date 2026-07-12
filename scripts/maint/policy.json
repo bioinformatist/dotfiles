@@ -65,6 +65,7 @@
     "-github-mcp-server.drv",
     "-playwright-cli.drv",
     "-zeroclaw-daemon.service.drv",
+    "-nm-applet.service.drv",
     "-anyrun-application-exec-preprocessor.drv",
     "-appimage-exec.sh.drv",
     "-orca-ide-"

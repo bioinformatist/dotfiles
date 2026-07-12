@@ -3,6 +3,7 @@
 {
   inputs,
   config,
+  pkgs,
   ...
 }:
 
@@ -63,6 +64,19 @@
     config.sops.secrets."github-mcp-token".path;
   home-manager.users.ysun.dotfiles.codex.context7ApiKeyFile =
     config.sops.secrets."context7-api-key".path;
+  home-manager.users.ysun.home.packages = [ pkgs.networkmanagerapplet ];
+  home-manager.users.ysun.systemd.user.services.nm-applet = {
+    Unit = {
+      Description = "NetworkManager applet";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${pkgs.networkmanagerapplet}/bin/nm-applet --indicator";
+      Restart = "on-failure";
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
 
   fileSystems."/persist".neededForBoot = true;
 

@@ -28,6 +28,7 @@
       (sysinfo)
       (label :class "separator" :text "│")
       (notifications)
+      (systray :icon-size 18 :spacing 4)
       (network :monitor_id monitor_id)
       (bluetooth :monitor_id monitor_id)
       (audio :monitor_id monitor_id)
