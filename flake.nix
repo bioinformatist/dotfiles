@@ -29,6 +29,10 @@
       url = "github:mattpocock/skills/v1.0.1";
       flake = false;
     };
+    shadcn-improve = {
+      url = "github:shadcn/improve/03369ee6d7cafbfcecc4346539b05b3dc0a603bb";
+      flake = false;
+    };
   };
 
   outputs =

@@ -64,6 +64,7 @@
     "-context7-auth-mcp-server.drv",
     "-github-mcp-server.drv",
     "-playwright-cli.drv",
+    "-codex-improve-exec.drv",
     "-zeroclaw-daemon.service.drv",
     "-nm-applet.service.drv",
     "-anyrun-application-exec-preprocessor.drv",
