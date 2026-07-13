@@ -108,3 +108,96 @@ jobs:
             sed -n '1,20p' "$tmp/china-new-unapproved.blocked" >&2
             exit 1
           fi
+
+  shadow:
+    name: china delta shadow
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      HOSTS: homePC linglong
+      CHINA_SUBSTITUTERS: >-
+        https://mirrors.ustc.edu.cn/nix-channels/store
+        https://anyrun.cachix.org
+        https://hyprland.cachix.org
+      CHINA_EXTRA_TRUSTED_PUBLIC_KEYS: >-
+        anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s=
+        hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
+      NIXPKGS_ALLOW_UNFREE: "1"
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Compare closure delta
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          read -r -a hosts <<< "$HOSTS"
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+
+          git fetch origin main:refs/remotes/origin/main
+          git worktree add --detach "$tmp/base" origin/main
+
+          set +e
+          bash scripts/maint/china-gate-delta.sh \
+            --base-flake-root "$tmp/base" \
+            --head-flake-root . \
+            --base-policy-file "$tmp/base/scripts/maint/policy.json" \
+            --head-policy-file scripts/maint/policy.json \
+            --output "$tmp/china-shadow.blocked" \
+            --direct-output "$tmp/china-shadow.direct" \
+            --home 'ci@headless' \
+            "${hosts[@]}" \
+            > "$tmp/china-shadow.log" \
+            2>&1
+          shadow_exit=$?
+          set -e
+
+          shadow_status=inconclusive
+          if [[ "$shadow_exit" -eq 0 ]]; then
+            : > "$tmp/empty"
+            eval_args=(
+              --base-blocked "$tmp/empty"
+              --base-direct "$tmp/empty"
+              --head-blocked "$tmp/china-shadow.blocked"
+              --head-direct "$tmp/china-shadow.direct"
+              --output-dir "$tmp/shadow-eval"
+            )
+            if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
+              eval_args+=(--leaf "${GITHUB_HEAD_REF#maint/}")
+            fi
+            bash scripts/maint/evaluate-china-gate.sh "${eval_args[@]}"
+            if [[ -s "$tmp/shadow-eval/china-new-unapproved.blocked" ]]; then
+              shadow_status=miss
+            else
+              shadow_status=pass
+            fi
+          fi
+
+          {
+            echo "## China delta shadow"
+            echo
+            echo "- Status: \`${shadow_status}\`"
+            if [[ "$shadow_exit" -eq 0 ]]; then
+              echo "- Blocked derivations: \`$(wc -l < "$tmp/china-shadow.blocked" | tr -d '[:space:]')\`"
+              echo "- Declared direct fetches: \`$(wc -l < "$tmp/china-shadow.direct" | tr -d '[:space:]')\`"
+            else
+              echo "- The required full gate remains authoritative."
+            fi
+            echo
+            echo '### Classifier log'
+            echo "\`\`\`text"
+            sed -n '1,40p' "$tmp/china-shadow.log"
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$shadow_status" == "miss" ]]; then
+            echo "::warning title=China delta shadow::The shadow classifier found new unapproved derivations"
+          elif [[ "$shadow_status" == "inconclusive" ]]; then
+            echo "::notice title=China delta shadow::The shadow classifier was inconclusive; the full gate remains authoritative"
+          fi
