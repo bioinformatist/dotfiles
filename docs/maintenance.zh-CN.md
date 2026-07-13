@@ -110,6 +110,15 @@ base 和 head dry-run 也共用 `scripts/maint/china-gate.sh`，但每次运行�
 对应的 flake root 和 policy 文件。这样 workflow 的当前工作目录或 PR 内的 policy
 变更就不会悄悄重新分类 base closure；host 配置与 `ci@headless` 使用同一分类实现。
 
+workflow 还会运行一个非 required 的 `china delta shadow` job。它先在本地生成
+base 和 head derivation 图，再比较实际需要的 `(derivation, output)` 对。policy
+已经允许本地构建的 glue derivation 不会发起 cache 查询；其余 output 先查询
+Cachix，再查询 USTC，并从后续请求中移除已经命中的路径。marker policy 发生变化、
+图格式不受支持或包含动态 output、cache metadata 无法查询或通过信任验证时，
+shadow 结果为 inconclusive，完整 gate 继续作为权威结果。shadow 不修改 Nix HTTP
+连接设置，也不替换 required gate；在考虑切换前，只用它积累两种分类器的一致性
+样本。
+
 marker policy 是经验性边界，应该在真实 miss 中持续收紧：`unit-`、
 `-etc-`、`nixos-system-` 这类较宽的生成式 glue marker 如果误分类
 derivation，就应收紧；新的 release tarball leaf 也必须显式声明后才允许
