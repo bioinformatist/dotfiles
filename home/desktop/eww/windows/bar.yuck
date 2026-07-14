@@ -20,7 +20,7 @@
          :halign "center"
          :spacing 12
       (clock)
-      (weather :monitor_name monitor_name :monitor_id monitor_id)
+      (weather)
       (bar-center-extra))
 
     ;; ─── Right: System Modules ───

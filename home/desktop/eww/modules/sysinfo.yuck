@@ -1,4 +1,4 @@
-;; Compact CPU/RAM metrics from Eww and an optional custom GPU probe.
+;; Fixed-width CPU/MEM/GPU wordmarks with honest unavailable states.
 
 (defpoll gpu-status
   :interval "3s"
@@ -10,30 +10,30 @@
        :orientation "h"
        :space-evenly false
        :spacing 6
-    (box :class "sysinfo-metric"
+    (box :class "sysinfo-wordmark"
          :orientation "h"
          :space-evenly false
-         :spacing 4
+         :spacing 0
          :tooltip "CPU usage"
-      (label :class "icon-cpu" :text "")
-      (label :class "module-value sysval-cpu"
-             :text "${round(EWW_CPU.avg, 0)}%"))
+      (label :class "sysinfo-label" :text "CPU")
+      (label :class "sysinfo-value"
+             :text {EWW_CPU.avg == "null" ? "--%" : "${round(EWW_CPU.avg, 0)}%"}))
 
-    (box :class "sysinfo-metric"
+    (box :class "sysinfo-wordmark"
          :orientation "h"
          :space-evenly false
-         :spacing 4
+         :spacing 0
          :tooltip "Memory usage"
-      (label :class "icon-ram" :text "󰍛")
-      (label :class "module-value sysval-ram"
-             :text "${round(EWW_RAM.used_mem_perc, 0)}%"))
+      (label :class "sysinfo-label" :text "MEM")
+      (label :class "sysinfo-value"
+             :text {EWW_RAM.used_mem_perc == "null" ? "--%" : "${round(EWW_RAM.used_mem_perc, 0)}%"}))
 
-    (box :class "sysinfo-metric"
+    (box :class "sysinfo-wordmark"
          :orientation "h"
          :space-evenly false
-         :spacing 4
+         :spacing 0
          :visible {gpu-status.present}
          :tooltip {gpu-status.present ? "GPU usage (${gpu-status.gpus[0].vendor})" : "GPU telemetry unavailable"}
-      (label :class "icon-gpu" :text "󰢮")
-      (label :class "module-value sysval-gpu"
+      (label :class "sysinfo-label" :text "GPU")
+      (label :class "sysinfo-value"
              :text {gpu-status.present ? "${gpu-status.gpus[0].util}%" : ""}))))

@@ -5,6 +5,35 @@
   ...
 }:
 let
+  ewwRuntimePath =
+    lib.makeBinPath (
+      with pkgs;
+      [
+        alsa-utils
+        bash
+        coreutils
+        curl
+        gawk
+        gnugrep
+        gnused
+        hyprland
+        iproute2
+        jq
+        libnotify
+        nushell
+        pavucontrol
+        pulseaudio
+        socat
+        swaynotificationcenter
+        systemd
+        util-linux
+        xdg-utils
+        zenity
+      ]
+      ++ [ config.programs.eww.package ]
+    )
+    + ":/run/current-system/sw/bin";
+
   powerAction = pkgs.writeShellApplication {
     name = "dotfiles-power-action";
     runtimeInputs = with pkgs; [
@@ -59,7 +88,6 @@ let
     "eww/windows/audio-popup.yuck".source = ./eww/windows/audio-popup.yuck;
     "eww/windows/popup-closer.yuck".source = ./eww/windows/popup-closer.yuck;
     "eww/windows/power-popup.yuck".source = ./eww/windows/power-popup.yuck;
-    "eww/windows/weather-search.yuck".source = ./eww/windows/weather-search.yuck;
     # Data files
   };
 
@@ -105,6 +133,10 @@ let
       executable = true;
     };
   };
+
+  ewwRestartTriggers = map (file: toString file.source) (
+    builtins.attrValues (ewwConfigFiles // ewwScriptFiles // d2rFiles)
+  );
 in
 {
   imports = [
@@ -125,15 +157,77 @@ in
 
     xdg.configFile = ewwConfigFiles // ewwScriptFiles // d2rFiles;
 
-    systemd.user.services."dotfiles-power-action@" = {
-      Unit = {
-        Description = "Stop UWSM session and %i";
-        Documentation = "man:uwsm(1)";
+    systemd.user.services = {
+      eww = {
+        Unit = {
+          Description = "Eww widget daemon";
+          Documentation = "https://elkowar.github.io/eww/";
+          After = [ "graphical-session.target" ];
+          X-Restart-Triggers = ewwRestartTriggers;
+        };
+        Service = {
+          ExecStart = "${lib.getExe config.programs.eww.package} daemon --no-daemonize";
+          Environment = "PATH=${ewwRuntimePath}";
+          Slice = "app-graphical.slice";
+          Restart = "on-failure";
+          RestartSec = 2;
+        };
+        Install.WantedBy = [ "graphical-session.target" ];
       };
-      Service = {
-        Type = "oneshot";
-        Slice = "session.slice";
-        ExecStart = "${lib.getExe powerAction} %i";
+
+      dotfiles-eww-bars = {
+        Unit = {
+          Description = "Reconcile Eww bars with Hyprland monitors";
+          After = [
+            "graphical-session.target"
+            "eww.service"
+          ];
+          Wants = [ "eww.service" ];
+          X-Restart-Triggers = [ (toString ewwScriptFiles."eww/scripts/manage-bars".source) ];
+        };
+        Service = {
+          Type = "notify";
+          NotifyAccess = "all";
+          TimeoutStartSec = 20;
+          ExecStart = "%h/.config/eww/scripts/manage-bars";
+          Environment = "PATH=${ewwRuntimePath}";
+          Slice = "background-graphical.slice";
+          Restart = "on-failure";
+          RestartSec = 1;
+        };
+        Install.WantedBy = [ "graphical-session.target" ];
+      };
+
+      dotfiles-eww-popup-closer = {
+        Unit = {
+          Description = "Close Eww popups when application focus changes";
+          After = [
+            "graphical-session.target"
+            "eww.service"
+          ];
+          Wants = [ "eww.service" ];
+          X-Restart-Triggers = [ (toString ewwScriptFiles."eww/scripts/close-popups".source) ];
+        };
+        Service = {
+          ExecStart = "%h/.config/eww/scripts/close-popups";
+          Environment = "PATH=${ewwRuntimePath}";
+          Slice = "background-graphical.slice";
+          Restart = "on-failure";
+          RestartSec = 1;
+        };
+        Install.WantedBy = [ "graphical-session.target" ];
+      };
+
+      "dotfiles-power-action@" = {
+        Unit = {
+          Description = "Stop UWSM session and %i";
+          Documentation = "man:uwsm(1)";
+        };
+        Service = {
+          Type = "oneshot";
+          Slice = "session.slice";
+          ExecStart = "${lib.getExe powerAction} %i";
+        };
       };
     };
 
@@ -141,7 +235,7 @@ in
     home.packages = with pkgs; [
       socat # Hyprland IPC socket listener
       curl # Weather API requests
-      dunst # Notification daemon (dunstctl)
+      swaynotificationcenter # Notification daemon and maintained control center
       pulseaudio # pactl stream for volume events
       alsa-utils # amixer for hardware capture gain in the audio popup
       pavucontrol # Full PipeWire/PulseAudio mixer opened from the audio popup

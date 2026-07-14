@@ -10,6 +10,7 @@
   imports = [
     ./hardware-configuration.nix
     ./disko-config.nix
+    ../common/personal-workstation.nix
     (import ../../profiles/workstation.nix { inherit inputs; })
     ../../nixos/china-network.nix
     ../../nixos/proxy.nix
@@ -21,7 +22,6 @@
 
   networking.hostName = "linglong";
   networking.networkmanager.enable = true;
-  dotfiles.workstation.clash.enable = true;
 
   hardware.bluetooth = {
     enable = true;

@@ -1,6 +1,6 @@
 ;; ═══ Workspace Indicator ═══
 ;; Event-driven via socat on Hyprland socket2.
-;; Shows 10 workspace dots: current(■) / occupied(▪) / empty(□)
+;; Shows distinct current, active-on-other-monitor, occupied, and empty states.
 
 (deflisten workspaces_data
   :initial "[]"
@@ -20,4 +20,5 @@
                                   ws.active ? 'ws-active-other' :
                                   ws.occupied ? 'ws-occupied' : 'ws-empty'}"
           :text "${ws.active && ws.monitor == monitor_id ? '■' :
+                  ws.active ? '◆' :
                   ws.occupied ? '▪' : '□'}")))))

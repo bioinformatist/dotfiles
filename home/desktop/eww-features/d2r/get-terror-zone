@@ -87,7 +87,8 @@ def lookup-tier [en_name: string] {
 
 # ─── Main ─────────────────────────────────────────────────────
 def main [] {
-  let html = (^curl -sf https://d2emu.com/tz | str trim)
+  let response = (do { ^curl -sf --connect-timeout 5 --max-time 15 --retry 0 https://d2emu.com/tz } | complete)
+  let html = if $response.exit_code == 0 { $response.stdout | str trim } else { "" }
   if ($html | is-empty) {
     return '{"zone":"网络错误","next":"","xp":"","loot":"","next_xp":"","next_loot":""}'
   }

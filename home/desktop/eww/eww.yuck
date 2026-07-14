@@ -4,7 +4,7 @@
 
 ;; ─── Polling Intervals Overview ─────────────────────────
 ;; Clock:        1s (time), 60s (date)
-;; Weather:      1800s (30 minutes) — yr.no API rate-limited
+;; Weather:      300s checks with a 30-minute successful-cache TTL
 ;; Other:        Event-driven (buttons, clicks) — no background polls
 
 ;; ─── Phase 1: Foundation ────────────────────────────────
@@ -27,4 +27,3 @@
 (include "./windows/audio-popup.yuck")
 (include "./windows/popup-closer.yuck")
 (include "./windows/power-popup.yuck")
-(include "./windows/weather-search.yuck")

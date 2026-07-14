@@ -199,6 +199,19 @@ maint-switch --repo /tmp/dotfiles-clean --no-pull
 Use this for host-local auto-generated data such as Rime sync files. Do not make
 a Rime-only commit just to satisfy the clean-checkout gate.
 
+Pass `--boot` when a reviewed change must be installed as the next booted
+generation without activating it in the current desktop session:
+
+```nu
+maint-switch --boot
+```
+
+This flag still runs the clean-check, optional pull, network gate, and complete
+toplevel build. It always calls `nixos-rebuild boot --store-path ...` and reports
+that a reboot is required. It is an explicit deferral path for lifecycle changes,
+not the day-to-day default; without it, the existing automatic kernel/NVIDIA risk
+selection remains in effect.
+
 Default blocking markers include:
 
 - `linux-`, `nvidia-x11`, `mesa-`, `systemd-`

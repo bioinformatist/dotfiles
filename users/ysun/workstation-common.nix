@@ -17,74 +17,149 @@
     x11.enable = true;
   };
 
-  services.dunst = {
+  services.swaync = {
     enable = true;
     settings = {
-      global = {
-        origin = "bottom-right";
-        offset = "20x20";
-        width = "(0, 380)";
-        height = 200;
-        gap_size = 8;
-        frame_width = 1;
-        frame_color = "#00dd36";
-        corner_radius = 10;
-        separator_height = 2;
-        separator_color = "frame";
-        padding = 12;
-        horizontal_padding = 12;
-        text_icon_padding = 10;
-        progress_bar = true;
-        progress_bar_height = 8;
-        progress_bar_frame_width = 1;
-        progress_bar_min_width = 150;
-        progress_bar_max_width = 300;
-        progress_bar_corner_radius = 4;
-        font = "JetBrainsMono Nerd Font 11, Noto Sans CJK SC 11";
-        markup = "full";
-        format = "<b>%s</b>\\n%b";
-        alignment = "left";
-        vertical_alignment = "center";
-        line_height = 0;
-        ellipsize = "middle";
-        icon_position = "left";
-        min_icon_size = 32;
-        max_icon_size = 64;
-        enable_recursive_icon_lookup = true;
-        follow = "mouse";
-        stack_duplicates = true;
-        hide_duplicate_count = false;
-        show_indicators = true;
-        sticky_history = true;
-        history_length = 30;
-        show_age_threshold = 60;
-        layer = "overlay";
-        mouse_left_click = "close_current";
-        mouse_middle_click = "do_action, close_current";
-        mouse_right_click = "close_all";
-      };
-
-      urgency_low = {
-        background = "#050505F0";
-        foreground = "#00aa28";
-        frame_color = "#005515";
-        timeout = 5;
-      };
-
-      urgency_normal = {
-        background = "#050808F0";
-        foreground = "#00ff41";
-        frame_color = "#00dd36";
-        timeout = 8;
-      };
-
-      urgency_critical = {
-        background = "#1a0008F0";
-        foreground = "#ff2244";
-        frame_color = "#ff2244";
-        timeout = 0;
+      positionX = "right";
+      positionY = "bottom";
+      control-center-positionX = "right";
+      control-center-positionY = "top";
+      control-center-margin-top = 56;
+      control-center-margin-right = 16;
+      layer = "overlay";
+      control-center-layer = "top";
+      layer-shell = true;
+      cssPriority = "user";
+      notification-window-width = 400;
+      control-center-width = 420;
+      control-center-height = 640;
+      notification-grouping = true;
+      notification-inline-replies = false;
+      relative-timestamps = true;
+      timeout = 8;
+      timeout-low = 5;
+      timeout-critical = 0;
+      hide-on-action = true;
+      text-empty = "No notifications";
+      widgets = [
+        "title"
+        "dnd"
+        "notifications"
+      ];
+      widget-config = {
+        title = {
+          text = "Notifications";
+          clear-all-button = true;
+          button-text = "Clear all";
+        };
+        dnd.text = "Do Not Disturb";
+        notifications.vexpand = true;
       };
     };
+
+    style = ''
+      * {
+        font-family: "JetBrainsMono Nerd Font", "Noto Sans CJK SC", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      notificationwindow,
+      blankwindow {
+        background: transparent;
+      }
+
+      .control-center {
+        color: #ffffff;
+        background: #090909;
+        border: 1px solid #333333;
+        border-radius: 8px;
+        box-shadow: 0 0 8px rgba(255, 163, 26, 0.22);
+      }
+
+      .notification-row {
+        outline: none;
+      }
+
+      .notification-row .notification-background {
+        padding: 5px 10px;
+      }
+
+      .notification-row .notification-background .notification {
+        color: #ffffff;
+        background: #111111;
+        border: 1px solid #333333;
+        border-radius: 8px;
+      }
+
+      .notification-row .notification-background .notification.critical {
+        border-color: #e5484d;
+      }
+
+      .notification-row .notification-background .notification .notification-default-action,
+      .notification-row .notification-background .notification .notification-action {
+        color: #ffffff;
+        background: transparent;
+        border-radius: 7px;
+      }
+
+      .notification-row .notification-background .notification .notification-default-action:hover,
+      .notification-row .notification-background .notification .notification-action:hover {
+        background: #242424;
+      }
+
+      .summary,
+      .time,
+      .widget-title > label {
+        color: #ffffff;
+        font-weight: 700;
+      }
+
+      .body,
+      .widget-dnd > label {
+        color: #a7a7a7;
+      }
+
+      .close-button,
+      .widget-title > button {
+        color: #000000;
+        background: #ffa31a;
+        border: 0;
+        border-radius: 6px;
+      }
+
+      .widget-dnd > switch {
+        background: #333333;
+        border-radius: 8px;
+      }
+
+      .widget-dnd > switch:checked {
+        background: #ffa31a;
+      }
+
+      .widget-dnd > switch slider {
+        background: #ffffff;
+      }
+    '';
+  };
+
+  systemd.user.services.clash-verge-gui = {
+    Unit = {
+      Description = "Clash Verge graphical client";
+      After = [
+        "graphical-session.target"
+        "dotfiles-eww-bars.service"
+      ];
+      ConditionPathExists = "/run/current-system/sw/bin/clash-verge";
+    };
+    Service = {
+      ExecStart = "/run/current-system/sw/bin/clash-verge";
+      Environment = "PATH=${lib.makeBinPath [ pkgs.coreutils ]}:/run/current-system/sw/bin";
+      Slice = "app-graphical.slice";
+      Restart = "on-failure";
+      RestartSec = 3;
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
   };
 
   dotfiles.codex.trustedProjects = [

@@ -17,7 +17,7 @@ $font-main: "JetBrainsMono Nerd Font", "JetBrains Mono", "monospace";
   color: $text;
   font-family: $font-main;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0;
 }
 
@@ -54,6 +54,7 @@ menuitem:hover {
   padding: 6px 12px;
   background-color: $bg;
   border-bottom: 1px solid $surface-hover;
+  box-shadow: 0 1px 0 rgba(255, 163, 26, 0.24);
 }
 
 .bar-left,
@@ -80,23 +81,30 @@ menuitem:hover {
 
 .ws-current {
   color: $accent;
-  font-weight: 600;
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(255, 163, 26, 0.48);
 }
 
-.ws-active-other,
+.ws-active-other {
+  color: $text;
+  font-weight: 700;
+}
+
 .ws-occupied {
   color: $muted;
+  font-weight: 700;
 }
 
 .ws-empty {
-  color: $border;
+  color: #777777;
+  font-weight: 700;
 }
 
 .window-title {
   margin-left: 6px;
   color: $muted;
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .clock-container {
@@ -106,7 +114,7 @@ menuitem:hover {
 .clock {
   color: $text;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .weather-container,
@@ -130,7 +138,7 @@ menuitem:hover {
 .tz-name {
   color: $text;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .weather-temp {
@@ -171,36 +179,40 @@ menuitem:hover {
 .module-value {
   color: $text;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .sysinfo-container {
   padding: 0 2px;
 }
 
-.sysinfo-metric {
-  min-width: 54px;
-  min-height: 28px;
-  padding: 0 4px;
+.sysinfo-wordmark {
+  min-height: 24px;
   border-radius: 6px;
 }
 
-.sysinfo-metric:hover {
-  background-color: $surface-hover;
+.sysinfo-label,
+.sysinfo-value {
+  min-height: 24px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.icon-cpu,
-.icon-ram,
-.icon-gpu {
-  color: $muted;
-  font-size: 14px;
+.sysinfo-label {
+  min-width: 30px;
+  padding: 0 4px;
+  color: $bg;
+  background-color: $text;
+  border-radius: 5px 0 0 5px;
 }
 
-.sysval-cpu,
-.sysval-ram,
-.sysval-gpu {
-  min-width: 34px;
-  color: $text;
+.sysinfo-value {
+  min-width: 36px;
+  padding: 0 5px;
+  color: $bg;
+  background-color: $accent;
+  border-radius: 0 5px 5px 0;
+  box-shadow: 0 0 5px rgba(255, 163, 26, 0.32);
 }
 
 .icon-audio,
@@ -245,6 +257,11 @@ menuitem:hover {
   font-size: 16px;
 }
 
+.icon-notif-dnd {
+  color: $muted;
+  font-size: 16px;
+}
+
 .icon-clash-on {
   font-size: 15px;
 }
@@ -285,13 +302,13 @@ menuitem:hover {
 .popup-title {
   color: $text;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .popup-section-title {
   color: $muted;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .vol-btn {
@@ -358,7 +375,7 @@ scale slider {
   min-width: 250px;
   color: $text;
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .mixer-btn {
@@ -366,7 +383,7 @@ scale slider {
   color: $bg;
   background-color: $accent;
   border-radius: 6px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .mixer-btn:hover {
@@ -375,7 +392,7 @@ scale slider {
 
 .mixer-btn label {
   color: $bg;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .vol-btn label {
@@ -412,13 +429,13 @@ scale slider {
 .power-action-title {
   color: $text;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .power-action-subtitle {
   color: $muted;
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .power-action-poweroff,
@@ -439,40 +456,9 @@ scale slider {
   border-color: $critical;
 }
 
-.weather-search-panel {
-  min-width: 320px;
-  padding: 18px;
-}
-
-.search-title {
-  margin-bottom: 4px;
-  color: $text;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.search-input {
-  min-width: 276px;
-  padding: 9px 12px;
-  color: $text;
-  background-color: $bg;
-  border: 1px solid $border;
-  border-radius: 6px;
-  font-size: 13px;
-}
-
-.search-input:focus {
-  border-color: $accent;
-}
-
-.search-hint,
 .empty-hint {
   color: $muted;
   font-size: 12px;
-}
-
-.search-hint {
-  margin-top: 4px;
 }
 
 .empty-hint {
