@@ -1,4 +1,5 @@
 .agent
 .playwright-cli/
 .claude/settings.local.json
+/plans/
 *.local.nix
