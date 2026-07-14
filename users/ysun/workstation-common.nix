@@ -1,5 +1,6 @@
 {
   inputs,
+  config,
   pkgs,
   lib,
   ...
@@ -142,6 +143,10 @@
       }
     '';
   };
+
+  xdg.configFile."swaync/config.json".source = lib.mkForce (
+    (pkgs.formats.json { }).generate "swaync-config.json" config.services.swaync.settings
+  );
 
   systemd.user.services.clash-verge-gui = {
     Unit = {
