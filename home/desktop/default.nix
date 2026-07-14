@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   lib,
   ...
@@ -41,19 +42,22 @@ let
     "eww/modules/window-title.yuck".source = ./eww/modules/window-title.yuck;
     "eww/modules/clock.yuck".source = ./eww/modules/clock.yuck;
     "eww/modules/weather.yuck".source = ./eww/modules/weather.yuck;
+    "eww/modules/bar-center-extra.yuck".source =
+      if config.dotfiles.eww.d2r.enable then
+        ./eww-features/d2r/bar-center-extra.yuck
+      else
+        ./eww/modules/bar-center-extra.yuck;
     # Phase 2: modules
     "eww/modules/audio.yuck".source = ./eww/modules/audio.yuck;
-    "eww/modules/bluetooth.yuck".source = ./eww/modules/bluetooth.yuck;
     "eww/modules/battery.yuck".source = ./eww/modules/battery.yuck;
-    "eww/modules/network.yuck".source = ./eww/modules/network.yuck;
+    "eww/modules/proxy-status.yuck".source = ./eww/modules/proxy-status.yuck;
     "eww/modules/power.yuck".source = ./eww/modules/power.yuck;
     "eww/modules/sysinfo.yuck".source = ./eww/modules/sysinfo.yuck;
     "eww/modules/notifications.yuck".source = ./eww/modules/notifications.yuck;
     # Windows
     "eww/windows/bar.yuck".source = ./eww/windows/bar.yuck;
     "eww/windows/audio-popup.yuck".source = ./eww/windows/audio-popup.yuck;
-    "eww/windows/bt-popup.yuck".source = ./eww/windows/bt-popup.yuck;
-    "eww/windows/net-popup.yuck".source = ./eww/windows/net-popup.yuck;
+    "eww/windows/popup-closer.yuck".source = ./eww/windows/popup-closer.yuck;
     "eww/windows/power-popup.yuck".source = ./eww/windows/power-popup.yuck;
     "eww/windows/weather-search.yuck".source = ./eww/windows/weather-search.yuck;
     # Data files
@@ -83,11 +87,8 @@ let
         "get-audio-sources"
         "set-audio-device"
         "set-vol"
-        "get-bluetooth"
         "get-battery"
-        "bt-toggle"
-        "bt-pair"
-        "get-network"
+        "get-proxy-status"
         "get-sysinfo"
         "get-notifications"
         "close-popups"
@@ -96,6 +97,14 @@ let
         "search-weather"
       ]
   );
+
+  d2rFiles = lib.optionalAttrs config.dotfiles.eww.d2r.enable {
+    "eww/terror-zones.json".source = ./eww-features/d2r/terror-zones.json;
+    "eww/scripts/get-terror-zone" = {
+      source = ./eww-features/d2r/get-terror-zone;
+      executable = true;
+    };
+  };
 in
 {
   imports = [
@@ -104,39 +113,43 @@ in
     ./hyprland
   ];
 
-  # ── eww bar ────────────────────────────────────────────────
-  # We do NOT use programs.eww.configDir because it conflicts
-  # with adding scripts that need executable permission.
-  # Instead, we install the eww package and manage all files
-  # via xdg.configFile individually.
-  programs.eww.enable = true;
+  options.dotfiles.eww.d2r.enable = lib.mkEnableOption "D2R terror-zone content in the Eww bar";
 
-  xdg.configFile = ewwConfigFiles // ewwScriptFiles;
+  config = {
+    # ── eww bar ────────────────────────────────────────────────
+    # We do NOT use programs.eww.configDir because it conflicts
+    # with adding scripts that need executable permission.
+    # Instead, we install the eww package and manage all files
+    # via xdg.configFile individually.
+    programs.eww.enable = true;
 
-  systemd.user.services."dotfiles-power-action@" = {
-    Unit = {
-      Description = "Stop UWSM session and %i";
-      Documentation = "man:uwsm(1)";
+    xdg.configFile = ewwConfigFiles // ewwScriptFiles // d2rFiles;
+
+    systemd.user.services."dotfiles-power-action@" = {
+      Unit = {
+        Description = "Stop UWSM session and %i";
+        Documentation = "man:uwsm(1)";
+      };
+      Service = {
+        Type = "oneshot";
+        Slice = "session.slice";
+        ExecStart = "${lib.getExe powerAction} %i";
+      };
     };
-    Service = {
-      Type = "oneshot";
-      Slice = "session.slice";
-      ExecStart = "${lib.getExe powerAction} %i";
-    };
+
+    # ── eww runtime dependencies ───────────────────────────────
+    home.packages = with pkgs; [
+      socat # Hyprland IPC socket listener
+      curl # Weather API requests
+      dunst # Notification daemon (dunstctl)
+      pulseaudio # pactl stream for volume events
+      alsa-utils # amixer for hardware capture gain in the audio popup
+      pavucontrol # Full PipeWire/PulseAudio mixer opened from the audio popup
+      # jq is already in nixos/desktop.nix systemPackages
+
+      # Fonts — Nerd Font variant includes all glyph icons
+      nerd-fonts.jetbrains-mono
+      noto-fonts-cjk-sans
+    ];
   };
-
-  # ── eww runtime dependencies ───────────────────────────────
-  home.packages = with pkgs; [
-    socat # Hyprland IPC socket listener
-    curl # Weather API requests
-    dbus # dbus-monitor for Bluetooth events
-    dunst # Notification daemon (dunstctl)
-    pulseaudio # pactl stream for volume events
-    alsa-utils # amixer for hardware capture gain in the audio popup
-    # jq is already in nixos/desktop.nix systemPackages
-
-    # Fonts — Nerd Font variant includes all glyph icons
-    nerd-fonts.jetbrains-mono
-    noto-fonts-cjk-sans
-  ];
 }

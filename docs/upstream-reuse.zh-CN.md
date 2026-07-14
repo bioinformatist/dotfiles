@@ -49,6 +49,7 @@
 - `profiles.headless`
 - Hyprland / PipeWire / Fcitx5 + Rime / 中文字体
 - WeChat、截图工具、基础 GUI 工具
+- 根据系统能力默认启用 NetworkManager 与 Blueman 托盘 applet
 
 它不包含：
 
@@ -62,6 +63,8 @@
 
 NVIDIA 桌面机器应额外叠加 `nixosModules.nvidiaDesktop`。
 AMD 便携桌面机器可额外叠加 `nixosModules.amdMobile`。
+
+`homeManagerModules.workstation` 提供共享 Eww 状态栏和 Pavucontrol。它会为每台已连接的 Hyprland 显示器打开相同的状态栏实例，并在显示器增删时进行增量同步，不限制显示器数量。网络与蓝牙配置仍由 Eww 系统托盘中的 NetworkManager 和 Blueman 提供；电池、GPU 与 Clash 控件在不可用时隐藏。可选的 D2R 居中内容由 `dotfiles.eww.d2r.enable` 控制，默认关闭。NetworkManager 和 Blueman 的默认值取决于声明的 NixOS 系统能力，下游仍可覆盖。
 
 ## 当前本仓库主机组合
 

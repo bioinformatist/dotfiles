@@ -1,511 +1,480 @@
-// ═══════════════════════════════════════════════════════════════
-// Eww Bar — Matrix Theme (黑绿极客风)
-// Optimized for 1080p @ scale 1.0
-// ═══════════════════════════════════════════════════════════════
+// Shared workstation bar: compact black, white, gray, and orange hierarchy.
 
-// ─── Design Tokens ───────────────────────────────────────────
-
-// Colors
-$bg-primary:     rgba(5, 5, 5, 0.94);
-$bg-secondary:   rgba(8, 16, 8, 0.95);
-$bg-hover:       rgba(0, 255, 65, 0.15);
-
-$green-bright:   #00ff41;
-$green-normal:   #00dd36;
-$green-dim:      #00aa28;
-$green-dark:     #005515;
-$green-glow:     rgba(0, 255, 65, 0.50);
-$green-glow-far: rgba(0, 255, 65, 0.20);
-
-$red-alert:      #ff2244;
-$amber-warn:     #ccaa00;
-
-// Typography — Nerd Font variant required for all glyph icons (󰕾 󰂱 󰈀 etc.)
+$bg: #000000;
+$surface: #111111;
+$surface-raised: #1a1a1a;
+$surface-hover: #242424;
+$border: #333333;
+$text: #ffffff;
+$muted: #a7a7a7;
+$dim: #6f6f6f;
+$accent: #ffa31a;
+$critical: #e5484d;
 $font-main: "JetBrainsMono Nerd Font", "JetBrains Mono", "monospace";
-
-// ─── Global Reset ────────────────────────────────────────────
 
 * {
   all: unset;
+  color: $text;
   font-family: $font-main;
-  font-size: 16px;
-  font-weight: 800;
-  color: $green-normal;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
 }
 
-// ─── Bar Window ──────────────────────────────────────────────
+tooltip {
+  padding: 6px 8px;
+  background-color: $surface;
+  border: 1px solid $border;
+  border-radius: 6px;
+}
+
+tooltip label {
+  color: $text;
+  font-size: 12px;
+}
+
+menu {
+  padding: 5px;
+  background-color: $surface;
+  border: 1px solid $border;
+  border-radius: 6px;
+}
+
+menuitem {
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+
+menuitem:hover {
+  background-color: $surface-hover;
+}
 
 .bar-inner {
-  margin: 6px 12px;
-  padding: 6px 24px;
-  background-color: $bg-primary;
-  border-radius: 14px;
-  border: 2px solid $green-glow;
-  box-shadow: 0 0 6px  $green-glow,
-              0 0 16px $green-glow-far,
-              0 0 40px rgba(0, 255, 65, 0.08),
-              inset 0 0 8px rgba(0, 255, 65, 0.06);
+  min-height: 35px;
+  padding: 6px 12px;
+  background-color: $bg;
+  border-bottom: 1px solid $surface-hover;
 }
 
-// ─── Workspaces ──────────────────────────────────────────────
+.bar-left,
+.bar-center,
+.bar-right {
+  min-height: 35px;
+}
 
 .workspace-entry {
-  padding: 4px 4px;
+  min-width: 18px;
+  min-height: 28px;
   border-radius: 6px;
-  transition: background-color 150ms ease-in-out;
+}
 
-  &:hover {
-    background-color: $bg-hover;
-  }
+.workspace-entry:hover {
+  background-color: $surface-hover;
 }
 
 .workspace-dot {
-  font-size: 16px;
-  font-weight: 800;
-  min-width: 22px;
-  min-height: 22px;
+  min-width: 18px;
+  color: $dim;
+  font-size: 14px;
 }
 
 .ws-current {
-  color: $green-bright;
-  font-weight: 800;
-  text-shadow: 0 0 6px  $green-bright,
-               0 0 14px rgba(0, 255, 65, 0.6),
-               0 0 28px rgba(0, 255, 65, 0.3);
+  color: $accent;
+  font-weight: 600;
 }
 
-.ws-active-other {
-  color: $green-dim;
-  text-shadow: 0 0 4px rgba(0, 255, 65, 0.3);
-}
-
+.ws-active-other,
 .ws-occupied {
-  color: $green-normal;
-  text-shadow: 0 0 4px rgba(0, 255, 65, 0.2);
+  color: $muted;
 }
 
 .ws-empty {
-  color: $green-dark;
+  color: $border;
 }
-
-// ─── Window Title ────────────────────────────────────────────
 
 .window-title {
-  color: $green-dim;
-  font-size: 14px;
-  font-weight: 700;
-  margin-left: 14px;
+  margin-left: 6px;
+  color: $muted;
+  font-size: 13px;
+  font-weight: 400;
 }
 
-// ─── Clock ───────────────────────────────────────────────────
-
 .clock-container {
-  padding: 0px 8px;
+  padding: 0 6px;
 }
 
 .clock {
-  color: $green-bright;
-  font-size: 24px;
-  font-weight: 800;
-  text-shadow: 0 0 8px  $green-bright,
-               0 0 18px rgba(0, 255, 65, 0.5),
-               0 0 36px rgba(0, 255, 65, 0.2);
+  color: $text;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-// ─── Weather ─────────────────────────────────────────────────
+.weather-container,
+.terror-zone-container {
+  min-height: 28px;
+  padding: 0 7px;
+  border-radius: 6px;
+}
 
-.weather-container {
-  padding: 4px 10px;
-  border-radius: 8px;
-  transition: background-color 150ms ease-in-out;
-
-  &:hover {
-    background-color: $bg-hover;
-  }
+.weather-container:hover,
+.terror-zone-container:hover {
+  background-color: $surface-hover;
 }
 
 .weather-icon {
-  font-size: 20px;
-  color: $green-normal;
-  text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
+  color: $muted;
+  font-size: 15px;
+}
+
+.weather-temp,
+.tz-name {
+  color: $text;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .weather-temp {
-  font-size: 16px;
-  font-weight: 800;
-  color: $green-dim;
+  min-width: 42px;
 }
 
-// ─── Terror Zone ─────────────────────────────────────────────
-
-.terror-zone-container {
-  padding: 4px 10px;
-  border-radius: 8px;
-
-  .tz-icon {
-    font-size: 16px;
-  }
-
-  .tz-name {
-    font-size: 14px;
-    color: $green-normal;
-  }
-
-  .tz-tier {
-    font-size: 12px;
-    margin-left: 4px;
-    color: $green-dim;
-  }
+.tz-name {
+  min-width: 132px;
 }
 
-// ─── Separator ───────────────────────────────────────────────
+.tz-icon {
+  color: $accent;
+  font-size: 14px;
+}
+
+.tz-tier {
+  margin-left: 2px;
+  color: $muted;
+  font-size: 12px;
+}
 
 .separator {
-  color: $green-dark;
-  font-size: 16px;
-  padding: 0 4px;
+  padding: 0 2px;
+  color: $border;
+  font-size: 13px;
 }
 
-// ─── Generic Module Button ───────────────────────────────────
-
 .module-btn {
-  border-radius: 8px;
-  padding: 4px 8px;
-  transition: background-color 150ms ease-in-out;
+  min-height: 28px;
+  padding: 0 7px;
+  border-radius: 6px;
+}
 
-  &:hover {
-    background-color: $bg-hover;
-  }
+.module-btn:hover {
+  background-color: $surface-hover;
 }
 
 .module-value {
-  font-size: 14px;
-  font-weight: 800;
-  color: $green-normal;
+  color: $text;
+  font-size: 13px;
+  font-weight: 500;
 }
-
-// ─── System Info ─────────────────────────────────────────────
 
 .sysinfo-container {
+  padding: 0 2px;
+}
+
+.sysinfo-metric {
+  min-width: 54px;
+  min-height: 28px;
   padding: 0 4px;
+  border-radius: 6px;
 }
 
-.sysinfo-label {
-  font-size: 11px;
-  font-weight: 800;
-  color: $green-dark;
-  margin-right: 2px;
-  letter-spacing: 0.5px;
+.sysinfo-metric:hover {
+  background-color: $surface-hover;
 }
 
-.icon-cpu, .icon-ram, .icon-gpu {
+.icon-cpu,
+.icon-ram,
+.icon-gpu {
+  color: $muted;
+  font-size: 14px;
+}
+
+.sysval-cpu,
+.sysval-ram,
+.sysval-gpu {
+  min-width: 34px;
+  color: $text;
+}
+
+.icon-audio,
+.icon-battery,
+.icon-notif-idle {
+  color: $text;
   font-size: 16px;
-  color: $green-dim;
 }
 
-// Color thresholds applied dynamically via class override in future
-.sysval-cpu, .sysval-ram, .sysval-gpu {
-  color: $green-normal;
+.icon-hidden {
+  min-width: 0;
+  min-height: 0;
+  font-size: 0;
 }
 
-// ─── Icon States ─────────────────────────────────────────────
+.icon-muted,
+.icon-mic-muted {
+  color: $muted;
+  font-size: 16px;
+}
 
-.icon-audio   { color: $green-bright; font-size: 18px; }
-.icon-muted   { color: $red-alert;    font-size: 18px; }
-.icon-hidden  { min-width: 0; min-height: 0; font-size: 0; }
-.icon-mic-muted { color: $red-alert; margin-left: 4px; }
+.icon-battery-critical {
+  color: $critical;
+  font-size: 16px;
+}
 
-.icon-battery          { color: $green-bright; font-size: 18px; }
-.icon-battery-low      { color: $amber-warn;   font-size: 18px; }
-.icon-battery-critical { color: $red-alert;    font-size: 18px; }
-.icon-battery-charging { color: $green-bright; font-size: 18px; }
+.icon-mic-muted {
+  margin-left: 2px;
+}
 
-.icon-bt-on        { color: $green-bright; font-size: 18px; }
-.icon-bt-connected { color: $green-bright; font-size: 18px; }
-.icon-bt-off       { color: $green-dark;   font-size: 18px; }
+.icon-battery-low,
+.icon-battery-charging,
+.icon-clash-on,
+.icon-notif-active,
+.icon-active {
+  color: $accent;
+}
 
-.icon-eth    { color: $green-bright; font-size: 18px; }
-.icon-wifi   { color: $green-bright; font-size: 18px; }
-.icon-offline { color: $green-dark;  font-size: 18px; }
-.icon-clash-on { color: $amber-warn; font-size: 16px; }
+.icon-battery-low,
+.icon-battery-charging,
+.icon-notif-active {
+  font-size: 16px;
+}
 
-.icon-notif-active { color: $green-bright; font-size: 18px; }
-.icon-notif-idle   { color: $green-dark;   font-size: 18px; }
-.icon-power        { color: $amber-warn;   font-size: 18px; }
+.icon-clash-on {
+  font-size: 15px;
+}
 
-.icon-active   { color: $green-bright; font-size: 14px; }
-.icon-inactive { color: $green-dark;   font-size: 14px; }
+.icon-active,
+.icon-inactive {
+  font-size: 14px;
+}
 
-// ─── Popup Panels ────────────────────────────────────────────
+.icon-inactive,
+.icon-power {
+  color: $muted;
+}
+
+.icon-power {
+  font-size: 16px;
+}
 
 .popup-panel {
-  background-color: $bg-primary;
-  border-radius: 14px;
-  border: 2px solid $green-glow;
-  box-shadow: 0 0 8px  $green-glow,
-              0 0 24px $green-glow-far,
-              0 0 48px rgba(0, 255, 65, 0.08);
-  padding: 20px;
   min-width: 280px;
+  padding: 16px;
+  background-color: $surface;
+  border: 1px solid $border;
+  border-radius: 8px;
 }
 
 .popup-header {
-  border-bottom: 1px solid $green-dark;
+  margin-bottom: 2px;
   padding-bottom: 10px;
-  margin-bottom: 4px;
+  border-bottom: 1px solid $border;
 }
 
 .popup-icon {
-  font-size: 22px;
-  color: $green-bright;
-  text-shadow: 0 0 8px $green-bright;
+  color: $accent;
+  font-size: 18px;
 }
 
 .popup-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: $green-bright;
-}
-
-.popup-section {
-  margin-top: 4px;
+  color: $text;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .popup-section-title {
-  font-size: 11px;
-  font-weight: 800;
-  color: $green-dark;
-  letter-spacing: 2px;
+  color: $muted;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-// ─── Volume Slider ───────────────────────────────────────────
-
 .vol-btn {
-  font-size: 20px;
-  color: $green-bright;
-  padding: 4px 8px;
+  min-width: 28px;
+  min-height: 28px;
+  color: $text;
+  font-size: 17px;
   border-radius: 6px;
-  transition: background-color 150ms ease-in-out;
+}
 
-  &:hover { background-color: $bg-hover; }
+.vol-btn:hover {
+  background-color: $surface-hover;
 }
 
 .vol-btn-muted {
-  color: $red-alert;
-  text-shadow: 0 0 6px $red-alert;
+  color: $muted;
 }
 
 .vol-label {
-  font-size: 14px;
-  font-weight: 800;
-  color: $green-dim;
-  min-width: 44px;
+  min-width: 42px;
+  color: $muted;
+  font-size: 13px;
 }
 
-// GTK scale slider
-scale {
-  trough {
-    background-color: $green-dark;
-    border-radius: 4px;
-    min-height: 4px;
-  }
-  highlight {
-    background-color: $green-bright;
-    box-shadow: 0 0 6px $green-glow;
-    border-radius: 4px;
-  }
-  slider {
-    background-color: $green-bright;
-    border-radius: 50%;
-    min-width: 14px;
-    min-height: 14px;
-    box-shadow: 0 0 8px $green-glow;
-  }
+scale trough {
+  min-height: 4px;
+  background-color: $border;
+  border-radius: 4px;
 }
 
-// ─── Device Lists ────────────────────────────────────────────
+scale highlight {
+  background-color: $accent;
+  border-radius: 4px;
+}
+
+scale slider {
+  min-width: 12px;
+  min-height: 12px;
+  background-color: $text;
+  border-radius: 6px;
+}
 
 .device-list {
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 .device-btn {
-  padding: 8px 10px;
-  border-radius: 8px;
-  transition: background-color 150ms ease-in-out;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
 
-  &:hover { background-color: $bg-hover; }
+.device-btn:hover {
+  background-color: $surface-hover;
 }
 
 .device-btn-active {
-  background-color: rgba(0, 255, 65, 0.08);
-  border: 1px solid $green-dark;
+  background-color: $surface-raised;
+  border-color: $accent;
 }
 
 .device-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: $green-normal;
+  min-width: 250px;
+  color: $text;
+  font-size: 13px;
+  font-weight: 400;
 }
 
-.device-mac {
-  font-size: 12px;
+.mixer-btn {
+  min-height: 34px;
+  color: $bg;
+  background-color: $accent;
+  border-radius: 6px;
   font-weight: 600;
-  color: $green-dark;
 }
 
-.device-row {
-  padding: 6px 4px;
-  border-radius: 8px;
-
-  &:hover { background-color: $bg-hover; }
+.mixer-btn:hover {
+  background-color: #ffb13d;
 }
 
-// ─── Bluetooth Controls ──────────────────────────────────────
-
-.power-btn {
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 800;
-  transition: background-color 150ms ease-in-out;
+.mixer-btn label {
+  color: $bg;
+  font-weight: 600;
 }
 
-.power-btn-on {
-  color: $green-bright;
-  border: 1px solid $green-glow;
-  background-color: rgba(0, 255, 65, 0.10);
-  text-shadow: 0 0 6px $green-bright;
+.vol-btn label {
+  color: $text;
 }
 
-.power-btn-off {
-  color: $green-dark;
-  border: 1px solid $green-dark;
+.vol-btn-muted label {
+  color: $muted;
 }
-
-.disconnect-btn {
-  color: $red-alert;
-  font-size: 16px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background-color 150ms ease-in-out;
-
-  &:hover { background-color: rgba(255, 34, 68, 0.12); }
-}
-
-.scan-btn {
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 800;
-  color: $green-dim;
-  border: 1px solid $green-dark;
-  transition: background-color 150ms ease-in-out;
-
-  &:hover { background-color: $bg-hover; }
-}
-
-.scan-btn-active {
-  color: $green-bright;
-  border-color: $green-glow;
-  background-color: rgba(0, 255, 65, 0.08);
-  text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
-}
-
-// ─── Power Panel ────────────────────────────────────────────
 
 .power-panel {
-  min-width: 300px;
+  min-width: 286px;
 }
 
 .power-action-btn {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 255, 65, 0.12);
-  background-color: rgba(0, 255, 65, 0.03);
-  transition: background-color 150ms ease-in-out, border-color 150ms ease-in-out;
+  min-height: 50px;
+  padding: 0 11px;
+  background-color: $surface-raised;
+  border: 1px solid $border;
+  border-radius: 6px;
+}
 
-  &:hover {
-    background-color: $bg-hover;
-    border-color: rgba(0, 255, 65, 0.28);
-  }
+.power-action-btn:hover {
+  background-color: $surface-hover;
+  border-color: $muted;
 }
 
 .power-action-icon {
   min-width: 24px;
-  font-size: 20px;
-  color: $green-bright;
+  color: $text;
+  font-size: 18px;
 }
 
 .power-action-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: $green-bright;
+  color: $text;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .power-action-subtitle {
+  color: $muted;
   font-size: 12px;
-  font-weight: 700;
-  color: $green-dark;
+  font-weight: 400;
 }
 
 .power-action-poweroff,
 .power-action-reboot {
-  .power-action-icon,
-  .power-action-title {
-    color: $amber-warn;
-  }
+  border-color: rgba(229, 72, 77, 0.45);
 }
 
-// ─── Network ─────────────────────────────────────────────────
-
-.net-row {
-  padding: 6px 4px;
-  border-radius: 8px;
-
-  &:hover { background-color: $bg-hover; }
+.power-action-poweroff .power-action-icon,
+.power-action-poweroff .power-action-title,
+.power-action-reboot .power-action-icon,
+.power-action-reboot .power-action-title {
+  color: $critical;
 }
 
-// ─── Misc ────────────────────────────────────────────────────
-
-// ─── Weather Search ──────────────────────────────────────────
+.power-action-poweroff:hover,
+.power-action-reboot:hover {
+  background-color: rgba(229, 72, 77, 0.10);
+  border-color: $critical;
+}
 
 .weather-search-panel {
   min-width: 320px;
-  padding: 24px;
+  padding: 18px;
 }
 
 .search-title {
+  margin-bottom: 4px;
+  color: $text;
   font-size: 14px;
-  font-weight: 800;
-  color: $green-dark;
-  letter-spacing: 2px;
-  margin-bottom: 8px;
+  font-weight: 600;
 }
 
 .search-input {
-  background-color: rgba(0, 255, 65, 0.05);
-  border: 1px solid $green-dim;
-  border-radius: 8px;
-  padding: 10px 16px;
-  color: $green-bright;
-  font-size: 16px;
-  transition: border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+  min-width: 276px;
+  padding: 9px 12px;
+  color: $text;
+  background-color: $bg;
+  border: 1px solid $border;
+  border-radius: 6px;
+  font-size: 13px;
+}
 
-  &:focus {
-    border-color: $green-bright;
-    box-shadow: 0 0 10px $green-glow-far;
-  }
+.search-input:focus {
+  border-color: $accent;
+}
+
+.search-hint,
+.empty-hint {
+  color: $muted;
+  font-size: 12px;
 }
 
 .search-hint {
-  font-size: 11px;
-  color: $green-dark;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .empty-hint {
-  color: $green-dark;
-  font-size: 13px;
   padding: 4px 8px;
 }

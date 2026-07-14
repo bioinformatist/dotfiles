@@ -49,6 +49,7 @@ It does not include CUDA userspace or model-serving application stacks.
 - `profiles.headless`
 - Hyprland / PipeWire / Fcitx5 + Rime / CJK fonts
 - WeChat, screenshot tools, and baseline GUI tools
+- capability-derived defaults for the NetworkManager and Blueman tray applets
 
 It does not include:
 
@@ -62,6 +63,8 @@ It does not include:
 
 NVIDIA desktop hosts should explicitly add `nixosModules.nvidiaDesktop`.
 AMD mobile desktop hosts can explicitly add `nixosModules.amdMobile`.
+
+`homeManagerModules.workstation` provides the shared Eww bar and Pavucontrol. It opens one identical bar instance per connected Hyprland monitor and reconciles monitor additions and removals without a fixed monitor limit. NetworkManager and Blueman remain the configuration surfaces through Eww's systray; battery, GPU, and Clash widgets hide when unavailable. Optional D2R center content is controlled by `dotfiles.eww.d2r.enable` and defaults to off. The NetworkManager and Blueman defaults follow declared NixOS capabilities and remain overrideable downstream.
 
 ## Current host composition
 

@@ -9,6 +9,7 @@
 (defwidget notifications []
   (button
     :class "module-btn"
+    :visible {notif-status.waiting + notif-status.displayed > 0}
     :onclick "dunstctl history-pop"
     :onrightclick "dunstctl close-all"
     :tooltip "Notifications (right-click: clear all)"

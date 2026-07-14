@@ -1,25 +1,31 @@
 #!/usr/bin/env bash
-# ═══ Event-Driven Eww Bar Manager ═══
-# Runs as a single long-lived reconciler for bar windows:
-#   - ensures only one manager instance is active
-#   - starts a fresh eww daemon for the current session
-#   - waits for Hyprland monitor topology to settle
-#   - rebuilds only the managed bar windows when topology changes
+# Event-driven Eww bar manager. Runtime IDs use encoded connector names;
+# --screen and monitor_name always receive the raw Hyprland monitor name.
 
 set -u
 
-MAX_BARS=3
-LOCK_DIR="${XDG_RUNTIME_DIR:-/tmp}/eww-manage-bars.lock"
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/eww-manage-bars.lock"
+LOCK_FD=""
 SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
-LAST_APPLIED_SIGNATURE=""
+LAST_APPLIED_STATE=""
+LOCK_OWNED=false
+RECONCILE_RETRY_DELAY="${RECONCILE_RETRY_DELAY:-1}"
+TOPOLOGY_REVALIDATE_SECONDS="${TOPOLOGY_REVALIDATE_SECONDS:-5}"
+declare -A LAST_APPLIED_MONITOR_IDS=()
 
-bar_name() {
-  printf 'bar%s\n' "$1"
+monitor_key() {
+  local sanitized digest
+
+  sanitized=$(printf '%s' "$1" | LC_ALL=C tr -c 'A-Za-z0-9_-' '-' | sed -E 's/-+/-/g; s/^-//; s/-$//')
+  [ -n "$sanitized" ] || sanitized="monitor"
+  digest=$(printf '%s' "$1" | sha256sum)
+  digest=${digest%% *}
+  printf '%s-%s\n' "$sanitized" "${digest:0:16}"
 }
 
 monitor_state() {
   hyprctl monitors -j 2>/dev/null |
-    jq -r '[length, (sort_by(.id) | map("\(.id):\(.name)") | join("|"))] | @tsv' 2>/dev/null
+    jq -c '[sort_by(.id)[] | {name, id}]' 2>/dev/null
 }
 
 wait_for_stable_monitors() {
@@ -29,8 +35,15 @@ wait_for_stable_monitors() {
   local _
 
   for _ in $(seq 1 30); do
-    state=$(monitor_state)
-    if [ -n "$state" ] && [ "$state" = "$previous" ]; then
+    if ! state=$(monitor_state) || [ -z "$state" ]; then
+      state=""
+      previous=""
+      stable_reads=0
+      sleep 0.2
+      continue
+    fi
+
+    if [ "$state" = "$previous" ]; then
       stable_reads=$((stable_reads + 1))
       if [ "$stable_reads" -ge 2 ]; then
         printf '%s\n' "$state"
@@ -40,106 +53,350 @@ wait_for_stable_monitors() {
       stable_reads=0
       previous="$state"
     fi
-
     sleep 0.2
   done
 
-  if [ -n "$previous" ]; then
-    printf '%s\n' "$previous"
-  fi
+  return 1
+}
+
+active_window_ids() {
+  local windows
+
+  windows=$(eww active-windows 2>/dev/null) || return 1
+  [ -n "$windows" ] || return 0
+  printf '%s\n' "$windows" | awk -F': ' '{print $1}'
+}
+
+popup_window_parts() {
+  local window_id="$1"
+  local monitor_key counterpart
+
+  case "$window_id" in
+    popup-audio-*)
+      monitor_key=${window_id#popup-audio-}
+      counterpart="closer-audio-$monitor_key"
+      ;;
+    popup-power-*)
+      monitor_key=${window_id#popup-power-}
+      counterpart="closer-power-$monitor_key"
+      ;;
+    popup-weather-search-*)
+      monitor_key=${window_id#popup-weather-search-}
+      counterpart="closer-weather-search-$monitor_key"
+      ;;
+    closer-audio-*)
+      monitor_key=${window_id#closer-audio-}
+      counterpart="popup-audio-$monitor_key"
+      ;;
+    closer-power-*)
+      monitor_key=${window_id#closer-power-}
+      counterpart="popup-power-$monitor_key"
+      ;;
+    closer-weather-search-*)
+      monitor_key=${window_id#closer-weather-search-}
+      counterpart="popup-weather-search-$monitor_key"
+      ;;
+    *) return 1 ;;
+  esac
+
+  [ -n "$monitor_key" ] || return 1
+  printf '%s\t%s\n' "$monitor_key" "$counterpart"
+}
+
+load_active_windows() {
+  local windows_name="$1"
+  local bars_name="$2"
+  local active_ids active_id
+  local -n loaded_windows="$windows_name"
+  local -n loaded_bars="$bars_name"
+
+  loaded_windows=()
+  loaded_bars=()
+  active_ids=$(active_window_ids) || return 1
+
+  while IFS= read -r active_id; do
+    [ -n "$active_id" ] || continue
+    # shellcheck disable=SC2034 # The caller consumes this nameref assignment.
+    loaded_windows["$active_id"]=1
+    # shellcheck disable=SC2034 # The caller consumes this nameref assignment.
+    case "$active_id" in
+      bar-*) loaded_bars["$active_id"]=1 ;;
+    esac
+  done <<< "$active_ids"
+}
+
+popup_state_is_valid() {
+  local windows_name="$1"
+  local desired_monitors_name="$2"
+  local window_id parts monitor_key counterpart
+  local popup_window_count=0
+  local -n popup_windows="$windows_name"
+  local -n popup_desired_monitors="$desired_monitors_name"
+
+  for window_id in "${!popup_windows[@]}"; do
+    case "$window_id" in
+      popup-*|closer-*) popup_window_count=$((popup_window_count + 1)) ;;
+    esac
+  done
+
+  [ "$popup_window_count" -ne 0 ] || return 0
+  [ "$popup_window_count" -eq 2 ] || return 1
+
+  for window_id in "${!popup_windows[@]}"; do
+    case "$window_id" in
+      popup-*|closer-*)
+        parts=$(popup_window_parts "$window_id") || return 1
+        IFS=$'\t' read -r monitor_key counterpart <<< "$parts"
+        [ -n "${popup_desired_monitors[$monitor_key]+present}" ] || return 1
+        [ -n "${popup_windows[$counterpart]+present}" ] || return 1
+        ;;
+    esac
+  done
+}
+
+topology_is_applied() {
+  local desired_name="$1"
+  local desired_monitors_name="$2"
+  local bar_id
+  local -A active_windows=()
+  local -A active_bars=()
+  local -n desired_topology="$desired_name"
+
+  load_active_windows active_windows active_bars || return 1
+
+  [ "${#active_bars[@]}" -eq "${#desired_topology[@]}" ] || return 1
+  for bar_id in "${!desired_topology[@]}"; do
+    [ -n "${active_bars[$bar_id]+present}" ] || return 1
+  done
+
+  popup_state_is_valid active_windows "$desired_monitors_name"
 }
 
 reconcile_bars() {
-  local state count signature i
+  local state name monitor_id encoded bar_id monitor_expression active_id delay
+  local raw_name previous_monitor_id parts popup_monitor_key changed_bar_id
+  local changed_complete monitor_rows
+  local -A desired=()
+  local -A desired_monitors=()
+  local -A monitor_names=()
+  local -A monitor_ids=()
+  local -A monitor_keys=()
+  local -A active_windows=()
+  local -A active_bars=()
+  local -A close_set=()
+  local -A changed_bars=()
+  local -A changed_bar_for_key=()
+  local -A reopened_changed_bars=()
+  local -A cleared_changed_popups=()
+  local -a close_ids=()
 
-  state=$(wait_for_stable_monitors)
-  [ -n "$state" ] || return 0
+  state=$(wait_for_stable_monitors) || return 1
+  [ -n "$state" ] || return 1
 
-  IFS=$'\t' read -r count signature <<< "$state"
-  [ -n "$count" ] || return 0
+  monitor_rows=$(printf '%s\n' "$state" |
+    jq -r '.[] | [.name, (.id | tostring)] | @tsv') || return 1
 
-  if [ "$count" -gt "$MAX_BARS" ]; then
-    count="$MAX_BARS"
-  fi
+  while IFS=$'\t' read -r name monitor_id; do
+    [ -n "$name" ] || continue
+    encoded=$(monitor_key "$name")
+    bar_id="bar-$encoded"
+    desired["$bar_id"]=1
+    # shellcheck disable=SC2034 # topology_is_applied consumes this via nameref.
+    desired_monitors["$encoded"]=1
+    monitor_names["$bar_id"]="$name"
+    monitor_ids["$bar_id"]="$monitor_id"
+    monitor_keys["$bar_id"]="$encoded"
 
-  if [ "$signature" = "$LAST_APPLIED_SIGNATURE" ]; then
+    if [ -n "${LAST_APPLIED_MONITOR_IDS[$name]+present}" ]; then
+      previous_monitor_id=${LAST_APPLIED_MONITOR_IDS[$name]}
+      if [ "$previous_monitor_id" != "$monitor_id" ]; then
+        changed_bars["$bar_id"]=1
+        changed_bar_for_key["$encoded"]="$bar_id"
+      fi
+    fi
+  done <<< "$monitor_rows"
+
+  if [ "$state" = "$LAST_APPLIED_STATE" ] &&
+    topology_is_applied desired desired_monitors; then
     return 0
   fi
+  LAST_APPLIED_STATE=""
 
-  if [ "$count" -gt 0 ]; then
-    local windows=()
+  for delay in 0 0.1 0.2 0.4; do
+    [ "$delay" = 0 ] || sleep "$delay"
 
-    for i in $(seq 0 $((count - 1))); do
-      windows+=("$(bar_name "$i")")
+    active_windows=()
+    active_bars=()
+    close_set=()
+    close_ids=()
+    load_active_windows active_windows active_bars || continue
+
+    for active_id in "${!active_bars[@]}"; do
+      if [ -z "${desired[$active_id]+present}" ]; then
+        close_set["$active_id"]=1
+      elif [ -n "${changed_bars[$active_id]+present}" ] &&
+        [ -z "${reopened_changed_bars[$active_id]+present}" ]; then
+        close_set["$active_id"]=1
+      fi
     done
 
-    restart_eww
-    eww open-many --restart "${windows[@]}" &
-  else
-    kill_eww_processes
-  fi
+    if ! popup_state_is_valid active_windows desired_monitors; then
+      for active_id in "${!active_windows[@]}"; do
+        case "$active_id" in
+          popup-*|closer-*) close_set["$active_id"]=1 ;;
+        esac
+      done
+    else
+      for active_id in "${!active_windows[@]}"; do
+        case "$active_id" in
+          popup-*|closer-*)
+            parts=$(popup_window_parts "$active_id") || continue
+            IFS=$'\t' read -r popup_monitor_key _ <<< "$parts"
+            changed_bar_id=${changed_bar_for_key[$popup_monitor_key]-}
+            if [ -n "$changed_bar_id" ] &&
+              [ -z "${cleared_changed_popups[$popup_monitor_key]+present}" ]; then
+              close_set["$active_id"]=1
+            fi
+            ;;
+        esac
+      done
+    fi
 
-  LAST_APPLIED_SIGNATURE="$signature"
+    close_ids=("${!close_set[@]}")
+    if [ "${#close_ids[@]}" -ne 0 ]; then
+      eww close "${close_ids[@]}" 2>/dev/null || true
+    fi
+
+    active_windows=()
+    active_bars=()
+    load_active_windows active_windows active_bars || continue
+
+    for popup_monitor_key in "${!changed_bar_for_key[@]}"; do
+      if [ -z "${cleared_changed_popups[$popup_monitor_key]+present}" ]; then
+        cleared_changed_popups["$popup_monitor_key"]=1
+        for active_id in "${!active_windows[@]}"; do
+          case "$active_id" in
+            popup-*|closer-*)
+              parts=$(popup_window_parts "$active_id") || continue
+              IFS=$'\t' read -r encoded _ <<< "$parts"
+              if [ "$encoded" = "$popup_monitor_key" ]; then
+                unset 'cleared_changed_popups[$popup_monitor_key]'
+                break
+              fi
+              ;;
+          esac
+        done
+      fi
+    done
+
+    for bar_id in "${!desired[@]}"; do
+      if [ -z "${active_bars[$bar_id]+present}" ]; then
+        name="${monitor_names[$bar_id]}"
+        monitor_id="${monitor_ids[$bar_id]}"
+        monitor_expression=$(jq -Rn --arg value "$name" '$value')
+        if eww open bar \
+          --id "$bar_id" \
+          --screen "$name" \
+          --arg "monitor_name=$monitor_expression" \
+          --arg "monitor_id=$monitor_id"; then
+          if [ -n "${changed_bars[$bar_id]+present}" ]; then
+            reopened_changed_bars["$bar_id"]=1
+          fi
+        fi
+      fi
+    done
+
+    changed_complete=true
+    for bar_id in "${!changed_bars[@]}"; do
+      encoded=${monitor_keys[$bar_id]}
+      if [ -z "${reopened_changed_bars[$bar_id]+present}" ] ||
+        [ -z "${cleared_changed_popups[$encoded]+present}" ]; then
+        changed_complete=false
+        break
+      fi
+    done
+
+    if [ "$changed_complete" = true ] &&
+      topology_is_applied desired desired_monitors; then
+      LAST_APPLIED_STATE="$state"
+      LAST_APPLIED_MONITOR_IDS=()
+      for bar_id in "${!desired[@]}"; do
+        raw_name=${monitor_names[$bar_id]}
+        LAST_APPLIED_MONITOR_IDS["$raw_name"]=${monitor_ids[$bar_id]}
+      done
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 acquire_lock() {
-  if mkdir "$LOCK_DIR" 2>/dev/null; then
-    printf '%s\n' "$$" > "$LOCK_DIR/pid"
-    return 0
-  fi
-
-  if [ -f "$LOCK_DIR/pid" ]; then
-    local existing_pid
-    existing_pid=$(cat "$LOCK_DIR/pid" 2>/dev/null || true)
-    if [ -n "$existing_pid" ] && kill -0 "$existing_pid" 2>/dev/null; then
-      exit 0
-    fi
-  fi
-
-  rm -rf "$LOCK_DIR"
-  mkdir "$LOCK_DIR" 2>/dev/null || exit 0
-  printf '%s\n' "$$" > "$LOCK_DIR/pid"
+  exec {LOCK_FD}>>"$LOCK_FILE" || return 1
+  flock --exclusive --nonblock "$LOCK_FD" || return 1
+  LOCK_OWNED=true
 }
-
-cleanup() {
-  kill_eww_processes
-  rm -rf "$LOCK_DIR"
-}
-
-trap cleanup EXIT
-trap 'exit 0' TERM INT HUP
 
 kill_eww_processes() {
-  pkill -x .eww-wrapped 2>/dev/null || true
-
   local _
+
+  pkill -x .eww-wrapped 2>/dev/null || true
   for _ in $(seq 1 30); do
     pgrep -x .eww-wrapped >/dev/null 2>&1 || return 0
     sleep 0.1
   done
-
   pkill -9 -x .eww-wrapped 2>/dev/null || true
 }
 
-restart_eww() {
+cleanup() {
+  [ "$LOCK_OWNED" = true ] || return 0
   kill_eww_processes
-  sleep 0.1
 }
 
-acquire_lock
-reconcile_bars
+listen_for_topology_events() {
+  local event
 
-# Hyprland socket2 emits monitoradded>>NAME / monitorremoved>>NAME.
-# Re-run reconciliation whenever monitor topology changes.
-while true; do
-  socat -U - UNIX-CONNECT:"$SOCKET" 2>/dev/null |
-    while IFS= read -r event; do
-      case "$event" in
-        monitoradded*|monitorremoved*)
-          reconcile_bars
-          ;;
-      esac
-    done
+  while IFS= read -r event; do
+    case "$event" in
+      monitoradded*|monitorremoved*)
+        reconcile_bars || return 1
+        ;;
+    esac
+  done < <(
+    timeout "$TOPOLOGY_REVALIDATE_SECONDS" \
+      socat -U - UNIX-CONNECT:"$SOCKET" 2>/dev/null
+  )
+}
 
-  sleep 1
-done
+run_manager() {
+  trap cleanup EXIT
+  trap 'exit 0' TERM INT HUP
+
+  # Start this manager from one clean daemon state. Later topology changes only
+  # close or open runtime instances associated with the changed connector.
+  kill_eww_processes
+
+  while true; do
+    if ! reconcile_bars; then
+      sleep "$RECONCILE_RETRY_DELAY"
+      continue
+    fi
+
+    # Bound each subscription so a hotplug in the initial reconcile-to-listen
+    # gap is recovered even if its event was missed. Normal updates still
+    # reconcile immediately from the Hyprland event stream.
+    listen_for_topology_events || true
+    sleep "$RECONCILE_RETRY_DELAY"
+  done
+}
+
+main() {
+  acquire_lock || return 0
+
+  # Bash retains the lock internally while exec'd children cannot inherit it.
+  run_manager "$@" {LOCK_FD}>&-
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
+fi

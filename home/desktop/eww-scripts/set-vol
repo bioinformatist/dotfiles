@@ -3,21 +3,43 @@
 # Usage: set-vol sink|source <0-150>
 # Converts the 0-150 Eww scale value to pactl-compatible percentage.
 
-TARGET=$1
-VAL=$2
-STATUS=0
+set -u
 
-echo "[$(date)] set-vol called: target=$TARGET val=$VAL" >> /tmp/eww-vol-debug.log
+fail() {
+  local message="$1"
+  printf 'set-vol: %s\n' "$message" >&2
+  dunstify -u critical "Audio volume change failed" "$message" 2>/dev/null || true
+  exit 1
+}
+
+[ "$#" -eq 2 ] || fail "Usage: set-vol <sink|source> <0-150>"
+
+TARGET="$1"
+VAL="$2"
+
+case "$TARGET" in
+  sink|source) ;;
+  *) fail "Unknown volume target: $TARGET" ;;
+esac
+
+if ! [[ "$VAL" =~ ^[0-9]+([.][0-9]+)?$ ]] ||
+  ! awk -v value="$VAL" 'BEGIN { exit !(value >= 0 && value <= 150) }'; then
+  fail "Volume must be a number from 0 to 150: $VAL"
+fi
 
 if [ "$TARGET" = "sink" ]; then
-  pactl set-sink-volume @DEFAULT_SINK@ "${VAL}%" >> /tmp/eww-vol-debug.log 2>&1 || STATUS=$?
+  if ! output=$(pactl set-sink-volume @DEFAULT_SINK@ "${VAL}%" 2>&1); then
+    fail "Could not set output volume: ${output:-pactl failed}"
+  fi
 else
   ALSA_VAL=${VAL%.*}
   if [ "$ALSA_VAL" -gt 100 ]; then
     ALSA_VAL=100
   fi
 
-  pactl set-source-volume @DEFAULT_SOURCE@ "${VAL}%" >> /tmp/eww-vol-debug.log 2>&1 || STATUS=$?
+  if ! output=$(pactl set-source-volume @DEFAULT_SOURCE@ "${VAL}%" 2>&1); then
+    fail "Could not set input volume: ${output:-pactl failed}"
+  fi
 
   DEFAULT_SOURCE=$(pactl get-default-source 2>/dev/null)
   ALSA_CARD=$(pactl list sources 2>/dev/null | awk -v default_source="$DEFAULT_SOURCE" '
@@ -33,9 +55,8 @@ else
   ')
 
   if [ -n "$ALSA_CARD" ] && command -v amixer >/dev/null 2>&1; then
-    amixer -c "$ALSA_CARD" sset Capture "${ALSA_VAL}%" cap >> /tmp/eww-vol-debug.log 2>&1 || STATUS=$?
+    if ! output=$(amixer -c "$ALSA_CARD" sset Capture "${ALSA_VAL}%" cap 2>&1); then
+      fail "Could not set hardware capture gain: ${output:-amixer failed}"
+    fi
   fi
 fi
-
-echo "[$(date)] set-vol exit code: $STATUS" >> /tmp/eww-vol-debug.log
-exit "$STATUS"

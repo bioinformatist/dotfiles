@@ -6,10 +6,10 @@
   :initial '{"sink_vol":50,"sink_muted":false,"source_vol":80,"source_muted":false}'
   `~/.config/eww/scripts/get-volume`)
 
-(defwidget audio [monitor_id]
+(defwidget audio [monitor_name monitor_id]
   (button
     :class "module-btn"
-    :onclick "~/.config/eww/scripts/toggle-popup audio ${monitor_id}"
+    :onclick "~/.config/eww/scripts/toggle-popup audio '${monitor_name}' ${monitor_id}"
     :tooltip "Audio"
     (box :orientation "h"
          :space-evenly false

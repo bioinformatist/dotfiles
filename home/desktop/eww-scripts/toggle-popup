@@ -1,41 +1,152 @@
 #!/usr/bin/env bash
-# ═══ Eww Popup Toggle ═══
-# Opens/closes a popup + its closer window pair.
-# Usage: toggle-popup <type> <monitor_id>
-#   type: audio | bt | net | power | weather-search
-#   monitor_id: 0 | 1 | 2
+# Usage: toggle-popup <audio|power|weather-search> <monitor_name> <monitor_id>
 
-TYPE="${1:?Usage: toggle-popup <type> <monitor_id>}"
-MON="${2:?Usage: toggle-popup <type> <monitor_id>}"
+set -u
 
-POPUP="${TYPE}-popup-${MON}"
-CLOSER="${TYPE}-closer-${MON}"
+monitor_key() {
+  local sanitized digest
 
-# Get currently open windows (once, to avoid repeated IPC calls)
-ACTIVE=$(eww active-windows 2>/dev/null)
+  sanitized=$(printf '%s' "$1" | LC_ALL=C tr -c 'A-Za-z0-9_-' '-' | sed -E 's/-+/-/g; s/^-//; s/-$//')
+  [ -n "$sanitized" ] || sanitized="monitor"
+  digest=$(printf '%s' "$1" | sha256sum)
+  digest=${digest%% *}
+  printf '%s-%s\n' "$sanitized" "${digest:0:16}"
+}
 
-# If this popup is already open → toggle off
-if echo "$ACTIVE" | grep -q "^${POPUP}:"; then
-  eww close "$POPUP" "$CLOSER" 2>/dev/null
-  exit 0
-fi
+active_window_ids() {
+  local windows
 
-# Close only actually-open popups & closers (avoid timeout from
-# trying to close 18 non-existent windows)
-WINDOWS_TO_CLOSE=""
-for t in audio bt net power weather-search; do
-  for m in 0 1 2; do
-    echo "$ACTIVE" | grep -q "^${t}-popup-${m}:" && WINDOWS_TO_CLOSE="$WINDOWS_TO_CLOSE ${t}-popup-${m}"
-    echo "$ACTIVE" | grep -q "^${t}-closer-${m}:" && WINDOWS_TO_CLOSE="$WINDOWS_TO_CLOSE ${t}-closer-${m}"
+  windows=$(eww active-windows 2>/dev/null) || return 1
+  [ -n "$windows" ] || return 0
+  printf '%s\n' "$windows" | awk -F': ' '{print $1}'
+}
+
+rollback_pair() {
+  local popup_id="$1"
+  local closer_id="$2"
+  local active id popup_present closer_present
+  local _
+
+  for _ in 1 2 3; do
+    eww close "$popup_id" "$closer_id" 2>/dev/null || true
+    active=$(active_window_ids) || continue
+    popup_present=false
+    closer_present=false
+    while IFS= read -r id; do
+      [ "$id" = "$popup_id" ] && popup_present=true
+      [ "$id" = "$closer_id" ] && closer_present=true
+    done <<< "$active"
+    if [ "$popup_present" = false ] && [ "$closer_present" = false ]; then
+      return 1
+    fi
   done
-done
 
-if [ -n "$WINDOWS_TO_CLOSE" ]; then
-  # shellcheck disable=SC2086
-  eww close $WINDOWS_TO_CLOSE 2>/dev/null
+  printf 'toggle-popup: failed to clean up incomplete popup pair\n' >&2
+  return 1
+}
+
+main() {
+  local type="${1:?Usage: toggle-popup <type> <monitor_name> <monitor_id>}"
+  local monitor_name="${2:?Usage: toggle-popup <type> <monitor_name> <monitor_id>}"
+  local monitor_id="${3:?Usage: toggle-popup <type> <monitor_name> <monitor_id>}"
+  local encoded popup_id closer_id active requested_active id
+  local monitor_expression type_expression
+  local -a windows_to_close=()
+  local -A active_after_close=()
+  local -A final_active=()
+
+  case "$type" in
+    audio|power|weather-search) ;;
+    *)
+      printf 'toggle-popup: unknown popup type: %s\n' "$type" >&2
+      return 1
+      ;;
+  esac
+
+  case "$monitor_id" in
+    ''|*[!0-9]*)
+      printf 'toggle-popup: monitor ID must be numeric: %s\n' "$monitor_id" >&2
+      return 1
+      ;;
+  esac
+
+  encoded=$(monitor_key "$monitor_name")
+  popup_id="popup-${type}-${encoded}"
+  closer_id="closer-${type}-${encoded}"
+  active=$(active_window_ids) || {
+    printf 'toggle-popup: failed to query active Eww windows\n' >&2
+    return 1
+  }
+  requested_active=false
+
+  while IFS= read -r id; do
+    [ -n "$id" ] || continue
+    case "$id" in
+      popup-*|closer-*) windows_to_close+=("$id") ;;
+    esac
+    [ "$id" = "$popup_id" ] && requested_active=true
+  done <<< "$active"
+
+  if [ "${#windows_to_close[@]}" -gt 0 ]; then
+    eww close "${windows_to_close[@]}" 2>/dev/null || true
+  fi
+
+  active=$(active_window_ids) || {
+    printf 'toggle-popup: failed to verify closed Eww windows\n' >&2
+    return 1
+  }
+  while IFS= read -r id; do
+    [ -n "$id" ] && active_after_close["$id"]=1
+  done <<< "$active"
+  for id in "${windows_to_close[@]}"; do
+    if [ -n "${active_after_close[$id]+present}" ]; then
+      printf 'toggle-popup: failed to close prior window: %s\n' "$id" >&2
+      return 1
+    fi
+  done
+
+  [ "$requested_active" = false ] || return 0
+
+  monitor_expression=$(jq -Rn --arg value "$monitor_name" '$value')
+  type_expression=$(jq -Rn --arg value "$type" '$value')
+
+  if ! eww open popup-closer \
+    --id "$closer_id" \
+    --screen "$monitor_name" \
+    --arg "popup_type=$type_expression" \
+    --arg "monitor_name=$monitor_expression" \
+    --arg "monitor_id=$monitor_id"; then
+    printf 'toggle-popup: failed to open popup closer\n' >&2
+    rollback_pair "$popup_id" "$closer_id"
+    return 1
+  fi
+
+  if ! eww open "${type}-popup" \
+    --id "$popup_id" \
+    --screen "$monitor_name" \
+    --arg "monitor_name=$monitor_expression" \
+    --arg "monitor_id=$monitor_id"; then
+    printf 'toggle-popup: failed to open popup\n' >&2
+    rollback_pair "$popup_id" "$closer_id"
+    return 1
+  fi
+
+  active=$(active_window_ids) || {
+    printf 'toggle-popup: failed to verify opened popup pair\n' >&2
+    rollback_pair "$popup_id" "$closer_id"
+    return 1
+  }
+  while IFS= read -r id; do
+    [ -n "$id" ] && final_active["$id"]=1
+  done <<< "$active"
+  if [ -z "${final_active[$popup_id]+present}" ] ||
+    [ -z "${final_active[$closer_id]+present}" ]; then
+    printf 'toggle-popup: popup pair did not become active\n' >&2
+    rollback_pair "$popup_id" "$closer_id"
+    return 1
+  fi
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
 fi
-
-# Open closer first (bottom layer), then popup (overlay)
-eww open "$CLOSER" &
-eww open "$POPUP" &
-wait

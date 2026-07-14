@@ -100,6 +100,14 @@
 | **grim** + **slurp** | `pkgs.grim`、`pkgs.slurp` | Wayland 屏幕截图 + 区域选择器 |
 | **satty** | `pkgs.satty` | 截图标注编辑器（箭头、文字、模糊、画笔） |
 
+### 共享 Eww 工作站状态栏
+
+导出的工作站 Home Manager 模块会在 Hyprland 报告的每台显示器上安装同一套 48 px Eww 状态栏。状态栏管理器按接口名称增删实例，不限制显示器数量。每个实例都使用相同布局：左侧为工作区和活动窗口，中间为时钟、天气和可选的居中内容，右侧为硬件状态、通知、托盘、音频和电源控制。
+
+网络和蓝牙配置由 Eww 系统托盘中的原生 NetworkManager 与 Blueman applet 提供。可复用的 NixOS 工作站层只会在对应系统能力启用时默认启用 applet。通过托盘图标选择 Wi-Fi、编辑连接、配对设备或切换蓝牙电源。Eww 音频弹窗继续提供音量、静音和默认设备快捷控制；点击 **Open mixer** 会启动 Pavucontrol，用于按应用调整路由和修改高级设备设置。
+
+电池、GPU 和 Clash 状态仅在运行时探针报告硬件可用或服务活跃时显示。D2R 居中内容由 `dotfiles.eww.d2r.enable` 控制，默认值为 `false`；本仓库只为 `homePC` 启用，`linglong` 保持关闭。
+
 ### 已评估但未安装
 
 | 应用 | 结论 |
@@ -305,7 +313,7 @@ Clash Verge 的配置文件数据持久化在 `~/.local/share/io.github.clash-ve
 
 ## 🎮 游戏（仅 `homePC`）
 
-游戏工作流只在 `homePC` 上配置。`linglong` 有意不包含 Steam、GameMode、D2R 和 D2R Eww 模块。
+游戏工作流只在 `homePC` 上配置。`linglong` 有意不包含 Steam、GameMode、D2R 和可选的 D2R 状态栏内容。
 
 ### Battle.net 安装（Steam + Proton）
 

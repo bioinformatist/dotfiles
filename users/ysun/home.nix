@@ -5,12 +5,12 @@
 {
   imports = [
     ./workstation-common.nix
-    ./d2r-eww
     ../../home/programs/gaming.nix
     ../../home/programs/zeroclaw
   ];
 
   dotfiles.hyprland.noHardwareCursors = true;
+  dotfiles.eww.d2r.enable = true;
 
   home.packages = [
     pkgs.orca-ide
