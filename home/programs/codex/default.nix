@@ -180,43 +180,132 @@ let
     allowImplicit = false;
   };
   improveSkill = pkgs.runCommand "codex-shadcn-improve-skill" { } ''
-    mkdir -p "$out/agents" "$out/references"
-    cp ${improveSource}/LICENSE.md "$out/LICENSE.md"
-    cp ${./improve/SKILL.md} "$out/SKILL.md"
-    cp ${./improve/agents/openai.yaml} "$out/agents/openai.yaml"
-    cp ${improveSource}/skills/improve/references/audit-playbook.md "$out/references/audit-playbook.md"
-    cp ${improveSource}/skills/improve/references/plan-template.md "$out/references/plan-template.md"
-    cp ${./improve/references/closing-the-loop.md} "$out/references/closing-the-loop.md"
+        mkdir -p "$out/agents" "$out/references"
+        cp ${improveSource}/LICENSE.md "$out/LICENSE.md"
+        cp ${./improve/SKILL.md} "$out/SKILL.md"
+        cp ${./improve/agents/openai.yaml} "$out/agents/openai.yaml"
+        cp ${improveSource}/skills/improve/references/audit-playbook.md "$out/references/audit-playbook.md"
+        cp ${improveSource}/skills/improve/references/plan-template.md "$out/references/plan-template.md"
+        cp ${./improve/references/closing-the-loop.md} "$out/references/closing-the-loop.md"
+        cp ${./improve/references/planning-contract.md} "$out/references/planning-contract.md"
 
-    substituteInPlace "$out/references/plan-template.md" \
-      --replace-fail \
-        '- Branch: `advisor/NNN-<slug>` (or the repo'"'"'s branch-naming convention if one is evident)' \
-        '- Branch and worktree: created by `codex-improve-exec`; do not create another branch' \
-      --replace-fail \
-        '- Commit per step or per logical unit; message style: <match repo, e.g. conventional commits — include an example from `git log`>' \
-        '- Leave all executor changes uncommitted for the main agent to review' \
-      --replace-fail \
-        '- Do NOT push or open a PR unless the operator instructed it.' \
-        '- Do not commit, merge, push, open a PR, or remove the worktree.' \
-      --replace-fail \
-        '- [ ] `plans/README.md` status row updated' \
-        '- [ ] `plans/README.md` remains unchanged by the executor' \
-      --replace-fail \
-        'Written once by the advisor after all plans, updated by executors:' \
-        'Written and maintained by the advisor after review:' \
-      --replace-fail \
-        'dependencies say otherwise. Each executor: read the plan fully before starting,' \
-        'dependencies say otherwise. Each executor reads the plan fully before starting and' \
-      --replace-fail \
-        'honor its STOP conditions, and update your row when done.' \
-        'honors its STOP conditions; the advisor updates status after review.'
+        substituteInPlace "$out/references/plan-template.md" \
+          --replace-fail \
+            'File naming: `plans/NNN-short-slug.md`, numbered in recommended execution order.' \
+            'File naming: follow the repository'"'"'s explicit artifact convention. Otherwise use local-only `plans/NNN-short-slug.md`, or `advisor-plans/NNN-short-slug.md` when `plans/` already has another purpose, numbered in recommended execution order.' \
+          --replace-fail \
+            '> **Executor instructions**: Follow this plan step by step. Run every' \
+            '> **Executor instructions**: Before editing, reread this complete plan and recover its objective, Semantic anchors, Modification scope, evidence/drift paths, Engineering contract, checks, and STOP conditions. Then follow it step by step. Run every' \
+          --replace-fail \
+            '> report — do not improvise. When done, update the status row for this plan
+    > in `plans/README.md` — unless a reviewer dispatched you and told you they
+    > maintain the index.' \
+            '> report — do not improvise. Leave the plan and index unchanged; the advisor
+    > updates lifecycle state after review.' \
+          --replace-fail \
+            '> **Drift check (run first)**: `git diff --stat <planned-at SHA>..HEAD -- <in-scope paths>`
+    > If any in-scope file changed since this plan was written, compare the' \
+            '> **Drift check (run first)**: `git diff --stat <planned-at SHA>..HEAD -- <Modification scope and evidence/drift paths>`
+    > If any path in Modification scope or evidence/drift paths changed since this plan was written, compare the' \
+          --replace-fail \
+            '## Status
 
-    if grep -R -n -E \
-      '(Explore agents|sonnet|haiku|Agent tool|subagent_type|isolation:|SendMessage|general-purpose)' \
-      "$out"; then
-      echo "adapted improve skill contains stale host-agent wording" >&2
-      exit 1
-    fi
+    - **Priority**: P1 | P2 | P3' \
+            '## Status
+
+    - **Status**: TODO
+    - **Improve contract**: `1.0.0-codex.2`
+    - **Priority**: P1 | P2 | P3' \
+          --replace-fail \
+            '- **Issue**: <GitHub issue URL — only when published via `--issues`; omit otherwise>
+
+    ## Why this matters' \
+            '- **Issue**: <issue URL — only when published via `--issues`; omit otherwise>
+
+    ## Semantic anchors
+
+    Persist concise material semantics with stable provenance prefixes: `U` user decision, `F` verified fact, `D` advisor derivation, `A` assumption, and `R` rejected alternative. Include only populated categories and preserve identifiers across review.
+
+    ## Review record
+
+    Record the reviewed baseline, refreshed evidence, material semantic changes with provenance, and the `READY` or `BLOCKED` verdict.
+
+    ## Why this matters' \
+          --replace-fail \
+            '**In scope** (the only files you should modify):' \
+            '**Modification scope** (the only files you should modify):' \
+          --replace-fail \
+            '- `src/orders/api.test.ts` (create)
+
+    **Out of scope**' \
+            '- `src/orders/api.test.ts` (create)
+
+    **Evidence/drift paths** (read-only inputs used to verify facts and baseline drift):
+    - `src/lib/result.ts`
+
+    **Out of scope**' \
+          --replace-fail \
+            '- **Depends on**: plans/NNN-*.md (or "none")' \
+            '- **Depends on**: <plan artifact identifier at the repository-specific location> (or "none"); inline every dependency contract so execution never requires conversation context or another plan' \
+          --replace-fail \
+            '## Commands you will need' \
+            '## Engineering contract
+
+    Record every applicable build, test, lint, type, compatibility, release, and review requirement discovered during recon. For each one, cite the repository evidence that establishes it; record a concern as not applicable only with evidence.
+
+    | Concern | Requirement or command | Repository evidence | Expected result |
+    |---------|------------------------|---------------------|-----------------|
+    | Build | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
+    | Test | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
+    | Lint | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
+    | Type | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
+    | Compatibility | `<boundary or N/A>` | `<path, config, or documented rule>` | `<preserved behavior>` |
+    | Release | `<requirement or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
+    | Review | `<requirement or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
+
+    Changing an established CI rule, test policy, classifier, release policy, or compatibility boundary requires an evidence-backed `BLOCKED` verdict and user approval. Adding ordinary behavior tests inside an existing harness does not.
+
+    ## Commands you will need' \
+          --replace-fail \
+            '- Branch: `advisor/NNN-<slug>` (or the repo'"'"'s branch-naming convention if one is evident)' \
+            '- Branch and worktree: created by `codex-improve-exec`; do not create another branch' \
+          --replace-fail \
+            '- Commit per step or per logical unit; message style: <match repo, e.g. conventional commits — include an example from `git log`>' \
+            '- Leave all executor changes uncommitted for the main agent to review' \
+          --replace-fail \
+            '- Do NOT push or open a PR unless the operator instructed it.' \
+            '- Do not commit, merge, push, open a PR, or remove the worktree.' \
+          --replace-fail \
+            '- [ ] `plans/README.md` status row updated' \
+            '- [ ] Plan artifacts and any repository-specific plan index remain unchanged by the executor' \
+          --replace-fail \
+            '- [ ] No files outside the in-scope list are modified (`git status`)' \
+            '- [ ] No files outside Modification scope are modified (`git status`)' \
+          --replace-fail \
+            '## Index file: `plans/README.md`' \
+            '## Optional index at the repository-specific artifact location' \
+          --replace-fail \
+            'Written once by the advisor after all plans, updated by executors:' \
+            'Written and maintained by the advisor after review:' \
+          --replace-fail \
+            'dependencies say otherwise. Each executor: read the plan fully before starting,' \
+            'dependencies say otherwise. Each executor reads the plan fully before starting and' \
+          --replace-fail \
+            'honor its STOP conditions, and update your row when done.' \
+            'honors its STOP conditions; the advisor updates status after review.' \
+          --replace-fail \
+            'Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)' \
+            'Status values: TODO | IN PROGRESS | IMPLEMENTED | ACCEPTANCE PENDING | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned). ACCEPTANCE PENDING takes precedence over IMPLEMENTED whenever a named runtime, physical, human, or external acceptance check remains.' \
+          --replace-fail \
+            '- "Planned at" SHA is filled in and the in-scope paths in the drift check match the Scope section.' \
+            '- "Planned at" SHA is filled in and the Modification scope plus evidence/drift paths in the drift check match the Scope section.'
+
+        if grep -R -n -E \
+          '(Explore agents|sonnet|haiku|Agent tool|subagent_type|isolation:|SendMessage|general-purpose)' \
+          "$out"; then
+          echo "adapted improve skill contains stale host-agent wording" >&2
+          exit 1
+        fi
   '';
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "codex";
