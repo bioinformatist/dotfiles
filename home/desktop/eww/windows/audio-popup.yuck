@@ -1,7 +1,7 @@
 ;; ═══ Audio Popup Window ═══
 ;; Output device selector + volume slider
 ;; Input device selector + gain slider
-;; Per-monitor popup + closer windows for multi-monitor support.
+;; toggle-popup selects the monitor through the runtime instance.
 
 (defpoll audio-sinks
   :interval "5s"
@@ -63,7 +63,12 @@
                    :text {sink.active ? "󰓾" : "󰓿"})
             (label :class "device-name"
                    :text {sink.name}
-                   :limit-width 30)))))
+                   :tooltip {sink.name}
+                   :halign "start"
+                   :hexpand true
+                   :truncate true
+                   :limit-width 30
+                   :show-truncated true)))))
 
     ;; ─── Input (Mic) ──────────────────────────────────────
     (label :class "popup-section-title" :text "INPUT" :halign "start")
@@ -101,22 +106,21 @@
                    :text {source.active ? "󰍬" : "󰍮"})
             (label :class "device-name"
                    :text {source.name}
-                   :limit-width 30)))))))
+                   :tooltip {source.name}
+                   :halign "start"
+                   :hexpand true
+                   :truncate true
+                   :limit-width 30
+                   :show-truncated true)))))
 
-;; ─── Closer widget ────────────────────────────────────────
-;; Transparent full-screen eventbox that dismisses the popup
-;; when clicked. Placed at "bottom" layer so it does NOT block
-;; anyrun (overlay) or normal compositor windows.
+    (button
+      :class "mixer-btn"
+      :onclick "pavucontrol &"
+      (label :text "Open mixer"))))
 
-(defwidget audio-closer-content [monitor_id]
-  (eventbox :onclick "~/.config/eww/scripts/toggle-popup audio ${monitor_id}"))
-
-;; ─── Per-monitor popup + closer windows ───────────────────
-;; Monitor 0
-(defwindow audio-popup-0
-  :monitor 0
+(defwindow audio-popup [monitor_name monitor_id]
   :geometry (geometry :x "-16px"
-                      :y "4px"
+                      :y "52px"
                       :width "360px"
                       :anchor "top right")
   :stacking "overlay"
@@ -124,68 +128,3 @@
   :exclusive false
   :namespace "eww-popup"
   (audio-popup-content))
-
-(defwindow audio-closer-0
-  :monitor 0
-  :geometry (geometry :x "0px"
-                      :y "0px"
-                      :width "100%"
-                      :height "100%"
-                      :anchor "center")
-  :stacking "fg"
-  :focusable false
-  :exclusive false
-  :namespace "eww-closer"
-  (audio-closer-content :monitor_id 0))
-
-;; Monitor 1
-(defwindow audio-popup-1
-  :monitor 1
-  :geometry (geometry :x "-16px"
-                      :y "4px"
-                      :width "360px"
-                      :anchor "top right")
-  :stacking "overlay"
-  :focusable false
-  :exclusive false
-  :namespace "eww-popup"
-  (audio-popup-content))
-
-(defwindow audio-closer-1
-  :monitor 1
-  :geometry (geometry :x "0px"
-                      :y "0px"
-                      :width "100%"
-                      :height "100%"
-                      :anchor "center")
-  :stacking "fg"
-  :focusable false
-  :exclusive false
-  :namespace "eww-closer"
-  (audio-closer-content :monitor_id 1))
-
-;; Monitor 2
-(defwindow audio-popup-2
-  :monitor 2
-  :geometry (geometry :x "-16px"
-                      :y "4px"
-                      :width "360px"
-                      :anchor "top right")
-  :stacking "overlay"
-  :focusable false
-  :exclusive false
-  :namespace "eww-popup"
-  (audio-popup-content))
-
-(defwindow audio-closer-2
-  :monitor 2
-  :geometry (geometry :x "0px"
-                      :y "0px"
-                      :width "100%"
-                      :height "100%"
-                      :anchor "center")
-  :stacking "fg"
-  :focusable false
-  :exclusive false
-  :namespace "eww-closer"
-  (audio-closer-content :monitor_id 2))

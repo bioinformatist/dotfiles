@@ -1,35 +1,21 @@
 #!/usr/bin/env bash
-# System resources monitor.
-# Polls CPU, RAM, and GPU telemetry when the driver exposes it.
-# Called by defpoll every 3 seconds.
+# GPU-only telemetry probe. CPU and RAM come from Eww magic variables.
 
-# CPU usage (1-second average from /proc/stat diff)
-CPU1=$(awk '/^cpu / {print $2+$3+$4, $2+$3+$4+$5+$6+$7+$8}' /proc/stat)
-sleep 1
-CPU2=$(awk '/^cpu / {print $2+$3+$4, $2+$3+$4+$5+$6+$7+$8}' /proc/stat)
+set -u
 
-CPU_USED=$(($(echo "$CPU2" | awk '{print $1}') - $(echo "$CPU1" | awk '{print $1}')))
-CPU_TOTAL=$(($(echo "$CPU2" | awk '{print $2}') - $(echo "$CPU1" | awk '{print $2}')))
-CPU_PCT=$(awk "BEGIN {printf \"%d\", (($CPU_TOTAL > 0) ? $CPU_USED*100/$CPU_TOTAL : 0)}")
-
-# RAM usage
-RAM_INFO=$(free -m | awk '/Mem:/ {printf "%d %d", $3, $2}')
-RAM_USED=$(echo "$RAM_INFO" | awk '{print $1}')
-RAM_TOTAL=$(echo "$RAM_INFO" | awk '{print $2}')
-RAM_PCT=$(awk "BEGIN {printf \"%d\", (($RAM_TOTAL > 0) ? $RAM_USED*100/$RAM_TOTAL : 0)}")
-
-# GPU usage: prefer NVIDIA's query interface, then fall back to AMD DRM sysfs.
+# Prefer NVIDIA's query interface, then fall back to AMD DRM sysfs.
 if GPU_DATA=$(nvidia-smi --query-gpu=index,utilization.gpu,memory.used,memory.total \
   --format=csv,noheader,nounits 2>/dev/null) && [ -n "$GPU_DATA" ]; then
-  GPU_JSON=$(echo "$GPU_DATA" | while IFS=', ' read -r idx util mem_used mem_total; do
+  GPU_JSON=$(printf '%s\n' "$GPU_DATA" | while IFS=', ' read -r idx util mem_used mem_total; do
     mem_pct=$(awk "BEGIN {printf \"%d\", (($mem_total > 0) ? $mem_used*100/$mem_total : 0)}")
     jq -cn \
       --argjson idx "$idx" \
+      --arg vendor "NVIDIA" \
       --argjson util "$util" \
       --argjson mem_used "$mem_used" \
       --argjson mem_total "$mem_total" \
       --argjson mem_pct "$mem_pct" \
-      '{idx: $idx, util: $util, mem_used: $mem_used, mem_total: $mem_total, mem_pct: $mem_pct}'
+      '{idx: $idx, vendor: $vendor, util: $util, mem_used: $mem_used, mem_total: $mem_total, mem_pct: $mem_pct}'
   done | jq -s '.')
 else
   GPU_JSON=$(
@@ -39,18 +25,14 @@ else
 
       card=$(basename "$(dirname "$device")")
       case "$card" in
-        card*[!0-9]*)
-          continue
-          ;;
+        card*[!0-9]*) continue ;;
       esac
 
       vendor=$(cat "$device/vendor" 2>/dev/null || true)
       [ "$vendor" = "0x1002" ] || continue
+      [ -r "$device/gpu_busy_percent" ] || continue
 
-      util=0
-      if [ -r "$device/gpu_busy_percent" ]; then
-        util=$(cat "$device/gpu_busy_percent" 2>/dev/null || printf '0')
-      fi
+      util=$(cat "$device/gpu_busy_percent" 2>/dev/null || printf '0')
       case "$util" in
         ''|*[!0-9]*) util=0 ;;
       esac
@@ -67,20 +49,17 @@ else
 
       jq -cn \
         --argjson idx "$idx" \
+        --arg vendor "AMD" \
         --argjson util "$util" \
         --argjson mem_used "$mem_used" \
         --argjson mem_total "$mem_total" \
         --argjson mem_pct "$mem_pct" \
-        '{idx: $idx, util: $util, mem_used: $mem_used, mem_total: $mem_total, mem_pct: $mem_pct}'
+        '{idx: $idx, vendor: $vendor, util: $util, mem_used: $mem_used, mem_total: $mem_total, mem_pct: $mem_pct}'
       idx=$((idx + 1))
     done | jq -s '.'
   )
 fi
 
 jq -cn \
-  --argjson cpu "$CPU_PCT" \
-  --argjson ram_used "$RAM_USED" \
-  --argjson ram_total "$RAM_TOTAL" \
-  --argjson ram_pct "$RAM_PCT" \
   --argjson gpus "${GPU_JSON:-[]}" \
-  '{cpu: $cpu, ram: {used: $ram_used, total: $ram_total, pct: $ram_pct}, gpus: $gpus}'
+  '{present: ($gpus | length > 0), gpus: $gpus}'

@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 # ═══ Eww Power Action Runner ═══
-# Closes the per-monitor power popup, then executes the requested action.
+# Closes the active power popup, then executes the requested action.
 
 set -eu
 
-ACTION="${1:?Usage: run-power-action <logout|poweroff|reboot> <monitor_id>}"
-MON="${2:?Usage: run-power-action <logout|poweroff|reboot> <monitor_id>}"
+ACTION="${1:?Usage: run-power-action <logout|poweroff|reboot>}"
 
-eww close "power-popup-${MON}" "power-closer-${MON}" 2>/dev/null || true
+mapfile -t POWER_WINDOWS < <(
+  eww active-windows 2>/dev/null |
+    awk -F': ' '$1 ~ /^(popup|closer)-power-/ {print $1}'
+)
+if [ "${#POWER_WINDOWS[@]}" -gt 0 ]; then
+  eww close "${POWER_WINDOWS[@]}" 2>/dev/null || true
+fi
 
 case "$ACTION" in
   logout)

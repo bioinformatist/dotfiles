@@ -9,5 +9,7 @@
   (label
     :class "window-title"
     :text "${active_window_title}"
+    :tooltip "${active_window_title}"
+    :truncate true
     :limit-width 50
     :show-truncated true))

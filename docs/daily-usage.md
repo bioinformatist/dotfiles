@@ -100,6 +100,14 @@ Everything else is wiped on reboot.
 | **grim** + **slurp** | `pkgs.grim`, `pkgs.slurp` | Wayland screen capture + region selector |
 | **satty** | `pkgs.satty` | Screenshot annotation editor (arrows, text, blur, brush) |
 
+### Shared Eww Workstation Bar
+
+The exported workstation Home Manager module installs the same 48 px Eww bar on every monitor reported by Hyprland. The bar manager adds and removes instances by connector name, so the layout is not limited to a fixed monitor count. Each instance uses the same structure: workspaces and the active window on the left; clock, weather, and optional center content in the middle; and hardware status, notifications, tray, audio, and power controls on the right.
+
+Network and Bluetooth configuration use the native NetworkManager and Blueman applets in Eww's systray. The reusable NixOS workstation layer enables each applet by default only when its matching system capability is enabled. Use those tray icons to select Wi-Fi, edit connections, pair devices, or change Bluetooth power. The Eww audio popup retains quick volume, mute, and default-device controls; **Open mixer** launches Pavucontrol for per-application routing and advanced device settings.
+
+Battery, GPU, and Clash status appear only when their runtime probes report that the feature is available or active. D2R center content is controlled by `dotfiles.eww.d2r.enable`, which defaults to `false`; this repository enables it for `homePC` and leaves it disabled for `linglong`.
+
 ### Evaluated But Not Installed
 
 | Application | Decision |
@@ -305,7 +313,7 @@ Clash Verge profile data is persisted at `~/.local/share/io.github.clash-verge-r
 
 ## 🎮 Gaming (`homePC` Only)
 
-The gaming workflow is configured only on `homePC`. `linglong` intentionally excludes Steam, GameMode, D2R, and the D2R Eww module.
+The gaming workflow is configured only on `homePC`. `linglong` intentionally excludes Steam, GameMode, D2R, and the optional D2R bar content.
 
 ### Battle.net Installation (Steam + Proton)
 
