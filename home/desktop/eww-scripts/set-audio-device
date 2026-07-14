@@ -7,7 +7,7 @@ set -u
 fail() {
   local message="$1"
   printf 'set-audio-device: %s\n' "$message" >&2
-  dunstify -u critical "Audio device change failed" "$message" 2>/dev/null || true
+  notify-send --urgency=critical "Audio device change failed" "$message" 2>/dev/null || true
   exit 1
 }
 

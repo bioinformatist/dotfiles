@@ -3,8 +3,27 @@
 
 set -u
 
-HYPR_SOCKET="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
+HYPR_SOCKET=""
 RECONNECT_DELAY="${RECONNECT_DELAY:-1}"
+
+wait_for_dependencies() {
+  local signature
+  local _
+
+  for _ in $(seq 1 60); do
+    signature=${HYPRLAND_INSTANCE_SIGNATURE:-}
+    if [ -n "$signature" ]; then
+      HYPR_SOCKET="${XDG_RUNTIME_DIR:?}/hypr/$signature/.socket2.sock"
+      if [ -S "$HYPR_SOCKET" ] && eww active-windows >/dev/null 2>&1; then
+        return 0
+      fi
+    fi
+    sleep 0.2
+  done
+
+  printf 'close-popups: Eww or Hyprland did not become ready\n' >&2
+  return 1
+}
 
 close_all_popups() {
   local id windows
@@ -39,6 +58,8 @@ listen_once() {
 }
 
 main() {
+  wait_for_dependencies || return 1
+
   while true; do
     listen_once
     sleep "$RECONNECT_DELAY"

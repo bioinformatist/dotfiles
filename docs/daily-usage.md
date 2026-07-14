@@ -92,7 +92,7 @@ Everything else is wiped on reboot.
 | **Orca** | `pkgs.orca-ide` | AI development environment |
 | **Clash Verge** | `programs.clash-verge` (NixOS module) | GUI proxy client (network flexibility) |
 | **Eww** | `pkgs.eww` + Home Manager | Desktop widgets and status bar |
-| **Dunst** | Home Manager service | Notification daemon |
+| **SwayNC** | Home Manager service | Notification daemon and maintained notification center |
 | **swww** | `inputs.swww` (flake) | Wayland wallpaper daemon with custom multi-monitor rotation script |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland-native lock screen |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland-native portal for screen sharing, file dialogs, etc. |
@@ -102,11 +102,15 @@ Everything else is wiped on reboot.
 
 ### Shared Eww Workstation Bar
 
-The exported workstation Home Manager module installs the same 48 px Eww bar on every monitor reported by Hyprland. The bar manager adds and removes instances by connector name, so the layout is not limited to a fixed monitor count. Each instance uses the same structure: workspaces and the active window on the left; clock, weather, and optional center content in the middle; and hardware status, notifications, tray, audio, and power controls on the right.
+The exported workstation Home Manager module installs the same 48 px Eww bar on every monitor reported by Hyprland. Home Manager systemd user units own the Eww daemon, per-monitor bar reconciliation, and popup closer at `graphical-session.target`; Hyprland does not start or restart them. The bar manager adds and removes instances by connector name, so the layout is not limited to a fixed monitor count. Each instance uses the same structure: workspaces and the active window on the left; clock, weather, and optional center content in the middle; and hardware status, notifications, tray, audio, and power controls on the right.
 
 Network and Bluetooth configuration use the native NetworkManager and Blueman applets in Eww's systray. The reusable NixOS workstation layer enables each applet by default only when its matching system capability is enabled. Use those tray icons to select Wi-Fi, edit connections, pair devices, or change Bluetooth power. The Eww audio popup retains quick volume, mute, and default-device controls; **Open mixer** launches Pavucontrol for per-application routing and advanced device settings.
 
-Battery, GPU, and Clash status appear only when their runtime probes report that the feature is available or active. D2R center content is controlled by `dotfiles.eww.d2r.enable`, which defaults to `false`; this repository enables it for `homePC` and leaves it disabled for `linglong`.
+The notification button is always visible. Left-click it to toggle SwayNC's notification center; right-click it to toggle Do Not Disturb. The icon and tooltip show DND and center state, while the count appears only when positive. Left-click weather to enter a manual place in a Zenity prompt; right-click opens the forecast. Weather has no IP geolocation or default city, and valid older data remains visible as a stale fallback after a bounded refresh failure.
+
+Battery and GPU modules stay in the shared configuration and hide when their hardware probes report unavailable; Clash status appears only while its service is active. D2R center content is controlled by `dotfiles.eww.d2r.enable`, which defaults to `false`; this repository enables it for `homePC` and leaves it disabled for `linglong`.
+
+The reusable workstation exports keep Clash disabled by default. The narrow personal-host policy enables Clash for `homePC`, `linglong`, and future personal GUI hosts, and their shared personal Home Manager module starts the Clash Verge GUI at the graphical-session boundary. This personal GUI lifecycle is intentionally not part of the exported Eww/Home Manager module, so downstream workstation consumers do not inherit it.
 
 ### Evaluated But Not Installed
 
@@ -175,7 +179,6 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + F` | Toggle **Fullscreen** |
 | `SUPER + Return` | Launch **Terminal** (Ghostty) |
 | `SUPER + B` | Launch **Browser** (Chrome) |
-| `SUPER + SHIFT + P` | Launch **Proxy Client** (Clash Verge) |
 | `SUPER + W` | Launch **WeChat** |
 | `SUPER + L` | **Lock Screen** (hyprlock) |
 | `SUPER + R` | Enter **Resize Mode** (arrow keys to resize, `Escape` to exit) |
@@ -273,7 +276,7 @@ git push
 The system follows a **Nix maintenance-scoped localhost proxy** strategy:
 - **Nix maintenance traffic**: `nix-daemon` uses `http://127.0.0.1:7897`, and `maint-*` commands read the same proxy env from `/etc/dotfiles/nix-network.json`.
 - **Desktop applications**: GUI apps do not inherit `http_proxy` / `https_proxy` / `all_proxy` from NixOS config by default.
-- **Clash Verge (User GUI)**: Handles the actual upstream connection (e.g., your LAN proxy, airport Wi-Fi, 5G hotspot).
+- **Clash Verge (User GUI)**: Starts automatically on personal GUI hosts and handles the actual upstream connection (e.g., your LAN proxy, airport Wi-Fi, 5G hotspot).
 
 | Item | Detail |
 | :--- | :--- |
@@ -286,7 +289,7 @@ The system follows a **Nix maintenance-scoped localhost proxy** strategy:
 
 For example, `192.168.0.116:7890`:
 
-1.  Launch **Clash Verge** (`SUPER + SHIFT + P`).
+1.  Open **Clash Verge** from its Eww status icon or the application launcher; its GUI service starts automatically.
 2.  Go to **Profiles** -> **New Local Profile**.
 3.  Right-click the new profile -> **Edit File**.
 4.  Add your LAN proxy as a "Proxy" node:

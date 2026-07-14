@@ -231,7 +231,7 @@ in
           git
           ghostty
           eww
-          dunst
+          swaynotificationcenter
           google-chrome
           hyprlock
           grim # Wayland screenshot backend

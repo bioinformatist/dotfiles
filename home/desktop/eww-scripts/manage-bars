@@ -6,9 +6,11 @@ set -u
 
 LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/eww-manage-bars.lock"
 LOCK_FD=""
-SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+SOCKET=""
 LAST_APPLIED_STATE=""
 LOCK_OWNED=false
+WATCHER_FD=""
+WATCHER_PID=""
 RECONCILE_RETRY_DELAY="${RECONCILE_RETRY_DELAY:-1}"
 TOPOLOGY_REVALIDATE_SECONDS="${TOPOLOGY_REVALIDATE_SECONDS:-5}"
 declare -A LAST_APPLIED_MONITOR_IDS=()
@@ -80,10 +82,6 @@ popup_window_parts() {
       monitor_key=${window_id#popup-power-}
       counterpart="closer-power-$monitor_key"
       ;;
-    popup-weather-search-*)
-      monitor_key=${window_id#popup-weather-search-}
-      counterpart="closer-weather-search-$monitor_key"
-      ;;
     closer-audio-*)
       monitor_key=${window_id#closer-audio-}
       counterpart="popup-audio-$monitor_key"
@@ -91,10 +89,6 @@ popup_window_parts() {
     closer-power-*)
       monitor_key=${window_id#closer-power-}
       counterpart="popup-power-$monitor_key"
-      ;;
-    closer-weather-search-*)
-      monitor_key=${window_id#closer-weather-search-}
-      counterpart="popup-weather-search-$monitor_key"
       ;;
     *) return 1 ;;
   esac
@@ -337,61 +331,113 @@ acquire_lock() {
   LOCK_OWNED=true
 }
 
-kill_eww_processes() {
+wait_for_dependencies() {
+  local signature state
   local _
 
-  pkill -x .eww-wrapped 2>/dev/null || true
-  for _ in $(seq 1 30); do
-    pgrep -x .eww-wrapped >/dev/null 2>&1 || return 0
-    sleep 0.1
+  for _ in $(seq 1 60); do
+    signature=${HYPRLAND_INSTANCE_SIGNATURE:-}
+    if [ -n "$signature" ]; then
+      SOCKET="${XDG_RUNTIME_DIR:?}/hypr/$signature/.socket2.sock"
+      if [ -S "$SOCKET" ] &&
+        state=$(monitor_state) &&
+        [ "$(printf '%s\n' "$state" | jq -r 'length' 2>/dev/null)" -gt 0 ] &&
+        eww active-windows >/dev/null 2>&1; then
+        return 0
+      fi
+    fi
+    sleep 0.2
   done
-  pkill -9 -x .eww-wrapped 2>/dev/null || true
+
+  printf 'manage-bars: Eww or Hyprland did not become ready\n' >&2
+  return 1
+}
+
+close_managed_bars() {
+  local id windows
+  local -a bar_ids=()
+
+  windows=$(active_window_ids) || return 0
+  while IFS= read -r id; do
+    case "$id" in
+      bar-*) bar_ids+=("$id") ;;
+    esac
+  done <<< "$windows"
+
+  if [ "${#bar_ids[@]}" -gt 0 ]; then
+    eww close "${bar_ids[@]}" 2>/dev/null || true
+  fi
+}
+
+stop_topology_watcher() {
+  if [ -n "$WATCHER_PID" ]; then
+    kill "$WATCHER_PID" 2>/dev/null || true
+    wait "$WATCHER_PID" 2>/dev/null || true
+    WATCHER_PID=""
+  fi
+  if [ -n "$WATCHER_FD" ]; then
+    exec {WATCHER_FD}<&-
+    WATCHER_FD=""
+  fi
 }
 
 cleanup() {
   [ "$LOCK_OWNED" = true ] || return 0
-  kill_eww_processes
+  stop_topology_watcher
+  close_managed_bars
+}
+
+start_topology_watcher() {
+  coproc TOPOLOGY_WATCHER {
+    exec timeout "$TOPOLOGY_REVALIDATE_SECONDS" \
+      socat -U - UNIX-CONNECT:"$SOCKET" 2>/dev/null
+  }
+  WATCHER_FD=${TOPOLOGY_WATCHER[0]}
+  WATCHER_PID=$TOPOLOGY_WATCHER_PID
+
+  sleep 0.1
+  kill -0 "$WATCHER_PID" 2>/dev/null
 }
 
 listen_for_topology_events() {
   local event
 
-  while IFS= read -r event; do
+  while IFS= read -r -u "$WATCHER_FD" event; do
     case "$event" in
       monitoradded*|monitorremoved*)
-        reconcile_bars || return 1
+        reconcile_bars || true
         ;;
     esac
-  done < <(
-    timeout "$TOPOLOGY_REVALIDATE_SECONDS" \
-      socat -U - UNIX-CONNECT:"$SOCKET" 2>/dev/null
-  )
+  done
+
+  stop_topology_watcher
 }
 
 run_manager() {
   trap cleanup EXIT
   trap 'exit 0' TERM INT HUP
 
-  # Start this manager from one clean daemon state. Later topology changes only
-  # close or open runtime instances associated with the changed connector.
-  kill_eww_processes
+  wait_for_dependencies || return 1
+  reconcile_bars || return 1
+  start_topology_watcher || return 1
+  systemd-notify --ready --status="Eww bars reconciled; watching Hyprland monitors"
 
   while true; do
-    if ! reconcile_bars; then
-      sleep "$RECONCILE_RETRY_DELAY"
-      continue
-    fi
-
     # Bound each subscription so a hotplug in the initial reconcile-to-listen
     # gap is recovered even if its event was missed. Normal updates still
     # reconcile immediately from the Hyprland event stream.
     listen_for_topology_events || true
+    reconcile_bars || true
+    start_topology_watcher || return 1
     sleep "$RECONCILE_RETRY_DELAY"
   done
 }
 
 main() {
-  acquire_lock || return 0
+  acquire_lock || {
+    printf 'manage-bars: another manager owns the lock\n' >&2
+    return 1
+  }
 
   # Bash retains the lock internally while exec'd children cannot inherit it.
   run_manager "$@" {LOCK_FD}>&-

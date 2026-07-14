@@ -1,25 +1,29 @@
 ;; ═══ Notifications Module ═══
-;; Polls every 2s via dunstctl count.
+;; Long-running SwayNC subscription: count, DND, center visibility, inhibition.
 
-(defpoll notif-status
-  :interval "2s"
-  :initial '{"waiting":0,"displayed":0,"history":0,"total":0}'
+(deflisten notif-status
+  :initial '{"count":0,"dnd":false,"visible":false,"inhibited":false}'
   `~/.config/eww/scripts/get-notifications`)
 
 (defwidget notifications []
   (button
     :class "module-btn"
-    :visible {notif-status.waiting + notif-status.displayed > 0}
-    :onclick "dunstctl history-pop"
-    :onrightclick "dunstctl close-all"
-    :tooltip "Notifications (right-click: clear all)"
+    :onclick "swaync-client --toggle-panel"
+    :onrightclick "swaync-client --toggle-dnd"
+    :tooltip {notif-status.dnd ? "Notifications: Do Not Disturb (right-click to disable)" :
+              notif-status.inhibited ? "Notifications inhibited (right-click toggles DND)" :
+              notif-status.visible ? "Notification center open (right-click toggles DND)" :
+              "Notifications (left-click opens center; right-click toggles DND)"}
     (box :orientation "h"
          :space-evenly false
          :spacing 6
       (label
-        :class {notif-status.total > 0 ? "icon-notif-active" : "icon-notif-idle"}
-        :text  {notif-status.total > 0 ? "󰂚" : "󰂜"})
+        :class {notif-status.dnd || notif-status.inhibited ? "icon-notif-dnd" :
+                notif-status.visible || notif-status.count > 0 ? "icon-notif-active" :
+                "icon-notif-idle"}
+        :text  {notif-status.dnd || notif-status.inhibited ? "󰂛" :
+                notif-status.visible || notif-status.count > 0 ? "󰂚" : "󰂜"})
       (label
         :class "module-value"
-        :visible {notif-status.total > 0}
-        :text "${notif-status.total}"))))
+        :visible {notif-status.count > 0}
+        :text "${notif-status.count}"))))

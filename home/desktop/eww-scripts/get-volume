@@ -1,24 +1,37 @@
 #!/usr/bin/env bash
-# ═══ Volume Monitor ═══
-# Event-driven via pactl subscribe (PipeWire compatible).
-# Outputs JSON with volume percentage and mute state.
+# Resilient PipeWire/PulseAudio status listener with ALSA capture fallback.
+
+set -u
+
+RECONNECT_DELAY="${RECONNECT_DELAY:-2}"
+
+first_percentage() {
+  grep -oE '[0-9]+%' | head -n 1 | tr -d '%' || true
+}
 
 get_audio_status() {
-  local SINK_VOL SINK_MUTED SOURCE_VOL SOURCE_MUTED ALSA_CARD ALSA_CAPTURE
+  local sink_info source_info sink_mute_info source_mute_info
+  local sink_pct source_pct sink_muted source_muted
+  local default_source alsa_card alsa_capture alsa_pct
 
-  # Use pactl for reliable sink and source info
-  local SINK_INFO SOURCE_INFO
-  SINK_INFO=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null)
-  SOURCE_INFO=$(pactl get-source-volume @DEFAULT_SOURCE@ 2>/dev/null)
-  SINK_MUTE_INFO=$(pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null)
-  SOURCE_MUTE_INFO=$(pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null)
+  sink_info=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null || true)
+  source_info=$(pactl get-source-volume @DEFAULT_SOURCE@ 2>/dev/null || true)
+  sink_mute_info=$(pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null || true)
+  source_mute_info=$(pactl get-source-mute @DEFAULT_SOURCE@ 2>/dev/null || true)
 
-  # Extract volume percentage (first channel)
-  SINK_PCT=$(echo "$SINK_INFO" | grep -oP '\d+(?=%)' | head -1)
-  SOURCE_PCT=$(echo "$SOURCE_INFO" | grep -oP '\d+(?=%)' | head -1)
+  sink_pct=$(printf '%s\n' "$sink_info" | first_percentage)
+  source_pct=$(printf '%s\n' "$source_info" | first_percentage)
+  sink_muted=false
+  source_muted=false
+  case "$sink_mute_info" in
+    *yes*) sink_muted=true ;;
+  esac
+  case "$source_mute_info" in
+    *yes*) source_muted=true ;;
+  esac
 
-  DEFAULT_SOURCE=$(pactl get-default-source 2>/dev/null)
-  ALSA_CARD=$(pactl list sources 2>/dev/null | awk -v default_source="$DEFAULT_SOURCE" '
+  default_source=$(pactl get-default-source 2>/dev/null || true)
+  alsa_card=$(pactl list sources 2>/dev/null | awk -v default_source="$default_source" '
     BEGIN { in_default = 0 }
     /^\tName: / {
       in_default = ($2 == default_source)
@@ -28,35 +41,56 @@ get_audio_status() {
       print $3
       exit
     }
-  ')
-  if [ -n "$ALSA_CARD" ] && command -v amixer >/dev/null 2>&1; then
-    ALSA_CAPTURE=$(amixer -c "$ALSA_CARD" sget Capture 2>/dev/null)
-    ALSA_PCT=$(echo "$ALSA_CAPTURE" | grep -oP '\d+(?=%)' | head -1)
-    if [ -n "$ALSA_PCT" ]; then
-      SOURCE_PCT=$ALSA_PCT
-      SOURCE_MUTED=$(echo "$ALSA_CAPTURE" | grep -c "\[off\]" || true)
+  ' || true)
+
+  if [ -n "$alsa_card" ] && command -v amixer >/dev/null 2>&1; then
+    alsa_capture=$(amixer -c "$alsa_card" sget Capture 2>/dev/null || true)
+    alsa_pct=$(printf '%s\n' "$alsa_capture" | first_percentage)
+    if [ -n "$alsa_pct" ]; then
+      source_pct=$alsa_pct
+      case "$alsa_capture" in
+        *'[off]'*) source_muted=true ;;
+        *) source_muted=false ;;
+      esac
     fi
   fi
 
-  # Extract mute state
-  SINK_MUTED=$(echo "$SINK_MUTE_INFO" | grep -c "yes" || true)
-  SOURCE_MUTED=${SOURCE_MUTED:-$(echo "$SOURCE_MUTE_INFO" | grep -c "yes" || true)}
-
-  SINK_PCT=${SINK_PCT:-0}
-  SOURCE_PCT=${SOURCE_PCT:-0}
+  sink_pct=${sink_pct:-0}
+  source_pct=${source_pct:-0}
+  case "$sink_pct" in
+    *[!0-9]*) sink_pct=0 ;;
+  esac
+  case "$source_pct" in
+    *[!0-9]*) source_pct=0 ;;
+  esac
 
   jq -cn \
-    --argjson sv "$SINK_PCT" \
-    --argjson sm "$SINK_MUTED" \
-    --argjson rv "$SOURCE_PCT" \
-    --argjson rm "$SOURCE_MUTED" \
-    '{sink_vol: $sv, sink_muted: ($sm > 0), source_vol: $rv, source_muted: ($rm > 0)}'
+    --argjson sink_vol "$sink_pct" \
+    --argjson sink_muted "$sink_muted" \
+    --argjson source_vol "$source_pct" \
+    --argjson source_muted "$source_muted" \
+    '{
+      sink_vol:$sink_vol,
+      sink_muted:$sink_muted,
+      source_vol:$source_vol,
+      source_muted:$source_muted
+    }'
 }
 
-# Emit initial state
-get_audio_status
+main() {
+  local event
 
-# Listen for PipeWire/PulseAudio change events
-pactl subscribe 2>/dev/null | grep --line-buffered "Event 'change' on" | while read -r; do
-  get_audio_status
-done
+  while true; do
+    if pactl info >/dev/null 2>&1; then
+      get_audio_status
+      while IFS= read -r event; do
+        if [[ "$event" =~ ^Event\ \'(change|new|remove)\'\ on\ (sink|source|card|server)([[:space:]]|$) ]]; then
+          get_audio_status
+        fi
+      done < <(pactl subscribe 2>/dev/null)
+    fi
+    sleep "$RECONNECT_DELAY"
+  done
+}
+
+main "$@"

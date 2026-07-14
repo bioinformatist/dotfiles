@@ -92,7 +92,7 @@
 | **Orca** | `pkgs.orca-ide` | AI 开发环境 |
 | **Clash Verge** | `programs.clash-verge`（NixOS 模块） | GUI 代理客户端（灵活网络管理） |
 | **Eww** | `pkgs.eww` + Home Manager | 桌面小部件和状态栏 |
-| **Dunst** | Home Manager 服务 | 通知守护进程 |
+| **SwayNC** | Home Manager 服务 | 通知守护进程与维护中的通知中心 |
 | **swww** | `inputs.swww`（flake） | Wayland 壁纸守护进程，附带多显示器随机轮换脚本 |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland 原生锁屏 |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland 原生门户（屏幕共享、文件对话框等） |
@@ -102,11 +102,15 @@
 
 ### 共享 Eww 工作站状态栏
 
-导出的工作站 Home Manager 模块会在 Hyprland 报告的每台显示器上安装同一套 48 px Eww 状态栏。状态栏管理器按接口名称增删实例，不限制显示器数量。每个实例都使用相同布局：左侧为工作区和活动窗口，中间为时钟、天气和可选的居中内容，右侧为硬件状态、通知、托盘、音频和电源控制。
+导出的工作站 Home Manager 模块会在 Hyprland 报告的每台显示器上安装同一套 48 px Eww 状态栏。Home Manager systemd 用户单元在 `graphical-session.target` 边界管理 Eww 守护进程、每显示器状态栏对齐和弹窗关闭器；Hyprland 不再启动或重启它们。状态栏管理器按接口名称增删实例，不限制显示器数量。每个实例都使用相同布局：左侧为工作区和活动窗口，中间为时钟、天气和可选的居中内容，右侧为硬件状态、通知、托盘、音频和电源控制。
 
 网络和蓝牙配置由 Eww 系统托盘中的原生 NetworkManager 与 Blueman applet 提供。可复用的 NixOS 工作站层只会在对应系统能力启用时默认启用 applet。通过托盘图标选择 Wi-Fi、编辑连接、配对设备或切换蓝牙电源。Eww 音频弹窗继续提供音量、静音和默认设备快捷控制；点击 **Open mixer** 会启动 Pavucontrol，用于按应用调整路由和修改高级设备设置。
 
-电池、GPU 和 Clash 状态仅在运行时探针报告硬件可用或服务活跃时显示。D2R 居中内容由 `dotfiles.eww.d2r.enable` 控制，默认值为 `false`；本仓库只为 `homePC` 启用，`linglong` 保持关闭。
+通知按钮始终可见。左键切换 SwayNC 通知中心，右键切换免打扰；图标和 tooltip 反映免打扰/中心状态，只在计数大于零时显示数字。左键点击天气后，在 Zenity 提示框中手动输入地点；右键继续打开预报。天气不使用 IP 定位或默认城市，有效旧数据在有界刷新失败后会作为 stale fallback 继续显示。
+
+电池和 GPU 模块保留在共享配置中，硬件探针报告不可用时自动隐藏；Clash 状态只在服务活跃时显示。D2R 居中内容由 `dotfiles.eww.d2r.enable` 控制，默认值为 `false`；本仓库只为 `homePC` 启用，`linglong` 保持关闭。
+
+可复用工作站导出仍默认关闭 Clash。狭化的个人主机策略为 `homePC`、`linglong` 和未来个人 GUI 主机启用 Clash，它们共享的个人 Home Manager 模块在图形会话边界启动 Clash Verge GUI。该个人 GUI 生命周期明确不属于导出的 Eww/Home Manager 模块，因此下游工作站消费者不会继承它。
 
 ### 已评估但未安装
 
@@ -175,7 +179,6 @@
 | `SUPER + F` | 切换**全屏** |
 | `SUPER + Return` | 启动**终端**（Ghostty） |
 | `SUPER + B` | 启动**浏览器**（Chrome） |
-| `SUPER + SHIFT + P` | 启动**代理客户端**（Clash Verge） |
 | `SUPER + W` | 启动**微信** |
 | `SUPER + L` | **锁屏**（hyprlock） |
 | `SUPER + R` | 进入**调整大小模式**（方向键调整，`Escape` 退出） |
@@ -273,7 +276,7 @@ git push
 系统采用 **Nix 维护路径作用域的本地代理**策略：
 - **Nix 维护流量**：`nix-daemon` 使用 `http://127.0.0.1:7897`，`maint-*` 命令从 `/etc/dotfiles/nix-network.json` 读取同一组代理环境变量。
 - **桌面应用**：GUI 应用默认不会从 NixOS 配置继承 `http_proxy` / `https_proxy` / `all_proxy`。
-- **Clash Verge（用户 GUI）**：负责处理实际的上游连接（如局域网代理、机场 WiFi、5G 热点等）。
+- **Clash Verge（用户 GUI）**：在个人 GUI 主机上自动启动，负责处理实际的上游连接（如局域网代理、机场 WiFi、5G 热点等）。
 
 | 项目 | 详情 |
 | :--- | :--- |
@@ -286,7 +289,7 @@ git push
 
 例如 `192.168.0.116:7890`：
 
-1.  启动 **Clash Verge**（`SUPER + SHIFT + P`）。
+1.  通过 Eww 状态图标或应用启动器打开 **Clash Verge**；其 GUI 服务会自动启动。
 2.  进入 **Profiles** -> **New Local Profile**。
 3.  右键新配置文件 -> **Edit File**。
 4.  将局域网代理添加为"Proxy"节点：

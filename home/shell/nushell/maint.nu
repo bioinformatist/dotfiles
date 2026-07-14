@@ -278,7 +278,7 @@ def dotfiles-maint-switch-risk [target: string] {
 
 # Daily local entry point: consume the already-reviewed main branch state, gate it
 # against the machine's cache policy, then activate one complete system closure.
-def maint-switch [--no-pull, --repo: string] {
+def maint-switch [--no-pull, --repo: string, --boot] {
   let repo_env = if $repo == null { {} } else { { DOTFILES_MAINT_REPO: $repo } }
   with-env $repo_env {
     if not (dotfiles-maint-repo-clean) {
@@ -307,7 +307,11 @@ def maint-switch [--no-pull, --repo: string] {
     let target = (dotfiles-maint-build-toplevel $attr)
     let risk = (dotfiles-maint-switch-risk $target)
 
-    if $risk.requiresBoot {
+    if $boot {
+      print "Boot-only activation requested; the running system will not be switched."
+      print "Next step after this finishes: reboot into the new generation."
+      ^sudo nixos-rebuild --no-reexec boot --store-path $target
+    } else if $risk.requiresBoot {
       print "Detected runtime-sensitive changes; using boot activation instead of hot switch."
       if $risk.kernelChanged { print "risk: booted kernel differs from target kernel" }
       if $risk.nvidiaChanged { print "risk: NVIDIA userspace differs from current system" }

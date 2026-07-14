@@ -178,6 +178,17 @@ maint-switch --repo /tmp/dotfiles-clean --no-pull
 这适用于 Rime sync 文件这类主机本地自动生成数据；不要为了通过 clean-checkout
 门控而创建 Rime-only commit。
 
+当已审查变更必须安装为下次启动的 generation，但不应在当前桌面会话中激活时，
+显式传入 `--boot`：
+
+```nu
+maint-switch --boot
+```
+
+该标志仍会执行 clean-check、可选 pull、网络门控和完整 toplevel 构建，然后固定调用
+`nixos-rebuild boot --store-path ...`，并提示必须重启。它是有意延后激活的显式路径，
+不是日常默认；不传该标志时，现有 kernel/NVIDIA 风险自动选择保持不变。
+
 默认阻断标记包括：
 
 - `linux-`、`nvidia-x11`、`mesa-`、`systemd-`

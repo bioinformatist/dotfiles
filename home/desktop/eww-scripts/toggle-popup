@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: toggle-popup <audio|power|weather-search> <monitor_name> <monitor_id>
+# Usage: toggle-popup <audio|power> <monitor_name> <monitor_id>
 
 set -u
 
@@ -56,7 +56,7 @@ main() {
   local -A final_active=()
 
   case "$type" in
-    audio|power|weather-search) ;;
+    audio|power) ;;
     *)
       printf 'toggle-popup: unknown popup type: %s\n' "$type" >&2
       return 1
