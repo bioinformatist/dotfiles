@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.2`
+Contract version: `1.0.0-codex.3`
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -78,16 +78,32 @@ List modification scope separately from evidence/drift paths:
 Do not blur these lists. A needed edit outside modification scope is a STOP or
 BLOCKED result, not implied permission to expand scope.
 
+These lists govern edit authority, not impact analysis. CI, policy, classifier,
+release, compatibility, generated-artifact, and deployment impacts remain
+mandatory evidence even when their files are outside modification scope. "Out
+of scope" means do not edit without approval; it never means assume no impact.
+
 One plan represents one true integration, rollback, and acceptance boundary.
 Combine work only when it must land, be reverted, and be accepted atomically.
 Sharing a product area or directory is not sufficient evidence for combining
 independently landable changes.
 
 During recon, discover and inline the applicable Engineering contract: build,
-test, lint, type, compatibility, release, and review requirements, including
-where each requirement was verified. Changing an established CI rule, test
-policy, classifier, release policy, or compatibility boundary requires an
-evidence-backed BLOCKED verdict and user approval. Adding ordinary behavior
+test, lint, type, CI, policy, classifier, compatibility, release, deployment,
+and review requirements. Record an impact-matrix row for every planned change
+trigger, including generated or packaged artifacts, dependency or lock changes,
+public interfaces or formats, and runtime or deployment changes when applicable.
+Each row names the trigger, requirement or exact check, repository evidence,
+expected result, and whether a contract edit is unnecessary, pending approval,
+or approved. Mark a concern not applicable only with evidence.
+
+Run state-sensitive checks in an evidence-preserving order. If a build, cache,
+installation, deployment, or other local state can hide the delta being checked,
+capture clean base/head evidence first or use an isolated equivalent. Changing
+an established CI rule, test policy, classifier, release policy, or compatibility
+boundary requires an evidence-backed BLOCKED verdict and user approval. After
+approval, mark the row approved and add the exact paths and checks to the plan
+rather than treating the change as implicit scope. Adding ordinary behavior
 tests within an existing harness does not cross that threshold.
 
 Discover the repository's explicit artifact convention before choosing a plan
@@ -126,7 +142,8 @@ For `plan` and `review-plan`, run an internal loop in this order:
 
 1. **Draft** — write or refresh the complete plan and its anchors.
 2. **Coverage** — map every user decision, verified fact, derivation, assumption,
-   rejected alternative, scope boundary, and engineering requirement to text.
+   rejected alternative, scope boundary, planned change trigger, and Engineering
+   contract impact row to text.
 3. **Zero-context** — verify an executor can act using only the plan and listed
    repository evidence.
 4. **Logic** — check precedence, dependencies, lifecycle, STOP conditions,

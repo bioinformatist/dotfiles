@@ -215,7 +215,7 @@ let
             '## Status
 
     - **Status**: TODO
-    - **Improve contract**: `1.0.0-codex.2`
+    - **Improve contract**: `1.0.0-codex.3`
     - **Priority**: P1 | P2 | P3' \
           --replace-fail \
             '- **Issue**: <GitHub issue URL — only when published via `--issues`; omit otherwise>
@@ -252,19 +252,18 @@ let
             '## Commands you will need' \
             '## Engineering contract
 
-    Record every applicable build, test, lint, type, compatibility, release, and review requirement discovered during recon. For each one, cite the repository evidence that establishes it; record a concern as not applicable only with evidence.
+    Record one row for every planned change trigger. Modification scope limits edits, not read-only impact analysis; record a concern as not applicable only with repository evidence.
 
-    | Concern | Requirement or command | Repository evidence | Expected result |
-    |---------|------------------------|---------------------|-----------------|
-    | Build | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
-    | Test | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
-    | Lint | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
-    | Type | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
-    | Compatibility | `<boundary or N/A>` | `<path, config, or documented rule>` | `<preserved behavior>` |
-    | Release | `<requirement or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
-    | Review | `<requirement or N/A>` | `<path, config, or documented rule>` | `<observable result>` |
+    | Concern | Planned change trigger | Requirement or command | Repository evidence | Expected result | Contract edit |
+    |---------|------------------------|------------------------|---------------------|-----------------|---------------|
+    | Build/generated artifacts | `<package, generated output, or N/A>` | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` | `<no, pending approval, or approved>` |
+    | Test/lint/type | `<behavior or source change>` | `<exact command or N/A>` | `<path, config, or documented rule>` | `<observable result>` | `<no, pending approval, or approved>` |
+    | CI/policy/classifier | `<artifact, dependency, or workflow impact>` | `<exact gate or N/A>` | `<path, config, or documented rule>` | `<observable result>` | `<no, pending approval, or approved>` |
+    | Compatibility/public interface | `<interface, format, or dependency change>` | `<boundary check or N/A>` | `<path, config, or documented rule>` | `<preserved behavior>` | `<no, pending approval, or approved>` |
+    | Release/deployment | `<packaging, runtime, or rollout impact>` | `<exact check or N/A>` | `<path, config, or documented rule>` | `<observable result>` | `<no, pending approval, or approved>` |
+    | Review/acceptance | `<risk or user-visible impact>` | `<required review or N/A>` | `<path, config, or documented rule>` | `<observable result>` | `<no, pending approval, or approved>` |
 
-    Changing an established CI rule, test policy, classifier, release policy, or compatibility boundary requires an evidence-backed `BLOCKED` verdict and user approval. Adding ordinary behavior tests inside an existing harness does not.
+    Run state-sensitive checks before a build, cache, installation, deployment, or other local state can hide their evidence, or use clean base/head isolation. Any `pending approval` contract edit requires an evidence-backed `BLOCKED` verdict; after approval, mark it `approved`, add the exact edit paths to Modification scope, and add the exact checks to this table and the verification commands. Adding ordinary behavior tests inside an existing harness does not require approval.
 
     ## Commands you will need' \
           --replace-fail \

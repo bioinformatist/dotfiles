@@ -17,6 +17,11 @@ Before dispatch:
   unnamed expectation is not sufficient.
 - Run the plan's drift check against the current `HEAD`.
 - Check that uncommitted source changes do not overlap the plan. The executor starts from `HEAD`; only the plan text is inlined.
+- Verify that the Engineering-contract impact matrix covers every planned change
+  trigger and its generated or packaged artifacts. Files outside modification
+  scope remain in scope for read-only impact analysis.
+- If a matrix row requires an unapproved CI, policy, classifier, release,
+  compatibility, or other contract edit, return `BLOCKED` before dispatch.
 - Reconcile a stale plan instead of asking the executor to improvise.
 
 ### Dispatch
@@ -53,14 +58,22 @@ Treat the executor report and diff as untrusted until verified:
 2. Compare `git -C <worktree> status --short` and `git -C <worktree> diff --stat` with the plan's scope.
 3. Read the complete diff and verify each hunk traces to a plan step.
 4. Inspect new tests for meaningful assertions, not only passing commands.
-5. Perform the main-agent acceptance pass. Check behavior, tests, repository
+5. Reconcile the actual diff, generated artifacts, dependency graph, public
+   interfaces, and runtime effects with the Engineering-contract impact matrix.
+   An unexplained trigger or out-of-scope impact returns to planning; a required
+   unapproved contract edit `BLOCK`s. Omission is not evidence that the impact
+   is absent.
+6. Run applicable repository checks in evidence-preserving order. Capture a
+   clean base/head delta before builds, caches, installations, deployments, or
+   other local state can hide it, or use an isolated equivalent.
+7. Perform the main-agent acceptance pass. Check behavior, tests, repository
    rules, reuse, justified abstraction, module boundaries, locality, speculative
    flexibility, compatibility layers, and removable code.
-6. Apply the installed `$ponytail-review` skill to the current diff. Treat its
+8. Apply the installed `$ponytail-review` skill to the current diff. Treat its
    suggestions as hypotheses; reject any that weaken settled semantics,
    correctness, repository rules, or necessary tests. Its line-count score is
    not an acceptance criterion.
-7. Decide whether external-practice evidence or an independent review is
+9. Decide whether external-practice evidence or an independent review is
    required under the triggers below.
 
 #### External-practice evidence
@@ -150,6 +163,8 @@ does not ask the reviewer to rediscover the repository. Include:
 
 - the exact current plan artifact, its immutable baseline commit, settled
   semantic anchors, and Engineering contract;
+- the Engineering-contract impact matrix reconciled against the actual diff,
+  including generated artifacts and every out-of-scope impact;
 - the baseline and complete diff boundary plus a changed-path manifest;
 - executor and main-agent verification results, including generated-artifact
   evidence when applicable;

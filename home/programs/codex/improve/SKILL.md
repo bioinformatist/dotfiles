@@ -4,7 +4,7 @@ description: Audit a codebase as a read-only senior advisor, prioritize evidence
 license: MIT
 metadata:
   author: shadcn
-  version: "1.0.0-codex.2"
+  version: "1.0.0-codex.3"
 ---
 
 # Improve
@@ -24,7 +24,11 @@ Act as the senior advisor. Understand the repository, vet findings, and write pl
 
 ### 1. Recon
 
-Read repository guidance, intent and design documents, root configuration, CI, representative source, tests, and recent git history. Establish the exact build, test, lint, and typecheck commands. Record settled tradeoffs so they are not reported as defects.
+Read repository guidance, intent and design documents, root configuration, CI,
+representative source, tests, and recent git history. Establish the exact build,
+test, lint, typecheck, policy, release, and review gates. Map each planned change
+trigger to the applicable gates; modification scope never limits read-only
+impact analysis. Record settled tradeoffs so they are not reported as defects.
 
 ### 2. Audit
 
