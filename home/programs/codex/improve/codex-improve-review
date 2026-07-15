@@ -1,0 +1,283 @@
+#!/usr/bin/env bash
+
+set +e
+set -uo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: codex-improve-review ROLE WORKTREE DOSSIER
+
+Run one bounded Improve review. ROLE must be correctness or elegance,
+WORKTREE must be a Git worktree, and DOSSIER must be a complete non-empty file.
+EOF
+}
+
+fail_input() {
+  printf 'codex-improve-review: %s\n' "$1" >&2
+  exit 2
+}
+
+if [ "$#" -ne 3 ]; then
+  usage >&2
+  exit 2
+fi
+
+role="$1"
+case "$role" in
+  correctness) profile="improve-reviewer" ;;
+  elegance) profile="improve-elegance-reviewer" ;;
+  *) fail_input "role must be correctness or elegance" ;;
+esac
+
+worktree="$(realpath -- "$2" 2>/dev/null)" || fail_input "cannot resolve worktree: $2"
+git_root="$(git -C "$worktree" rev-parse --show-toplevel 2>/dev/null)" ||
+  fail_input "worktree is not inside a Git repository: $2"
+git_root="$(realpath -- "$git_root")" || fail_input "cannot resolve Git worktree root: $2"
+if [ "$worktree" != "$git_root" ]; then
+  fail_input "worktree must be the Git worktree root: $2"
+fi
+
+if [ ! -f "$3" ] || [ ! -r "$3" ] || [ ! -s "$3" ]; then
+  fail_input "dossier must be a readable non-empty file: $3"
+fi
+dossier="$(realpath -- "$3")" || fail_input "cannot resolve dossier: $3"
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+schema="${CODEX_IMPROVE_REVIEW_SCHEMA:-$script_dir/references/review-verdict.schema.json}"
+if [ ! -r "$schema" ] || ! jq -e . "$schema" >/dev/null 2>&1; then
+  fail_input "verdict schema is unavailable or invalid: $schema"
+fi
+
+absolute_seconds=480
+quiet_seconds=180
+kill_after_seconds=5
+poll_seconds=1
+
+umask 077
+runtime_parent="${XDG_RUNTIME_DIR:-/tmp}/codex-improve/reviews"
+mkdir -p "$runtime_parent" || fail_input "cannot create review runtime directory"
+runtime_dir="$(mktemp -d "$runtime_parent/$(date -u +%Y%m%dT%H%M%SZ)-$role-XXXXXX")" ||
+  fail_input "cannot create review runtime directory"
+event_log="$runtime_dir/events.jsonl"
+final_output="$runtime_dir/final.json"
+diagnostic_log="$runtime_dir/stderr.log"
+prompt_file="$runtime_dir/prompt.txt"
+if ! { : >"$event_log" && : >"$final_output" && : >"$diagnostic_log"; }; then
+  fail_input "cannot initialize review artifacts"
+fi
+
+emit_review_prompt() {
+  cat <<'EOF'
+You are an independent reviewer for one atomic Improve implementation. Treat
+the dossier below as the complete bounded evidence contract. Host-injected
+repository instructions identified in the dossier remain authoritative. Do not
+launch agents or broaden the repository audit.
+
+Build a coverage matrix for every requested check. At 40000 weighted tokens
+remaining, stop broad recon. At 20000, pursue only named evidence gaps. At
+10000, stop tool use and render the verdict. Return only the JSON object
+required by the output schema, with evidence for every finding and check.
+EOF
+
+  if [ "$role" = "correctness" ]; then
+    printf '\nCorrectness role: check behavior, safety, regressions, tests, and plan and Engineering-contract compliance.\n'
+  else
+    cat <<'EOF'
+
+Elegance role: check reuse, justified abstraction, locality, speculative
+flexibility, compatibility layers, and removable code. Apply the installed
+$ponytail-review skill once to the current diff as an internal subreview. Treat
+its suggestions as hypotheses: reject any that weaken settled semantics,
+correctness, repository rules, or necessary tests. Its line-count score is not
+an acceptance criterion. Include only supported, actionable suggestions as
+findings. Do not reopen settled user decisions without contradictory evidence.
+EOF
+  fi
+
+  printf '\n--- BEGIN BOUNDED DOSSIER ---\n'
+  cat "$dossier" || return 1
+  printf '\n--- END BOUNDED DOSSIER ---\n'
+}
+
+emit_review_prompt >"$prompt_file" || fail_input "cannot snapshot review dossier"
+
+started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+started_epoch="$(date +%s)"
+cancelled=""
+supervisor_pid=""
+
+# shellcheck disable=SC2329 # Invoked by INT and TERM traps.
+cancel_review() {
+  cancelled="$1"
+  if [ -n "$supervisor_pid" ]; then
+    kill -s "$1" "$supervisor_pid" 2>/dev/null || true
+  fi
+}
+
+trap 'cancel_review INT' INT
+trap 'cancel_review TERM' TERM
+
+timeout \
+  --signal=INT \
+  --kill-after="${kill_after_seconds}s" \
+  "${absolute_seconds}s" \
+  codex exec \
+  --strict-config \
+  --ephemeral \
+  --json \
+  --output-schema "$schema" \
+  --output-last-message "$final_output" \
+  -C "$worktree" \
+  -p "$profile" \
+  - \
+  <"$prompt_file" \
+  >"$event_log" \
+  2>"$diagnostic_log" &
+supervisor_pid="$!"
+
+last_event_epoch="$started_epoch"
+last_event_count=0
+max_event_gap_seconds=0
+quiet_interval_observed=0
+while kill -0 "$supervisor_pid" 2>/dev/null; do
+  sleep "$poll_seconds"
+  event_count="$(wc -l <"$event_log")"
+  now_epoch="$(date +%s)"
+  if [ "$event_count" -gt "$last_event_count" ]; then
+    last_event_count="$event_count"
+    last_event_epoch="$now_epoch"
+  fi
+  event_gap_seconds="$((now_epoch - last_event_epoch))"
+  if [ "$event_gap_seconds" -gt "$max_event_gap_seconds" ]; then
+    max_event_gap_seconds="$event_gap_seconds"
+  fi
+  if [ "$event_gap_seconds" -ge "$quiet_seconds" ] && [ "$quiet_interval_observed" -eq 0 ]; then
+    quiet_interval_observed=1
+    printf 'codex-improve-review: no new JSONL event for %s seconds; continuing\n' \
+      "$quiet_seconds" >>"$diagnostic_log"
+  fi
+done
+
+wait "$supervisor_pid"
+codex_status="$?"
+
+# GNU timeout owns this process group; drain a descendant that outlived it.
+if kill -0 -- "-$supervisor_pid" 2>/dev/null; then
+  kill -TERM -- "-$supervisor_pid" 2>/dev/null || true
+  sleep 0.1
+  kill -KILL -- "-$supervisor_pid" 2>/dev/null || true
+fi
+trap '' INT TERM
+
+finished_epoch="$(date +%s)"
+elapsed_seconds="$((finished_epoch - started_epoch))"
+final_gap="$((finished_epoch - last_event_epoch))"
+if [ "$final_gap" -gt "$max_event_gap_seconds" ]; then
+  max_event_gap_seconds="$final_gap"
+fi
+if [ "$max_event_gap_seconds" -ge "$quiet_seconds" ]; then
+  quiet_interval_observed=1
+fi
+
+result="INCONCLUSIVE"
+exit_reason=""
+event_log_valid=0
+if [ -n "$cancelled" ]; then
+  exit_reason="wrapper_signal_$cancelled"
+elif [ "$codex_status" -eq 124 ] || [ "$codex_status" -eq 137 ]; then
+  exit_reason="absolute_timeout"
+elif [ "$codex_status" -ne 0 ]; then
+  exit_reason="codex_exit_$codex_status"
+elif ! jq -Rse '
+  split("\n") as $lines
+  | (if $lines[-1] == "" then $lines[:-1] else $lines end)
+  | length > 0
+    and all(.[]; . != "" and (try (fromjson | type == "object") catch false))
+' "$event_log" >/dev/null 2>&1; then
+  exit_reason="invalid_event_log"
+else
+  event_log_valid=1
+  if verdict="$(jq -er -s '
+    def nonblank: type == "string" and test("\\S");
+    if length == 1 then .[0] else empty end
+    | select(
+    (.summary | nonblank)
+    and (.findings | type == "array")
+    and all(.findings[];
+      (.check | nonblank) and (.location | nonblank) and (.claim | nonblank)
+      and (.evidence | nonblank) and (.action | nonblank))
+    and (.coverage | type == "array" and length > 0)
+    and all(.coverage[]; (.check | nonblank) and (.evidence | nonblank))
+    and (.unresolved_items | type == "array")
+    and all(.unresolved_items[]; (.item | nonblank) and (.impact | nonblank))
+    and (
+      (.verdict == "APPROVE" and (.findings | length == 0)
+        and all(.coverage[]; .status == "PASS") and (.unresolved_items | length == 0))
+      or (.verdict == "REVISE" and (.findings | length > 0)
+        and any(.coverage[]; .status == "FAIL") and all(.coverage[]; .status != "BLOCKED")
+        and (.unresolved_items | length == 0))
+      or (.verdict == "BLOCK"
+        and (any(.coverage[]; .status == "BLOCKED") or (.unresolved_items | length > 0)))
+    )
+    )
+    | .verdict
+  ' "$final_output" 2>/dev/null)"; then
+    result="$verdict"
+    exit_reason="completed"
+  else
+    exit_reason="invalid_final_output"
+  fi
+fi
+
+stats='{"token_usage":{"input_tokens":0,"cached_input_tokens":0,"output_tokens":0},"tool_event_count":0}'
+if [ "$event_log_valid" -eq 1 ]; then
+  stats="$(jq -c -s '
+    def n: if type == "number" then . else 0 end;
+    ([.[] | select(.type? == "turn.completed") | .usage? | select(type == "object")] | last // {}) as $usage
+    | {
+        token_usage: {
+          input_tokens: (($usage.input_tokens // 0) | n),
+          cached_input_tokens: (($usage.cached_input_tokens // 0) | n),
+          output_tokens: (($usage.output_tokens // 0) | n)
+        },
+        tool_event_count: ([.[] | select(.type? == "item.completed") | .item.type? | select(. != "reasoning" and . != "agent_message")] | length)
+      }
+  ' "$event_log")"
+fi
+
+metric="$(jq -nc \
+  --arg timestamp "$started_at" \
+  --arg role "$role" \
+  --arg profile "$profile" \
+  --arg result "$result" \
+  --arg reason "$exit_reason" \
+  --argjson elapsed_seconds "$elapsed_seconds" \
+  --argjson stats "$stats" \
+  --argjson max_event_gap_seconds "$max_event_gap_seconds" \
+  --argjson quiet_interval_observed "$quiet_interval_observed" \
+  --argjson exit_status "$codex_status" \
+  '{timestamp: $timestamp, role: $role, profile: $profile, elapsed_seconds: $elapsed_seconds,
+    token_usage: $stats.token_usage, tool_event_count: $stats.tool_event_count,
+    max_event_gap_seconds: $max_event_gap_seconds,
+    quiet_interval_observed: ($quiet_interval_observed == 1), exit_status: $exit_status}
+   + if $result == "INCONCLUSIVE" then {inconclusive_reason: $reason} else {verdict: $result} end')"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/codex-improve"
+if mkdir -p "$state_dir" 2>/dev/null; then
+  printf '%s\n' "$metric" >>"$state_dir/review-metrics.jsonl" 2>/dev/null ||
+    printf 'codex-improve-review: metrics unavailable\n' >&2
+else
+  printf 'codex-improve-review: metrics unavailable\n' >&2
+fi
+
+printf 'IMPROVE_REVIEW_ROLE=%s\n' "$role"
+printf 'IMPROVE_REVIEW_PROFILE=%s\n' "$profile"
+printf 'IMPROVE_REVIEW_RESULT=%s\n' "$result"
+printf 'IMPROVE_REVIEW_ELAPSED_SECONDS=%s\n' "$elapsed_seconds"
+printf 'IMPROVE_REVIEW_MAX_EVENT_GAP_SECONDS=%s\n' "$max_event_gap_seconds"
+printf 'IMPROVE_REVIEW_QUIET_INTERVAL_OBSERVED=%s\n' "$quiet_interval_observed"
+printf 'IMPROVE_REVIEW_EVENT_LOG=%s\n' "$event_log"
+printf 'IMPROVE_REVIEW_FINAL_OUTPUT=%s\n' "$final_output"
+printf 'IMPROVE_REVIEW_DIAGNOSTIC_LOG=%s\n' "$diagnostic_log"
+printf 'IMPROVE_REVIEW_EXIT_REASON=%s\n' "$exit_reason"
+
+[ "$result" != "INCONCLUSIVE" ]
