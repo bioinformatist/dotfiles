@@ -65,6 +65,7 @@
     "-github-mcp-server.drv",
     "-playwright-cli.drv",
     "-codex-improve-exec.drv",
+    "-codex-improve-review.drv",
     "-eww.service.drv",
     "-dotfiles-eww-bars.service.drv",
     "-dotfiles-eww-popup-closer.service.drv",
