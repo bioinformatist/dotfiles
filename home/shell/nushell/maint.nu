@@ -26,19 +26,17 @@ def dotfiles-maint-host [] {
 
 def dotfiles-maint-policy [] {
   let repo = (dotfiles-maint-repo)
-  let policy_file = ($repo | path join "scripts" "maint" "policy.json")
-  if ($policy_file | path exists) {
-    open $policy_file
-  } else {
-    {}
+  let policy_attr = $"($repo)#lib.maintenancePolicy"
+  with-env (dotfiles-maint-config) {
+    ^nix eval --json $policy_attr | from json
   }
 }
 
-def dotfiles-maint-list-setting [name: string, extra_name: string] {
+def dotfiles-maint-list-setting [policy: record, name: string, extra_name: string] {
   let settings = (dotfiles-maint-settings)
-  let policy = (dotfiles-maint-policy | get -o $name | default [])
-  let extra = ($settings | get -o $extra_name | default [])
-  $policy | append $extra | uniq
+  let policy_values = ($policy | get -o $name | default [])
+  let extra_values = ($settings | get -o $extra_name | default [])
+  $policy_values | append $extra_values | uniq
 }
 
 def dotfiles-maint-network-config [] {
@@ -66,16 +64,16 @@ def dotfiles-maint-has-proxy-env [] {
   ] | any {|value| $value != "" }
 }
 
-def dotfiles-maint-risk-markers [] {
-  dotfiles-maint-list-setting "riskMarkers" "extraRiskMarkers"
+def dotfiles-maint-risk-markers [policy: record] {
+  dotfiles-maint-list-setting $policy "riskMarkers" "extraRiskMarkers"
 }
 
-def dotfiles-maint-allowed-local-build-markers [] {
-  dotfiles-maint-list-setting "allowedLocalBuildMarkers" "extraAllowedLocalBuildMarkers"
+def dotfiles-maint-allowed-local-build-markers [policy: record] {
+  dotfiles-maint-list-setting $policy "allowedLocalBuildMarkers" "extraAllowedLocalBuildMarkers"
 }
 
-def dotfiles-maint-allowed-direct-fetch-markers [] {
-  dotfiles-maint-list-setting "allowedDirectFetchMarkers" "extraAllowedDirectFetchMarkers"
+def dotfiles-maint-allowed-direct-fetch-markers [policy: record] {
+  dotfiles-maint-list-setting $policy "allowedDirectFetchMarkers" "extraAllowedDirectFetchMarkers"
 }
 
 def dotfiles-maint-parallel [] {
@@ -130,7 +128,12 @@ def dotfiles-maint-derivation-matches [derivation: string markers: list<string>]
   $markers | where {|marker| $derivation | str contains $marker }
 }
 
-def dotfiles-maint-dry-run [attr: string markers: list<string>] {
+def dotfiles-maint-dry-run [
+  attr: string,
+  markers: list<string>,
+  allowed_markers: list<string>,
+  allowed_direct_fetch_markers: list<string>,
+] {
   let tmp = (^mktemp "/tmp/maint-dry-run.XXXXXX" | str trim)
   let code_file = (^mktemp "/tmp/maint-dry-run-code.XXXXXX" | str trim)
   let nix_options = (dotfiles-maint-nix-options)
@@ -148,8 +151,6 @@ def dotfiles-maint-dry-run [attr: string markers: list<string>] {
     | each {|line| $line | str trim }
     | where {|line| ($line | str starts-with "/nix/store/") and ($line | str ends-with ".drv") }
   )
-  let allowed_markers = (dotfiles-maint-allowed-local-build-markers)
-  let allowed_direct_fetch_markers = (dotfiles-maint-allowed-direct-fetch-markers)
   let direct_fetch_derivations = (
     $built_derivations
     | where {|derivation| not (dotfiles-maint-derivation-matches $derivation $allowed_direct_fetch_markers | is-empty) }
@@ -221,7 +222,13 @@ def dotfiles-maint-print-dry-run-summary [label: string result: record] {
 
 def dotfiles-maint-gate-current-system [] {
   let attr = (dotfiles-maint-toplevel-attr)
-  let result = (dotfiles-maint-dry-run $attr (dotfiles-maint-risk-markers))
+  let policy = (dotfiles-maint-policy)
+  let risk_markers = (dotfiles-maint-risk-markers $policy)
+  let allowed_markers = (dotfiles-maint-allowed-local-build-markers $policy)
+  let allowed_direct_fetch_markers = (dotfiles-maint-allowed-direct-fetch-markers $policy)
+  let result = (
+    dotfiles-maint-dry-run $attr $risk_markers $allowed_markers $allowed_direct_fetch_markers
+  )
   dotfiles-maint-print-dry-run-summary "current system" $result
 
   if $result.exitCode != 0 {

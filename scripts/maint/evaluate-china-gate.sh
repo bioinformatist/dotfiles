@@ -10,10 +10,18 @@ leaf=""
 github_output=""
 summary=""
 fail_on_miss=false
+policy_file=""
+policy_tmp=""
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "${script_dir}/../.." && pwd)"
-policy_file="${repo_root}/scripts/maint/policy.json"
+
+cleanup() {
+  if [[ -n "$policy_tmp" ]]; then
+    rm -f "$policy_tmp"
+  fi
+}
+trap cleanup EXIT
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -81,6 +89,14 @@ while [[ $# -gt 0 ]]; do
       summary="${1#*=}"
       shift
       ;;
+    --policy-file)
+      policy_file="$2"
+      shift 2
+      ;;
+    --policy-file=*)
+      policy_file="${1#*=}"
+      shift
+      ;;
     --fail-on-miss)
       fail_on_miss=true
       shift
@@ -95,6 +111,14 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [[ -z "$policy_file" ]]; then
+  policy_tmp="$(mktemp)"
+  nix eval --json "${repo_root}#lib.maintenancePolicy" > "$policy_tmp"
+  policy_file="$policy_tmp"
+else
+  policy_file="$(realpath "$policy_file")"
+fi
 
 required=(
   "$base_blocked"

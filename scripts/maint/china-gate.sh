@@ -14,6 +14,14 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "${script_dir}/../.." && pwd)"
 flake_root="$repo_root"
 policy_file=""
+policy_tmp=""
+
+cleanup() {
+  if [[ -n "$policy_tmp" ]]; then
+    rm -f "$policy_tmp"
+  fi
+}
+trap cleanup EXIT
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -79,7 +87,18 @@ done
 
 flake_root="$(cd -- "$flake_root" && pwd)"
 if [[ -z "$policy_file" ]]; then
-  policy_file="${flake_root}/scripts/maint/policy.json"
+  if [[ -f "${flake_root}/scripts/maint/policy.json" \
+    && ! -f "${flake_root}/scripts/maint/policy-workstation.json" \
+    && ! -f "${flake_root}/scripts/maint/policy-overrides.json" ]]; then
+    # Revisions from before the flake policy interface stored one complete policy.
+    policy_file="${flake_root}/scripts/maint/policy.json"
+  else
+    policy_tmp="$(mktemp)"
+    nix eval --json "${flake_root}#lib.maintenancePolicy" > "$policy_tmp"
+    policy_file="$policy_tmp"
+  fi
+else
+  policy_file="$(realpath "$policy_file")"
 fi
 
 if [[ ${#hosts[@]} -eq 0 && ${#homes[@]} -eq 0 ]]; then
@@ -98,10 +117,7 @@ read_policy_list() {
   local attr="$1"
   local -n target="$2"
 
-  mapfile -t target < <(
-    nix eval --raw --impure --expr \
-      "builtins.concatStringsSep \"\\n\" (builtins.fromJSON (builtins.readFile ${policy_file})).${attr}"
-  )
+  mapfile -t target < <(jq -r ".${attr}[]" "$policy_file")
 }
 
 read_policy_list riskMarkers risk_markers

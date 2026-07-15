@@ -159,7 +159,6 @@ jobs:
           bash scripts/maint/china-gate.sh \
             --report-only \
             --flake-root "$base_worktree" \
-            --policy-file "$base_worktree/scripts/maint/policy.json" \
             --output "$RUNNER_TEMP/china-base.blocked" \
             --direct-output "$RUNNER_TEMP/china-base.direct" \
             "${hosts[@]}"

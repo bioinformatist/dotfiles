@@ -88,16 +88,49 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$base_flake_root" || -z "$head_flake_root" || -z "$base_policy_file" || -z "$head_policy_file" || -z "$blocked_output" || -z "$direct_output" ]]; then
-  echo "base/head flake roots and policies, blocked output, and direct output are required" >&2
+if [[ -z "$base_flake_root" || -z "$head_flake_root" || -z "$blocked_output" || -z "$direct_output" ]]; then
+  echo "base/head flake roots, blocked output, and direct output are required" >&2
   exit 2
 fi
 
 base_flake_root="$(cd -- "$base_flake_root" && pwd)"
 head_flake_root="$(cd -- "$head_flake_root" && pwd)"
-base_policy_file="$(realpath "$base_policy_file")"
-head_policy_file="$(realpath "$head_policy_file")"
-if ! cmp -s "$base_policy_file" "$head_policy_file"; then
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+resolve_policy_file() {
+  local flake_root="$1"
+  local requested_file="$2"
+  local evaluated_file="$3"
+
+  if [[ -n "$requested_file" ]]; then
+    realpath "$requested_file"
+  elif [[ -f "${flake_root}/scripts/maint/policy.json" \
+    && ! -f "${flake_root}/scripts/maint/policy-workstation.json" \
+    && ! -f "${flake_root}/scripts/maint/policy-overrides.json" ]]; then
+    # Revisions from before the flake policy interface stored one complete policy.
+    realpath "${flake_root}/scripts/maint/policy.json"
+  else
+    nix eval --json "${flake_root}#lib.maintenancePolicy" > "$evaluated_file"
+    realpath "$evaluated_file"
+  fi
+}
+
+base_policy_file="$(resolve_policy_file "$base_flake_root" "$base_policy_file" "$tmp/base-policy.json")"
+head_policy_file="$(resolve_policy_file "$head_flake_root" "$head_policy_file" "$tmp/head-policy.json")"
+
+normalize_policy() {
+  jq -S -c '
+    .riskMarkers |= (sort | unique)
+    | .allowedLocalBuildMarkers |= (sort | unique)
+    | .allowedDirectFetchMarkers |= (sort | unique)
+    | .leafDirectFetchMarkers |= with_entries(.value |= (sort | unique))
+  ' "$1"
+}
+
+normalize_policy "$base_policy_file" > "$tmp/base-policy-normalized.json"
+normalize_policy "$head_policy_file" > "$tmp/head-policy-normalized.json"
+if ! cmp -s "$tmp/base-policy-normalized.json" "$tmp/head-policy-normalized.json"; then
   echo "policy changes require the full China gate" >&2
   exit 2
 fi
@@ -105,8 +138,6 @@ if [[ ${#hosts[@]} -eq 0 && ${#homes[@]} -eq 0 ]]; then
   hosts=(homePC linglong)
 fi
 
-tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
 : > "$blocked_output"
 : > "$direct_output"
 : > "$tmp/new-output-map.tsv"

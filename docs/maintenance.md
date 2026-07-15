@@ -102,24 +102,26 @@ from a cold GitHub runner are diagnostic baseline debt and must not freeze every
 leaf PR. Fixed-output release fetches are allowed only when their marker is
 declared in the maintenance policy, currently Codex, Orca, and ZeroClaw.
 
-Gate marker policy is shared through `scripts/maint/policy.json`; local
-`maint-switch` and the GitHub China gate consume the same marker lists from the
-current repo checkout. The generated `maint.nuon` stores machine-local settings
-such as repo path, host, concurrency, and optional extra markers; it does not
-snapshot the main marker policy, so policy tightening in the repo takes effect
-before the next switch. GitHub's leaf workflow and required gate workflow share
-the head-vs-base China gate evaluation in
+The reusable marker base lives in `scripts/maint/policy.json`, while
+`scripts/maint/policy-workstation.json` contains GUI-only additions. The flake
+exports their composition as `lib.maintenancePolicy`; local `maint-switch` and
+the GitHub China gate evaluate that target-flake value. Downstream repositories
+extend `lib.maintenancePolicyBase` with narrow local overlays instead of
+forwarding the complete file. The generated `maint.nuon` stores machine-local
+settings such as repo path, host, concurrency, and optional extra markers; it
+does not snapshot the effective policy. GitHub's leaf workflow and required
+gate workflow share the head-vs-base China gate evaluation in
 `scripts/maint/evaluate-china-gate.sh`, so PR metadata and the required
 `maintenance gate` status do not drift apart. Flake-input policy groups and
 schedules live in `renovate.json`; release-pin leaves stay in
 `.github/workflows/maintenance-leaf.yml`. These are workflow orchestration, not
 gate policy.
 
-Base and head dry-runs also share `scripts/maint/china-gate.sh`, but each run
-receives an explicit flake root and its matching policy file. This prevents the
-workflow checkout directory or a policy change in the PR from silently
-reclassifying the base closure. The same classifier covers host configurations
-and `ci@headless`.
+Base and head dry-runs also share `scripts/maint/china-gate.sh`. Each run receives
+an explicit flake root and evaluates that root's `lib.maintenancePolicy`. This
+prevents the workflow checkout directory or a policy change in the PR from
+silently reclassifying the base closure. The same classifier covers host
+configurations and `ci@headless`.
 
 The workflow also runs a non-required `china delta shadow` job. It computes
 base and head derivation graphs locally and compares the required
@@ -140,9 +142,9 @@ are allowed.
 
 If a local gate blocks a clearly generated NixOS/Home Manager glue derivation,
 such as environment-file or activation glue, treat it as policy drift. Update
-`scripts/maint/policy.json` narrowly and let downstream repositories inherit or
-forward that policy. Do not bypass the gate, and do not add heavy components to
-the allowlist.
+the shared base or the owning overlay narrowly; downstream repositories should
+refresh their upstream input, not copy the complete policy. Do not bypass the
+gate, and do not add heavy components to the allowlist.
 
 Network failures should be diagnosed by fetch path. Nix binary substitution,
 GitHub release/direct fetches, npm registry or node-gyp downloads, Cargo
