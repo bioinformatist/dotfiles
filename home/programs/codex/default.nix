@@ -188,6 +188,7 @@ let
         cp ${improveSource}/skills/improve/references/plan-template.md "$out/references/plan-template.md"
         cp ${./improve/references/closing-the-loop.md} "$out/references/closing-the-loop.md"
         cp ${./improve/references/planning-contract.md} "$out/references/planning-contract.md"
+        cp ${./improve/references/review-verdict.schema.json} "$out/references/review-verdict.schema.json"
 
         substituteInPlace "$out/references/plan-template.md" \
           --replace-fail \
@@ -475,6 +476,20 @@ let
     '';
   };
 
+  improveReview = pkgs.writeShellApplication {
+    name = "codex-improve-review";
+    runtimeInputs = [
+      codexPkg
+      pkgs.coreutils
+      pkgs.gitMinimal
+      pkgs.jq
+    ];
+    text = ''
+      export CODEX_IMPROVE_REVIEW_SCHEMA="${improveSkill}/references/review-verdict.schema.json"
+      ${builtins.readFile ./improve/codex-improve-review}
+    '';
+  };
+
   improveScoutProfile = ''
     model = "gpt-5.6-luna"
     model_reasoning_effort = "high"
@@ -520,6 +535,14 @@ let
 
     [features]
     multi_agent = false
+
+    # Provisional reviewer-only calibration; see closing-the-loop.md.
+    [features.rollout_budget]
+    enabled = true
+    limit_tokens = 80000
+    reminder_at_remaining_tokens = [40000, 20000, 10000]
+    sampling_token_weight = 1.0
+    prefill_token_weight = 1.0
   '';
 
   githubMcpServer = pkgs.writeShellScriptBin "github-mcp-server" ''
@@ -724,7 +747,7 @@ in
   options.dotfiles.codex.ponytail.enable = lib.mkOption {
     type = lib.types.bool;
     default = true;
-    description = "Whether to install Ponytail Codex skills for over-engineering review and debt workflows.";
+    description = "Whether to install the complete Ponytail Codex skill bundle; Improve independently requires ponytail-review.";
   };
 
   options.dotfiles.codex.mattPocockSkills.enable = lib.mkOption {
@@ -736,7 +759,7 @@ in
   options.dotfiles.codex.improve.enable = lib.mkOption {
     type = lib.types.bool;
     default = true;
-    description = "Whether to install the Codex-adapted shadcn improve workflow and isolated executor profiles.";
+    description = "Whether to install the Codex-adapted shadcn improve workflow and isolated executor and reviewer profiles.";
   };
 
   config = {
@@ -746,15 +769,20 @@ in
       codexNode
       playwrightCli
     ]
-    ++ lib.optionals config.dotfiles.codex.improve.enable [ improveExec ];
+    ++ lib.optionals config.dotfiles.codex.improve.enable [
+      improveExec
+      improveReview
+    ];
 
     home.file.".agents/skills/playwright-cli".source = "${playwrightCliSource}/skills/playwright-cli";
     home.file.".agents/skills/stop-slop" = lib.mkIf config.dotfiles.codex.stopSlop.enable {
       source = stopSlopSkill;
     };
-    home.file.".agents/skills/ponytail-review" = lib.mkIf config.dotfiles.codex.ponytail.enable {
-      source = "${ponytailSource}/skills/ponytail-review";
-    };
+    home.file.".agents/skills/ponytail-review" =
+      lib.mkIf (config.dotfiles.codex.ponytail.enable || config.dotfiles.codex.improve.enable)
+        {
+          source = "${ponytailSource}/skills/ponytail-review";
+        };
     home.file.".agents/skills/ponytail-audit" = lib.mkIf config.dotfiles.codex.ponytail.enable {
       source = "${ponytailSource}/skills/ponytail-audit";
     };
@@ -794,6 +822,11 @@ in
     home.file.".codex/improve-reviewer.config.toml" = lib.mkIf config.dotfiles.codex.improve.enable {
       text = improveReviewerProfile;
     };
+    home.file.".codex/improve-elegance-reviewer.config.toml" =
+      lib.mkIf config.dotfiles.codex.improve.enable
+        {
+          text = improveReviewerProfile;
+        };
 
     # Codex keeps its own state under ~/.codex, which is ephemeral on this system.
     # Persist the whole directory so auth, history, and other runtime state
