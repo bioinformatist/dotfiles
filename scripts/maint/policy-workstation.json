@@ -1,0 +1,13 @@
+{
+  "allowedLocalBuildMarkers": [
+    "-eww.service.drv",
+    "-dotfiles-eww-bars.service.drv",
+    "-dotfiles-eww-popup-closer.service.drv",
+    "-clash-verge-gui.service.drv",
+    "-swaync.service.drv",
+    "-swaync-config.json.drv",
+    "-swaync-style.css.drv",
+    "-nm-applet.service.drv",
+    "-anyrun-application-exec-preprocessor.drv"
+  ]
+}

@@ -75,7 +75,6 @@ jobs:
           bash scripts/maint/china-gate.sh \
             --report-only \
             --flake-root "$tmp/base" \
-            --policy-file "$tmp/base/scripts/maint/policy.json" \
             --output "$tmp/china-base.blocked" \
             --direct-output "$tmp/china-base.direct" \
             --home 'ci@headless' \
@@ -84,7 +83,6 @@ jobs:
           bash scripts/maint/china-gate.sh \
             --report-only \
             --flake-root . \
-            --policy-file scripts/maint/policy.json \
             --output "$tmp/china-head.blocked" \
             --direct-output "$tmp/china-head.direct" \
             --home 'ci@headless' \
@@ -147,8 +145,6 @@ jobs:
           bash scripts/maint/china-gate-delta.sh \
             --base-flake-root "$tmp/base" \
             --head-flake-root . \
-            --base-policy-file "$tmp/base/scripts/maint/policy.json" \
-            --head-policy-file scripts/maint/policy.json \
             --output "$tmp/china-shadow.blocked" \
             --direct-output "$tmp/china-shadow.direct" \
             --home 'ci@headless' \

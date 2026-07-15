@@ -96,19 +96,23 @@ full-head miss 是诊断用 baseline debt，不应冻结每个 leaf PR。固定�
 直连 fetch 只有在维护 policy 中声明过 marker 时才允许，目前是 Codex、Orca 和
 ZeroClaw。
 
-门控 marker policy 统一放在 `scripts/maint/policy.json`；本机
-`maint-switch` 和 GitHub China gate 都从当前 repo checkout 读取同一组
-marker。生成的 `maint.nuon` 只保存 repo 路径、host、并发和可选 extra marker
-这类机器本地设置，不再 snapshot 主 marker policy，因此 repo 里的 policy 收紧会在下一次 switch 前生效。GitHub leaf workflow 和 required gate workflow 共享
+可复用的 marker 基线放在 `scripts/maint/policy.json`，GUI 专属增量放在
+`scripts/maint/policy-workstation.json`。flake 将两者合成为
+`lib.maintenancePolicy`，本机 `maint-switch` 和 GitHub China gate 都求值目标
+flake 的这个值。下游仓库只用窄 overlay 扩展 `lib.maintenancePolicyBase`，不再
+转发整份文件。生成的 `maint.nuon` 只保存 repo 路径、host、并发和可选 extra
+marker 这类机器本地设置，不 snapshot 有效 policy。GitHub leaf workflow 和
+required gate workflow 共享
 `scripts/maint/evaluate-china-gate.sh` 里的 head-vs-base China gate 评估，
 避免 PR 元数据和 required `maintenance gate` 状态漂移。flake-input 的 policy
 分组和调度放在 `renovate.json`；release-pin leaves 保留在
 `.github/workflows/maintenance-leaf.yml`。这些属于 workflow 编排，不属于 gate
 policy。
 
-base 和 head dry-run 也共用 `scripts/maint/china-gate.sh`，但每次运行都会显式传入
-对应的 flake root 和 policy 文件。这样 workflow 的当前工作目录或 PR 内的 policy
-变更就不会悄悄重新分类 base closure；host 配置与 `ci@headless` 使用同一分类实现。
+base 和 head dry-run 也共用 `scripts/maint/china-gate.sh`。每次运行都会显式传入
+对应的 flake root，并求值该 root 的 `lib.maintenancePolicy`。这样 workflow 的
+当前工作目录或 PR 内的 policy 变更就不会悄悄重新分类 base closure；host 配置与
+`ci@headless` 使用同一分类实现。
 
 workflow 还会运行一个非 required 的 `china delta shadow` job。它先在本地生成
 base 和 head derivation 图，再比较实际需要的 `(derivation, output)` 对。policy
@@ -125,9 +129,9 @@ derivation，就应收紧；新的 release tarball leaf 也必须显式声明后
 direct fetch。
 
 如果本机 gate 拦住的是明确的 NixOS/Home Manager 生成式 glue derivation，
-例如环境文件或 activation glue，应把它当作 policy 漂移处理：窄幅更新
-`scripts/maint/policy.json`，再让下游仓库继承或转发该 policy。不要绕过 gate，
-也不要把重组件加入 allowlist。
+例如环境文件或 activation glue，应把它当作 policy 漂移处理：窄幅更新共享基线
+或负责该行为的 overlay；下游只刷新 upstream input，不复制整份 policy。不要绕过
+gate，也不要把重组件加入 allowlist。
 
 网络失败需要按 fetch 路径拆分诊断。Nix 二进制替代、GitHub release/direct fetch、
 npm registry 或 node-gyp 下载、Cargo registry、运行时代理是不同路径；一个路径
