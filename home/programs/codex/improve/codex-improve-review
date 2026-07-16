@@ -54,14 +54,15 @@ kill_after_seconds=5
 poll_seconds=1
 
 umask 077
-runtime_parent="${XDG_RUNTIME_DIR:-/tmp}/codex-improve/reviews"
-mkdir -p "$runtime_parent" || fail_input "cannot create review runtime directory"
-runtime_dir="$(mktemp -d "$runtime_parent/$(date -u +%Y%m%dT%H%M%SZ)-$role-XXXXXX")" ||
-  fail_input "cannot create review runtime directory"
-event_log="$runtime_dir/events.jsonl"
-final_output="$runtime_dir/final.json"
-diagnostic_log="$runtime_dir/stderr.log"
-prompt_file="$runtime_dir/prompt.txt"
+state_home="${XDG_STATE_HOME:-$HOME/.local/state}"
+artifact_parent="$state_home/codex-improve/reviews"
+mkdir -p "$artifact_parent" || fail_input "cannot create review artifact directory"
+artifact_dir="$(mktemp -d "$artifact_parent/$(date -u +%Y%m%dT%H%M%SZ)-$role-XXXXXX")" ||
+  fail_input "cannot create review artifact directory"
+event_log="$artifact_dir/events.jsonl"
+final_output="$artifact_dir/final.json"
+diagnostic_log="$artifact_dir/stderr.log"
+prompt_file="$artifact_dir/prompt.txt"
 if ! { : >"$event_log" && : >"$final_output" && : >"$diagnostic_log"; }; then
   fail_input "cannot initialize review artifacts"
 fi
@@ -71,12 +72,17 @@ emit_review_prompt() {
 You are an independent reviewer for one atomic Improve implementation. Treat
 the dossier below as the complete bounded evidence contract. Host-injected
 repository instructions identified in the dossier remain authoritative. Do not
-launch agents or broaden the repository audit.
+launch agents, load workflow skills, reread the Improve planning references, or
+broaden the repository audit. Read repository source only to answer a named
+evidence gap that the dossier does not settle.
 
-Build a coverage matrix for every requested check. At 40000 weighted tokens
-remaining, stop broad recon. At 20000, pursue only named evidence gaps. At
-10000, stop tool use and render the verdict. Return only the JSON object
-required by the output schema, with evidence for every finding and check.
+Build coverage only for the requested implementation checks. A named runtime,
+physical, human, or external check owned after implementation review belongs in
+deferred_acceptance; it is not coverage, a finding, or a review_blocker. At
+40000 weighted tokens remaining, stop broad recon. At 20000, pursue only named
+evidence gaps. At 10000, stop tool use and render the verdict. Return only the
+JSON object required by the output schema, with evidence for every finding,
+coverage item, blocker, and deferred acceptance.
 EOF
 
   if [ "$role" = "correctness" ]; then
@@ -85,11 +91,11 @@ EOF
     cat <<'EOF'
 
 Elegance role: check reuse, justified abstraction, locality, speculative
-flexibility, compatibility layers, and removable code. Apply the installed
-$ponytail-review skill once to the current diff as an internal subreview. Treat
-its suggestions as hypotheses: reject any that weaken settled semantics,
-correctness, repository rules, or necessary tests. Its line-count score is not
-an acceptance criterion. Include only supported, actionable suggestions as
+flexibility, compatibility layers, and removable code. The dossier contains the
+main agent's single Ponytail pass when that lens applies. Treat those suggestions
+as hypotheses: reject any that weaken settled semantics, correctness,
+repository rules, or necessary tests. Never use a line-count score as an
+acceptance criterion. Include only supported, actionable suggestions as
 findings. Do not reopen settled user decisions without contradictory evidence.
 EOF
   fi
@@ -208,16 +214,20 @@ else
       and (.evidence | nonblank) and (.action | nonblank))
     and (.coverage | type == "array" and length > 0)
     and all(.coverage[]; (.check | nonblank) and (.evidence | nonblank))
-    and (.unresolved_items | type == "array")
-    and all(.unresolved_items[]; (.item | nonblank) and (.impact | nonblank))
+    and (.review_blockers | type == "array")
+    and all(.review_blockers[]; (.item | nonblank) and (.impact | nonblank))
+    and (.deferred_acceptance | type == "array")
+    and all(.deferred_acceptance[];
+      (.check | nonblank) and (.owner | nonblank) and (.reason | nonblank)
+      and (.evidence_required | nonblank))
     and (
       (.verdict == "APPROVE" and (.findings | length == 0)
-        and all(.coverage[]; .status == "PASS") and (.unresolved_items | length == 0))
+        and all(.coverage[]; .status == "PASS") and (.review_blockers | length == 0))
       or (.verdict == "REVISE" and (.findings | length > 0)
         and any(.coverage[]; .status == "FAIL") and all(.coverage[]; .status != "BLOCKED")
-        and (.unresolved_items | length == 0))
+        and (.review_blockers | length == 0))
       or (.verdict == "BLOCK"
-        and (any(.coverage[]; .status == "BLOCKED") or (.unresolved_items | length > 0)))
+        and (any(.coverage[]; .status == "BLOCKED") or (.review_blockers | length > 0)))
     )
     )
     | .verdict

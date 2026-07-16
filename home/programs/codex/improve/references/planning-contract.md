@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.3`
+Contract version: `1.0.0-codex.4`
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -112,23 +112,71 @@ plans are local-only by default, and Improve must not change ignore or
 publication policy implicitly. Publishing any plan or finding still requires
 explicit user confirmation.
 
+## Verification and acceptance
+
+Classify every required check before execution. A check belongs to exactly one
+of these classes:
+
+- **Implementation gate** — deterministic or agent-observable evidence such as
+  tests, builds, lint, CI, browser automation, screenshots, logs, metrics, or a
+  simulator. It must pass before implementation review can approve the change.
+- **Deferred acceptance** — a runtime, physical, human-judgment, or external
+  check that the available agent and environment cannot complete. It is owned
+  outside the independent implementation review and runs against a named target.
+- **Observation** — post-integration telemetry or a follow-up signal. It does
+  not block the atomic change unless the plan gives an explicit failure
+  threshold and says which lifecycle transition that threshold causes.
+
+Do not defer a check merely because it is inconvenient. If the repository can
+make the behavior legible through an existing test, preview, browser, log,
+metric, simulator, or other agent-accessible surface, keep it as an
+implementation gate. For each genuinely deferred acceptance, record its owner,
+environment, exact procedure, expected evidence, rollback or recovery path, and
+what drift invalidates the result.
+
+Track implementation, integration, and external acceptance independently:
+
+- **Implementation review**: `PENDING`, `APPROVED`, `REVISE`, or `BLOCKED`.
+- **Checkpoint**: `NONE`, `RESUMABLE`, or `INTEGRATED`.
+- **External acceptance**: `NOT REQUIRED`, `PENDING`, `PASSED`, or `FAILED`.
+- **Checkpoint ID**: `none` or an exact persistent-worktree and diff identity,
+  commit SHA, branch or PR ref, deployment identity, or other repository-backed
+  identifier that lets the main agent recover the same change.
+
+An asynchronous handoff for human or external acceptance requires a resumable
+checkpoint. Preparing it may require user approval for a commit, push, preview,
+deployment, or other action under the repository rules. Record that approval
+and the checkpoint ID before returning control for later feedback. A temporary
+process, an unrecorded runtime directory, or conversation history alone is not
+a resumable checkpoint.
+
 ## Lifecycle and dependencies
 
 Use exactly these lifecycle states:
 
 - `TODO` — approved direction exists, but execution has not started.
 - `IN PROGRESS` — an executor is actively implementing or revising the plan.
-- `IMPLEMENTED` — scoped implementation and executor checks are complete, but
-  integration is not yet established and no named acceptance check remains.
-- `ACCEPTANCE PENDING` — implementation is available and a named runtime,
-  physical, human, or external acceptance check remains. This state takes
-  precedence over `IMPLEMENTED` whenever such a check remains.
+- `IMPLEMENTED` — implementation review is `APPROVED`, but integration is not
+  yet established and no deferred acceptance is currently ready to run against
+  a resumable or integrated checkpoint. A known future acceptance check does
+  not by itself change this state.
+- `ACCEPTANCE PENDING` — implementation review is `APPROVED`, checkpoint is
+  `RESUMABLE` or `INTEGRATED`, and a named deferred acceptance is ready to run
+  against that exact checkpoint.
 - `DONE` — the atomic change is integrated and every required acceptance check
-  has passed.
+  has passed, or external acceptance is `NOT REQUIRED`.
 - `BLOCKED` — a material decision, prerequisite, authority, or required evidence
-  is unavailable; state the exact blocker.
+  is unavailable; state the exact blocker. Waiting for an already prepared
+  deferred acceptance result is not a blocker.
 - `REJECTED` — the approach was abandoned, superseded, or independently made
   unnecessary; state the rationale.
+
+Lifecycle is a summary derived from the three facets above, not an independent
+source of truth. A failed deferred acceptance returns the plan to `IN PROGRESS`
+when it demonstrates an in-scope implementation defect. It returns to
+`BLOCKED` planning only when the requested behavior, scope, authority, or
+approach must change. An unrelated environment outage leaves acceptance
+pending with the outage evidence recorded.
 
 Dependencies require `DONE` by default. The only exception is a code-only
 dependency whose contract names an actual landing commit and an observable
