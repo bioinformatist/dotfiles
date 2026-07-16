@@ -3,6 +3,8 @@
 {
   inputs,
   config,
+  lib,
+  pkgs,
   ...
 }:
 
@@ -30,6 +32,21 @@
   };
   services.hardware.bolt.enable = true;
   services.colord.enable = true;
+  services.power-profiles-daemon.package = pkgs.power-profiles-daemon.overrideAttrs (old: {
+    pname = "${old.pname}-linglong";
+    nativeBuildInputs = map (
+      input:
+      if lib.hasPrefix "python" input.name && lib.hasSuffix "-env" input.name then
+        input.overrideAttrs (_: {
+          name = "${old.pname}-linglong-${old.version}-build-python";
+        })
+      else
+        input
+    ) old.nativeBuildInputs;
+    patches = (old.patches or [ ]) ++ [
+      ./patches/power-profiles-daemon-ignore-unsupported-boost.patch
+    ];
+  });
 
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
   sops.defaultSopsFormat = "yaml";

@@ -8,6 +8,7 @@ SET_PROFILE="$ROOT/home/desktop/eww-scripts/set-power-profile"
 TEST_TMP=$(mktemp -d)
 FAKE_BIN="$TEST_TMP/bin"
 FAKE_BUSCTL_LOG="$TEST_TMP/busctl.log"
+FAKE_HYPRCTL_LOG="$TEST_TMP/hyprctl.log"
 FAKE_NOTIFY_LOG="$TEST_TMP/notify.log"
 
 cleanup() {
@@ -17,6 +18,7 @@ trap cleanup EXIT
 
 mkdir -p "$FAKE_BIN"
 : > "$FAKE_BUSCTL_LOG"
+: > "$FAKE_HYPRCTL_LOG"
 : > "$FAKE_NOTIFY_LOG"
 
 write_executable() {
@@ -105,8 +107,25 @@ write_executable "$FAKE_BIN/notify-send" <<'SCRIPT'
 printf "%s\n" "$*" >> "$FAKE_NOTIFY_LOG"
 SCRIPT
 
+write_executable "$FAKE_BIN/hyprctl" <<'SCRIPT'
+#!/usr/bin/env bash
+set -u
+
+printf "%s\n" "$*" >> "$FAKE_HYPRCTL_LOG"
+if [ "${FAKE_DISPATCH_FAIL:-0}" = 1 ]; then
+  printf "simulated dispatch failure\n" >&2
+  exit 1
+fi
+if [ "$#" -ne 4 ] || [ "$1" != dispatch ] || [ "$2" != exec ] || [ "$3" != -- ]; then
+  printf "unexpected hyprctl command: %s\n" "$*" >&2
+  exit 97
+fi
+
+bash -c "$4" || true
+SCRIPT
+
 export PATH="$FAKE_BIN:$PATH"
-export FAKE_BUSCTL_LOG FAKE_NOTIFY_LOG
+export FAKE_BUSCTL_LOG FAKE_HYPRCTL_LOG FAKE_NOTIFY_LOG
 export FAKE_ACTIVE=balanced
 export FAKE_DEGRADED=lap-detected
 export FAKE_PROFILES_JSON='{
@@ -128,8 +147,9 @@ assert_json() {
 
 reset_logs() {
   : > "$FAKE_BUSCTL_LOG"
+  : > "$FAKE_HYPRCTL_LOG"
   : > "$FAKE_NOTIFY_LOG"
-  unset FAKE_LIST_FAIL FAKE_PROPERTY_FAIL FAKE_SET_FAIL
+  unset FAKE_LIST_FAIL FAKE_PROPERTY_FAIL FAKE_SET_FAIL FAKE_DISPATCH_FAIL
 }
 
 assert_list_command() {
@@ -209,15 +229,30 @@ test_setter_success_and_failure() {
   reset_logs
   export FAKE_SERVICE_AVAILABLE=1
   bash "$SET_PROFILE" performance
+  grep -F 'dispatch exec -- env EWW_POWER_PROFILE_ACTIVE_SESSION=1 bash ' \
+    "$FAKE_HYPRCTL_LOG" >/dev/null
   grep -F ' set-property ' "$FAKE_BUSCTL_LOG" | grep -F ' ActiveProfile s performance' >/dev/null
 
   reset_logs
   export FAKE_SET_FAIL=1
-  if bash "$SET_PROFILE" power-saver >/dev/null 2>&1; then
+  bash "$SET_PROFILE" power-saver
+  grep -F 'Failed to set power-saver: simulated setter failure' "$FAKE_NOTIFY_LOG" >/dev/null
+  printf '%s\n' 'ok - profile setter: accepted dispatch mutates and async D-Bus failures notify'
+}
+
+test_dispatch_failure() {
+  reset_logs
+  export FAKE_SERVICE_AVAILABLE=1
+  export FAKE_DISPATCH_FAIL=1
+  if bash "$SET_PROFILE" balanced >/dev/null 2>&1; then
     return 1
   fi
-  grep -F 'Failed to set power-saver: simulated setter failure' "$FAKE_NOTIFY_LOG" >/dev/null
-  printf '%s\n' 'ok - profile setter: daemon-reported values mutate and D-Bus failures propagate'
+  if grep -F ' set-property ' "$FAKE_BUSCTL_LOG" >/dev/null; then
+    return 1
+  fi
+  grep -F 'Failed to request balanced: simulated dispatch failure' \
+    "$FAKE_NOTIFY_LOG" >/dev/null
+  printf '%s\n' 'ok - profile setter: dispatch failures notify before mutation'
 }
 
 test_missing_service
@@ -226,3 +261,4 @@ test_service_query_failure
 test_property_read_failure
 test_unknown_profile_rejected
 test_setter_success_and_failure
+test_dispatch_failure
