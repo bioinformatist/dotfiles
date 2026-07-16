@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: toggle-popup <audio|power|profile> <monitor_name> <monitor_id> <screen_index>
+# Usage: toggle-popup [--close] <audio|power|profile> <monitor_name> <monitor_id> <screen_index>
 
 set -u
 
@@ -46,7 +46,14 @@ rollback_pair() {
 }
 
 main() {
-  local usage='Usage: toggle-popup <type> <monitor_name> <monitor_id> <screen_index>'
+  local usage='Usage: toggle-popup [--close] <type> <monitor_name> <monitor_id> <screen_index>'
+  local action=toggle
+
+  if [ "${1:-}" = --close ]; then
+    action=close
+    shift
+  fi
+
   local type="${1:?$usage}"
   local monitor_name="${2:?$usage}"
   local monitor_id="${3:?$usage}"
@@ -82,6 +89,12 @@ main() {
   encoded=$(monitor_key "$monitor_name")
   popup_id="popup-${type}-${encoded}"
   closer_id="closer-${type}-${encoded}"
+
+  if [ "$action" = close ]; then
+    eww close "$popup_id" "$closer_id" 2>/dev/null || true
+    return 0
+  fi
+
   active=$(active_window_ids) || {
     printf 'toggle-popup: failed to query active Eww windows\n' >&2
     return 1

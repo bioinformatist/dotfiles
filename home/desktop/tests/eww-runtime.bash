@@ -167,8 +167,13 @@ test_popup_types_and_toggle() {
 
     bash "$TOGGLE_POPUP" "$type" DP-2 9 1
     [ ! -s "$FAKE_EWW_STATE" ]
+
+    bash "$TOGGLE_POPUP" "$type" DP-2 9 1
+    bash "$TOGGLE_POPUP" --close "$type" DP-2 9 1
+    bash "$TOGGLE_POPUP" --close "$type" DP-2 9 1
+    [ ! -s "$FAKE_EWW_STATE" ]
   done
-  printf '%s\n' 'ok - popup lifecycle: all types use numeric screens and active pairs toggle closed'
+  printf '%s\n' 'ok - popup lifecycle: all types use numeric screens and repeated close callbacks stay closed'
 }
 
 test_popup_validation_and_rollback() {
