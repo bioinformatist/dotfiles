@@ -52,7 +52,6 @@ main() {
   local monitor_id="${3:?$usage}"
   local screen_index="${4:?$usage}"
   local encoded popup_id closer_id active requested_active id
-  local monitor_expression type_expression
   local -a windows_to_close=()
   local -A active_after_close=()
   local -A final_active=()
@@ -116,16 +115,9 @@ main() {
 
   [ "$requested_active" = false ] || return 0
 
-  monitor_expression=$(jq -Rn --arg value "$monitor_name" '$value')
-  type_expression=$(jq -Rn --arg value "$type" '$value')
-
   if ! eww open popup-closer \
     --id "$closer_id" \
-    --screen "$screen_index" \
-    --arg "popup_type=$type_expression" \
-    --arg "monitor_name=$monitor_expression" \
-    --arg "monitor_id=$monitor_id" \
-    --arg "screen_index=$screen_index"; then
+    --screen "$screen_index"; then
     printf 'toggle-popup: failed to open popup closer\n' >&2
     rollback_pair "$popup_id" "$closer_id"
     return 1
@@ -133,10 +125,7 @@ main() {
 
   if ! eww open "${type}-popup" \
     --id "$popup_id" \
-    --screen "$screen_index" \
-    --arg "monitor_name=$monitor_expression" \
-    --arg "monitor_id=$monitor_id" \
-    --arg "screen_index=$screen_index"; then
+    --screen "$screen_index"; then
     printf 'toggle-popup: failed to open popup\n' >&2
     rollback_pair "$popup_id" "$closer_id"
     return 1

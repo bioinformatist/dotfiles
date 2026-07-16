@@ -12,14 +12,22 @@ first_percentage() {
 
 get_audio_status() {
   local sink_info source_info sink_mute_info source_mute_info
-  local sink_pct source_pct sink_muted source_muted
-  local default_source alsa_card alsa_capture alsa_pct available_sinks available
+  local sink_pct source_pct sink_muted source_muted source_available
+  local default_source alsa_card alsa_capture alsa_pct
+  local available_sinks available_sources available
 
   available_sinks=$(bash "$SCRIPT_DIR/get-audio-sinks" 2>/dev/null || printf '[]')
   if jq -e 'length > 0' <<< "$available_sinks" >/dev/null 2>&1; then
     available=true
   else
     available=false
+  fi
+
+  available_sources=$(bash "$SCRIPT_DIR/get-audio-sources" 2>/dev/null || printf '[]')
+  if jq -e 'length > 0' <<< "$available_sources" >/dev/null 2>&1; then
+    source_available=true
+  else
+    source_available=false
   fi
 
   sink_info=$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null || true)
@@ -77,11 +85,13 @@ get_audio_status() {
     --argjson sink_muted "$sink_muted" \
     --argjson source_vol "$source_pct" \
     --argjson source_muted "$source_muted" \
+    --argjson source_available "$source_available" \
     --argjson available "$available" \
     '{
       available:$available,
       sink_vol:$sink_vol,
       sink_muted:$sink_muted,
+      source_available:$source_available,
       source_vol:$source_vol,
       source_muted:$source_muted
     }'

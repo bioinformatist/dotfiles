@@ -3,7 +3,7 @@
 ;; Clicking opens the audio popup on the correct monitor.
 
 (deflisten audio-status
-  :initial '{"available":false,"sink_vol":0,"sink_muted":false,"source_vol":0,"source_muted":false}'
+  :initial '{"available":false,"sink_vol":0,"sink_muted":false,"source_available":false,"source_vol":0,"source_muted":false}'
   `~/.config/eww/scripts/get-volume`)
 
 (defwidget audio [monitor_name monitor_id screen_index]

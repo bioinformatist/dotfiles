@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ═══ Volume Setter ═══
-# Usage: set-vol sink|source <0-150>
-# Converts the 0-150 Eww scale value to pactl-compatible percentage.
+# Usage: set-vol sink|source <0-100>
+# Converts the Eww scale value to a pactl-compatible percentage.
 
 set -u
 
@@ -12,7 +12,7 @@ fail() {
   exit 1
 }
 
-[ "$#" -eq 2 ] || fail "Usage: set-vol <sink|source> <0-150>"
+[ "$#" -eq 2 ] || fail "Usage: set-vol <sink|source> <0-100>"
 
 TARGET="$1"
 VAL="$2"
@@ -23,8 +23,8 @@ case "$TARGET" in
 esac
 
 if ! [[ "$VAL" =~ ^[0-9]+([.][0-9]+)?$ ]] ||
-  ! awk -v value="$VAL" 'BEGIN { exit !(value >= 0 && value <= 150) }'; then
-  fail "Volume must be a number from 0 to 150: $VAL"
+  ! awk -v value="$VAL" 'BEGIN { exit !(value >= 0 && value <= 100) }'; then
+  fail "Volume must be a number from 0 to 100: $VAL"
 fi
 
 if [ "$TARGET" = "sink" ]; then
@@ -33,9 +33,6 @@ if [ "$TARGET" = "sink" ]; then
   fi
 else
   ALSA_VAL=${VAL%.*}
-  if [ "$ALSA_VAL" -gt 100 ]; then
-    ALSA_VAL=100
-  fi
 
   if ! output=$(pactl set-source-volume @DEFAULT_SOURCE@ "${VAL}%" 2>&1); then
     fail "Could not set input volume: ${output:-pactl failed}"
