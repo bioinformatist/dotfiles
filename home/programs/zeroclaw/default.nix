@@ -10,9 +10,9 @@
   ...
 }:
 let
-  zeroclawVersion = "0.8.2";
+  zeroclawVersion = "0.8.3";
   zeroclawAsset = "zeroclaw-x86_64-unknown-linux-gnu.tar.gz";
-  zeroclawHash = "sha256-a59+nZh3pWuG2dhZcGa5IXP/FiUslhpxRek+mg2a39k=";
+  zeroclawHash = "sha256-Ziq/ogr8V5BTjmmuvBvmDhiNNLpk+W/YFQW7zdjtzkQ=";
   zeroclawPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "zeroclaw";
     version = zeroclawVersion;
