@@ -8,6 +8,7 @@ TOGGLE_POPUP="$ROOT/home/desktop/eww-scripts/toggle-popup"
 CLOSE_POPUPS="$ROOT/home/desktop/eww-scripts/close-popups"
 GET_AUDIO_SINKS="$ROOT/home/desktop/eww-scripts/get-audio-sinks"
 GET_VOLUME="$ROOT/home/desktop/eww-scripts/get-volume"
+SET_VOLUME="$ROOT/home/desktop/eww-scripts/set-vol"
 TEST_TMP=$(mktemp -d)
 FAKE_BIN="$TEST_TMP/bin"
 FAKE_EWW_STATE="$TEST_TMP/eww.state"
@@ -91,11 +92,30 @@ case "$*" in
   "get-default-sink") printf "%s\n" "${FAKE_DEFAULT_SINK:-auto_null}" ;;
   "--format=json list sinks") printf "%s\n" "$FAKE_SINKS_JSON" ;;
   "get-sink-volume @DEFAULT_SINK@") printf "Volume: front-left: 65536 / 42%% / 0.00 dB\n" ;;
-  "get-source-volume @DEFAULT_SOURCE@") printf "Volume: front-left: 65536 / 55%% / 0.00 dB\n" ;;
+  "get-source-volume @DEFAULT_SOURCE@")
+    [ "${FAKE_SOURCE_AVAILABLE:-true}" = true ] || exit 1
+    printf "Volume: front-left: 65536 / 55%% / 0.00 dB\n"
+    ;;
   "get-sink-mute @DEFAULT_SINK@") printf "Mute: no\n" ;;
-  "get-source-mute @DEFAULT_SOURCE@") printf "Mute: no\n" ;;
-  "get-default-source") printf "fake_source\n" ;;
-  "list sources") exit 0 ;;
+  "get-source-mute @DEFAULT_SOURCE@")
+    [ "${FAKE_SOURCE_AVAILABLE:-true}" = true ] || exit 1
+    printf "Mute: no\n"
+    ;;
+  "get-default-source")
+    [ "${FAKE_SOURCE_AVAILABLE:-true}" = true ] || exit 1
+    printf "fake_source\n"
+    ;;
+  "set-sink-volume @DEFAULT_SINK@ 100%") exit 0 ;;
+  "list sources short")
+    if [ "${FAKE_SOURCE_AVAILABLE:-true}" = true ]; then
+      printf "51\tfake_source\tPipeWire\tfloat32le 2ch 48000Hz\tSUSPENDED\n"
+    fi
+    ;;
+  "list sources")
+    if [ "${FAKE_SOURCE_AVAILABLE:-true}" = true ]; then
+      printf "Source #51\n\tName: fake_source\n\tDescription: Fake Microphone\n"
+    fi
+    ;;
   "info") exit 0 ;;
   "subscribe") /bin/sleep 10 ;;
   *)
@@ -251,6 +271,11 @@ test_audio_availability() {
   assert_json "$sinks" 'length == 0'
   assert_json "$status" '.available == false and .sink_vol == 42'
 
+  export FAKE_SOURCE_AVAILABLE=false
+  status=$(get_audio_status)
+  assert_json "$status" '.source_available == false and .source_vol == 0'
+  export FAKE_SOURCE_AVAILABLE=true
+
   export FAKE_DEFAULT_SINK=alsa_output.pci-0000_00_1f.3.analog-stereo
   export FAKE_SINKS_JSON='[
     {"index":42,"name":"alsa_output.pci-0000_00_1f.3.analog-stereo","description":"Front Headphones","driver":"PipeWire","state":"SUSPENDED","properties":{"device.api":"alsa","device.class":"sound","port.available":"no"}}
@@ -271,9 +296,18 @@ test_audio_availability() {
   printf '%s\n' 'ok - audio availability: dummy-only hides audio while powered-off analog and HDMI remain real'
 }
 
+test_volume_bounds() {
+  bash "$SET_VOLUME" sink 100
+  if bash "$SET_VOLUME" sink 101 >/dev/null 2>&1; then
+    return 1
+  fi
+  printf '%s\n' 'ok - volume bounds: software amplification above 100 percent is rejected'
+}
+
 test_monitor_mapping
 test_popup_types_and_toggle
 test_popup_dismiss_is_idempotent
 test_popup_validation_and_rollback
 test_ordinal_change_reconciliation
 test_audio_availability
+test_volume_bounds
