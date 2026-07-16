@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Set a daemon-reported power profile.
+
+set -u
+
+SERVICE="net.hadess.PowerProfiles"
+OBJECT="/net/hadess/PowerProfiles"
+INTERFACE="net.hadess.PowerProfiles"
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+
+notify_failure() {
+  notify-send --urgency=critical "Power profiles" "$1" >/dev/null 2>&1 || true
+}
+
+main() {
+  local requested="${1:?Usage: set-power-profile <profile>}"
+  local state available output
+
+  state=$(bash "$SCRIPT_DIR/get-power-profile") || return 1
+  available=$(jq -r '.available' <<< "$state") || return 1
+  if [ "$available" != true ]; then
+    notify_failure "power-profiles-daemon is unavailable"
+    return 1
+  fi
+  if ! jq -e --arg requested "$requested" \
+    '.profiles | index($requested) != null' <<< "$state" >/dev/null; then
+    notify_failure "Unknown power profile: $requested"
+    return 1
+  fi
+
+  if ! output=$(busctl --system --no-pager --auto-start=false set-property \
+    "$SERVICE" "$OBJECT" "$INTERFACE" ActiveProfile s "$requested" 2>&1); then
+    notify_failure "Failed to set $requested: $output"
+    return 1
+  fi
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
+fi

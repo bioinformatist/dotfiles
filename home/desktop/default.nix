@@ -79,7 +79,6 @@ let
     # Phase 2: modules
     "eww/modules/audio.yuck".source = ./eww/modules/audio.yuck;
     "eww/modules/battery.yuck".source = ./eww/modules/battery.yuck;
-    "eww/modules/proxy-status.yuck".source = ./eww/modules/proxy-status.yuck;
     "eww/modules/power.yuck".source = ./eww/modules/power.yuck;
     "eww/modules/sysinfo.yuck".source = ./eww/modules/sysinfo.yuck;
     "eww/modules/notifications.yuck".source = ./eww/modules/notifications.yuck;
@@ -88,6 +87,7 @@ let
     "eww/windows/audio-popup.yuck".source = ./eww/windows/audio-popup.yuck;
     "eww/windows/popup-closer.yuck".source = ./eww/windows/popup-closer.yuck;
     "eww/windows/power-popup.yuck".source = ./eww/windows/power-popup.yuck;
+    "eww/windows/profile-popup.yuck".source = ./eww/windows/profile-popup.yuck;
     # Data files
   };
 
@@ -116,7 +116,8 @@ let
         "set-audio-device"
         "set-vol"
         "get-battery"
-        "get-proxy-status"
+        "get-power-profile"
+        "set-power-profile"
         "get-sysinfo"
         "get-notifications"
         "close-popups"

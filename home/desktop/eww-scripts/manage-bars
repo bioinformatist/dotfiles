@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Event-driven Eww bar manager. Runtime IDs use encoded connector names;
-# --screen and monitor_name always receive the raw Hyprland monitor name.
+# Event-driven Eww bar manager. Runtime IDs use encoded connector names,
+# workspace filters use Hyprland IDs, and Eww --screen uses GDK ordinals.
 
 set -u
 
@@ -14,6 +14,7 @@ WATCHER_PID=""
 RECONCILE_RETRY_DELAY="${RECONCILE_RETRY_DELAY:-1}"
 TOPOLOGY_REVALIDATE_SECONDS="${TOPOLOGY_REVALIDATE_SECONDS:-5}"
 declare -A LAST_APPLIED_MONITOR_IDS=()
+declare -A LAST_APPLIED_SCREEN_INDICES=()
 
 monitor_key() {
   local sanitized digest
@@ -27,7 +28,11 @@ monitor_key() {
 
 monitor_state() {
   hyprctl monitors -j 2>/dev/null |
-    jq -c '[sort_by(.id)[] | {name, id}]' 2>/dev/null
+    jq -c '
+      sort_by(.id)
+      | to_entries
+      | map({name: .value.name, id: .value.id, screen_index: .key})
+    ' 2>/dev/null
 }
 
 wait_for_stable_monitors() {
@@ -82,6 +87,10 @@ popup_window_parts() {
       monitor_key=${window_id#popup-power-}
       counterpart="closer-power-$monitor_key"
       ;;
+    popup-profile-*)
+      monitor_key=${window_id#popup-profile-}
+      counterpart="closer-profile-$monitor_key"
+      ;;
     closer-audio-*)
       monitor_key=${window_id#closer-audio-}
       counterpart="popup-audio-$monitor_key"
@@ -89,6 +98,10 @@ popup_window_parts() {
     closer-power-*)
       monitor_key=${window_id#closer-power-}
       counterpart="popup-power-$monitor_key"
+      ;;
+    closer-profile-*)
+      monitor_key=${window_id#closer-profile-}
+      counterpart="popup-profile-$monitor_key"
       ;;
     *) return 1 ;;
   esac
@@ -167,13 +180,14 @@ topology_is_applied() {
 }
 
 reconcile_bars() {
-  local state name monitor_id encoded bar_id monitor_expression active_id delay
-  local raw_name previous_monitor_id parts popup_monitor_key changed_bar_id
+  local state name monitor_id screen_index encoded bar_id monitor_expression active_id delay
+  local raw_name previous_monitor_id previous_screen_index parts popup_monitor_key changed_bar_id
   local changed_complete monitor_rows
   local -A desired=()
   local -A desired_monitors=()
   local -A monitor_names=()
   local -A monitor_ids=()
+  local -A screen_indices=()
   local -A monitor_keys=()
   local -A active_windows=()
   local -A active_bars=()
@@ -188,9 +202,9 @@ reconcile_bars() {
   [ -n "$state" ] || return 1
 
   monitor_rows=$(printf '%s\n' "$state" |
-    jq -r '.[] | [.name, (.id | tostring)] | @tsv') || return 1
+    jq -r '.[] | [.name, (.id | tostring), (.screen_index | tostring)] | @tsv') || return 1
 
-  while IFS=$'\t' read -r name monitor_id; do
+  while IFS=$'\t' read -r name monitor_id screen_index; do
     [ -n "$name" ] || continue
     encoded=$(monitor_key "$name")
     bar_id="bar-$encoded"
@@ -199,11 +213,14 @@ reconcile_bars() {
     desired_monitors["$encoded"]=1
     monitor_names["$bar_id"]="$name"
     monitor_ids["$bar_id"]="$monitor_id"
+    screen_indices["$bar_id"]="$screen_index"
     monitor_keys["$bar_id"]="$encoded"
 
     if [ -n "${LAST_APPLIED_MONITOR_IDS[$name]+present}" ]; then
       previous_monitor_id=${LAST_APPLIED_MONITOR_IDS[$name]}
-      if [ "$previous_monitor_id" != "$monitor_id" ]; then
+      previous_screen_index=${LAST_APPLIED_SCREEN_INDICES[$name]-}
+      if [ "$previous_monitor_id" != "$monitor_id" ] ||
+        [ "$previous_screen_index" != "$screen_index" ]; then
         changed_bars["$bar_id"]=1
         changed_bar_for_key["$encoded"]="$bar_id"
       fi
@@ -287,12 +304,14 @@ reconcile_bars() {
       if [ -z "${active_bars[$bar_id]+present}" ]; then
         name="${monitor_names[$bar_id]}"
         monitor_id="${monitor_ids[$bar_id]}"
+        screen_index="${screen_indices[$bar_id]}"
         monitor_expression=$(jq -Rn --arg value "$name" '$value')
         if eww open bar \
           --id "$bar_id" \
-          --screen "$name" \
+          --screen "$screen_index" \
           --arg "monitor_name=$monitor_expression" \
-          --arg "monitor_id=$monitor_id"; then
+          --arg "monitor_id=$monitor_id" \
+          --arg "screen_index=$screen_index"; then
           if [ -n "${changed_bars[$bar_id]+present}" ]; then
             reopened_changed_bars["$bar_id"]=1
           fi
@@ -314,9 +333,11 @@ reconcile_bars() {
       topology_is_applied desired desired_monitors; then
       LAST_APPLIED_STATE="$state"
       LAST_APPLIED_MONITOR_IDS=()
+      LAST_APPLIED_SCREEN_INDICES=()
       for bar_id in "${!desired[@]}"; do
         raw_name=${monitor_names[$bar_id]}
         LAST_APPLIED_MONITOR_IDS["$raw_name"]=${monitor_ids[$bar_id]}
+        LAST_APPLIED_SCREEN_INDICES["$raw_name"]=${screen_indices[$bar_id]}
       done
       return 0
     fi

@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# Read power-profiles-daemon state as stable JSON for Eww.
+
+set -u
+
+SERVICE="net.hadess.PowerProfiles"
+OBJECT="/net/hadess/PowerProfiles"
+INTERFACE="net.hadess.PowerProfiles"
+BUSCTL=(busctl --system --no-pager --auto-start=false)
+
+notify_failure() {
+  notify-send --urgency=critical "Power profiles" "$1" >/dev/null 2>&1 || true
+}
+
+unavailable_json() {
+  jq -cn '{available:false, active:"", profiles:[], degraded:""}'
+}
+
+read_property() {
+  local property="$1"
+  local output
+
+  if ! output=$("${BUSCTL[@]}" --json=short get-property \
+    "$SERVICE" "$OBJECT" "$INTERFACE" "$property" 2>&1); then
+    notify_failure "Failed to read $property: $output"
+    return 1
+  fi
+  printf '%s\n' "$output"
+}
+
+main() {
+  local services service_name active_json profiles_json degraded_json
+  local active profiles degraded
+  local service_available=false
+
+  if ! services=$("${BUSCTL[@]}" --no-legend list 2>&1); then
+    notify_failure "Failed to query power-profiles-daemon: $services"
+    return 1
+  fi
+  while read -r service_name _; do
+    if [ "$service_name" = "$SERVICE" ]; then
+      service_available=true
+      break
+    fi
+  done <<< "$services"
+  if [ "$service_available" != true ]; then
+    unavailable_json
+    return 0
+  fi
+
+  active_json=$(read_property ActiveProfile) || return 1
+  profiles_json=$(read_property Profiles) || return 1
+  degraded_json=$(read_property PerformanceDegraded) || return 1
+
+  active=$(jq -er '
+    select(.type == "s")
+    | .data
+    | select(type == "string")
+  ' <<< "$active_json") || {
+    notify_failure "ActiveProfile returned an invalid value"
+    return 1
+  }
+  profiles=$(jq -cer '
+    [
+      ..
+      | objects
+      | .Profile?
+      | select(. != null)
+      | if type == "object" then .data else . end
+      | select(type == "string" and length > 0)
+    ]
+    | reduce .[] as $profile ([];
+        if index($profile) == null then . + [$profile] else . end)
+    | select(length > 0)
+  ' <<< "$profiles_json") || {
+    notify_failure "Profiles returned an invalid value"
+    return 1
+  }
+  degraded=$(jq -er '
+    select(.type == "s")
+    | .data
+    | select(type == "string")
+  ' <<< "$degraded_json") || {
+    notify_failure "PerformanceDegraded returned an invalid value"
+    return 1
+  }
+
+  if ! jq -e --arg active "$active" 'index($active) != null' \
+    <<< "$profiles" >/dev/null; then
+    notify_failure "ActiveProfile was not present in Profiles"
+    return 1
+  fi
+
+  jq -cn \
+    --arg active "$active" \
+    --argjson profiles "$profiles" \
+    --arg degraded "$degraded" \
+    '{available:true, active:$active, profiles:$profiles, degraded:$degraded}'
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
+fi

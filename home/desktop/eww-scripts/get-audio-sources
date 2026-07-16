@@ -6,7 +6,7 @@
 DEFAULT_SOURCE=$(pactl get-default-source 2>/dev/null | tr -d '[:space:]')
 
 # pactl list sources short format: ID  NAME  DRIVER  SAMPLE_SPEC  STATE
-pactl list sources short 2>/dev/null | while IFS=$'\t' read -r id name driver sample state; do
+pactl list sources short 2>/dev/null | while IFS=$'\t' read -r id name _driver _sample _state; do
   # Skip monitor sources and GPU audio inputs
   if echo "$name" | grep -iq "\.monitor\|hdmi\|DisplayPort\|dp\b"; then
     continue

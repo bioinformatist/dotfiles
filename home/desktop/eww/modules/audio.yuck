@@ -3,13 +3,14 @@
 ;; Clicking opens the audio popup on the correct monitor.
 
 (deflisten audio-status
-  :initial '{"sink_vol":50,"sink_muted":false,"source_vol":80,"source_muted":false}'
+  :initial '{"available":false,"sink_vol":0,"sink_muted":false,"source_vol":0,"source_muted":false}'
   `~/.config/eww/scripts/get-volume`)
 
-(defwidget audio [monitor_name monitor_id]
+(defwidget audio [monitor_name monitor_id screen_index]
   (button
     :class "module-btn"
-    :onclick "~/.config/eww/scripts/toggle-popup audio '${monitor_name}' ${monitor_id}"
+    :visible {audio-status.available}
+    :onclick "~/.config/eww/scripts/toggle-popup audio '${monitor_name}' ${monitor_id} ${screen_index}"
     :tooltip "Audio"
     (box :orientation "h"
          :space-evenly false

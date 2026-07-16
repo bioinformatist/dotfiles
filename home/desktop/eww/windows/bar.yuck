@@ -1,7 +1,7 @@
 ;; ═══ Bar Window Definitions ═══
 ;; manage-bars opens one runtime instance for every connected monitor.
 
-(defwidget bar_widget [monitor_name monitor_id]
+(defwidget bar_widget [monitor_name monitor_id screen_index]
   (centerbox :orientation "h"
              :class "bar-inner"
     ;; ─── Left: Workspaces + Window Title ───
@@ -32,13 +32,12 @@
       (sysinfo)
       (label :class "separator" :text "│")
       (notifications)
-      (systray :icon-size 18 :spacing 4)
-      (battery)
-      (proxy-status-widget)
-      (audio :monitor_name monitor_name :monitor_id monitor_id)
-      (power :monitor_name monitor_name :monitor_id monitor_id))))
+      (systray :icon-size 18 :spacing 4 :space-evenly false)
+      (battery :monitor_name monitor_name :monitor_id monitor_id :screen_index screen_index)
+      (audio :monitor_name monitor_name :monitor_id monitor_id :screen_index screen_index)
+      (power :monitor_name monitor_name :monitor_id monitor_id :screen_index screen_index))))
 
-(defwindow bar [monitor_name monitor_id]
+(defwindow bar [monitor_name monitor_id screen_index]
   :geometry (geometry :x "0%"
                       :y "0%"
                       :width "100%"
@@ -47,4 +46,4 @@
   :stacking "fg"
   :exclusive true
   :namespace "eww-bar"
-  (bar_widget :monitor_name monitor_name :monitor_id monitor_id))
+  (bar_widget :monitor_name monitor_name :monitor_id monitor_id :screen_index screen_index))

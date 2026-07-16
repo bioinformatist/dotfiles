@@ -45,8 +45,31 @@ menuitem {
   border-radius: 4px;
 }
 
-menuitem:hover {
+menuitem:hover,
+menuitem:focus {
   background-color: $surface-hover;
+}
+
+menuitem:focus {
+  box-shadow: inset 0 0 0 1px rgba(255, 163, 26, 0.45);
+}
+
+menuitem:disabled,
+menuitem:disabled:hover,
+menuitem:disabled:focus {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+menuitem:disabled label {
+  color: $dim;
+  text-shadow: none;
+}
+
+menu separator {
+  min-height: 1px;
+  margin: 4px 6px;
+  background-color: $border;
 }
 
 .bar-inner {
@@ -54,7 +77,9 @@ menuitem:hover {
   padding: 6px 12px;
   background-color: $bg;
   border-bottom: 1px solid $surface-hover;
-  box-shadow: 0 1px 0 rgba(255, 163, 26, 0.24);
+  box-shadow:
+    0 1px 6px rgba(255, 163, 26, 0.45),
+    0 2px 14px rgba(255, 163, 26, 0.20);
 }
 
 .bar-left,
@@ -82,7 +107,20 @@ menuitem:hover {
 .ws-current {
   color: $accent;
   font-weight: 700;
-  text-shadow: 0 0 5px rgba(255, 163, 26, 0.48);
+}
+
+.ws-current,
+.workspace-entry:hover .workspace-dot,
+.weather-container:hover .weather-icon,
+.terror-zone-container:hover .tz-icon,
+.module-btn:hover label,
+.icon-battery-low,
+.icon-battery-charging,
+.icon-notif-active,
+.icon-active {
+  text-shadow:
+    0 0 6px rgba(255, 163, 26, 0.55),
+    0 0 12px rgba(255, 163, 26, 0.25);
 }
 
 .ws-active-other {
@@ -183,36 +221,38 @@ menuitem:hover {
 }
 
 .sysinfo-container {
-  padding: 0 2px;
+  padding: 0 3px;
 }
 
 .sysinfo-wordmark {
-  min-height: 24px;
-  border-radius: 6px;
+  min-height: 22px;
+  border-radius: 5px;
 }
 
 .sysinfo-label,
 .sysinfo-value {
-  min-height: 24px;
-  font-size: 12px;
+  min-height: 22px;
+  font-size: 11px;
   font-weight: 700;
 }
 
 .sysinfo-label {
-  min-width: 30px;
-  padding: 0 4px;
+  min-width: 26px;
+  padding: 0 3px;
   color: $bg;
   background-color: $text;
   border-radius: 5px 0 0 5px;
 }
 
 .sysinfo-value {
-  min-width: 36px;
-  padding: 0 5px;
+  min-width: 32px;
+  padding: 0 3px;
   color: $bg;
   background-color: $accent;
   border-radius: 0 5px 5px 0;
-  box-shadow: 0 0 5px rgba(255, 163, 26, 0.32);
+  box-shadow:
+    0 0 6px rgba(255, 163, 26, 0.55),
+    0 0 12px rgba(255, 163, 26, 0.25);
 }
 
 .icon-audio,
@@ -245,7 +285,6 @@ menuitem:hover {
 
 .icon-battery-low,
 .icon-battery-charging,
-.icon-clash-on,
 .icon-notif-active,
 .icon-active {
   color: $accent;
@@ -260,10 +299,6 @@ menuitem:hover {
 .icon-notif-dnd {
   color: $muted;
   font-size: 16px;
-}
-
-.icon-clash-on {
-  font-size: 15px;
 }
 
 .icon-active,
@@ -286,6 +321,9 @@ menuitem:hover {
   background-color: $surface;
   border: 1px solid $border;
   border-radius: 8px;
+  box-shadow:
+    0 0 8px rgba(255, 163, 26, 0.35),
+    0 0 18px rgba(255, 163, 26, 0.16);
 }
 
 .popup-header {
@@ -401,6 +439,61 @@ scale slider {
 
 .vol-btn-muted label {
   color: $muted;
+}
+
+.profile-panel {
+  min-width: 266px;
+}
+
+.profile-btn {
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.profile-btn:hover {
+  background-color: $surface-hover;
+}
+
+.profile-btn-active {
+  background-color: $surface-raised;
+  border-color: $accent;
+}
+
+.profile-indicator {
+  color: $dim;
+  font-size: 12px;
+}
+
+.profile-indicator-active {
+  color: $accent;
+  text-shadow:
+    0 0 6px rgba(255, 163, 26, 0.55),
+    0 0 12px rgba(255, 163, 26, 0.25);
+}
+
+.profile-name {
+  color: $text;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.profile-degraded {
+  padding: 8px 9px;
+  background-color: rgba(255, 163, 26, 0.08);
+  border: 1px solid rgba(255, 163, 26, 0.35);
+  border-radius: 6px;
+}
+
+.profile-degraded-icon {
+  color: $accent;
+  font-size: 15px;
+}
+
+.profile-degraded-text {
+  color: $muted;
+  font-size: 12px;
 }
 
 .power-panel {

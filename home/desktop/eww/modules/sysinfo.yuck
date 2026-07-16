@@ -9,7 +9,7 @@
   (box :class "sysinfo-container"
        :orientation "h"
        :space-evenly false
-       :spacing 6
+       :spacing 4
     (box :class "sysinfo-wordmark"
          :orientation "h"
          :space-evenly false
