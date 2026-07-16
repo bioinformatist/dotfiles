@@ -52,7 +52,7 @@
 
 (defwindow power-popup [monitor_name monitor_id screen_index]
   :geometry (geometry :x "-16px"
-                      :y "52px"
+                      :y "4px"
                       :width "320px"
                       :anchor "top right")
   :stacking "overlay"
