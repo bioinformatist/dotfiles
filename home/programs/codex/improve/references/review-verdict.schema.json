@@ -8,7 +8,8 @@
     "summary",
     "findings",
     "coverage",
-    "unresolved_items"
+    "review_blockers",
+    "deferred_acceptance"
   ],
   "properties": {
     "verdict": {
@@ -108,7 +109,7 @@
         }
       }
     },
-    "unresolved_items": {
+    "review_blockers": {
       "type": "array",
       "items": {
         "type": "object",
@@ -124,6 +125,41 @@
             "pattern": "\\S"
           },
           "impact": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        }
+      }
+    },
+    "deferred_acceptance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "check",
+          "owner",
+          "reason",
+          "evidence_required"
+        ],
+        "properties": {
+          "check": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "evidence_required": {
             "type": "string",
             "minLength": 1,
             "pattern": "\\S"

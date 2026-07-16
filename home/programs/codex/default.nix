@@ -215,7 +215,11 @@ let
             '## Status
 
     - **Status**: TODO
-    - **Improve contract**: `1.0.0-codex.3`
+    - **Improve contract**: `1.0.0-codex.4`
+    - **Implementation review**: PENDING
+    - **Checkpoint**: NONE
+    - **External acceptance**: NOT REQUIRED | PENDING
+    - **Checkpoint ID**: none
     - **Priority**: P1 | P2 | P3' \
           --replace-fail \
             '- **Issue**: <GitHub issue URL — only when published via `--issues`; omit otherwise>
@@ -265,6 +269,16 @@ let
 
     Run state-sensitive checks before a build, cache, installation, deployment, or other local state can hide their evidence, or use clean base/head isolation. Any `pending approval` contract edit requires an evidence-backed `BLOCKED` verdict; after approval, mark it `approved`, add the exact edit paths to Modification scope, and add the exact checks to this table and the verification commands. Adding ordinary behavior tests inside an existing harness does not require approval.
 
+    ## Verification and acceptance contract
+
+    Classify every check exactly once. Implementation gates are deterministic or agent-observable and must pass before implementation approval. Deferred acceptance is limited to behavior the available agent and environment cannot exercise. Observations are non-blocking unless an explicit threshold and lifecycle transition are recorded.
+
+    | Check | Class | Owner | Stage and target | Required evidence |
+    |-------|-------|-------|------------------|-------------------|
+    | `<exact check>` | `<implementation gate, deferred acceptance, or observation>` | `<executor, main agent, user, or external system>` | `<before review, checkpoint ID, or after integration>` | `<command output or observable result>` |
+
+    For every deferred acceptance, record the environment, exact procedure, expected evidence, rollback or recovery path, and what drift invalidates the result. Before an asynchronous handoff, the main agent records a resumable Checkpoint and exact Checkpoint ID; the executor never creates or integrates that checkpoint on its own.
+
     ## Commands you will need' \
           --replace-fail \
             '- Branch: `advisor/NNN-<slug>` (or the repo'"'"'s branch-naming convention if one is evident)' \
@@ -295,7 +309,7 @@ let
             'honors its STOP conditions; the advisor updates status after review.' \
           --replace-fail \
             'Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned)' \
-            'Status values: TODO | IN PROGRESS | IMPLEMENTED | ACCEPTANCE PENDING | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned). ACCEPTANCE PENDING takes precedence over IMPLEMENTED whenever a named runtime, physical, human, or external acceptance check remains.' \
+            'Status values: TODO | IN PROGRESS | IMPLEMENTED | ACCEPTANCE PENDING | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale — finding fixed independently or approach abandoned). Derive ACCEPTANCE PENDING only when implementation review is APPROVED, a deferred acceptance is ready, and Checkpoint is RESUMABLE or INTEGRATED with an exact Checkpoint ID.' \
           --replace-fail \
             '- "Planned at" SHA is filled in and the in-scope paths in the drift check match the Scope section.' \
             '- "Planned at" SHA is filled in and the Modification scope plus evidence/drift paths in the drift check match the Scope section.'
@@ -419,7 +433,8 @@ let
       fi
       timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
       suffix="$timestamp-$$"
-      worktree_parent="''${XDG_RUNTIME_DIR:-/tmp}/codex-improve"
+      state_home="''${XDG_STATE_HOME:-$HOME/.local/state}"
+      worktree_parent="$state_home/codex-improve/worktrees"
       worktree="$worktree_parent/$slug-$suffix"
       branch="codex/improve-$slug-$suffix"
       mkdir -p "$worktree_parent"

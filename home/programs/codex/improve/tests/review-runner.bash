@@ -7,7 +7,8 @@ runner_source="$(realpath -- "$1")"
 [ -f "$runner_source" ] || { echo "review runner does not exist: $runner_source" >&2; exit 2; }
 
 if [ -z "${CODEX_IMPROVE_REVIEW_SCHEMA:-}" ]; then
-  export CODEX_IMPROVE_REVIEW_SCHEMA="$(dirname -- "$runner_source")/references/review-verdict.schema.json"
+  CODEX_IMPROVE_REVIEW_SCHEMA="$(dirname -- "$runner_source")/references/review-verdict.schema.json"
+  export CODEX_IMPROVE_REVIEW_SCHEMA
 fi
 
 test_root="$(mktemp -d)"
@@ -43,36 +44,44 @@ emit_usage() {
 case "$FAKE_CODEX_MODE" in
   approve)
     emit_usage
-    printf '%s\n' '{"verdict":"APPROVE","summary":"TOP_SECRET_FINDING","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"unresolved_items":[]}' >"$final_output"
+    printf '%s\n' '{"verdict":"APPROVE","summary":"TOP_SECRET_FINDING","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"review_blockers":[],"deferred_acceptance":[]}' >"$final_output"
+    ;;
+  approve_deferred)
+    emit_usage
+    printf '%s\n' '{"verdict":"APPROVE","summary":"implementation approved","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"review_blockers":[],"deferred_acceptance":[{"check":"physical display acceptance","owner":"user","reason":"display is not visible to the reviewer","evidence_required":"user confirms the named checkpoint renders correctly"}]}' >"$final_output"
+    ;;
+  approve_with_blocker)
+    emit_usage
+    printf '%s\n' '{"verdict":"APPROVE","summary":"contradictory blocker","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"review_blockers":[{"item":"missing implementation evidence","impact":"implementation cannot be reviewed"}],"deferred_acceptance":[]}' >"$final_output"
     ;;
   revise)
     emit_usage
-    printf '%s\n' '{"verdict":"REVISE","summary":"revise","findings":[{"check":"complete diff","severity":"medium","location":"runner","claim":"revision required","evidence":"bounded evidence","action":"revise"}],"coverage":[{"check":"complete diff","status":"FAIL","evidence":"bounded evidence"}],"unresolved_items":[]}' >"$final_output"
+    printf '%s\n' '{"verdict":"REVISE","summary":"revise","findings":[{"check":"complete diff","severity":"medium","location":"runner","claim":"revision required","evidence":"bounded evidence","action":"revise"}],"coverage":[{"check":"complete diff","status":"FAIL","evidence":"bounded evidence"}],"review_blockers":[],"deferred_acceptance":[]}' >"$final_output"
     ;;
   block)
     emit_usage
-    printf '%s\n' '{"verdict":"BLOCK","summary":"blocked","findings":[],"coverage":[{"check":"complete diff","status":"BLOCKED","evidence":"decision required"}],"unresolved_items":[{"item":"user decision","impact":"cannot proceed"}]}' >"$final_output"
+    printf '%s\n' '{"verdict":"BLOCK","summary":"blocked","findings":[],"coverage":[{"check":"complete diff","status":"BLOCKED","evidence":"decision required"}],"review_blockers":[{"item":"user decision","impact":"cannot proceed"}],"deferred_acceptance":[]}' >"$final_output"
     ;;
   whitespace_verdict)
     emit_usage
-    printf '%s\n' '{"verdict":"APPROVE","summary":" ","findings":[],"coverage":[{"check":" ","status":"PASS","evidence":" "}],"unresolved_items":[]}' >"$final_output"
+    printf '%s\n' '{"verdict":"APPROVE","summary":" ","findings":[],"coverage":[{"check":" ","status":"PASS","evidence":" "}],"review_blockers":[],"deferred_acceptance":[]}' >"$final_output"
     ;;
   contradictory_verdict)
     emit_usage
-    printf '%s\n' '{"verdict":"APPROVE","summary":"contradictory","findings":[{"check":"complete diff","severity":"medium","location":"runner","claim":"unexpected finding","evidence":"bounded evidence","action":"revise"}],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"unresolved_items":[]}' >"$final_output"
+    printf '%s\n' '{"verdict":"APPROVE","summary":"contradictory","findings":[{"check":"complete diff","severity":"medium","location":"runner","claim":"unexpected finding","evidence":"bounded evidence","action":"revise"}],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"review_blockers":[],"deferred_acceptance":[]}' >"$final_output"
     ;;
   multiple_verdicts)
     emit_usage
-    printf '%s\n' '{"verdict":"APPROVE","summary":"first","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"unresolved_items":[]}' >"$final_output"
-    printf '%s\n' '{"verdict":"APPROVE","summary":"second","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"unresolved_items":[]}' >>"$final_output"
+    printf '%s\n' '{"verdict":"APPROVE","summary":"first","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"review_blockers":[],"deferred_acceptance":[]}' >"$final_output"
+    printf '%s\n' '{"verdict":"APPROVE","summary":"second","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"review_blockers":[],"deferred_acceptance":[]}' >>"$final_output"
     ;;
   invalid_jsonl)
     printf '%s\n' 'not-json'
-    printf '%s\n' '{"verdict":"APPROVE","summary":"valid final","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"unresolved_items":[]}' >"$final_output"
+    printf '%s\n' '{"verdict":"APPROVE","summary":"valid final","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"review_blockers":[],"deferred_acceptance":[]}' >"$final_output"
     ;;
   concatenated_jsonl)
     printf '%s\n' '{}{}'
-    printf '%s\n' '{"verdict":"APPROVE","summary":"valid final","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"unresolved_items":[]}' >"$final_output"
+    printf '%s\n' '{"verdict":"APPROVE","summary":"valid final","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"review_blockers":[],"deferred_acceptance":[]}' >"$final_output"
     ;;
   nonzero)
     emit_usage
@@ -92,7 +101,7 @@ case "$FAKE_CODEX_MODE" in
     printf '%s\n' '{"type":"turn.started"}'
     sleep 2
     emit_usage
-    printf '%s\n' '{"verdict":"APPROVE","summary":"quiet completed","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"unresolved_items":[]}' >"$final_output"
+    printf '%s\n' '{"verdict":"APPROVE","summary":"quiet completed","findings":[],"coverage":[{"check":"complete diff","status":"PASS","evidence":"bounded evidence"}],"review_blockers":[],"deferred_acceptance":[]}' >"$final_output"
     ;;
 esac
 FAKE_CODEX
@@ -150,6 +159,11 @@ run_case() {
   assert_eq "$status" "$expected_status" "$case_name status"
   assert_eq "$(field "$case_dir/stdout" IMPROVE_REVIEW_RESULT)" "$expected_result" "$case_name result"
   assert_eq "$(field "$case_dir/stdout" IMPROVE_REVIEW_EXIT_REASON)" "$expected_reason" "$case_name reason"
+  event_log="$(field "$case_dir/stdout" IMPROVE_REVIEW_EVENT_LOG)"
+  case "$event_log" in
+    "$case_dir/state/codex-improve/reviews/"*) ;;
+    *) fail "$case_name review artifacts are not in persistent state: $event_log" ;;
+  esac
   metric="$case_dir/state/codex-improve/review-metrics.jsonl"
   [ -s "$metric" ] || fail "$case_name metric missing"
   if grep -F -e TOP_SECRET -e /private/repository/path "$metric" >/dev/null; then
@@ -177,10 +191,21 @@ jq -e '
   and .tool_event_count == 1 and .verdict == "APPROVE"
 ' "$approve_dir/state/codex-improve/review-metrics.jsonl" >/dev/null || fail "approve metric"
 
+run_case approve_deferred correctness approve_deferred 0 APPROVE completed
+deferred_output="$(field "$test_root/cases/approve_deferred/stdout" IMPROVE_REVIEW_FINAL_OUTPUT)"
+jq -e '.deferred_acceptance | length == 1' "$deferred_output" >/dev/null ||
+  fail "deferred acceptance was not preserved"
+
 run_case revise elegance revise 0 REVISE completed
 grep -Fx -- improve-elegance-reviewer "$test_root/cases/revise/invocation" >/dev/null || fail "elegance profile missing"
-grep -F -- '$ponytail-review' "$test_root/cases/revise/prompt" >/dev/null || fail "Ponytail lens missing"
+grep -F -- "main agent's single Ponytail pass" "$test_root/cases/revise/prompt" >/dev/null ||
+  fail "Ponytail handoff missing"
+ponytail_invocation="\$ponytail-review"
+if grep -F -- "$ponytail_invocation" "$test_root/cases/revise/prompt" >/dev/null; then
+  fail "elegance reviewer still invokes Ponytail"
+fi
 run_case block correctness block 0 BLOCK completed
+run_case approve_with_blocker correctness approve_with_blocker 1 INCONCLUSIVE invalid_final_output
 run_case whitespace correctness whitespace_verdict 1 INCONCLUSIVE invalid_final_output
 run_case contradictory correctness contradictory_verdict 1 INCONCLUSIVE invalid_final_output
 run_case multiple correctness multiple_verdicts 1 INCONCLUSIVE invalid_final_output
