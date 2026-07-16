@@ -1,10 +1,10 @@
 ;; One full-screen closer definition, instantiated beside any popup at runtime.
 
-(defwidget popup-closer-content [popup_type monitor_name monitor_id]
+(defwidget popup-closer-content [popup_type monitor_name monitor_id screen_index]
   (eventbox
-    :onclick "~/.config/eww/scripts/toggle-popup ${popup_type} '${monitor_name}' ${monitor_id}"))
+    :onclick "~/.config/eww/scripts/toggle-popup ${popup_type} '${monitor_name}' ${monitor_id} ${screen_index}"))
 
-(defwindow popup-closer [popup_type monitor_name monitor_id]
+(defwindow popup-closer [popup_type monitor_name monitor_id screen_index]
   :geometry (geometry :x "0px"
                       :y "0px"
                       :width "100%"
@@ -17,4 +17,5 @@
   (popup-closer-content
     :popup_type popup_type
     :monitor_name monitor_name
-    :monitor_id monitor_id))
+    :monitor_id monitor_id
+    :screen_index screen_index))

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../.." && pwd)
 GET_WEATHER="$ROOT/home/desktop/eww-scripts/get-weather"
 SEARCH_WEATHER="$ROOT/home/desktop/eww-scripts/search-weather"
 TEST_TMP=$(mktemp -d)
@@ -18,12 +18,13 @@ mkdir -p "$FAKE_BIN"
 
 write_executable() {
   local path="$1"
-  shift
-  printf '%s\n' "$@" > "$path"
+
+  tee "$path" >/dev/null
   chmod +x "$path"
 }
 
-write_executable "$FAKE_BIN/curl" '#!/usr/bin/env bash' '
+write_executable "$FAKE_BIN/curl" <<'SCRIPT'
+#!/usr/bin/env bash
 set -u
 
 for argument in "$@"; do
@@ -45,10 +46,14 @@ case " $* " in
     printf "unexpected curl request: %s\n" "$*" >&2
     exit 97
     ;;
-esac'
+esac
+SCRIPT
 
 for command in notify-send eww zenity; do
-  write_executable "$FAKE_BIN/$command" '#!/usr/bin/env bash' 'exit 0'
+  write_executable "$FAKE_BIN/$command" <<'SCRIPT'
+#!/usr/bin/env bash
+exit 0
+SCRIPT
 done
 
 export PATH="$FAKE_BIN:$PATH"
@@ -129,7 +134,9 @@ test_stale_cache_refresh() {
   assert_json "$cache" '.temp == 23 and .stale == false'
   [ "$(curl_calls)" -eq 1 ]
   assert_bounded_curl_calls 1
-  ! compgen -G "$XDG_CACHE_HOME/eww/.weather_data.*" >/dev/null
+  if compgen -G "$XDG_CACHE_HOME/eww/.weather_data.*" >/dev/null; then
+    return 1
+  fi
   printf '%s\n' 'ok - stale cache plus MET success: one bounded refresh, atomic replacement'
 }
 
@@ -180,8 +187,12 @@ test_manual_location_safe_argv() {
   assert_json "$weather" '.temp == 23 and .city == "上海" and .stale == false'
   [ "$(curl_calls)" -eq 2 ]
   assert_bounded_curl_calls 2
-  ! compgen -G "$XDG_CACHE_HOME/eww/.weather_location.*" >/dev/null
-  ! compgen -G "$XDG_CACHE_HOME/eww/.weather_data.*" >/dev/null
+  if compgen -G "$XDG_CACHE_HOME/eww/.weather_location.*" >/dev/null; then
+    return 1
+  fi
+  if compgen -G "$XDG_CACHE_HOME/eww/.weather_data.*" >/dev/null; then
+    return 1
+  fi
   printf '%s\n' 'ok - manual location: spaces, quotes, metacharacters, and Unicode stay argv/data'
 }
 

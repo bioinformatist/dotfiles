@@ -102,13 +102,17 @@ Everything else is wiped on reboot.
 
 ### Shared Eww Workstation Bar
 
-The exported workstation Home Manager module installs the same 48 px Eww bar on every monitor reported by Hyprland. Home Manager systemd user units own the Eww daemon, per-monitor bar reconciliation, and popup closer at `graphical-session.target`; Hyprland does not start or restart them. The bar manager adds and removes instances by connector name, so the layout is not limited to a fixed monitor count. Each instance uses the same structure: workspaces and the active window on the left; clock, weather, and optional center content in the middle; and hardware status, notifications, tray, audio, and power controls on the right.
+The exported workstation Home Manager module installs the same 48 px Eww bar on every monitor reported by Hyprland. Home Manager systemd user units own the Eww daemon, per-monitor bar reconciliation, and popup closer at `graphical-session.target`; Hyprland does not start or restart them. The bar manager adds and removes instances by connector name, so the layout is not limited to a fixed monitor count. Connector names are stable runtime keys, Hyprland monitor IDs filter workspaces, and the zero-based ordinal of monitors sorted by Hyprland ID is the GDK/Eww screen selector. Reordering a display updates that ordinal, closes its open popup, and reopens the bar on the corresponding screen.
 
-Network and Bluetooth configuration use the native NetworkManager and Blueman applets in Eww's systray. The reusable NixOS workstation layer enables each applet by default only when its matching system capability is enabled. Use those tray icons to select Wi-Fi, edit connections, pair devices, or change Bluetooth power. The Eww audio popup retains quick volume, mute, and default-device controls; **Open mixer** launches Pavucontrol for per-application routing and advanced device settings.
+Network and Bluetooth configuration use the native NetworkManager and Blueman applets in Eww's systray. NetworkManager owns its menu, including status rows and actions; Eww only hosts the applet and styles disabled rows differently from actionable ones. Use the tray icons to select Wi-Fi, edit connections, pair devices, or change Bluetooth power. Clash Verge likewise uses only its official tray item—Eww does not add another proxy indicator or launcher.
 
 The notification button is always visible. Left-click it to toggle SwayNC's notification center; right-click it to toggle Do Not Disturb. The icon and tooltip show DND and center state, while the count appears only when positive. Left-click weather to enter a manual place in a Zenity prompt; right-click opens the forecast. Weather has no IP geolocation or default city, and valid older data remains visible as a stale fallback after a bounded refresh failure.
 
-Battery and GPU modules stay in the shared configuration and hide when their hardware probes report unavailable; Clash status appears only while its service is active. D2R center content is controlled by `dotfiles.eww.d2r.enable`, which defaults to `false`; this repository enables it for `homePC` and leaves it disabled for `linglong`.
+Audio appears only while PipeWire/PulseAudio exposes at least one real analog, USB, or HDMI sink. Dummy/null sinks such as `auto_null` are excluded, but sink activity, jack detection, and headset power do not define availability: a powered-off front-panel headset that remains exposed as an analog sink stays visible. The audio popup provides volume, mute, and default-device controls; **Open mixer** launches Pavucontrol for per-application routing and advanced settings. If the system exposes no real sink, diagnose ALSA, PipeWire, and WirePlumber rather than expecting an Eww fallback.
+
+Battery controls appear only when a battery is present. When power-profiles-daemon is also available, the battery button tooltip shows the active profile and opens a selector containing only profiles reported by the daemon; without that service, the battery remains visible but is not clickable. The GPU module follows the same capability-driven visibility rule, while shutdown and reboot remain available on every GUI host. At the current host boundary, `homePC` shows its real front-panel analog audio sink and hides battery/profile controls; `linglong` hides audio while it exposes only `auto_null`, but shows battery and power profiles.
+
+WeChat keeps its official tray item. `SUPER + W` moves the running WeChat window between `special:wechat` and the current workspace; Eww does not add a duplicate launcher or click bridge. D2R center content is controlled by `dotfiles.eww.d2r.enable`, which defaults to `false`; this repository enables it for `homePC` and leaves it disabled for `linglong`.
 
 The reusable workstation exports keep Clash disabled by default. The narrow personal-host policy enables Clash for `homePC`, `linglong`, and future personal GUI hosts, and their shared personal Home Manager module starts the Clash Verge GUI at the graphical-session boundary. This personal GUI lifecycle is intentionally not part of the exported Eww/Home Manager module, so downstream workstation consumers do not inherit it.
 
@@ -179,7 +183,7 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + F` | Toggle **Fullscreen** |
 | `SUPER + Return` | Launch **Terminal** (Ghostty) |
 | `SUPER + B` | Launch **Browser** (Chrome) |
-| `SUPER + W` | Launch **WeChat** |
+| `SUPER + W` | Toggle the running **WeChat** window between `special:wechat` and the current workspace |
 | `SUPER + L` | **Lock Screen** (hyprlock) |
 | `SUPER + R` | Enter **Resize Mode** (arrow keys to resize, `Escape` to exit) |
 | `ALT + A` | **Screenshot** region → annotate (satty) → clipboard |
@@ -289,7 +293,7 @@ The system follows a **Nix maintenance-scoped localhost proxy** strategy:
 
 For example, `192.168.0.116:7890`:
 
-1.  Open **Clash Verge** from its Eww status icon or the application launcher; its GUI service starts automatically.
+1.  Open **Clash Verge** from its official tray icon or the application launcher; its GUI service starts automatically.
 2.  Go to **Profiles** -> **New Local Profile**.
 3.  Right-click the new profile -> **Edit File**.
 4.  Add your LAN proxy as a "Proxy" node:

@@ -102,13 +102,17 @@
 
 ### 共享 Eww 工作站状态栏
 
-导出的工作站 Home Manager 模块会在 Hyprland 报告的每台显示器上安装同一套 48 px Eww 状态栏。Home Manager systemd 用户单元在 `graphical-session.target` 边界管理 Eww 守护进程、每显示器状态栏对齐和弹窗关闭器；Hyprland 不再启动或重启它们。状态栏管理器按接口名称增删实例，不限制显示器数量。每个实例都使用相同布局：左侧为工作区和活动窗口，中间为时钟、天气和可选的居中内容，右侧为硬件状态、通知、托盘、音频和电源控制。
+导出的工作站 Home Manager 模块会在 Hyprland 报告的每台显示器上安装同一套 48 px Eww 状态栏。Home Manager systemd 用户单元在 `graphical-session.target` 边界管理 Eww 守护进程、每显示器状态栏对齐和弹窗关闭器；Hyprland 不再启动或重启它们。状态栏管理器按接口名称增删实例，不限制显示器数量。接口名称是稳定的运行时键，Hyprland 显示器 ID 用于筛选工作区，按 Hyprland ID 排序后的零基序号则是 GDK/Eww 的屏幕选择器。显示器顺序变化时，管理器会更新该序号、关闭对应弹窗，并在相应屏幕上重新打开状态栏。
 
-网络和蓝牙配置由 Eww 系统托盘中的原生 NetworkManager 与 Blueman applet 提供。可复用的 NixOS 工作站层只会在对应系统能力启用时默认启用 applet。通过托盘图标选择 Wi-Fi、编辑连接、配对设备或切换蓝牙电源。Eww 音频弹窗继续提供音量、静音和默认设备快捷控制；点击 **Open mixer** 会启动 Pavucontrol，用于按应用调整路由和修改高级设备设置。
+网络和蓝牙配置由 Eww 系统托盘中的原生 NetworkManager 与 Blueman applet 提供。NetworkManager 自己管理菜单中的状态行与操作；Eww 只承载 applet，并用不同样式区分禁用状态行与可操作项目。通过托盘图标选择 Wi-Fi、编辑连接、配对设备或切换蓝牙电源。Clash Verge 也只使用官方托盘图标，Eww 不再添加第二个代理状态或启动入口。
 
 通知按钮始终可见。左键切换 SwayNC 通知中心，右键切换免打扰；图标和 tooltip 反映免打扰/中心状态，只在计数大于零时显示数字。左键点击天气后，在 Zenity 提示框中手动输入地点；右键继续打开预报。天气不使用 IP 定位或默认城市，有效旧数据在有界刷新失败后会作为 stale fallback 继续显示。
 
-电池和 GPU 模块保留在共享配置中，硬件探针报告不可用时自动隐藏；Clash 状态只在服务活跃时显示。D2R 居中内容由 `dotfiles.eww.d2r.enable` 控制，默认值为 `false`；本仓库只为 `homePC` 启用，`linglong` 保持关闭。
+只有 PipeWire/PulseAudio 暴露至少一个真实的模拟、USB 或 HDMI sink 时，音频控件才会显示。`auto_null` 等 dummy/null sink 会被排除，但 sink 是否处于活动状态、插孔检测结果和耳机是否通电都不用于判断可用性：只要已断电的前置耳机仍以真实模拟 sink 暴露，控件就会保留。音频弹窗提供音量、静音和默认设备控制；点击 **Open mixer** 会启动 Pavucontrol，用于按应用调整路由和修改高级设置。如果系统没有暴露真实 sink，应诊断 ALSA、PipeWire 和 WirePlumber，而不是期待 Eww 提供后备设备。
+
+只有检测到电池时才显示电池控件。power-profiles-daemon 同时可用时，电池按钮的 tooltip 会显示当前 profile，并打开只包含守护进程实际报告选项的选择器；服务缺失时，电池仍会显示，但不可点击。GPU 模块采用同样的能力驱动显示规则，而关机和重启按钮在所有 GUI 主机上始终保留。按当前主机边界，`homePC` 会显示真实的前置模拟音频 sink，并隐藏电池/profile 控件；`linglong` 只暴露 `auto_null` 时隐藏音频，但会显示电池和电源 profile。
+
+微信保留官方托盘图标。`SUPER + W` 会在 `special:wechat` 与当前工作区之间移动正在运行的微信窗口；Eww 不添加重复启动器或点击桥接。D2R 居中内容由 `dotfiles.eww.d2r.enable` 控制，默认值为 `false`；本仓库只为 `homePC` 启用，`linglong` 保持关闭。
 
 可复用工作站导出仍默认关闭 Clash。狭化的个人主机策略为 `homePC`、`linglong` 和未来个人 GUI 主机启用 Clash，它们共享的个人 Home Manager 模块在图形会话边界启动 Clash Verge GUI。该个人 GUI 生命周期明确不属于导出的 Eww/Home Manager 模块，因此下游工作站消费者不会继承它。
 
@@ -179,7 +183,7 @@
 | `SUPER + F` | 切换**全屏** |
 | `SUPER + Return` | 启动**终端**（Ghostty） |
 | `SUPER + B` | 启动**浏览器**（Chrome） |
-| `SUPER + W` | 启动**微信** |
+| `SUPER + W` | 在 `special:wechat` 与当前工作区之间切换正在运行的**微信**窗口 |
 | `SUPER + L` | **锁屏**（hyprlock） |
 | `SUPER + R` | 进入**调整大小模式**（方向键调整，`Escape` 退出） |
 | `ALT + A` | **截图**选区 → 标注（satty） → 剪贴板 |
@@ -289,7 +293,7 @@ git push
 
 例如 `192.168.0.116:7890`：
 
-1.  通过 Eww 状态图标或应用启动器打开 **Clash Verge**；其 GUI 服务会自动启动。
+1.  通过官方托盘图标或应用启动器打开 **Clash Verge**；其 GUI 服务会自动启动。
 2.  进入 **Profiles** -> **New Local Profile**。
 3.  右键新配置文件 -> **Edit File**。
 4.  将局域网代理添加为"Proxy"节点：
