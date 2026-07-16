@@ -16,7 +16,7 @@
          :orientation "v"
          :space-evenly false
          :spacing 4
-      (for profile in power-profile-status.profiles
+      (for profile in {power-profile-status.profiles}
         (button
           :class {profile == power-profile-status.active ? "profile-btn profile-btn-active" : "profile-btn"}
           :onclick "~/.config/eww/scripts/set-power-profile '${profile}'"

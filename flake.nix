@@ -449,6 +449,58 @@
             self.nixosConfigurations.homePC.config.home-manager.users.ysun.dotfiles.codex.mattPocockSkills.enable;
         in
         {
+          eww-config =
+            pkgs.runCommand "eww-config-check"
+              {
+                nativeBuildInputs = [
+                  pkgs.eww
+                  pkgs.xvfb-run
+                ];
+              }
+              ''
+                config="$TMPDIR/config"
+                export HOME="$TMPDIR/home"
+                export XDG_CACHE_HOME="$TMPDIR/cache"
+                export XDG_RUNTIME_DIR="$TMPDIR/runtime"
+
+                mkdir -p "$config" "$HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+                chmod 700 "$XDG_RUNTIME_DIR"
+                cp -R ${./home/desktop/eww}/. "$config/"
+
+                daemon_pid=""
+                cleanup() {
+                  eww --config "$config" kill >/dev/null 2>&1 || true
+                  if [ -n "$daemon_pid" ]; then
+                    wait "$daemon_pid" 2>/dev/null || true
+                  fi
+                }
+                trap cleanup EXIT
+
+                xvfb-run -a eww --config "$config" daemon --no-daemonize \
+                  >"$TMPDIR/eww.log" 2>&1 &
+                daemon_pid=$!
+
+                windows=""
+                for _ in $(seq 1 100); do
+                  windows=$(eww --config "$config" list-windows 2>/dev/null || true)
+                  [ -n "$windows" ] && break
+                  sleep 0.1
+                done
+
+                for window in bar audio-popup popup-closer power-popup profile-popup; do
+                  if ! grep -qx "$window" <<< "$windows"; then
+                    cat "$TMPDIR/eww.log" >&2
+                    echo "Eww config did not register window: $window" >&2
+                    exit 1
+                  fi
+                done
+
+                cleanup
+                trap - EXIT
+                mkdir -p "$out"
+                touch "$out/ok"
+              '';
+
           repo-local-skills = pkgs.runCommand "repo-local-skills-check" { } ''
             ${lib.optionalString (!globalMattPocockSkillsEnabled) ''
               echo "repo-local Matt Pocock workflow skills require dotfiles.codex.mattPocockSkills.enable for homePC" >&2
