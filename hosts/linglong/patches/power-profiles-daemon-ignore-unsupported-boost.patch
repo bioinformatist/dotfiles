@@ -1,0 +1,30 @@
+Subject: amd-pstate: tolerate unsupported per-policy boost
+
+ARB33P BIOS 1.23 advertises CPB globally but rejects the policy11 boost
+write with EINVAL. Keep other failures fatal while allowing the remaining
+amd-pstate profile controls to apply. Remove this patch after First ARPC
+provides a firmware fix.
+
+Upstream context:
+https://gitlab.freedesktop.org/upower/power-profiles-daemon/-/issues/189
+---
+diff --git a/src/ppd-driver-amd-pstate.c b/src/ppd-driver-amd-pstate.c
+index cc9be85..5a9ba7b 100644
+--- a/src/ppd-driver-amd-pstate.c
++++ b/src/ppd-driver-amd-pstate.c
+@@ -222 +222,2 @@ apply_pref_to_devices (GPtrArray   *devices,
+     g_autofree char *min_freq_path = NULL;
++    g_autoptr(GError) boost_error = NULL;
+@@ -240,2 +241,10 @@ apply_pref_to_devices (GPtrArray   *devices,
+-      if (!ppd_utils_write (cpb, cpb_pref, error))
+-        return FALSE;
++      if (!ppd_utils_write (cpb, cpb_pref, &boost_error)) {
++        if (!g_error_matches (boost_error,
++                              G_IO_ERROR,
++                              G_IO_ERROR_INVALID_ARGUMENT)) {
++          g_propagate_error (error, g_steal_pointer (&boost_error));
++          return FALSE;
++        }
++
++        g_warning ("Ignoring unsupported boost control for %s", base);
++      }

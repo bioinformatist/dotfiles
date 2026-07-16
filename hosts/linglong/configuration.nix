@@ -3,6 +3,7 @@
 {
   inputs,
   config,
+  pkgs,
   ...
 }:
 
@@ -30,6 +31,12 @@
   };
   services.hardware.bolt.enable = true;
   services.colord.enable = true;
+  services.power-profiles-daemon.package = pkgs.power-profiles-daemon.overrideAttrs (old: {
+    pname = "${old.pname}-linglong";
+    patches = (old.patches or [ ]) ++ [
+      ./patches/power-profiles-daemon-ignore-unsupported-boost.patch
+    ];
+  });
 
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
   sops.defaultSopsFormat = "yaml";

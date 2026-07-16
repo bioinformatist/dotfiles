@@ -8,6 +8,7 @@
     "-swaync-config.json.drv",
     "-swaync-style.css.drv",
     "-nm-applet.service.drv",
+    "-power-profiles-daemon-linglong-0.30.drv",
     "-anyrun-application-exec-preprocessor.drv"
   ]
 }
