@@ -58,6 +58,20 @@ listen_once() {
 }
 
 main() {
+  if [ "${1:-}" = --once ]; then
+    if [ "$#" -ne 1 ]; then
+      printf 'Usage: close-popups [--once]\n' >&2
+      return 2
+    fi
+    close_all_popups
+    return
+  fi
+
+  if [ "$#" -ne 0 ]; then
+    printf 'Usage: close-popups [--once]\n' >&2
+    return 2
+  fi
+
   wait_for_dependencies || return 1
 
   while true; do

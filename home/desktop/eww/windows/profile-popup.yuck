@@ -40,7 +40,7 @@
         :text "Performance limited: ${power-profile-status.degraded}"
         :wrap true))))
 
-(defwindow profile-popup [monitor_name monitor_id screen_index]
+(defwindow profile-popup
   :geometry (geometry :x "-16px"
                       :y "4px"
                       :width "300px"

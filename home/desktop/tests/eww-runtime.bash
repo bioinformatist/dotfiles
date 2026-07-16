@@ -5,6 +5,7 @@ set -euo pipefail
 ROOT=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../.." && pwd)
 MANAGE_BARS="$ROOT/home/desktop/eww-scripts/manage-bars"
 TOGGLE_POPUP="$ROOT/home/desktop/eww-scripts/toggle-popup"
+CLOSE_POPUPS="$ROOT/home/desktop/eww-scripts/close-popups"
 GET_AUDIO_SINKS="$ROOT/home/desktop/eww-scripts/get-audio-sinks"
 GET_VOLUME="$ROOT/home/desktop/eww-scripts/get-volume"
 TEST_TMP=$(mktemp -d)
@@ -160,6 +161,9 @@ test_popup_types_and_toggle() {
     bash "$TOGGLE_POPUP" "$type" DP-2 9 1
     grep -F $'open\tpopup-closer' "$FAKE_EWW_LOG" | grep -F -- $'--screen\t1' >/dev/null
     grep -F $'open\t'"$type"'-popup' "$FAKE_EWW_LOG" | grep -F -- $'--screen\t1' >/dev/null
+    if grep -F -- $'--arg' "$FAKE_EWW_LOG" >/dev/null; then
+      return 1
+    fi
     if grep -F -- $'--screen\tDP-2' "$FAKE_EWW_LOG" >/dev/null; then
       return 1
     fi
@@ -167,13 +171,17 @@ test_popup_types_and_toggle() {
 
     bash "$TOGGLE_POPUP" "$type" DP-2 9 1
     [ ! -s "$FAKE_EWW_STATE" ]
-
-    bash "$TOGGLE_POPUP" "$type" DP-2 9 1
-    bash "$TOGGLE_POPUP" --close "$type" DP-2 9 1
-    bash "$TOGGLE_POPUP" --close "$type" DP-2 9 1
-    [ ! -s "$FAKE_EWW_STATE" ]
   done
-  printf '%s\n' 'ok - popup lifecycle: all types use numeric screens and repeated close callbacks stay closed'
+  printf '%s\n' 'ok - popup lifecycle: all types use numeric screens and active pairs toggle closed'
+}
+
+test_popup_dismiss_is_idempotent() {
+  reset_eww
+  bash "$TOGGLE_POPUP" power DP-2 9 1
+  bash "$CLOSE_POPUPS" --once
+  bash "$CLOSE_POPUPS" --once
+  [ ! -s "$FAKE_EWW_STATE" ]
+  printf '%s\n' 'ok - popup dismissal: repeated close callbacks leave all popup windows closed'
 }
 
 test_popup_validation_and_rollback() {
@@ -265,6 +273,7 @@ test_audio_availability() {
 
 test_monitor_mapping
 test_popup_types_and_toggle
+test_popup_dismiss_is_idempotent
 test_popup_validation_and_rollback
 test_ordinal_change_reconciliation
 test_audio_availability

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: toggle-popup [--close] <audio|power|profile> <monitor_name> <monitor_id> <screen_index>
+# Usage: toggle-popup <audio|power|profile> <monitor_name> <monitor_id> <screen_index>
 
 set -u
 
@@ -46,20 +46,12 @@ rollback_pair() {
 }
 
 main() {
-  local usage='Usage: toggle-popup [--close] <type> <monitor_name> <monitor_id> <screen_index>'
-  local action=toggle
-
-  if [ "${1:-}" = --close ]; then
-    action=close
-    shift
-  fi
-
+  local usage='Usage: toggle-popup <type> <monitor_name> <monitor_id> <screen_index>'
   local type="${1:?$usage}"
   local monitor_name="${2:?$usage}"
   local monitor_id="${3:?$usage}"
   local screen_index="${4:?$usage}"
   local encoded popup_id closer_id active requested_active id
-  local monitor_expression type_expression
   local -a windows_to_close=()
   local -A active_after_close=()
   local -A final_active=()
@@ -89,12 +81,6 @@ main() {
   encoded=$(monitor_key "$monitor_name")
   popup_id="popup-${type}-${encoded}"
   closer_id="closer-${type}-${encoded}"
-
-  if [ "$action" = close ]; then
-    eww close "$popup_id" "$closer_id" 2>/dev/null || true
-    return 0
-  fi
-
   active=$(active_window_ids) || {
     printf 'toggle-popup: failed to query active Eww windows\n' >&2
     return 1
@@ -129,16 +115,9 @@ main() {
 
   [ "$requested_active" = false ] || return 0
 
-  monitor_expression=$(jq -Rn --arg value "$monitor_name" '$value')
-  type_expression=$(jq -Rn --arg value "$type" '$value')
-
   if ! eww open popup-closer \
     --id "$closer_id" \
-    --screen "$screen_index" \
-    --arg "popup_type=$type_expression" \
-    --arg "monitor_name=$monitor_expression" \
-    --arg "monitor_id=$monitor_id" \
-    --arg "screen_index=$screen_index"; then
+    --screen "$screen_index"; then
     printf 'toggle-popup: failed to open popup closer\n' >&2
     rollback_pair "$popup_id" "$closer_id"
     return 1
@@ -146,10 +125,7 @@ main() {
 
   if ! eww open "${type}-popup" \
     --id "$popup_id" \
-    --screen "$screen_index" \
-    --arg "monitor_name=$monitor_expression" \
-    --arg "monitor_id=$monitor_id" \
-    --arg "screen_index=$screen_index"; then
+    --screen "$screen_index"; then
     printf 'toggle-popup: failed to open popup\n' >&2
     rollback_pair "$popup_id" "$closer_id"
     return 1
