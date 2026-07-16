@@ -1,6 +1,8 @@
 # Closing The Loop
 
-The advisor never edits source code. An executor works in a new Git worktree; the main agent verifies the result and returns a verdict. The worktree is preserved until the user decides what to do with it.
+The advisor never edits source code. An executor works in a new persistent Git
+worktree; the main agent verifies the result and returns an implementation
+verdict. The worktree is preserved until the user decides what to do with it.
 
 ## Execute A Plan
 
@@ -50,6 +52,11 @@ IMPROVE_EXEC_EXIT=...
 
 The executor must touch only in-scope files, run verification, honor STOP conditions, and leave changes uncommitted. It must not merge, push, modify the plan index, remove the worktree, or launch other agents.
 
+Executor worktrees live under `$XDG_STATE_HOME/codex-improve/worktrees`, falling
+back to `~/.local/state`, so an interruption or reboot does not silently discard
+uncommitted work that is awaiting review or a user decision. Runtime processes
+remain disposable; the worktree is the persistent recovery surface.
+
 ### Review
 
 Treat the executor report and diff as untrusted until verified:
@@ -66,13 +73,15 @@ Treat the executor report and diff as untrusted until verified:
 6. Run applicable repository checks in evidence-preserving order. Capture a
    clean base/head delta before builds, caches, installations, deployments, or
    other local state can hide it, or use an isolated equivalent.
-7. Perform the main-agent acceptance pass. Check behavior, tests, repository
+7. Perform the main-agent implementation pass. Check behavior, tests, repository
    rules, reuse, justified abstraction, module boundaries, locality, speculative
    flexibility, compatibility layers, and removable code.
-8. Apply the installed `$ponytail-review` skill to the current diff. Treat its
-   suggestions as hypotheses; reject any that weaken settled semantics,
-   correctness, repository rules, or necessary tests. Its line-count score is
-   not an acceptance criterion.
+8. Apply the installed `$ponytail-review` skill once to the current diff. Record
+   both its raw suggestions and the main agent's disposition in the bounded
+   dossier. Treat suggestions as hypotheses; reject any that weaken settled
+   semantics, correctness, repository rules, or necessary tests. Its line-count
+   score is not an acceptance criterion. No independent reviewer repeats this
+   skill pass for the same diff.
 9. Decide whether external-practice evidence or an independent review is
    required under the triggers below.
 
@@ -168,6 +177,10 @@ does not ask the reviewer to rediscover the repository. Include:
 - the baseline and complete diff boundary plus a changed-path manifest;
 - executor and main-agent verification results, including generated-artifact
   evidence when applicable;
+- implementation gates, deferred acceptance checks, and observations as three
+  separate lists; independent reviewers cover implementation gates only;
+- the single Ponytail pass and the main agent's disposition of each suggestion
+  when that lens applies;
 - the verified practice memo when external evidence applies;
 - the exact checks and questions assigned to this reviewer; and
 - the applicable host-injected repository instructions, clearly distinguished
@@ -177,9 +190,13 @@ Do not include secret values. The dossier must remain sufficient for a fresh
 reviewer after interruption or compaction. Missing material evidence produces a
 `BLOCK` verdict; it never authorizes a broad repository audit.
 
-The reviewer builds a coverage matrix for every requested check before new
-recon. It reads each changed artifact completely at most once. Any reread names
-one unresolved question first and targets only the range needed to answer it.
+The reviewer builds a coverage matrix for every requested implementation check
+before new recon. Deferred acceptance is reported separately and cannot create
+a finding, failed coverage row, or review blocker merely because it has not run.
+The reviewer does not reload the Improve skill, planning contract, audit
+playbook, or Ponytail skill. It reads each changed artifact completely at most
+once. Any reread names one unresolved question first and targets only the range
+needed to answer it.
 When rollout-budget reminders report 40,000 weighted tokens remaining, broad
 recon stops and the coverage matrix is completed. At 20,000, only one named
 evidence gap may be pursued at a time. At 10,000, tool use stops and the verdict
@@ -197,10 +214,11 @@ codex-improve-review correctness "$IMPROVE_WORKTREE" <dossier-file>
 The helper selects `improve-elegance-reviewer` or `improve-reviewer`, passes the
 dossier once, and runs `codex exec --strict-config --ephemeral --json
 --output-schema`. It preserves the JSONL event log, structured final output, and
-diagnostic log in a unique local runtime directory. An eight-minute absolute
-fuse is the last-resort runtime boundary. Three minutes without a new JSONL
-event is recorded as a quiet-interval observation but never treated as proof
-of a stalled model or used to interrupt the run. Bounded evidence and
+diagnostic log under `$XDG_STATE_HOME/codex-improve/reviews`, falling back to
+`~/.local/state`, so an interrupted review remains diagnosable. An eight-minute
+absolute fuse is the last-resort runtime boundary. Three minutes without a new
+JSONL event is recorded as a quiet-interval observation but never treated as
+proof of a stalled model or used to interrupt the run. Bounded evidence and
 model-visible rollout budgets remain the primary convergence controls.
 
 The 80,000 weighted-token limit, 40,000/20,000/10,000 convergence gates,
@@ -213,8 +231,10 @@ change requires evidence from observed runs and explicit user approval.
 The helper reports the role, profile, result, artifact paths, elapsed time,
 maximum event gap, quiet-interval observation, and exit reason. Its model output
 must satisfy [`review-verdict.schema.json`](review-verdict.schema.json) and keep
-the verdict coherent with its findings, coverage, and unresolved items. A model
-verdict is possible only when Codex exits successfully with valid JSONL and a
+the verdict coherent with its findings, implementation coverage, review
+blockers, and deferred acceptance. `APPROVE` may include deferred acceptance,
+but never a finding, failed coverage row, or review blocker. A model verdict is
+possible only when Codex exits successfully with valid JSONL and a
 coherent structured result; otherwise the result is `INCONCLUSIVE`. Invalid
 caller input or unavailable local storage may terminate before a complete
 handoff. Metrics are content-free and best-effort. The helper never retries.
@@ -222,31 +242,36 @@ handoff. Metrics are content-free and best-effort. The helper never retries.
 The correctness reviewer checks behavior, safety, regressions, meaningful
 tests, and plan and Engineering-contract compliance. The elegance reviewer
 checks reuse, justified abstraction, module boundaries, locality, speculative
-flexibility, unnecessary compatibility layers, and removable code. It applies
-the installed `$ponytail-review` skill once to the current diff as an internal
-subreview. Ponytail suggestions remain hypotheses: reject any that weaken
+flexibility, unnecessary compatibility layers, and removable code. It considers
+the main agent's already recorded Ponytail pass without rerunning or reloading
+that skill. Ponytail suggestions remain hypotheses: reject any that weaken
 settled semantics, correctness, repository rules, or necessary tests, and never
 use its line-count score as an acceptance criterion. Elegance review does not
 expand product scope or reopen settled user decisions without new contradictory
 evidence.
 
 The main agent validates every reviewer finding against the dossier and diff,
-then follows the single acceptance policy below. It never overrides a triggered
-review's `INCONCLUSIVE` status or tunes a provisional boundary on its own.
+then follows the single implementation-review policy below. It never overrides
+a triggered review's `INCONCLUSIVE` status or tunes a provisional boundary on
+its own.
 
-After an approved main-agent acceptance, the advisor records the lifecycle
-state in the plan and any index:
+After an approved main-agent implementation review, the advisor records all
+three facets in the plan and any index before deriving lifecycle:
 
-- `ACCEPTANCE PENDING` when a named runtime, physical, human, or external check
-  remains. This takes precedence over `IMPLEMENTED`.
-- `IMPLEMENTED` when scoped implementation and executor checks are complete,
-  no named acceptance check remains, and integration is not yet established.
-- `DONE` only when the atomic change is integrated and every required
-  acceptance check has passed.
+- **Implementation review**: `APPROVED`.
+- **Checkpoint**: `NONE`, `RESUMABLE`, or `INTEGRATED`, with an exact
+  checkpoint ID whenever it is not `NONE`.
+- **External acceptance**: `NOT REQUIRED`, `PENDING`, `PASSED`, or `FAILED`.
+
+Derive `IMPLEMENTED` while implementation is approved but no deferred
+acceptance is ready against a resumable or integrated checkpoint. Derive
+`ACCEPTANCE PENDING` only when a named deferred acceptance is ready against that
+exact checkpoint. Derive `DONE` only when the atomic change is integrated and
+external acceptance is `PASSED` or `NOT REQUIRED`.
 
 Implementation approval establishes neither integration nor acceptance.
 
-Render exactly one main-agent acceptance outcome. A triggered reviewer returns
+Render exactly one main-agent implementation outcome. A triggered reviewer returns
 a model verdict as evidence; `INCONCLUSIVE` remains a separate helper status:
 
 - `APPROVE`: criteria pass, scope is clean, and implementation quality holds. Report the diff summary, branch, worktree path, and material notes. Do not commit, merge, or push.
@@ -255,6 +280,31 @@ a model verdict as evidence; `INCONCLUSIVE` remains a separate helper status:
 - `INCONCLUSIVE`: report the helper's exact exit reason and preserved diagnostic
   paths, halt integration, and ask for explicit approval before another review
   attempt or a plan change. Never convert it to `APPROVE`.
+
+### Deferred acceptance handoff
+
+After `APPROVE`, complete every agent-observable implementation gate before
+deferring work to a person or external system. For each deferred acceptance:
+
+1. Prepare the exact target. Use the persistent worktree plus base and diff
+   identity for a local synchronous check, or a commit, branch, PR, preview,
+   deployment, or other repository-backed identity for an asynchronous or
+   cross-machine check.
+2. Ask for approval before any commit, push, deployment, integration, or other
+   action that repository rules or the user reserve for approval.
+3. Record the checkpoint ID, environment, procedure, expected evidence,
+   rollback or recovery path, and drift invalidation rule in the plan.
+4. Stop executor, reviewer, server, and other processes that are not themselves
+   part of the named acceptance environment. Return control with the plan and
+   checkpoint sufficient to resume in a later turn.
+5. Record the result. `PASSED` may advance an integrated change to `DONE`.
+   `FAILED` returns to `IN PROGRESS` for an in-scope defect, while a changed
+   requirement, scope, authority, or approach returns to `BLOCKED` planning.
+   An unrelated environment outage remains `ACCEPTANCE PENDING` with evidence.
+
+Human feedback across turns is a normal pause in the Improve loop, not a
+terminated execution. Resume from the plan and checkpoint rather than from
+conversation recollection.
 
 Cleanup is a separate, explicit action after the user accepts or rejects the result:
 
@@ -275,11 +325,11 @@ For each indexed plan:
   review when active. Otherwise inspect the preserved worktree and record the
   lifecycle state its evidence supports; do not leave a stale `IN PROGRESS`.
 - `IMPLEMENTED`: verify the scoped diff and executor checks, locate the actual
-  landing commit if integrated, and advance to `DONE` only after all acceptance
-  checks pass. If a named acceptance check remains, correct the state to
-  `ACCEPTANCE PENDING`.
-- `ACCEPTANCE PENDING`: preserve the named runtime, physical, human, or external
-  check; verify its result without treating implementation approval or landing
+  landing commit if integrated, and derive the next state from the three facets.
+  A known deferred check without a ready resumable target remains `IMPLEMENTED`.
+- `ACCEPTANCE PENDING`: verify implementation review is `APPROVED`, the named
+  deferred check is ready, and the checkpoint ID still identifies the exact
+  target. Verify its result without treating implementation approval or landing
   alone as acceptance. Advance to `DONE` only after integration and every check.
 - `DONE`: verify the integrated implementation, checks, and acceptance evidence,
   then record or confirm the actual landing commit.
