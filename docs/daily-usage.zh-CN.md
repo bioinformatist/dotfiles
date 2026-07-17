@@ -68,7 +68,7 @@
 | `~/xwechat_files` | 微信聊天记录和文件 |
 | `~/Downloads` | 下载目录 |
 | `~/Documents` | 文档目录 |
-| `~/.cache/eww` | Eww 缓存，包括天气位置缓存 |
+| `~/.local/state/noctalia` | Noctalia Settings 覆盖和运行时状态 |
 | `~/.cache/fontconfig` | GTK/Pango 应用启动用字体缓存 |
 | `~/.ssh/known_hosts` | SSH 已知主机（以文件而非目录形式持久化，详见配置注释） |
 | `~/.config/hypr/monitors.conf` | nwg-displays 写入的显示器布局 |
@@ -91,8 +91,7 @@
 | **Google Chrome** | `pkgs.google-chrome` | Web 浏览器 |
 | **Orca** | `pkgs.orca-ide` | AI 开发环境 |
 | **Clash Verge** | `programs.clash-verge`（NixOS 模块） | GUI 代理客户端（灵活网络管理） |
-| **Eww** | `pkgs.eww` + Home Manager | 桌面小部件和状态栏 |
-| **SwayNC** | Home Manager 服务 | 通知守护进程与维护中的通知中心 |
+| **Noctalia** | `inputs.noctalia` + Home Manager | 状态栏、原生硬件控制、通知以及控制/会话面板 |
 | **swww** | `inputs.swww`（flake） | Wayland 壁纸守护进程，附带多显示器随机轮换脚本 |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland 原生锁屏 |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland 原生门户（屏幕共享、文件对话框等） |
@@ -100,21 +99,33 @@
 | **grim** + **slurp** | `pkgs.grim`、`pkgs.slurp` | Wayland 屏幕截图 + 区域选择器 |
 | **satty** | `pkgs.satty` | 截图标注编辑器（箭头、文字、模糊、画笔） |
 
-### 共享 Eww 工作站状态栏
+### 共享 Noctalia 工作站桌面壳
 
-导出的工作站 Home Manager 模块会在 Hyprland 报告的每台显示器上安装同一套 48 px Eww 状态栏。Home Manager systemd 用户单元在 `graphical-session.target` 边界管理 Eww 守护进程、每显示器状态栏对齐和弹窗关闭器；Hyprland 不再启动或重启它们。状态栏管理器按接口名称增删实例，不限制显示器数量。接口名称是稳定的运行时键，Hyprland 显示器 ID 用于筛选工作区，按 Hyprland ID 排序后的零基序号则是 GDK/Eww 的屏幕选择器。显示器顺序变化时，管理器会更新该序号、关闭对应弹窗，并在相应屏幕上重新打开状态栏。
+导出的工作站 Home Manager 模块通过 `noctalia.service` 运行 Noctalia。
+Noctalia 负责带轮廓的多显示器状态栏、通知守护进程、附着式控制中心和会话面板，
+并原生提供网络、蓝牙、音频、电池、亮度和电源 profile 客户端。NetworkManager、
+BlueZ、PipeWire、UPower 和 power-profiles-daemon 仍是系统后端。AnyRun、swww、
+Hyprlock、KDE Polkit agent 和现有 Hyprland 快捷键继续分别负责启动、壁纸、锁屏、
+授权和硬件按键。
 
-网络和蓝牙配置由 Eww 系统托盘中的原生 NetworkManager 与 Blueman applet 提供。NetworkManager 自己管理菜单中的状态行与操作；Eww 只承载 applet，并用不同样式区分禁用状态行与可操作项目。通过托盘图标选择 Wi-Fi、编辑连接、配对设备或切换蓝牙电源。Clash Verge 也只使用官方托盘图标，Eww 不再添加第二个代理状态或启动入口。
+共享的 `dotfiles.noctalia.weatherLocation` 选项可为空，默认 `null` 会关闭声明式天气。
+Yu Sun 的个人 Home Manager 层将其设为 `Guangzhou, China`、摄氏度和 30 分钟刷新。
+在 Noctalia Settings 中修改地点、自动定位、单位或刷新间隔时，结果写入
+`~/.local/state/noctalia`；这些持久化覆盖在声明式默认值之后加载，因此重启后仍优先。
 
-通知按钮始终可见。左键切换 SwayNC 通知中心，右键切换免打扰；图标和 tooltip 反映免打扰/中心状态，只在计数大于零时显示数字。左键点击天气后，在 Zenity 提示框中手动输入地点；右键继续打开预报。天气不使用 IP 定位或默认城市，有效旧数据在有界刷新失败后会作为 stale fallback 继续显示。
+状态栏保持工作区 1–10 可见，并显示紧凑的 CPU、内存和 GPU 数值。网络、蓝牙、
+音量、通知和控制中心均使用 Noctalia 原生面板；音量 overdrive 已关闭，主控制范围
+保持 0–100%。电池、亮度、GPU 和电源 profile 界面取决于各主机实际报告的硬件和后端，
+设备缺失时应安全降级而不是显示损坏的控件。
 
-只有 PipeWire/PulseAudio 暴露至少一个真实的模拟、USB 或 HDMI sink 时，音频控件才会显示。`auto_null` 等 dummy/null sink 会被排除，但 sink 是否处于活动状态、插孔检测结果和耳机是否通电都不用于判断可用性：只要已断电的前置耳机仍以真实模拟 sink 暴露，控件就会保留。音频弹窗提供音量、静音和默认设备控制；点击 **Open mixer** 会启动 Pavucontrol，用于按应用调整路由和修改高级设置。如果系统没有暴露真实 sink，应诊断 ALSA、PipeWire 和 WirePlumber，而不是期待 Eww 提供后备设备。
+托盘显示应用自己导出的 StatusNotifierItem（SNI）图标。Clash Verge、Fcitx 和微信
+在实际导出时使用各自官方托盘项，不添加第二个启动器或弹窗。`SUPER + W` 仍用于在
+`special:wechat` 与当前工作区之间移动正在运行的微信窗口。Battle.net 只有在 Wine
+应用实际导出 SNI 时才会出现；缺失只是一项观察，不代表需要添加兼容桥。
 
-只有检测到电池时才显示电池控件。power-profiles-daemon 同时可用时，电池按钮的 tooltip 会显示当前 profile，并打开只包含守护进程实际报告选项的选择器；服务缺失时，电池仍会显示，但不可点击。GPU 模块采用同样的能力驱动显示规则，而关机和重启按钮在所有 GUI 主机上始终保留。按当前主机边界，`homePC` 会显示真实的前置模拟音频 sink，并隐藏电池/profile 控件；`linglong` 只暴露 `auto_null` 时隐藏音频，但会显示电池和电源 profile。
-
-微信保留官方托盘图标。`SUPER + W` 会在 `special:wechat` 与当前工作区之间移动正在运行的微信窗口；Eww 不添加重复启动器或点击桥接。D2R 居中内容由 `dotfiles.eww.d2r.enable` 控制，默认值为 `false`；本仓库只为 `homePC` 启用，`linglong` 保持关闭。
-
-可复用工作站导出仍默认关闭 Clash。狭化的个人主机策略为 `homePC`、`linglong` 和未来个人 GUI 主机启用 Clash，它们共享的个人 Home Manager 模块在图形会话边界启动 Clash Verge GUI。该个人 GUI 生命周期明确不属于导出的 Eww/Home Manager 模块，因此下游工作站消费者不会继承它。
+D2R 和 Terror Zone 内容已从工作站状态栏移除。若未来仍需实现，应放在独立的开源
+Noctalia v5 插件仓库中。可复用工作站导出仍默认关闭 Clash；个人 Home Manager 层在
+维护中的个人 GUI 主机上于 `noctalia.service` 之后启动 Clash Verge。
 
 ### 已评估但未安装
 
@@ -320,11 +331,12 @@ Clash Verge 的配置文件数据持久化在 `~/.local/share/io.github.clash-ve
 
 ## 🎮 游戏（仅 `homePC`）
 
-游戏工作流只在 `homePC` 上配置。`linglong` 有意不包含 Steam、GameMode、D2R 和可选的 D2R 状态栏内容。
+游戏工作流只在 `homePC` 上配置。`linglong` 有意不包含 Steam、GameMode 和 D2R。
 
 ### Battle.net 安装（Steam + Proton）
 
 Battle.net 作为**非 Steam 游戏**添加到 Steam，通过 Proton 兼容层运行。
+只有 Battle.net 通过 Wine 导出 SNI 托盘项时才预期显示图标；本配置不添加 XEmbed 桥。
 
 1. 下载 `Battle.net-Setup.exe`（官网检测到 Linux UA 会屏蔽下载按钮，用 `curl` 绕过）：
    ```nushell

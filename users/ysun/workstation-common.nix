@@ -1,6 +1,5 @@
 {
   inputs,
-  config,
   pkgs,
   lib,
   ...
@@ -18,142 +17,14 @@
     x11.enable = true;
   };
 
-  services.swaync = {
-    enable = true;
-    settings = {
-      positionX = "right";
-      positionY = "bottom";
-      control-center-positionX = "right";
-      control-center-positionY = "top";
-      control-center-margin-top = 56;
-      control-center-margin-right = 16;
-      layer = "overlay";
-      control-center-layer = "top";
-      layer-shell = true;
-      cssPriority = "user";
-      notification-window-width = 400;
-      control-center-width = 420;
-      control-center-height = 640;
-      notification-grouping = true;
-      notification-inline-replies = false;
-      relative-timestamps = true;
-      timeout = 8;
-      timeout-low = 5;
-      timeout-critical = 0;
-      hide-on-action = true;
-      text-empty = "No notifications";
-      widgets = [
-        "title"
-        "dnd"
-        "notifications"
-      ];
-      widget-config = {
-        title = {
-          text = "Notifications";
-          clear-all-button = true;
-          button-text = "Clear all";
-        };
-        dnd.text = "Do Not Disturb";
-        notifications.vexpand = true;
-      };
-    };
-
-    style = ''
-      * {
-        font-family: "JetBrainsMono Nerd Font", "Noto Sans CJK SC", sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-      }
-
-      notificationwindow,
-      blankwindow {
-        background: transparent;
-      }
-
-      .control-center {
-        color: #ffffff;
-        background: #090909;
-        border: 1px solid #333333;
-        border-radius: 8px;
-        box-shadow: 0 0 8px rgba(255, 163, 26, 0.22);
-      }
-
-      .notification-row {
-        outline: none;
-      }
-
-      .notification-row .notification-background {
-        padding: 5px 10px;
-      }
-
-      .notification-row .notification-background .notification {
-        color: #ffffff;
-        background: #111111;
-        border: 1px solid #333333;
-        border-radius: 8px;
-      }
-
-      .notification-row .notification-background .notification.critical {
-        border-color: #e5484d;
-      }
-
-      .notification-row .notification-background .notification .notification-default-action,
-      .notification-row .notification-background .notification .notification-action {
-        color: #ffffff;
-        background: transparent;
-        border-radius: 7px;
-      }
-
-      .notification-row .notification-background .notification .notification-default-action:hover,
-      .notification-row .notification-background .notification .notification-action:hover {
-        background: #242424;
-      }
-
-      .summary,
-      .time,
-      .widget-title > label {
-        color: #ffffff;
-        font-weight: 700;
-      }
-
-      .body,
-      .widget-dnd > label {
-        color: #a7a7a7;
-      }
-
-      .close-button,
-      .widget-title > button {
-        color: #000000;
-        background: #ffa31a;
-        border: 0;
-        border-radius: 6px;
-      }
-
-      .widget-dnd > switch {
-        background: #333333;
-        border-radius: 8px;
-      }
-
-      .widget-dnd > switch:checked {
-        background: #ffa31a;
-      }
-
-      .widget-dnd > switch slider {
-        background: #ffffff;
-      }
-    '';
-  };
-
-  xdg.configFile."swaync/config.json".source = lib.mkForce (
-    (pkgs.formats.json { }).generate "swaync-config.json" config.services.swaync.settings
-  );
+  dotfiles.noctalia.weatherLocation = "Guangzhou, China";
 
   systemd.user.services.clash-verge-gui = {
     Unit = {
       Description = "Clash Verge graphical client";
       After = [
         "graphical-session.target"
-        "dotfiles-eww-bars.service"
+        "noctalia.service"
       ];
       ConditionPathExists = "/run/current-system/sw/bin/clash-verge";
     };

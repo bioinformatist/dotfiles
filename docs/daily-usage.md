@@ -68,7 +68,7 @@ This repository currently manages the `homePC` workstation and `linglong` keyboa
 | `~/xwechat_files` | WeChat chat history and files |
 | `~/Downloads` | Downloads |
 | `~/Documents` | Documents |
-| `~/.cache/eww` | Eww cache, including weather-location cache |
+| `~/.local/state/noctalia` | Noctalia Settings overrides and runtime state |
 | `~/.cache/fontconfig` | Font cache for GTK/Pango application startup |
 | `~/.ssh/known_hosts` | SSH known hosts (persisted as file, not directory — see note in config) |
 | `~/.config/hypr/monitors.conf` | Monitor layout written by nwg-displays |
@@ -91,8 +91,7 @@ Everything else is wiped on reboot.
 | **Google Chrome** | `pkgs.google-chrome` | Web browser |
 | **Orca** | `pkgs.orca-ide` | AI development environment |
 | **Clash Verge** | `programs.clash-verge` (NixOS module) | GUI proxy client (network flexibility) |
-| **Eww** | `pkgs.eww` + Home Manager | Desktop widgets and status bar |
-| **SwayNC** | Home Manager service | Notification daemon and maintained notification center |
+| **Noctalia** | `inputs.noctalia` + Home Manager | Bar, native hardware controls, notifications, and control/session panels |
 | **swww** | `inputs.swww` (flake) | Wayland wallpaper daemon with custom multi-monitor rotation script |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland-native lock screen |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland-native portal for screen sharing, file dialogs, etc. |
@@ -100,21 +99,43 @@ Everything else is wiped on reboot.
 | **grim** + **slurp** | `pkgs.grim`, `pkgs.slurp` | Wayland screen capture + region selector |
 | **satty** | `pkgs.satty` | Screenshot annotation editor (arrows, text, blur, brush) |
 
-### Shared Eww Workstation Bar
+### Shared Noctalia Workstation Shell
 
-The exported workstation Home Manager module installs the same 48 px Eww bar on every monitor reported by Hyprland. Home Manager systemd user units own the Eww daemon, per-monitor bar reconciliation, and popup closer at `graphical-session.target`; Hyprland does not start or restart them. The bar manager adds and removes instances by connector name, so the layout is not limited to a fixed monitor count. Connector names are stable runtime keys, Hyprland monitor IDs filter workspaces, and the zero-based ordinal of monitors sorted by Hyprland ID is the GDK/Eww screen selector. Reordering a display updates that ordinal, closes its open popup, and reopens the bar on the corresponding screen.
+The exported workstation Home Manager module runs Noctalia through
+`noctalia.service`. Noctalia owns the outlined multi-monitor bar, notification
+daemon, attached control center and session panel, and the native network,
+Bluetooth, audio, battery, brightness, and power-profile clients. NetworkManager,
+BlueZ, PipeWire, UPower, and power-profiles-daemon remain the system backends.
+AnyRun, swww, Hyprlock, the KDE Polkit agent, and the existing Hyprland
+keybindings continue to own launching, wallpaper, locking, authorization, and
+hardware keys.
 
-Network and Bluetooth configuration use the native NetworkManager and Blueman applets in Eww's systray. NetworkManager owns its menu, including status rows and actions; Eww only hosts the applet and styles disabled rows differently from actionable ones. Use the tray icons to select Wi-Fi, edit connections, pair devices, or change Bluetooth power. Clash Verge likewise uses only its official tray item—Eww does not add another proxy indicator or launcher.
+The shared `dotfiles.noctalia.weatherLocation` option is nullable and defaults
+to `null`, which disables configured weather. Yu Sun's personal Home Manager
+layer sets `Guangzhou, China`, Celsius, with a 30-minute refresh. Changes made
+in Noctalia Settings—including location, automatic location, unit, and refresh
+interval—are written under `~/.local/state/noctalia`; those persisted overrides
+load after the declarative defaults and therefore win across restarts.
 
-The notification button is always visible. Left-click it to toggle SwayNC's notification center; right-click it to toggle Do Not Disturb. The icon and tooltip show DND and center state, while the count appears only when positive. Left-click weather to enter a manual place in a Zenity prompt; right-click opens the forecast. Weather has no IP geolocation or default city, and valid older data remains visible as a stale fallback after a bounded refresh failure.
+The bar keeps workspaces 1–10 visible and uses compact CPU, memory, and GPU
+readouts. Network, Bluetooth, volume, notifications, and the control center use
+Noctalia's native panels; volume overdrive is disabled, so the primary control
+stays within 0–100%. Battery, brightness, GPU, and power-profile surfaces depend
+on the hardware and backend actually reported by each host and must degrade
+without presenting broken controls when a device is absent.
 
-Audio appears only while PipeWire/PulseAudio exposes at least one real analog, USB, or HDMI sink. Dummy/null sinks such as `auto_null` are excluded, but sink activity, jack detection, and headset power do not define availability: a powered-off front-panel headset that remains exposed as an analog sink stays visible. The audio popup provides volume, mute, and default-device controls; **Open mixer** launches Pavucontrol for per-application routing and advanced settings. If the system exposes no real sink, diagnose ALSA, PipeWire, and WirePlumber rather than expecting an Eww fallback.
+The tray renders applications' official StatusNotifierItem (SNI) icons. Clash
+Verge, Fcitx, and WeChat use their own items when exported; there is no second
+launcher or popup for them. `SUPER + W` remains the workflow for moving the
+running WeChat window between `special:wechat` and the current workspace.
+Battle.net appears only if the Wine application exports SNI; absence is an
+observation, not evidence that a compatibility bridge should be added.
 
-Battery controls appear only when a battery is present. When power-profiles-daemon is also available, the battery button tooltip shows the active profile and opens a selector containing only profiles reported by the daemon; without that service, the battery remains visible but is not clickable. The GPU module follows the same capability-driven visibility rule, while shutdown and reboot remain available on every GUI host. At the current host boundary, `homePC` shows its real front-panel analog audio sink and hides battery/profile controls; `linglong` hides audio while it exposes only `auto_null`, but shows battery and power profiles.
-
-WeChat keeps its official tray item. `SUPER + W` moves the running WeChat window between `special:wechat` and the current workspace; Eww does not add a duplicate launcher or click bridge. D2R center content is controlled by `dotfiles.eww.d2r.enable`, which defaults to `false`; this repository enables it for `homePC` and leaves it disabled for `linglong`.
-
-The reusable workstation exports keep Clash disabled by default. The narrow personal-host policy enables Clash for `homePC`, `linglong`, and future personal GUI hosts, and their shared personal Home Manager module starts the Clash Verge GUI at the graphical-session boundary. This personal GUI lifecycle is intentionally not part of the exported Eww/Home Manager module, so downstream workstation consumers do not inherit it.
+D2R and Terror Zone content is not part of the workstation bar. If it is
+revisited, it belongs in a separate open-source Noctalia v5 plugin repository.
+The reusable workstation export still keeps Clash disabled by default; the
+personal Home Manager layer starts Clash Verge for the maintained personal GUI
+hosts after `noctalia.service`.
 
 ### Evaluated But Not Installed
 
@@ -320,11 +341,13 @@ Clash Verge profile data is persisted at `~/.local/share/io.github.clash-verge-r
 
 ## 🎮 Gaming (`homePC` Only)
 
-The gaming workflow is configured only on `homePC`. `linglong` intentionally excludes Steam, GameMode, D2R, and the optional D2R bar content.
+The gaming workflow is configured only on `homePC`. `linglong` intentionally excludes Steam, GameMode, and D2R.
 
 ### Battle.net Installation (Steam + Proton)
 
 Battle.net runs as a **non-Steam game** added to Steam, using the Proton compatibility layer.
+Its tray icon is only expected when Battle.net exports an SNI item through
+Wine; this setup does not add an XEmbed bridge.
 
 1. Download `Battle.net-Setup.exe` - the official site detects Linux UA and hides the download button, use `curl` to bypass:
    ```nushell

@@ -13,7 +13,7 @@ in
     ./core.nix
     ./shell
     ./tui
-    ./desktop
+    (import ./desktop { inherit inputs; })
     (import ./programs/workstation.nix { inherit inputs; })
   ];
 

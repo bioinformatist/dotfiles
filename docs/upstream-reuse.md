@@ -49,7 +49,7 @@ It does not include CUDA userspace or model-serving application stacks.
 - `profiles.headless`
 - Hyprland / PipeWire / Fcitx5 + Rime / CJK fonts
 - WeChat, screenshot tools, and baseline GUI tools
-- capability-derived defaults for the NetworkManager and Blueman tray applets
+- NetworkManager and BlueZ system backends for the shared shell
 
 It does not include:
 
@@ -64,7 +64,20 @@ It does not include:
 NVIDIA desktop hosts should explicitly add `nixosModules.nvidiaDesktop`.
 AMD mobile desktop hosts can explicitly add `nixosModules.amdMobile`.
 
-`homeManagerModules.workstation` provides the shared Eww bar and Pavucontrol. It opens one identical bar instance per connected Hyprland monitor and reconciles monitor additions and removals without a fixed monitor limit. NetworkManager and Blueman remain the configuration surfaces through Eww's systray; battery, GPU, and Clash widgets hide when unavailable. Optional D2R center content is controlled by `dotfiles.eww.d2r.enable` and defaults to off. The NetworkManager and Blueman defaults follow declared NixOS capabilities and remain overrideable downstream.
+`homeManagerModules.workstation` provides the shared Noctalia v5 shell and its
+systemd user service. Noctalia owns the bar, native network/Bluetooth/audio and
+notification panels, control center, and session panel while consuming the
+host's NetworkManager, BlueZ, PipeWire, UPower, and power-profiles-daemon
+backends. Hardware-dependent widgets remain in the shared layout and degrade
+when their device or backend is absent.
+
+The module's only location interface is
+`dotfiles.noctalia.weatherLocation`, a nullable string whose default is `null`;
+downstream consumers can omit it or set their own place without inheriting Yu
+Sun's personal `Guangzhou, China` value. Runtime Settings changes persist under
+`~/.local/state/noctalia` and override declarative defaults. D2R/Terror Zone
+content is not part of the export; any future version belongs in a separate
+Noctalia v5 plugin repository.
 
 ## Current host composition
 

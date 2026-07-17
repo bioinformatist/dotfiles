@@ -127,7 +127,7 @@
         "xwechat_files"
         "Downloads"
         "Documents"
-        ".cache/eww"
+        ".local/state/noctalia"
         ".cache/fontconfig"
       ];
       files = [
