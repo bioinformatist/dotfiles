@@ -36,7 +36,7 @@
     {
       "description": "Fast-moving desktop inputs are checked weekly.",
       "matchManagers": ["nix"],
-      "matchDepNames": ["hyprland"],
+      "matchDepNames": ["hyprland", "noctalia"],
       "schedule": ["* * * * 6"],
       "addLabels": ["policy-desktop"]
     },
