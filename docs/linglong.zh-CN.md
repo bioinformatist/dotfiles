@@ -10,7 +10,7 @@
 - 继承中国网络/代理设置、Clash Verge、GitHub SSH、公司 SSH、Codex GitHub/Context7 token。
 - 使用 `nixosModules.amdMobile` 提供 AMD 图形、固件、电池、电源 profile、fwupd 和硬件诊断工具。
 - 启用 `bolt` 管理 USB4/Thunderbolt 扩展坞授权，并持久化 `/var/lib/boltd`；不预设 AR 眼镜或具体外接显示器布局。
-- 使用导出的共享 Eww 状态栏；它会为任意数量的 Hyprland 显示器创建相同布局，并由系统托盘中的 NetworkManager 与 Blueman 提供网络和蓝牙配置。
+- 使用导出的共享 Noctalia v5 桌面壳，通过原生面板使用 NetworkManager、BlueZ、PipeWire、UPower 和 power-profiles-daemon 后端。
 - 不继承 NVIDIA、Steam/Gamemode、Mudfish、ZeroClaw、D2R。
 
 ## 安装前检查
@@ -30,14 +30,18 @@
 重建并启动后，检查：
 
 - `hostname` 输出 `linglong`。
-- Eww 系统托盘中的 NetworkManager 与 Blueman 可配置 Wi-Fi、蓝牙电源和设备配对。
+- Noctalia 原生网络和蓝牙面板可配置 Wi-Fi、蓝牙电源和设备配对。
 - USB4/Thunderbolt 扩展坞的 USB、网口、供电和外接显示正常。
-- 每台已连接显示器上都有相同的 Eww 状态栏；热插拔不会移除其他显示器上的实例。
-- Eww 状态栏显示电池；GPU telemetry 不可用、Clash 未运行时，对应控件会隐藏；D2R 居中内容保持关闭。
-- Eww 音频弹窗的 **Open mixer** 能启动 Pavucontrol。
-- `powerprofilesctl get` 能返回当前电源 profile。
+- 每台已连接显示器上都有带轮廓和辉光的 Noctalia 状态栏，空工作区 1–10 清晰可见。
+- Noctalia 原生音频、通知、控制中心和会话面板可用，主音量不会超过 100%。
+- Noctalia 显示电池，并在支持时提供亮度和电源 profile；硬件或后端缺失时不显示损坏控件。
+- `powerprofilesctl get` 能返回当前电源 profile，Noctalia 原生客户端能切换守护进程报告的 profile。
 - `vulkaninfo --summary` 和 `vainfo` 能看到 AMD/Mesa 能力。
-- EWW sysinfo 的 GPU 数值能在 Radeon 780M 上显示，或在驱动未暴露 telemetry 时安静隐藏。
+- Noctalia 的 GPU 数值在驱动暴露 telemetry 时显示，否则安全降级。
 - `ssh 116` 使用 `~/.ssh/id_ed25519_sctmes_ops`。
 - GitHub SSH、`gh auth status`、Codex GitHub MCP 和 Context7 MCP 可用。
 - Hyprland 光标、外接显示器、挂起/恢复、亮度键、音量键正常。
+
+Linglong 继续使用主机专属的窄化 power-profiles-daemon 补丁：它只忽略厂商固件对
+per-policy boost 写入返回的 `G_IO_ERROR_INVALID_ARGUMENT`。Noctalia 只是该后端的
+原生客户端；补丁内容和主机专属边界不因桌面壳迁移而扩大。

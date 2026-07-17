@@ -14,10 +14,8 @@
   # Proton-GE is declared in configuration.nix via programs.steam.extraCompatPackages.
   # The NixOS Steam module handles Steam integration automatically.
 
-  # TODO: systray architecture (deferred)
-  # When tray interaction is needed (Clash Verge, Telegram, WeChat, or future Wine apps):
-  #   1. Add (systray) widget to eww bar  — handles SNI protocol apps
-  #   2. Autostart xembedsniproxy         — bridges Wine/XEMBED tray icons → SNI
-  #   3. Hyprland window rule to hide the steam_app_0 floating helper window
-  # See memory: project_systray.md
+  # Noctalia renders an application's official StatusNotifierItem. Battle.net
+  # appears only when the Wine application exports SNI; this configuration does
+  # not add a speculative XEmbed bridge. D2R/Terror Zone bar content is also out
+  # of scope; a future implementation belongs in a separate Noctalia v5 plugin.
 }

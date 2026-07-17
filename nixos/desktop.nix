@@ -126,9 +126,6 @@ in
           inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
       };
 
-      programs.nm-applet.enable = lib.mkDefault config.networking.networkmanager.enable;
-      services.blueman.enable = lib.mkDefault config.hardware.bluetooth.enable;
-
       # Portal configuration: add GTK portal as fallback for Screenshot interface.
       # WeChat calls org.freedesktop.portal.Screenshot via D-Bus, but the Hyprland
       # portal doesn't implement it. The GTK portal provides a working Screenshot
@@ -232,8 +229,6 @@ in
           wl-clipboard
           git
           ghostty
-          eww
-          swaynotificationcenter
           google-chrome
           hyprlock
           grim # Wayland screenshot backend

@@ -15,6 +15,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hyprland.url = "github:hyprwm/Hyprland";
+    noctalia.url = "github:noctalia-dev/noctalia/cachix";
     swww.url = "github:LGFae/swww";
     impermanence.url = "github:nix-community/impermanence";
     sops-nix = {
@@ -445,58 +446,61 @@
           pkgs = import nixpkgs {
             inherit system;
           };
+          noctaliaPackage = inputs.noctalia.packages.${system}.default;
+          noctaliaConfigSources = {
+            homePC =
+              self.nixosConfigurations.homePC.config.home-manager.users.ysun.xdg.configFile."noctalia/config.toml".source;
+            linglong =
+              self.nixosConfigurations.linglong.config.home-manager.users.ysun.xdg.configFile."noctalia/config.toml".source;
+          };
           globalMattPocockSkillsEnabled =
             self.nixosConfigurations.homePC.config.home-manager.users.ysun.dotfiles.codex.mattPocockSkills.enable;
         in
         {
-          eww-config =
-            pkgs.runCommand "eww-config-check"
+          noctalia-config =
+            pkgs.runCommand "noctalia-config-check"
               {
                 nativeBuildInputs = [
-                  pkgs.eww
-                  pkgs.xvfb-run
+                  noctaliaPackage
+                  pkgs.gnugrep
                 ];
               }
               ''
-                config="$TMPDIR/config"
-                export HOME="$TMPDIR/home"
-                export XDG_CACHE_HOME="$TMPDIR/cache"
-                export XDG_RUNTIME_DIR="$TMPDIR/runtime"
+                validate_config() {
+                  name="$1"
+                  config="$2"
+                  stdout="$TMPDIR/$name.stdout"
+                  stderr="$TMPDIR/$name.stderr"
 
-                mkdir -p "$config" "$HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
-                chmod 700 "$XDG_RUNTIME_DIR"
-                cp -R ${./home/desktop/eww}/. "$config/"
-
-                daemon_pid=""
-                cleanup() {
-                  eww --config "$config" kill >/dev/null 2>&1 || true
-                  if [ -n "$daemon_pid" ]; then
-                    wait "$daemon_pid" 2>/dev/null || true
+                  if ${lib.getExe noctaliaPackage} config validate "$config" \
+                    >"$stdout" 2>"$stderr"; then
+                    status=0
+                  else
+                    status=$?
                   fi
-                }
-                trap cleanup EXIT
 
-                xvfb-run -a eww --config "$config" daemon --no-daemonize \
-                  >"$TMPDIR/eww.log" 2>&1 &
-                daemon_pid=$!
+                  cat "$stdout"
+                  cat "$stderr" >&2
 
-                windows=""
-                for _ in $(seq 1 100); do
-                  windows=$(eww --config "$config" list-windows 2>/dev/null || true)
-                  [ -n "$windows" ] && break
-                  sleep 0.1
-                done
+                  if [ "$status" -ne 0 ]; then
+                    echo "Noctalia config validation failed for $name" >&2
+                    exit "$status"
+                  fi
 
-                for window in bar audio-popup popup-closer power-popup profile-popup; do
-                  if ! grep -qx "$window" <<< "$windows"; then
-                    cat "$TMPDIR/eww.log" >&2
-                    echo "Eww config did not register window: $window" >&2
+                  if grep -Eiq \
+                    '(warning|deprecat(ed|ion)?|migrat(e|ed|ion)?)' \
+                    "$stdout" "$stderr"; then
+                    echo "Noctalia config validation emitted a maintenance notice for $name" >&2
                     exit 1
                   fi
-                done
+                }
 
-                cleanup
-                trap - EXIT
+                ${lib.concatStringsSep "\n" (
+                  lib.mapAttrsToList (
+                    name: source: "validate_config ${lib.escapeShellArg name} ${lib.escapeShellArg (toString source)}"
+                  ) noctaliaConfigSources
+                )}
+
                 mkdir -p "$out"
                 touch "$out/ok"
               '';

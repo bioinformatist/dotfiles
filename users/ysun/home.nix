@@ -10,7 +10,6 @@
   ];
 
   dotfiles.hyprland.noHardwareCursors = true;
-  dotfiles.eww.d2r.enable = true;
 
   home.packages = [
     pkgs.orca-ide

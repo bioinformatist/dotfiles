@@ -1,4 +1,0 @@
-;; Empty extension point used by the shared bar when no narrow feature is enabled.
-
-(defwidget bar-center-extra []
-  (box))
