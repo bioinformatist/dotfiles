@@ -453,6 +453,12 @@
             linglong =
               self.nixosConfigurations.linglong.config.home-manager.users.ysun.xdg.configFile."noctalia/config.toml".source;
           };
+          noctaliaPaletteSources = {
+            homePC =
+              self.nixosConfigurations.homePC.config.home-manager.users.ysun.xdg.configFile."noctalia/palettes/dotfiles.json".source;
+            linglong =
+              self.nixosConfigurations.linglong.config.home-manager.users.ysun.xdg.configFile."noctalia/palettes/dotfiles.json".source;
+          };
           globalMattPocockSkillsEnabled =
             self.nixosConfigurations.homePC.config.home-manager.users.ysun.dotfiles.codex.mattPocockSkills.enable;
         in
@@ -463,6 +469,7 @@
                 nativeBuildInputs = [
                   noctaliaPackage
                   pkgs.gnugrep
+                  pkgs.jq
                 ];
               }
               ''
@@ -495,10 +502,74 @@
                   fi
                 }
 
+                validate_palette() {
+                  name="$1"
+                  palette="$2"
+
+                  if ! jq -e '
+                    def color:
+                      type == "string" and test("^#[0-9A-Fa-f]{6}$");
+
+                    . as $root
+                    | ($root.dark | type == "object")
+                      and ([
+                        "mPrimary",
+                        "mOnPrimary",
+                        "mSecondary",
+                        "mOnSecondary",
+                        "mTertiary",
+                        "mOnTertiary",
+                        "mError",
+                        "mOnError",
+                        "mSurface",
+                        "mOnSurface",
+                        "mSurfaceVariant",
+                        "mOnSurfaceVariant",
+                        "mOutline",
+                        "mShadow",
+                        "mHover",
+                        "mOnHover"
+                      ] | all(. as $key | $root.dark[$key] | color))
+                      and ($root.dark.terminal | type == "object")
+                      and ([
+                        "foreground",
+                        "background",
+                        "cursor",
+                        "cursorText",
+                        "selectionFg",
+                        "selectionBg"
+                      ] | all(. as $key | $root.dark.terminal[$key] | color))
+                      and ($root.dark.terminal.normal | type == "object")
+                      and ($root.dark.terminal.bright | type == "object")
+                      and ([
+                        "black",
+                        "red",
+                        "green",
+                        "yellow",
+                        "blue",
+                        "magenta",
+                        "cyan",
+                        "white"
+                      ] | all(
+                        . as $key
+                        | ($root.dark.terminal.normal[$key] | color)
+                          and ($root.dark.terminal.bright[$key] | color)
+                      ))
+                  ' "$palette" >/dev/null; then
+                    echo "Noctalia custom palette validation failed for $name" >&2
+                    exit 1
+                  fi
+                }
+
                 ${lib.concatStringsSep "\n" (
                   lib.mapAttrsToList (
                     name: source: "validate_config ${lib.escapeShellArg name} ${lib.escapeShellArg (toString source)}"
                   ) noctaliaConfigSources
+                )}
+                ${lib.concatStringsSep "\n" (
+                  lib.mapAttrsToList (
+                    name: source: "validate_palette ${lib.escapeShellArg name} ${lib.escapeShellArg (toString source)}"
+                  ) noctaliaPaletteSources
                 )}
 
                 mkdir -p "$out"
