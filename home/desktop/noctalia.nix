@@ -214,6 +214,34 @@ in
       mShadow = "#FFA31A";
       mHover = "#242424";
       mOnHover = "#FFFFFF";
+      terminal = {
+        foreground = "#FFFFFF";
+        background = "#090909";
+        cursor = "#FFA31A";
+        cursorText = "#000000";
+        selectionFg = "#000000";
+        selectionBg = "#21D4FD";
+        normal = {
+          black = "#090909";
+          red = "#E5484D";
+          green = "#5FD75F";
+          yellow = "#FFA31A";
+          blue = "#4EA1FF";
+          magenta = "#D75FD7";
+          cyan = "#21D4FD";
+          white = "#C7C7C7";
+        };
+        bright = {
+          black = "#595959";
+          red = "#FF6B70";
+          green = "#87E887";
+          yellow = "#FFC266";
+          blue = "#78B7FF";
+          magenta = "#E889E8";
+          cyan = "#6BE4FF";
+          white = "#FFFFFF";
+        };
+      };
     };
   };
 }
