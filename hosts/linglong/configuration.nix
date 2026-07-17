@@ -128,6 +128,7 @@
         "Downloads"
         "Documents"
         ".local/state/noctalia"
+        ".cache/noctalia/calendar"
         ".cache/fontconfig"
       ];
       files = [

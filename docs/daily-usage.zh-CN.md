@@ -68,7 +68,8 @@
 | `~/xwechat_files` | 微信聊天记录和文件 |
 | `~/Downloads` | 下载目录 |
 | `~/Documents` | 文档目录 |
-| `~/.local/state/noctalia` | Noctalia Settings 覆盖和运行时状态 |
+| `~/.local/state/noctalia` | Noctalia Settings 覆盖、账户状态和 OAuth 令牌 |
+| `~/.cache/noctalia/calendar` | Noctalia 同步的日历事件快照 |
 | `~/.cache/fontconfig` | GTK/Pango 应用启动用字体缓存 |
 | `~/.ssh/known_hosts` | SSH 已知主机（以文件而非目录形式持久化，详见配置注释） |
 | `~/.config/hypr/monitors.conf` | nwg-displays 写入的显示器布局 |
@@ -112,11 +113,19 @@ Hyprlock、KDE Polkit agent 和现有 Hyprland 快捷键继续分别负责启动
 Yu Sun 的个人 Home Manager 层将其设为 `Guangzhou, China`、摄氏度和 30 分钟刷新。
 在 Noctalia Settings 中修改地点、自动定位、单位或刷新间隔时，结果写入
 `~/.local/state/noctalia`；这些持久化覆盖在声明式默认值之后加载，因此重启后仍优先。
+状态栏中的天气项有意只显示图标和温度，不显示天气状况文字。
 
-状态栏保持工作区 1–10 可见，并显示紧凑的 CPU、内存和 GPU 数值。网络、蓝牙、
-音量、通知和控制中心均使用 Noctalia 原生面板；音量 overdrive 已关闭，主控制范围
-保持 0–100%。电池、亮度、GPU 和电源 profile 界面取决于各主机实际报告的硬件和后端，
-设备缺失时应安全降级而不是显示损坏的控件。
+状态栏保持工作区 1–10 可见，并显示紧凑的 CPU 和 GPU 使用百分比，内存也以百分比
+显示。网络、蓝牙、音量、通知和控制中心均使用 Noctalia 原生面板；音量 overdrive
+已关闭，主控制范围保持 0–100%。电池、亮度、GPU 和电源 profile 界面取决于各主机
+实际报告的硬件和后端，设备缺失时应安全降级而不是显示损坏的控件。
+
+日历中的 `No events` 面板以只读方式显示所选日期的事件；它不是事件编辑器或任务列表。
+如需添加中国法定节假日，请通过 Google Calendar 的“通过网址订阅”界面添加
+`https://yangh9.github.io/ChinaCalendar/cal_holiday.ics`，再在每台主机的 Noctalia
+Settings 中分别连接 Google。ICS 订阅归 Google 管理；`~/.local/state/noctalia`
+保存 Noctalia 账户覆盖和 OAuth 令牌，持久化的
+`~/.cache/noctalia/calendar/events.json` 保存同步事件快照。
 
 托盘显示应用自己导出的 StatusNotifierItem（SNI）图标。Clash Verge、Fcitx 和微信
 在实际导出时使用各自官方托盘项，不添加第二个启动器或弹窗。`SUPER + W` 仍用于在

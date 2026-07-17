@@ -68,7 +68,8 @@ This repository currently manages the `homePC` workstation and `linglong` keyboa
 | `~/xwechat_files` | WeChat chat history and files |
 | `~/Downloads` | Downloads |
 | `~/Documents` | Documents |
-| `~/.local/state/noctalia` | Noctalia Settings overrides and runtime state |
+| `~/.local/state/noctalia` | Noctalia Settings overrides, account state, and OAuth tokens |
+| `~/.cache/noctalia/calendar` | Noctalia synchronized calendar event snapshots |
 | `~/.cache/fontconfig` | Font cache for GTK/Pango application startup |
 | `~/.ssh/known_hosts` | SSH known hosts (persisted as file, not directory — see note in config) |
 | `~/.config/hypr/monitors.conf` | Monitor layout written by nwg-displays |
@@ -115,14 +116,26 @@ to `null`, which disables configured weather. Yu Sun's personal Home Manager
 layer sets `Guangzhou, China`, Celsius, with a 30-minute refresh. Changes made
 in Noctalia Settings—including location, automatic location, unit, and refresh
 interval—are written under `~/.local/state/noctalia`; those persisted overrides
-load after the declarative defaults and therefore win across restarts.
+load after the declarative defaults and therefore win across restarts. The
+weather bar item intentionally shows only its icon and temperature, omitting
+condition text.
 
-The bar keeps workspaces 1–10 visible and uses compact CPU, memory, and GPU
-readouts. Network, Bluetooth, volume, notifications, and the control center use
-Noctalia's native panels; volume overdrive is disabled, so the primary control
-stays within 0–100%. Battery, brightness, GPU, and power-profile surfaces depend
-on the hardware and backend actually reported by each host and must degrade
-without presenting broken controls when a device is absent.
+The bar keeps workspaces 1–10 visible and uses compact CPU and GPU use
+percentages, with RAM also shown as a percentage. Network, Bluetooth, volume,
+notifications, and the control center use Noctalia's native panels; volume
+overdrive is disabled, so the primary control stays within 0–100%. Battery,
+brightness, GPU, and power-profile surfaces depend on the hardware and backend
+actually reported by each host and must degrade without presenting broken
+controls when a device is absent.
+
+The calendar's `No events` pane shows the selected day's events read-only; it is
+not an event editor or task list. To add Chinese statutory holidays, subscribe
+to `https://yangh9.github.io/ChinaCalendar/cal_holiday.ics` through Google
+Calendar's URL-subscription UI. Then connect Google independently in Noctalia
+Settings on each host. Google owns the ICS subscription, while
+`~/.local/state/noctalia` stores Noctalia account overrides and OAuth tokens,
+and the persisted `~/.cache/noctalia/calendar/events.json` stores synchronized
+event snapshots.
 
 The tray renders applications' official StatusNotifierItem (SNI) icons. Clash
 Verge, Fcitx, and WeChat use their own items when exported; there is no second

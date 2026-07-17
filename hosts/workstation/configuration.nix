@@ -224,6 +224,7 @@
         ".cargo/registry" # Cargo registry cache (speeds up rebuilds)
         ".local/share/Steam" # Steam games, Proton prefixes, saves
         ".local/state/noctalia" # Settings UI overrides and Noctalia runtime state
+        ".cache/noctalia/calendar" # Synchronized calendar event snapshot
         ".cache/fontconfig" # Font cache for GTK/Pango app cold starts
       ];
       # known_hosts is a symlink → /persist (cross-filesystem), so SSH cannot
