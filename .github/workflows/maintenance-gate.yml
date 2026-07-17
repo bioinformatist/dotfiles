@@ -30,12 +30,15 @@ jobs:
         https://mirrors.ustc.edu.cn/nix-channels/store
         https://anyrun.cachix.org
         https://hyprland.cachix.org
+        https://noctalia.cachix.org
       DECLARED_EXTRA_SUBSTITUTERS: >-
         https://anyrun.cachix.org
         https://hyprland.cachix.org
+        https://noctalia.cachix.org
       CHINA_EXTRA_TRUSTED_PUBLIC_KEYS: >-
         anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s=
         hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
+        noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4=
       NIXPKGS_ALLOW_UNFREE: "1"
 
     steps:
@@ -117,9 +120,11 @@ jobs:
         https://mirrors.ustc.edu.cn/nix-channels/store
         https://anyrun.cachix.org
         https://hyprland.cachix.org
+        https://noctalia.cachix.org
       CHINA_EXTRA_TRUSTED_PUBLIC_KEYS: >-
         anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s=
         hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
+        noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4=
       NIXPKGS_ALLOW_UNFREE: "1"
 
     steps:

@@ -18,7 +18,7 @@ maint-switch
 dotfiles.nixNetwork.profile = "china";
 ```
 
-这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。workstation 模块也窄幅声明了 Anyrun 和 Hyprland 的额外 Cachix substituter，因为这些快速变动的桌面输入确实有可用的上游缓存。本地代理 URL 也在 NixOS 配置中声明：
+这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。workstation 模块也窄幅声明了 Anyrun、Hyprland 和 Noctalia 的额外 Cachix substituter，因为这些快速变动的桌面输入确实有可用的上游缓存。本地代理 URL 也在 NixOS 配置中声明：
 
 ```nix
 dotfiles.nixNetwork.proxy = {
@@ -80,8 +80,8 @@ auto-merge。默认分支应通过 ruleset 保护：要求 PR，并要求 `maint
 
 PR 会跑两类 dry-run：
 
-- `global-*`：GitHub runner 默认网络下的基本 dry-run，同时显式加入 Anyrun 和 Hyprland Cachix。
-- `china-gate-*`：使用声明式中国维护 cache 集合：USTC 加 Anyrun/Hyprland Cachix，并清空未声明的 `extra-substituters`。
+- `global-*`：GitHub runner 默认网络下的基本 dry-run，同时显式加入 Anyrun、Hyprland 和 Noctalia Cachix。
+- `china-gate-*`：使用声明式中国维护 cache 集合：USTC 加 Anyrun/Hyprland/Noctalia Cachix，并清空未声明的 `extra-substituters`。
 
 required gate 还会 dry-run 一个合成的 `ci@headless` Home Manager 配置。这个配置
 消费 downstream 仓库使用的导出 headless 开发模块，因此共享工具输入不仅要对
