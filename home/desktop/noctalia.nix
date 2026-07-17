@@ -142,7 +142,7 @@ in
 
             mem = {
               type = "sysmon";
-              stat = "ram_used";
+              stat = "ram_pct";
               display = "text";
               show_label = true;
               scale = 0.85;
@@ -160,8 +160,8 @@ in
               show_label = true;
               scale = 0.85;
               capsule = true;
-              capsule_fill = "primary";
-              capsule_foreground = "on_primary";
+              capsule_fill = "surface_variant";
+              capsule_foreground = "on_surface";
               capsule_padding = 5;
               capsule_radius = 6.0;
             };
@@ -169,9 +169,13 @@ in
             network.show_label = false;
             bluetooth.show_label = false;
             volume.show_label = false;
+            weather.show_condition = false;
           };
 
-          system.monitor.enabled = true;
+          system.monitor = {
+            enabled = true;
+            gpu_poll_seconds = 2.0;
+          };
 
           weather = {
             enabled = cfg.weatherLocation != null;
@@ -244,4 +248,9 @@ in
       };
     };
   };
+
+  # Noctalia loads NVML at runtime; NixOS exposes the active driver libraries here.
+  config.systemd.user.services.noctalia.Service.Environment = [
+    "LD_LIBRARY_PATH=/run/opengl-driver/lib"
+  ];
 }
