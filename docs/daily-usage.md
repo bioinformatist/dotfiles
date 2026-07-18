@@ -113,7 +113,7 @@ hardware keys.
 
 The shared `dotfiles.noctalia.weatherLocation` option is nullable and defaults
 to `null`, which disables configured weather. Yu Sun's personal Home Manager
-layer sets `Guangzhou, China`, Celsius, with a 30-minute refresh. Changes made
+layer sets `Guangzhou, China`, Celsius, with a 10-minute refresh. Changes made
 in Noctalia Settings—including location, automatic location, unit, and refresh
 interval—are written under `~/.local/state/noctalia`; those persisted overrides
 load after the declarative defaults and therefore win across restarts. The
@@ -139,8 +139,10 @@ event snapshots.
 
 The tray renders applications' official StatusNotifierItem (SNI) icons. Clash
 Verge, Fcitx, and WeChat use their own items when exported; there is no second
-launcher or popup for them. `SUPER + W` remains the workflow for moving the
-running WeChat window between `special:wechat` and the current workspace.
+launcher or popup for them. AnyRun indexes WeChat's package-owned
+`com.tencent.wechat.desktop` entry; the repository does not define a duplicate.
+`SUPER + W` launches WeChat when no window exists, then moves the running window
+between `special:wechat` and the current workspace.
 Battle.net appears only if the Wine application exports SNI; absence is an
 observation, not evidence that a compatibility bridge should be added.
 
@@ -182,7 +184,13 @@ hosts after `noctalia.service`.
 | Component | Description |
 | :--- | :--- |
 | **Fcitx5** (system) | Input method framework, Wayland frontend enabled |
-| **Fcitx5** (user / Home Manager) | Addons: `fcitx5-rime`, `fcitx5-gtk`, `fcitx5-chinese-addons`, `fcitx5-configtool` |
+| **Fcitx5 addons** (NixOS `i18n.inputMethod`) | `fcitx5-rime`, `fcitx5-gtk`, `fcitx5-configtool` |
+
+Compose combines a short key sequence into one character without changing the
+US keyboard layout. On personal workstations, press Right Alt and release it,
+then type the sequence: `'` then `a` for `á`, `~` then `a` for `ã`, `,` then
+`c` for `ç`, or `^` then `e` for `ê`. Plain punctuation and `Ctrl + Space`
+Fcitx/Rime toggling are unchanged.
 
 ### Fonts
 
@@ -217,7 +225,7 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + F` | Toggle **Fullscreen** |
 | `SUPER + Return` | Launch **Terminal** (Ghostty) |
 | `SUPER + B` | Launch **Browser** (Chrome) |
-| `SUPER + W` | Toggle the running **WeChat** window between `special:wechat` and the current workspace |
+| `SUPER + W` | Launch **WeChat** if absent; otherwise hide/show it between `special:wechat` and the current workspace |
 | `SUPER + L` | **Lock Screen** (hyprlock) |
 | `SUPER + R` | Enter **Resize Mode** (arrow keys to resize, `Escape` to exit) |
 | `ALT + A` | **Screenshot** region → annotate (satty) → clipboard |
@@ -444,17 +452,22 @@ This system uses an **ephemeral root** approach. Only specific directories are p
 ### Software Rendering (VM Only)
 In VM environments where GPU acceleration is unstable, software rendering is forced globally via `LIBGL_ALWAYS_SOFTWARE=1`. The maintained physical hosts (`homePC` and `linglong`) do not include this setting.
 
-### Fcitx5 Not Responding After Unclean Shutdown (Ctrl+Space Broken)
+### Fcitx5 Wayland Input Not Switching (Ctrl+Space Broken)
 
-After a crash or unclean shutdown, fcitx5 may start but fail to initialize its Wayland frontend properly. Symptom: `Ctrl+Space` does nothing, and `fcitx5-remote` prints `0` (unreachable).
+The Fcitx5 Wayland frontend can become stale even while `fcitx5-remote` remains
+reachable and the toggle command returns success. Native Wayland applications
+may remain on the US keyboard while XWayland applications still switch input
+methods. This is separate from compositor shortcut inhibition.
 
-Fix — restart the Fcitx5 autostart service:
+Recover manually by restarting the existing Fcitx5 autostart service:
 
 ```nu
 systemctl --user restart app-org.fcitx.Fcitx5@autostart.service
 ```
 
-> UWSM starts fcitx5 through the XDG autostart service after the graphical session is ready. The command above is only needed after an unclean shutdown leaves stale state.
+> UWSM starts Fcitx5 through this XDG autostart service after the graphical
+> session is ready. Restart it only when the Wayland frontend is stale; no
+> compositor reload is required.
 
 ### GitHub CLI Authentication
 

@@ -7,6 +7,7 @@
     "-clash-verge-gui.service.drv",
     "-power-profiles-daemon-linglong-0.30.drv",
     "-power-profiles-daemon-linglong-0.30-build-python.drv",
-    "-anyrun-application-exec-preprocessor.drv"
+    "-anyrun-application-exec-preprocessor.drv",
+    "-wechat-uos-fcitx.drv"
   ]
 }

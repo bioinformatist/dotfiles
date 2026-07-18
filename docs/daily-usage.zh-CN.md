@@ -110,7 +110,7 @@ Hyprlock、KDE Polkit agent 和现有 Hyprland 快捷键继续分别负责启动
 授权和硬件按键。
 
 共享的 `dotfiles.noctalia.weatherLocation` 选项可为空，默认 `null` 会关闭声明式天气。
-Yu Sun 的个人 Home Manager 层将其设为 `Guangzhou, China`、摄氏度和 30 分钟刷新。
+Yu Sun 的个人 Home Manager 层将其设为 `Guangzhou, China`、摄氏度和 10 分钟刷新。
 在 Noctalia Settings 中修改地点、自动定位、单位或刷新间隔时，结果写入
 `~/.local/state/noctalia`；这些持久化覆盖在声明式默认值之后加载，因此重启后仍优先。
 状态栏中的天气项有意只显示图标和温度，不显示天气状况文字。
@@ -128,9 +128,11 @@ Settings 中分别连接 Google。ICS 订阅归 Google 管理；`~/.local/state/
 `~/.cache/noctalia/calendar/events.json` 保存同步事件快照。
 
 托盘显示应用自己导出的 StatusNotifierItem（SNI）图标。Clash Verge、Fcitx 和微信
-在实际导出时使用各自官方托盘项，不添加第二个启动器或弹窗。`SUPER + W` 仍用于在
-`special:wechat` 与当前工作区之间移动正在运行的微信窗口。Battle.net 只有在 Wine
-应用实际导出 SNI 时才会出现；缺失只是一项观察，不代表需要添加兼容桥。
+在实际导出时使用各自官方托盘项，不添加第二个启动器或弹窗。AnyRun 索引微信软件包
+自带的 `com.tencent.wechat.desktop` 条目；仓库不定义重复条目。微信没有窗口时，
+`SUPER + W` 会启动微信；已有窗口时，则在 `special:wechat` 与当前工作区之间移动。
+Battle.net 只有在 Wine 应用实际导出 SNI 时才会出现；缺失只是一项观察，不代表需要
+添加兼容桥。
 
 D2R 和 Terror Zone 内容已从工作站状态栏移除。若未来仍需实现，应放在独立的开源
 Noctalia v5 插件仓库中。可复用工作站导出仍默认关闭 Clash；个人 Home Manager 层在
@@ -168,7 +170,12 @@ Noctalia v5 插件仓库中。可复用工作站导出仍默认关闭 Clash；�
 | 组件 | 说明 |
 | :--- | :--- |
 | **Fcitx5**（系统级） | 输入法框架，已启用 Wayland 前端 |
-| **Fcitx5**（用户级 / Home Manager） | 插件：`fcitx5-rime`、`fcitx5-gtk`、`fcitx5-chinese-addons`、`fcitx5-configtool` |
+| **Fcitx5 插件**（NixOS `i18n.inputMethod`） | `fcitx5-rime`、`fcitx5-gtk`、`fcitx5-configtool` |
+
+Compose（组合键）通过一段短按键序列输入单个字符，不改变当前美式键盘布局。在个人
+工作站上，按下并松开右 Alt，再依次输入：`'`、`a` 得到 `á`；`~`、`a` 得到 `ã`；
+`,`、`c` 得到 `ç`；`^`、`e` 得到 `ê`。普通标点和 `Ctrl + Space` 切换 Fcitx/Rime
+的行为保持不变。
 
 ### 字体
 
@@ -203,7 +210,7 @@ Noctalia v5 插件仓库中。可复用工作站导出仍默认关闭 Clash；�
 | `SUPER + F` | 切换**全屏** |
 | `SUPER + Return` | 启动**终端**（Ghostty） |
 | `SUPER + B` | 启动**浏览器**（Chrome） |
-| `SUPER + W` | 在 `special:wechat` 与当前工作区之间切换正在运行的**微信**窗口 |
+| `SUPER + W` | **微信**不存在时启动；否则在 `special:wechat` 与当前工作区之间隐藏/显示 |
 | `SUPER + L` | **锁屏**（hyprlock） |
 | `SUPER + R` | 进入**调整大小模式**（方向键调整，`Escape` 退出） |
 | `ALT + A` | **截图**选区 → 标注（satty） → 剪贴板 |
@@ -442,17 +449,20 @@ d2r-bat ProjectDiablo2/setup.bat
 ### 软件渲染（仅 VM）
 在 GPU 加速不稳定的虚拟机环境中，通过全局设置 `LIBGL_ALWAYS_SOFTWARE=1` 强制使用软件渲染。当前维护的物理主机（`homePC` 和 `linglong`）不包含此设置。
 
-### Fcitx5 非正常关机后无响应（Ctrl+Space 失效）
+### Fcitx5 Wayland 输入无法切换（Ctrl+Space 失效）
 
-在崩溃或非正常关机后，fcitx5 可能正常启动但 Wayland 前端未能正确初始化。症状：`Ctrl+Space` 无反应，`fcitx5-remote` 输出 `0`（无法连接）。
+即使 `fcitx5-remote` 仍可连接且切换命令成功返回，Fcitx5 Wayland 前端也可能已经
+失效。此时原生 Wayland 应用可能仍停留在美式键盘，而 XWayland 应用仍能切换输入法。
+这与合成器的快捷键抑制是两个独立问题。
 
-修复方法——重启 Fcitx5 自启动服务：
+手动重启现有的 Fcitx5 自启动服务即可恢复：
 
 ```nu
 systemctl --user restart app-org.fcitx.Fcitx5@autostart.service
 ```
 
-> UWSM 会在图形会话就绪后通过 XDG 自启动服务启动 fcitx5。正常开机时此机制可靠；上述命令仅在非正常关机留下残余状态时需要。
+> UWSM 会在图形会话就绪后通过此 XDG 自启动服务启动 Fcitx5。仅在 Wayland 前端
+> 失效时重启该服务；无需重新加载合成器。
 
 ### GitHub CLI 认证
 

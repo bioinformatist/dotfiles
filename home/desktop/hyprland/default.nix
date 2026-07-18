@@ -8,7 +8,10 @@ let
   cfg = config.dotfiles.hyprland;
 in
 {
-  options.dotfiles.hyprland.noHardwareCursors = lib.mkEnableOption "software-rendered Hyprland cursors";
+  options.dotfiles.hyprland = {
+    noHardwareCursors = lib.mkEnableOption "software-rendered Hyprland cursors";
+    rightAltCompose = lib.mkEnableOption "Right Alt as the XKB Compose key";
+  };
 
   config = {
     xdg.configFile = {
@@ -35,6 +38,13 @@ in
       configType = "hyprlang";
       extraConfig =
         builtins.readFile ./hyprland.conf
+        + lib.optionalString cfg.rightAltCompose ''
+
+          # Keep the US layout while enabling Compose sequences for accents.
+          input {
+              kb_options = compose:ralt
+          }
+        ''
         + lib.optionalString cfg.noHardwareCursors ''
 
           # NVIDIA: software-rendered cursor avoids hardware cursor flicker caused
