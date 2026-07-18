@@ -14,14 +14,32 @@ in
 {
   imports = [ inputs.noctalia.homeModules.default ];
 
-  options.dotfiles.noctalia.weatherLocation = lib.mkOption {
-    type = lib.types.nullOr lib.types.str;
-    default = null;
-    description = ''
-      Fixed weather location for Noctalia. Set to null to disable configured
-      weather and leave location unset.
-    '';
+  options.dotfiles.noctalia = {
+    weatherLocation = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = ''
+        Fixed weather location for Noctalia. Set to null to disable configured
+        weather and leave location unset.
+      '';
+    };
+
+    weatherRefreshMinutes = lib.mkOption {
+      type = lib.types.ints.between 5 240;
+      default = 30;
+      description = ''
+        Weather refresh interval in minutes. Noctalia accepts values from 5 to
+        240 minutes in increments of 5.
+      '';
+    };
   };
+
+  config.assertions = [
+    {
+      assertion = lib.mod cfg.weatherRefreshMinutes 5 == 0;
+      message = "dotfiles.noctalia.weatherRefreshMinutes must be divisible by 5";
+    }
+  ];
 
   config.programs.noctalia = {
     enable = true;
@@ -179,7 +197,7 @@ in
 
           weather = {
             enabled = cfg.weatherLocation != null;
-            refresh_minutes = 30;
+            refresh_minutes = cfg.weatherRefreshMinutes;
             unit = "celsius";
           };
 

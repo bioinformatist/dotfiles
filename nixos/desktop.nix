@@ -36,6 +36,14 @@ let
     postBuild = ''
       wrapProgram $out/bin/wechat-uos \
         --set QT_IM_MODULE fcitx
+
+      desktopFile=$out/share/applications/com.tencent.wechat.desktop
+      rm "$desktopFile"
+      install -m 0644 ${wechat-uos-with-referer}/share/applications/com.tencent.wechat.desktop "$desktopFile"
+      substituteInPlace "$desktopFile" \
+        --replace-fail \
+        "Exec=${wechat-uos-with-referer}/bin/wechat-uos -- %U" \
+        "Exec=$out/bin/wechat-uos -- %U"
     '';
   };
   clash-verge-rev = pkgs.symlinkJoin {
@@ -152,8 +160,9 @@ in
       #
       # NOTE: On Hyprland (wlroots), fcitx5's native trigger key (TriggerKeys in
       # globalOptions) does NOT work — Wayland input-method-v2 protocol doesn't
-      # reliably deliver key events to fcitx5. We solve this with a Hyprland bind
-      # in hyprland.conf: `bind = CTRL, space, exec, fcitx5-remote -t`.
+      # reliably deliver key events to fcitx5. We use legacy Hyprland `bindp` in
+      # hyprland.conf to apply dontInhibit only to the Ctrl+Space toggle, without
+      # disabling application shortcut inhibition for other bindings.
       #
       # Related: the "Keep virtual keyboard object for V2 Protocol" option in
       # fcitx5's Wayland IM frontend addon can cause "sticky key" bugs on

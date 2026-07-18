@@ -18,6 +18,8 @@
   };
 
   dotfiles.noctalia.weatherLocation = "Guangzhou, China";
+  dotfiles.noctalia.weatherRefreshMinutes = 10;
+  dotfiles.hyprland.rightAltCompose = true;
 
   systemd.user.services.clash-verge-gui = {
     Unit = {
