@@ -16,8 +16,8 @@ trap 'rm -rf "$test_root"' EXIT
 fake_bin="$test_root/bin"
 mkdir -p "$fake_bin"
 
-cat >"$fake_bin/codex" <<'FAKE_CODEX'
-#!/usr/bin/env bash
+printf '#!%s\n' "$(command -v bash)" >"$fake_bin/codex"
+cat >>"$fake_bin/codex" <<'FAKE_CODEX'
 set -u
 
 : "${FAKE_CODEX_MODE:?}" "${FAKE_COUNT_FILE:?}" "${FAKE_INVOCATION_LOG:?}" "${FAKE_PROMPT_LOG:?}"

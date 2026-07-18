@@ -43,6 +43,7 @@ codex-improve-exec --deep <plan-artifact-path>
 The helper creates a branch and worktree from the current `HEAD`, selects `improve-executor` or `improve-executor-deep`, inlines the entire plan, disables recursive multi-agent work through the profile, and preserves the worktree even if execution fails. It prints stable handoff fields:
 
 ```text
+IMPROVE_MODE=initial
 IMPROVE_WORKTREE=...
 IMPROVE_BRANCH=...
 IMPROVE_BASE=...
@@ -56,6 +57,46 @@ Executor worktrees live under `$XDG_STATE_HOME/codex-improve/worktrees`, falling
 back to `~/.local/state`, so an interruption or reboot does not silently discard
 uncommitted work that is awaiting review or a user decision. Runtime processes
 remain disposable; the worktree is the persistent recovery surface.
+
+### Revise Before Integration
+
+A failed review or acceptance against the still-current pre-integration
+worktree may receive at most two narrow revision rounds. Prepare a complete
+revision dossier containing:
+
+- the complete current plan and semantic anchors;
+- revision round, current checkpoint, branch, worktree, original normal or deep
+  profile, and diff identity;
+- exact failing review or acceptance evidence;
+- classification as an in-scope defect, changed requirement, unrelated
+  environment failure, or new scope or Engineering contract;
+- the approved semantic amendment, when one exists;
+- permitted paths, affected gates, and exact verification commands;
+- prior reviewer evidence that remains valid and evidence that must be rerun;
+  and
+- explicit STOP conditions.
+
+Dispatch the dossier through the same helper and the original profile:
+
+```console
+codex-improve-exec --revise "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-exec --deep --revise "$IMPROVE_WORKTREE" <dossier-file>
+```
+
+The helper validates that the path is the root of a registered linked Git
+worktree on `refs/heads/codex/improve-*`, reuses it without creating or removing
+a branch or worktree, and passes the complete dossier exactly once to a fresh
+ephemeral executor. The executor preserves the existing diff, does not reload
+Improve or Ponytail, performs no broad recon, edits only dossier-authorized
+paths, and runs only named affected checks. New scope, an Engineering-contract
+edit, contradictory semantics, an unrecognized checkpoint, or a missing
+original profile is a STOP.
+
+A changed requirement or new scope or contract returns to planning rather than
+revision. An unrelated environment failure preserves the current acceptance
+state and records its evidence. After integration, even an in-scope defect
+starts from the current integrated baseline through initial mode and a new
+worktree; never revise the obsolete pre-integration worktree.
 
 ### Review
 
@@ -275,7 +316,7 @@ Render exactly one main-agent implementation outcome. A triggered reviewer retur
 a model verdict as evidence; `INCONCLUSIVE` remains a separate helper status:
 
 - `APPROVE`: criteria pass, scope is clean, and implementation quality holds. Report the diff summary, branch, worktree path, and material notes. Do not commit, merge, or push.
-- `REVISE`: give the executor specific failing criteria or hunks, inline the full plan again, and run `codex exec -C "$IMPROVE_WORKTREE" -p "$IMPROVE_PROFILE" --ephemeral -` against the same preserved worktree. Keep the executor restrictions from the initial prompt, rerun affected checks and only reviews whose evidence changed, and stop after two revision rounds.
+- `REVISE`: prepare the complete revision dossier and invoke the helper's matching normal or deep `--revise` form against the same preserved pre-integration worktree. Rerun only invalidated checks and reviewers, and stop after two revision rounds.
 - `BLOCK`: the plan is stale, a STOP condition occurred, required or not-yet-approved scope expanded, including an Engineering-contract change, or the approach is unsound. Return to planning and ask for user approval before changing direction.
 - `INCONCLUSIVE`: report the helper's exact exit reason and preserved diagnostic
   paths, halt integration, and ask for explicit approval before another review
@@ -292,28 +333,45 @@ deferring work to a person or external system. For each deferred acceptance:
    cross-machine check.
 2. Ask for approval before any commit, push, deployment, integration, or other
    action that repository rules or the user reserve for approval.
-3. Record the checkpoint ID, environment, procedure, expected evidence,
-   rollback or recovery path, and drift invalidation rule in the plan.
+3. Record the checkpoint ID and append a lineage row whenever its persistent
+   identity changes. Carry review evidence forward only after proving the
+   reviewed diff is unchanged; otherwise mark the applicable evidence invalid.
+   For stateful work, add the conditional Operational handoff with target and
+   checkpoint, owner, host or environment, working directory, complete commands
+   or physical procedure, prerequisites, temporary runtime mutations, cleanup
+   state and evidence, expected evidence, recovery, drift invalidation, and
+   secret locations or credential types without values.
 4. Stop executor, reviewer, server, and other processes that are not themselves
    part of the named acceptance environment. Return control with the plan and
    checkpoint sufficient to resume in a later turn.
 5. Record the result. `PASSED` may advance an integrated change to `DONE`.
-   `FAILED` returns to `IN PROGRESS` for an in-scope defect, while a changed
-   requirement, scope, authority, or approach returns to `BLOCKED` planning.
-   An unrelated environment outage remains `ACCEPTANCE PENDING` with evidence.
+   Before integration, `FAILED` returns to `IN PROGRESS` for an in-scope defect
+   and may use bounded revision. Against an integrated checkpoint, the same
+   plan may record the failure, but execution starts in initial mode from the
+   current integrated baseline and a new worktree. A changed requirement,
+   scope, authority, or approach returns to `BLOCKED` planning. An unrelated
+   environment outage remains `ACCEPTANCE PENDING` with evidence.
 
 Human feedback across turns is a normal pause in the Improve loop, not a
 terminated execution. Resume from the plan and checkpoint rather than from
 conversation recollection.
 
-Cleanup is a separate, explicit action after the user accepts or rejects the result:
+### Closeout
 
-```console
-git worktree remove <worktree>
-git branch -D <branch>
-```
+Closeout is a separate, explicit action and operates only on the worktree named
+by the current plan. Retain it while acceptance is pending. Before proposing
+cleanup:
 
-Never run cleanup while the worktree contains changes the user may still want.
+1. confirm the worktree belongs to the current repository and plan;
+2. inspect tracked, staged, and untracked changes;
+3. inspect whether its branch is safely integrated; and
+4. record `git worktree prune --dry-run --verbose` as evidence only.
+
+After explicit user approval, use `git worktree remove <worktree>` and
+`git branch -d <branch>` only for a clean, safely merged result. Forced removal
+requires separate explicit discard approval. STOP on dirty, unmerged,
+ambiguous, or cross-repository state; never infer that the user no longer wants
+the worktree.
 
 ## Reconcile
 
@@ -341,7 +399,9 @@ For each indexed plan:
 Obsolete or independently fixed work becomes `REJECTED` with a one-line
 rationale rather than being deleted. Reconciliation follows the planning
 contract's authority, semantic-anchor, and material-change rules for every
-state transition.
+state transition. It may report closeout candidates and dry-run prune evidence,
+but never removes a worktree or branch implicitly and never scans another user
+or unrelated repository's Improve state.
 
 ## Publish Issues
 
