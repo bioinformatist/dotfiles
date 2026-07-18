@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.4`
+Contract version: `1.0.0-codex.5`
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -143,12 +143,34 @@ Track implementation, integration, and external acceptance independently:
   commit SHA, branch or PR ref, deployment identity, or other repository-backed
   identifier that lets the main agent recover the same change.
 
+Keep one authoritative current Checkpoint and Checkpoint ID. Whenever that
+identity moves between a persistent worktree and diff, commit, PR, integration,
+preview, deployment, or another persistent target, append a short checkpoint
+lineage row containing the stage, new identity, superseded identity, preserved
+evidence, and invalidated evidence. An identity change does not preserve review
+evidence by itself. Carry evidence forward only after proving the reviewed diff
+is unchanged; every material diff change invalidates the applicable checks and
+reviewer conclusions.
+
 An asynchronous handoff for human or external acceptance requires a resumable
 checkpoint. Preparing it may require user approval for a commit, push, preview,
 deployment, or other action under the repository rules. Record that approval
 and the checkpoint ID before returning control for later feedback. A temporary
 process, an unrecorded runtime directory, or conversation history alone is not
 a resumable checkpoint.
+
+Add an `Operational handoff` only when the plan has stateful or deferred
+operations. It records:
+
+- target and current checkpoint;
+- owner, host or environment, and working directory;
+- complete commands or physical procedure and all prerequisites;
+- temporary runtime mutations plus their cleanup state and evidence;
+- expected evidence, recovery procedure, and the drift that invalidates it; and
+- secret locations or credential types, never secret values.
+
+The handoff must let every later acceptance operator act without conversation
+context. Omit it when the task has no stateful or deferred operation.
 
 ## Lifecycle and dependencies
 
@@ -192,8 +214,9 @@ For `plan` and `review-plan`, run an internal loop in this order:
 2. **Coverage** — map every user decision, verified fact, derivation, assumption,
    rejected alternative, scope boundary, planned change trigger, and Engineering
    contract impact row to text.
-3. **Zero-context** — verify an executor can act using only the plan and listed
-   repository evidence.
+3. **Zero-context** — verify the executor and every later acceptance operator
+   can act using only the plan, listed repository evidence, and any conditional
+   Operational handoff.
 4. **Logic** — check precedence, dependencies, lifecycle, STOP conditions,
    verification, rollback, and acceptance for contradictions.
 5. **Elegance** — remove duplication and incidental detail without weakening
