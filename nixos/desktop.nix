@@ -34,6 +34,8 @@ let
     paths = [ wechat-uos-with-referer ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
+      install -m 0755 ${./wechat-control} $out/bin/wechat-control
+
       wrapProgram $out/bin/wechat-uos \
         --set QT_IM_MODULE fcitx
 
@@ -43,7 +45,7 @@ let
       substituteInPlace "$desktopFile" \
         --replace-fail \
         "Exec=${wechat-uos-with-referer}/bin/wechat-uos -- %U" \
-        "Exec=$out/bin/wechat-uos -- %U"
+        "Exec=$out/bin/wechat-control launch -- %U"
     '';
   };
   clash-verge-rev = pkgs.symlinkJoin {

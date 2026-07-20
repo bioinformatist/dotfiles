@@ -1,0 +1,678 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+BASH_BIN=$(command -v bash)
+readonly BASH_BIN
+readonly SOURCE_CONTROLLER=${1:?usage: wechat-control-test CONTROLLER}
+
+TEST_ROOT=$(mktemp -d)
+readonly TEST_ROOT
+trap 'rm -rf "$TEST_ROOT"' EXIT
+
+readonly FAKE_BIN="$TEST_ROOT/fake-bin"
+readonly APP_DIR="$TEST_ROOT/app"
+readonly STATE_DIR="$TEST_ROOT/state"
+readonly COMMAND_LOG="$STATE_DIR/commands.log"
+readonly RUNTIME_DIR="$TEST_ROOT/runtime"
+
+mkdir -p "$FAKE_BIN" "$APP_DIR" "$STATE_DIR" "$RUNTIME_DIR"
+cp "$SOURCE_CONTROLLER" "$APP_DIR/wechat-control"
+chmod 0755 "$APP_DIR/wechat-control"
+
+write_fake() {
+  local path=$1
+
+  {
+    printf '#!%s\n' "$BASH_BIN"
+    cat
+  } >"$path"
+  chmod 0755 "$path"
+}
+
+write_fake "$FAKE_BIN/hyprctl" <<'FAKE'
+set -euo pipefail
+
+printf 'hyprctl' >>"$TEST_COMMAND_LOG"
+for argument in "$@"; do
+  printf ' <%s>' "$argument" >>"$TEST_COMMAND_LOG"
+done
+printf '\n' >>"$TEST_COMMAND_LOG"
+
+if [[ $# -eq 2 && $1 == clients && $2 == -j ]]; then
+  cat "$TEST_STATE_DIR/clients.json"
+  exit 0
+fi
+
+if [[ $# -eq 2 && $1 == activeworkspace && $2 == -j ]]; then
+  cat "$TEST_STATE_DIR/active-workspace.json"
+  exit 0
+fi
+
+if [[ $# -eq 2 && $1 == activewindow && $2 == -j ]]; then
+  cat "$TEST_STATE_DIR/active-window.json"
+  exit 0
+fi
+
+if [[ $# -eq 3 && $1 == dispatch && $2 == movetoworkspacesilent ]]; then
+  destination=${3%%,address:*}
+  address=${3#*,address:}
+  jq --arg address "$address" --arg destination "$destination" '
+    map(
+      if .address == $address
+      then .workspace.name = $destination
+      else .
+      end
+    )
+  ' "$TEST_STATE_DIR/clients.json" >"$TEST_STATE_DIR/clients.next"
+  mv "$TEST_STATE_DIR/clients.next" "$TEST_STATE_DIR/clients.json"
+  move_dispatch_count=0
+  if [[ -f $TEST_STATE_DIR/move-dispatch-count ]]; then
+    move_dispatch_count=$(<"$TEST_STATE_DIR/move-dispatch-count")
+  fi
+  ((move_dispatch_count += 1))
+  printf '%s\n' "$move_dispatch_count" >"$TEST_STATE_DIR/move-dispatch-count"
+  if [[ $move_dispatch_count -eq 1 && -f $TEST_STATE_DIR/move-injected-clients.json ]]; then
+    jq -s '.[0] + .[1]' \
+      "$TEST_STATE_DIR/clients.json" \
+      "$TEST_STATE_DIR/move-injected-clients.json" \
+      >"$TEST_STATE_DIR/clients.next"
+    mv "$TEST_STATE_DIR/clients.next" "$TEST_STATE_DIR/clients.json"
+  fi
+  exit 0
+fi
+
+if [[ $# -eq 3 && $1 == dispatch && $2 == focuswindow ]]; then
+  address=${3#address:}
+  if ! jq -e --arg address "$address" '
+    first(.[] | select(.address == $address))
+  ' "$TEST_STATE_DIR/clients.json" >"$TEST_STATE_DIR/active-window.next"; then
+    rm -f "$TEST_STATE_DIR/active-window.next"
+    exit 1
+  fi
+  mv "$TEST_STATE_DIR/active-window.next" "$TEST_STATE_DIR/active-window.json"
+  exit 0
+fi
+
+if [[ $# -eq 2 && $1 == dispatch && $2 == killactive ]]; then
+  exit 0
+fi
+
+exit 2
+FAKE
+
+write_fake "$FAKE_BIN/systemctl" <<'FAKE'
+set -euo pipefail
+
+printf 'systemctl' >>"$TEST_COMMAND_LOG"
+for argument in "$@"; do
+  printf ' <%s>' "$argument" >>"$TEST_COMMAND_LOG"
+done
+printf '\n' >>"$TEST_COMMAND_LOG"
+
+if [[ $# -eq 4 && $1 == --user && $2 == is-active && $3 == --quiet && $4 == app-wechat.service ]]; then
+  [[ $(<"$TEST_STATE_DIR/service-state") == active ]]
+  exit
+fi
+
+if [[ $# -eq 3 && $1 == --user && $2 == stop && $3 == app-wechat.service ]]; then
+  printf 'inactive\n' >"$TEST_STATE_DIR/service-state"
+  jq '
+    map(select(((.class // "") | ascii_downcase) != "wechat"))
+  ' "$TEST_STATE_DIR/clients.json" >"$TEST_STATE_DIR/clients.next"
+  mv "$TEST_STATE_DIR/clients.next" "$TEST_STATE_DIR/clients.json"
+  exit 0
+fi
+
+exit 2
+FAKE
+
+write_fake "$FAKE_BIN/uwsm" <<'FAKE'
+set -euo pipefail
+
+printf 'uwsm' >>"$TEST_COMMAND_LOG"
+for argument in "$@"; do
+  printf ' <%s>' "$argument" >>"$TEST_COMMAND_LOG"
+done
+printf '\n' >>"$TEST_COMMAND_LOG"
+
+if [[ " $* " == *" -t service "* ]]; then
+  printf 'active\n' >"$TEST_STATE_DIR/service-state"
+fi
+if [[ -f $TEST_STATE_DIR/activation-clients.json ]]; then
+  cp "$TEST_STATE_DIR/activation-clients.json" "$TEST_STATE_DIR/clients.json"
+fi
+if [[ -f $TEST_STATE_DIR/activation-active-workspace.json ]]; then
+  cp \
+    "$TEST_STATE_DIR/activation-active-workspace.json" \
+    "$TEST_STATE_DIR/active-workspace.json"
+fi
+FAKE
+
+write_fake "$FAKE_BIN/systemd-cat" <<'FAKE'
+set -euo pipefail
+
+printf 'systemd-cat' >>"$TEST_COMMAND_LOG"
+for argument in "$@"; do
+  printf ' <%s>' "$argument" >>"$TEST_COMMAND_LOG"
+done
+printf '\n' >>"$TEST_COMMAND_LOG"
+message=$(cat)
+printf 'systemd-cat-input <%s>\n' "$message" >>"$TEST_COMMAND_LOG"
+FAKE
+
+write_fake "$FAKE_BIN/sleep" <<'FAKE'
+set -euo pipefail
+FAKE
+
+write_fake "$APP_DIR/wechat-uos" <<'FAKE'
+set -euo pipefail
+
+printf 'wechat-uos' >>"$TEST_COMMAND_LOG"
+for argument in "$@"; do
+  printf ' <%s>' "$argument" >>"$TEST_COMMAND_LOG"
+done
+printf '\n' >>"$TEST_COMMAND_LOG"
+FAKE
+
+export TEST_STATE_DIR="$STATE_DIR"
+export TEST_COMMAND_LOG="$COMMAND_LOG"
+export XDG_RUNTIME_DIR="$RUNTIME_DIR"
+export PATH="$FAKE_BIN:$PATH"
+
+fail() {
+  printf 'wechat-control-test: %s\n' "$*" >&2
+  printf '%s\n' 'command log:' >&2
+  sed -n '1,240p' "$COMMAND_LOG" >&2
+  exit 1
+}
+
+reset_state() {
+  : >"$COMMAND_LOG"
+  printf 'inactive\n' >"$STATE_DIR/service-state"
+  printf '[]\n' >"$STATE_DIR/clients.json"
+  printf '{"id":7}\n' >"$STATE_DIR/active-workspace.json"
+  printf '{}\n' >"$STATE_DIR/active-window.json"
+  rm -f \
+    "$STATE_DIR/activation-active-workspace.json" \
+    "$STATE_DIR/activation-clients.json" \
+    "$STATE_DIR/move-dispatch-count" \
+    "$STATE_DIR/move-injected-clients.json"
+}
+
+set_clients() {
+  cat >"$STATE_DIR/clients.json"
+}
+
+set_active_window() {
+  cat >"$STATE_DIR/active-window.json"
+}
+
+set_activation_clients() {
+  cat >"$STATE_DIR/activation-clients.json"
+}
+
+set_activation_active_workspace() {
+  cat >"$STATE_DIR/activation-active-workspace.json"
+}
+
+set_move_injected_clients() {
+  cat >"$STATE_DIR/move-injected-clients.json"
+}
+
+run_controller() {
+  "$BASH_BIN" "$APP_DIR/wechat-control" "$@"
+}
+
+assert_log_line() {
+  local expected=$1
+
+  grep -Fqx -- "$expected" "$COMMAND_LOG" \
+    || fail "missing exact command: $expected"
+}
+
+assert_no_log_line() {
+  local unexpected=$1
+
+  if grep -Fqx -- "$unexpected" "$COMMAND_LOG"; then
+    fail "unexpected exact command: $unexpected"
+  fi
+}
+
+assert_log_count() {
+  local expected_count=$1
+  local pattern=$2
+  local actual_count
+
+  actual_count=$(grep -Fxc -- "$pattern" "$COMMAND_LOG" || true)
+  [[ $actual_count -eq $expected_count ]] \
+    || fail "expected $expected_count occurrences of '$pattern', found $actual_count"
+}
+
+assert_log_prefix_count() {
+  local expected_count=$1
+  local prefix=$2
+  local actual_count
+
+  actual_count=$(grep -Fc -- "$prefix" "$COMMAND_LOG" || true)
+  [[ $actual_count -eq $expected_count ]] \
+    || fail "expected $expected_count commands beginning '$prefix', found $actual_count"
+}
+
+assert_json() {
+  local expression=$1
+  local path=$2
+
+  jq -e "$expression" "$path" >/dev/null \
+    || fail "JSON assertion failed for $path: $expression"
+}
+
+fixed_launch_command="uwsm <app> <-t> <service> <-u> <app-wechat.service> <-d> <WeChat> <-p> <ExitType=cgroup> <-p> <KillMode=control-group> <-p> <TimeoutStopSec=5s> <--> <$APP_DIR/wechat-uos> <-->"
+activation_command="uwsm <app> <--> <$APP_DIR/wechat-uos> <-->"
+launch_uri_one='weixin://dl/chat?ticket=one&source=desktop'
+launch_uri_two='https://weixin.qq.com/invite/example#desktop'
+fixed_launch_with_uris="$fixed_launch_command <$launch_uri_one> <$launch_uri_two>"
+
+# 1. Launch from an absent state forwards URIs to the fixed service. Recovery
+# changes the active workspace, so the refreshed complete group follows it.
+reset_state
+printf '{"id":3}\n' >"$STATE_DIR/active-workspace.json"
+set_activation_clients <<'JSON'
+[
+  {
+    "address": "0xmain",
+    "class": "wechat",
+    "title": "Weixin",
+    "initialTitle": "Weixin",
+    "workspace": {"name": "special:wechat"}
+  },
+  {
+    "address": "0xchild",
+    "class": "wechat",
+    "title": "Browser",
+    "initialTitle": "Browser",
+    "workspace": {"name": "special:wechat"}
+  },
+  {
+    "address": "0xother",
+    "class": "wechat-dev",
+    "title": "Unrelated",
+    "initialTitle": "Unrelated",
+    "workspace": {"name": "3"}
+  }
+]
+JSON
+set_activation_active_workspace <<'JSON'
+{"id":8}
+JSON
+run_controller launch -- "$launch_uri_one" "$launch_uri_two"
+assert_log_line "$fixed_launch_with_uris"
+assert_log_prefix_count 2 \
+  "hyprctl <dispatch> <movetoworkspacesilent> <8,address:"
+assert_log_line \
+  "hyprctl <dispatch> <movetoworkspacesilent> <8,address:0xmain>"
+assert_log_line \
+  "hyprctl <dispatch> <movetoworkspacesilent> <8,address:0xchild>"
+assert_no_log_line \
+  "hyprctl <dispatch> <movetoworkspacesilent> <8,address:0xother>"
+assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+assert_json '
+  all(.[] | select(((.class // "") | ascii_downcase) == "wechat");
+    .workspace.name == "8")
+  and (
+    first(.[] | select(.address == "0xother") | .workspace.name)
+    == "3"
+  )
+' "$STATE_DIR/clients.json"
+assert_json '.address == "0xmain"' "$STATE_DIR/active-window.json"
+
+# An absent-state toggle separately preserves the SUPER+W launch contract.
+reset_state
+set_activation_clients <<'JSON'
+[
+  {
+    "address": "0xmain",
+    "class": "wechat",
+    "title": "Weixin",
+    "initialTitle": "Weixin",
+    "workspace": {"name": "special:wechat"}
+  }
+]
+JSON
+run_controller toggle
+assert_log_line "$fixed_launch_command"
+assert_log_line \
+  "hyprctl <dispatch> <movetoworkspacesilent> <7,address:0xmain>"
+assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+assert_json \
+  'length == 1 and .[0].workspace.name == "7"' \
+  "$STATE_DIR/clients.json"
+assert_json '.address == "0xmain"' "$STATE_DIR/active-window.json"
+
+# A launch with an already-visible group restores it to the active workspace
+# and focuses the main rather than toggling the group into hidden storage.
+reset_state
+printf 'active\n' >"$STATE_DIR/service-state"
+set_clients <<'JSON'
+[
+  {
+    "address": "0xmain",
+    "class": "wechat",
+    "title": "Weixin",
+    "initialTitle": "Weixin",
+    "workspace": {"name": "2"}
+  },
+  {
+    "address": "0xchild",
+    "class": "wechat",
+    "title": "Browser",
+    "initialTitle": "Browser",
+    "workspace": {"name": "2"}
+  }
+]
+JSON
+run_controller launch
+assert_log_prefix_count 2 \
+  "hyprctl <dispatch> <movetoworkspacesilent> <7,address:"
+assert_log_prefix_count 0 \
+  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:"
+assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+assert_log_prefix_count 0 "uwsm "
+assert_json 'all(.[]; .workspace.name == "7")' "$STATE_DIR/clients.json"
+assert_json '.address == "0xmain"' "$STATE_DIR/active-window.json"
+
+# 2 and 7. A child mapped after the first move dispatch is included by a
+# subsequent pass; the exact three-window set hides and wechat-dev is untouched.
+reset_state
+set_clients <<'JSON'
+[
+  {
+    "address": "0xmain",
+    "class": "WeChat",
+    "title": "微信",
+    "initialTitle": "Weixin",
+    "workspace": {"name": "2"}
+  },
+  {
+    "address": "0xchild1",
+    "class": "wechat",
+    "title": "Embedded browser",
+    "initialTitle": "Embedded browser",
+    "workspace": {"name": "2"}
+  },
+  {
+    "address": "0xother",
+    "class": "wechat-dev",
+    "title": "Unrelated",
+    "initialTitle": "Unrelated",
+    "workspace": {"name": "2"}
+  }
+]
+JSON
+set_move_injected_clients <<'JSON'
+[
+  {
+    "address": "0xchild2",
+    "class": "WECHAT",
+    "title": "Picker",
+    "initialTitle": "Picker",
+    "workspace": {"name": "2"}
+  }
+]
+JSON
+run_controller toggle
+assert_log_prefix_count 3 \
+  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:"
+assert_log_line \
+  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:0xmain>"
+assert_log_line \
+  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:0xchild1>"
+assert_log_line \
+  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:0xchild2>"
+assert_no_log_line \
+  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:0xother>"
+assert_log_prefix_count 0 "uwsm "
+assert_json '
+  all(.[] | select(((.class // "") | ascii_downcase) == "wechat");
+    .workspace.name == "special:wechat")
+  and (
+    first(.[] | select(.address == "0xother") | .workspace.name)
+    == "2"
+  )
+' "$STATE_DIR/clients.json"
+
+# 3. A hidden main and children show together on the active workspace.
+reset_state
+set_clients <<'JSON'
+[
+  {
+    "address": "0xmain",
+    "class": "wechat",
+    "title": "Weixin",
+    "initialTitle": "",
+    "workspace": {"name": "special:wechat"}
+  },
+  {
+    "address": "0xchild1",
+    "class": "wechat",
+    "title": "Browser",
+    "initialTitle": "Browser",
+    "workspace": {"name": "special:wechat"}
+  },
+  {
+    "address": "0xchild2",
+    "class": "wechat",
+    "title": "Dialog",
+    "initialTitle": "Dialog",
+    "workspace": {"name": "special:wechat"}
+  }
+]
+JSON
+run_controller toggle
+assert_log_prefix_count 3 \
+  "hyprctl <dispatch> <movetoworkspacesilent> <7,address:"
+assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+assert_log_prefix_count 0 "uwsm "
+assert_json \
+  'all(.[]; .workspace.name == "7")' \
+  "$STATE_DIR/clients.json"
+
+# 4. Child-only state activates the existing service, waits for a new main,
+# refreshes the changed active workspace, and shows the complete window set.
+reset_state
+printf 'active\n' >"$STATE_DIR/service-state"
+printf '{"id":5}\n' >"$STATE_DIR/active-workspace.json"
+set_clients <<'JSON'
+[
+  {
+    "address": "0xchild1",
+    "class": "wechat",
+    "title": "Browser",
+    "initialTitle": "Browser",
+    "workspace": {"name": "special:wechat"}
+  },
+  {
+    "address": "0xchild2",
+    "class": "wechat",
+    "title": "Dialog",
+    "initialTitle": "Dialog",
+    "workspace": {"name": "special:wechat"}
+  },
+  {
+    "address": "0xother",
+    "class": "firefox",
+    "title": "Other",
+    "initialTitle": "Other",
+    "workspace": {"name": "4"}
+  }
+]
+JSON
+set_activation_clients <<'JSON'
+[
+  {
+    "address": "0xmain",
+    "class": "wechat",
+    "title": "Weixin",
+    "initialTitle": "Weixin",
+    "workspace": {"name": "special:wechat"}
+  },
+  {
+    "address": "0xchild1",
+    "class": "wechat",
+    "title": "Browser",
+    "initialTitle": "Browser",
+    "workspace": {"name": "special:wechat"}
+  },
+  {
+    "address": "0xchild2",
+    "class": "wechat",
+    "title": "Dialog",
+    "initialTitle": "Dialog",
+    "workspace": {"name": "special:wechat"}
+  },
+  {
+    "address": "0xother",
+    "class": "firefox",
+    "title": "Other",
+    "initialTitle": "Other",
+    "workspace": {"name": "4"}
+  }
+]
+JSON
+set_activation_active_workspace <<'JSON'
+{"id":9}
+JSON
+run_controller toggle
+assert_log_line "$activation_command"
+assert_log_prefix_count 0 "uwsm <app> <-t>"
+assert_log_prefix_count 3 \
+  "hyprctl <dispatch> <movetoworkspacesilent> <9,address:"
+assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+assert_json '
+  all(.[] | select(((.class // "") | ascii_downcase) == "wechat");
+    .workspace.name == "9")
+  and (
+    first(.[] | select(.address == "0xother") | .workspace.name)
+    == "4"
+  )
+' "$STATE_DIR/clients.json"
+
+# 5. Closing the active main stops the complete fixed service.
+reset_state
+printf 'active\n' >"$STATE_DIR/service-state"
+set_clients <<'JSON'
+[
+  {
+    "address": "0xmain",
+    "class": "wechat",
+    "title": "Weixin",
+    "initialTitle": "",
+    "workspace": {"name": "7"}
+  },
+  {
+    "address": "0xchild",
+    "class": "wechat",
+    "title": "Browser",
+    "initialTitle": "Browser",
+    "workspace": {"name": "7"}
+  },
+  {
+    "address": "0xother",
+    "class": "firefox",
+    "title": "Other",
+    "initialTitle": "Other",
+    "workspace": {"name": "7"}
+  }
+]
+JSON
+set_active_window <<'JSON'
+{
+  "address": "0xmain",
+  "class": "wechat",
+  "title": "Weixin",
+  "initialTitle": ""
+}
+JSON
+run_controller close-active
+assert_log_count 1 "systemctl <--user> <stop> <app-wechat.service>"
+assert_log_count 0 "hyprctl <dispatch> <killactive>"
+assert_json \
+  'length == 1 and .[0].address == "0xother"' \
+  "$STATE_DIR/clients.json"
+
+# 6. Closing a WeChat child or a non-WeChat window retains killactive.
+reset_state
+set_active_window <<'JSON'
+{
+  "address": "0xchild",
+  "class": "wechat",
+  "title": "Browser",
+  "initialTitle": "Browser"
+}
+JSON
+run_controller close-active
+assert_log_count 1 "hyprctl <dispatch> <killactive>"
+assert_log_count 0 "systemctl <--user> <stop> <app-wechat.service>"
+
+reset_state
+set_active_window <<'JSON'
+{
+  "address": "0xother",
+  "class": "firefox",
+  "title": "Other",
+  "initialTitle": "Other"
+}
+JSON
+run_controller close-active
+assert_log_count 1 "hyprctl <dispatch> <killactive>"
+assert_log_count 0 "systemctl <--user> <stop> <app-wechat.service>"
+
+# 8. Main-window recovery has a bounded, failing timeout.
+reset_state
+printf 'active\n' >"$STATE_DIR/service-state"
+set_clients <<'JSON'
+[
+  {
+    "address": "0xchild",
+    "class": "wechat",
+    "title": "Browser",
+    "initialTitle": "Browser",
+    "workspace": {"name": "special:wechat"}
+  }
+]
+JSON
+if run_controller toggle >"$STATE_DIR/timeout.stdout" 2>"$STATE_DIR/timeout.stderr"; then
+  fail "child-only recovery unexpectedly succeeded without a main window"
+fi
+assert_log_line "$activation_command"
+assert_log_prefix_count 0 \
+  "hyprctl <dispatch> <movetoworkspacesilent>"
+assert_log_prefix_count 0 "hyprctl <dispatch> <focuswindow>"
+
+# 9. A held runtime lock makes a concurrent toggle a successful no-op.
+reset_state
+exec {HELD_LOCK_FD}>"$RUNTIME_DIR/wechat-control.lock"
+flock -n "$HELD_LOCK_FD"
+run_controller toggle
+flock -u "$HELD_LOCK_FD"
+exec {HELD_LOCK_FD}>&-
+[[ ! -s $COMMAND_LOG ]] \
+  || fail "locked toggle dispatched commands"
+
+# Malformed snapshots and unknown actions must fail without fallback behavior.
+reset_state
+printf '{}\n' >"$STATE_DIR/clients.json"
+if run_controller toggle >"$STATE_DIR/json.stdout" 2>"$STATE_DIR/json.stderr"; then
+  fail "malformed clients JSON unexpectedly succeeded"
+fi
+assert_log_prefix_count 0 "uwsm "
+assert_log_prefix_count 0 "hyprctl <dispatch>"
+
+reset_state
+if run_controller unknown >"$STATE_DIR/unknown.stdout" 2>"$STATE_DIR/unknown.stderr"; then
+  fail "unknown action unexpectedly succeeded"
+fi
+[[ ! -s $COMMAND_LOG ]] \
+  || fail "unknown action dispatched commands"
+
+printf 'wechat-control regression: all simulated states passed\n'

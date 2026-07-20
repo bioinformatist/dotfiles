@@ -1,0 +1,355 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly UNIT="app-wechat.service"
+readonly HIDDEN_WORKSPACE="special:wechat"
+readonly WECHAT_CLASS="wechat"
+readonly MAIN_TITLE="Weixin"
+readonly GROUP_MOVE_MAX_PASSES=3
+SCRIPT_PATH=$(readlink -f -- "${BASH_SOURCE[0]}")
+readonly SCRIPT_PATH
+SCRIPT_DIR=$(dirname -- "$SCRIPT_PATH")
+readonly SCRIPT_DIR
+readonly WECHAT_BIN="$SCRIPT_DIR/wechat-uos"
+
+CLIENTS_JSON='[]'
+WECHAT_ADDRESSES=()
+MAIN_ADDRESS=
+MAIN_WORKSPACE=
+
+die() {
+  printf 'wechat-control: %s\n' "$*" >&2
+  exit 1
+}
+
+log_invariant_failure() {
+  local message=$1
+
+  printf 'wechat-control: %s\n' "$message" >&2
+  printf '%s\n' "$message" | systemd-cat -t wechat-control || true
+}
+
+refresh_clients() {
+  local snapshot
+
+  if ! snapshot=$(hyprctl clients -j); then
+    die "failed to read Hyprland clients"
+  fi
+
+  if ! jq -e --arg wechat_class "$WECHAT_CLASS" '
+    type == "array"
+    and all(.[];
+      type == "object"
+      and ((.class? // "") | type == "string")
+      and ((.title? // "") | type == "string")
+      and ((.initialTitle? // "") | type == "string")
+      and ((.address? // "") | type == "string")
+      and ((.workspace? // {}) | type == "object")
+      and ((.workspace.name? // "") | type == "string")
+      and (
+        ((.class? // "") | ascii_downcase) != $wechat_class
+        or (
+          ((.address? // "") | length > 0)
+          and ((.workspace.name? // "") | length > 0)
+        )
+      )
+    )
+  ' <<<"$snapshot" >/dev/null; then
+    die "malformed Hyprland clients JSON"
+  fi
+
+  CLIENTS_JSON=$snapshot
+  mapfile -t WECHAT_ADDRESSES < <(
+    jq -r --arg wechat_class "$WECHAT_CLASS" '
+      .[]
+      | select(((.class // "") | ascii_downcase) == $wechat_class)
+      | .address
+    ' <<<"$CLIENTS_JSON"
+  )
+  MAIN_ADDRESS=$(
+    jq -r \
+      --arg wechat_class "$WECHAT_CLASS" \
+      --arg main_title "$MAIN_TITLE" '
+      first(
+        .[]
+        | select(
+          ((.class // "") | ascii_downcase) == $wechat_class
+          and (
+            (.title == $main_title)
+            or (.initialTitle == $main_title)
+          )
+        )
+        | .address
+      ) // empty
+    ' <<<"$CLIENTS_JSON"
+  )
+  MAIN_WORKSPACE=
+  if [[ -n $MAIN_ADDRESS ]]; then
+    MAIN_WORKSPACE=$(
+      jq -r --arg address "$MAIN_ADDRESS" '
+        first(.[] | select(.address == $address) | .workspace.name) // empty
+      ' <<<"$CLIENTS_JSON"
+    )
+  fi
+}
+
+active_workspace_id() {
+  local snapshot
+
+  if ! snapshot=$(hyprctl activeworkspace -j); then
+    die "failed to read the active Hyprland workspace"
+  fi
+  if ! jq -e '
+    type == "object"
+    and (.id | type == "number" and . >= 0)
+  ' <<<"$snapshot" >/dev/null; then
+    die "malformed active Hyprland workspace JSON"
+  fi
+
+  jq -r '.id' <<<"$snapshot"
+}
+
+address_exists() {
+  local address=$1
+
+  jq -e --arg address "$address" \
+    'any(.[]; .address == $address)' <<<"$CLIENTS_JSON" >/dev/null
+}
+
+address_workspace() {
+  local address=$1
+
+  jq -r --arg address "$address" '
+    first(.[] | select(.address == $address) | .workspace.name) // empty
+  ' <<<"$CLIENTS_JSON"
+}
+
+move_group() {
+  local destination=$1
+  local main_address=$2
+  local pass address workspace
+  local addresses=()
+
+  for ((pass = 1; pass <= GROUP_MOVE_MAX_PASSES; pass++)); do
+    refresh_clients
+    if ! address_exists "$main_address"; then
+      die "WeChat main window disappeared while moving the window group"
+    fi
+    addresses=("${WECHAT_ADDRESSES[@]}")
+
+    for address in "${addresses[@]}"; do
+      workspace=$(address_workspace "$address")
+      if [[ $workspace == "$destination" ]]; then
+        continue
+      fi
+      if ! hyprctl dispatch movetoworkspacesilent "$destination,address:$address"; then
+        refresh_clients
+        if ! address_exists "$main_address"; then
+          die "WeChat main window disappeared while moving the window group"
+        fi
+        if address_exists "$address"; then
+          die "failed to move WeChat window $address"
+        fi
+      fi
+    done
+
+    refresh_clients
+    if ! address_exists "$main_address"; then
+      die "WeChat main window disappeared while moving the window group"
+    fi
+    for address in "${WECHAT_ADDRESSES[@]}"; do
+      workspace=$(address_workspace "$address")
+      if [[ $workspace != "$destination" ]]; then
+        continue 2
+      fi
+    done
+    return
+  done
+
+  die "WeChat window group did not converge on $destination after $GROUP_MOVE_MAX_PASSES passes"
+}
+
+focus_main() {
+  local main_address=$1
+
+  if hyprctl dispatch focuswindow "address:$main_address"; then
+    return
+  fi
+
+  refresh_clients
+  if address_exists "$main_address"; then
+    die "failed to focus the WeChat main window"
+  fi
+  die "WeChat main window disappeared before it could be focused"
+}
+
+show_group() {
+  local destination=$1
+  local main_address=$MAIN_ADDRESS
+
+  move_group "$destination" "$main_address"
+  focus_main "$main_address"
+}
+
+hide_group() {
+  local main_address=$MAIN_ADDRESS
+
+  move_group "$HIDDEN_WORKSPACE" "$main_address"
+}
+
+activate_wechat() {
+  if systemctl --user is-active --quiet "$UNIT"; then
+    uwsm app -- "$WECHAT_BIN" -- "$@"
+  else
+    uwsm app \
+      -t service \
+      -u "$UNIT" \
+      -d WeChat \
+      -p ExitType=cgroup \
+      -p KillMode=control-group \
+      -p TimeoutStopSec=5s \
+      -- "$WECHAT_BIN" -- "$@"
+  fi
+}
+
+ensure_main_window() {
+  local attempt
+
+  if [[ -n $MAIN_ADDRESS ]]; then
+    return
+  fi
+
+  activate_wechat "$@"
+  for ((attempt = 0; attempt < 100; attempt++)); do
+    sleep 0.1
+    refresh_clients
+    if [[ -n $MAIN_ADDRESS ]]; then
+      return
+    fi
+  done
+
+  die "WeChat main window did not appear within 10 seconds"
+}
+
+acquire_runtime_lock() {
+  local runtime_dir=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+
+  [[ -d $runtime_dir ]] || die "runtime directory does not exist: $runtime_dir"
+  exec {CONTROLLER_LOCK_FD}>"$runtime_dir/wechat-control.lock"
+  if ! flock -n "$CONTROLLER_LOCK_FD"; then
+    exit 0
+  fi
+}
+
+launch() {
+  local destination
+
+  acquire_runtime_lock
+  refresh_clients
+  ensure_main_window "$@"
+  destination=$(active_workspace_id)
+  show_group "$destination"
+}
+
+toggle() {
+  local destination
+
+  acquire_runtime_lock
+  refresh_clients
+
+  if [[ -z $MAIN_ADDRESS ]]; then
+    ensure_main_window
+    destination=$(active_workspace_id)
+    show_group "$destination"
+    return
+  fi
+
+  if [[ $MAIN_WORKSPACE == "$HIDDEN_WORKSPACE" ]]; then
+    destination=$(active_workspace_id)
+    show_group "$destination"
+    return
+  fi
+
+  if [[ $MAIN_WORKSPACE == special:* ]]; then
+    die "WeChat main window is on unexpected workspace $MAIN_WORKSPACE"
+  fi
+
+  hide_group
+}
+
+close_active() {
+  local active_json
+
+  if ! active_json=$(hyprctl activewindow -j); then
+    die "failed to read the active Hyprland window"
+  fi
+  if ! jq -e '
+    type == "object"
+    and ((.class? // "") | type == "string")
+    and ((.title? // "") | type == "string")
+    and ((.initialTitle? // "") | type == "string")
+  ' <<<"$active_json" >/dev/null; then
+    die "malformed active Hyprland window JSON"
+  fi
+
+  if ! jq -e \
+    --arg wechat_class "$WECHAT_CLASS" \
+    --arg main_title "$MAIN_TITLE" '
+    ((.class // "") | ascii_downcase) == $wechat_class
+    and (
+      (.title == $main_title)
+      or (.initialTitle == $main_title)
+    )
+  ' <<<"$active_json" >/dev/null; then
+    hyprctl dispatch killactive
+    return
+  fi
+
+  systemctl --user stop "$UNIT"
+
+  local attempt service_active client_count
+  for ((attempt = 0; attempt < 50; attempt++)); do
+    service_active=false
+    if systemctl --user is-active --quiet "$UNIT"; then
+      service_active=true
+    fi
+    refresh_clients
+    client_count=${#WECHAT_ADDRESSES[@]}
+    if [[ $service_active == false && $client_count -eq 0 ]]; then
+      return
+    fi
+    sleep 0.1
+  done
+
+  log_invariant_failure \
+    "app-wechat.service stopped without clearing all WeChat clients"
+  return 1
+}
+
+[[ -x $WECHAT_BIN ]] || die "managed WeChat executable is missing: $WECHAT_BIN"
+
+action=${1-}
+[[ -n $action ]] || die "usage: wechat-control {launch [-- [URI...]]|toggle|close-active}"
+shift
+
+case "$action" in
+  launch)
+    if (($# > 0)); then
+      [[ $1 == -- ]] || die "launch arguments must follow --"
+      shift
+    fi
+    launch "$@"
+    ;;
+  toggle)
+    (($# == 0)) || die "toggle does not accept arguments"
+    toggle
+    ;;
+  close-active)
+    (($# == 0)) || die "close-active does not accept arguments"
+    close_active
+    ;;
+  *)
+    die "unknown action: $action"
+    ;;
+esac

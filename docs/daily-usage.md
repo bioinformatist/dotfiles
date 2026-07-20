@@ -141,8 +141,11 @@ The tray renders applications' official StatusNotifierItem (SNI) icons. Clash
 Verge, Fcitx, and WeChat use their own items when exported; there is no second
 launcher or popup for them. AnyRun indexes WeChat's package-owned
 `com.tencent.wechat.desktop` entry; the repository does not define a duplicate.
-`SUPER + W` launches WeChat when no window exists, then moves the running window
-between `special:wechat` and the current workspace.
+That entry and `SUPER + W` share one managed launch path. `SUPER + W` launches
+or restores a missing main window, then hides or shows every currently mapped
+WeChat child window with it as one preserved group. `SUPER + C` exits the
+complete application when the main window is active, but closes only the active
+child when used on a WeChat child window.
 Battle.net appears only if the Wine application exports SNI; absence is an
 observation, not evidence that a compatibility bridge should be added.
 
@@ -220,12 +223,12 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | Command | Action |
 | :--- | :--- |
 | `SUPER + SHIFT + Q` | **Force Logout** (Kill Hyprland session) |
-| `SUPER + C` | **Kill** Active Window |
+| `SUPER + C` | Close the active window; on WeChat's main window, exit the complete application |
 | `SUPER + V` | Toggle **Floating** |
 | `SUPER + F` | Toggle **Fullscreen** |
 | `SUPER + Return` | Launch **Terminal** (Ghostty) |
 | `SUPER + B` | Launch **Browser** (Chrome) |
-| `SUPER + W` | Launch **WeChat** if absent; otherwise hide/show it between `special:wechat` and the current workspace |
+| `SUPER + W` | Launch or restore **WeChat**, then hide/show its mapped windows as one preserved group |
 | `SUPER + L` | **Lock Screen** (hyprlock) |
 | `SUPER + R` | Enter **Resize Mode** (arrow keys to resize, `Escape` to exit) |
 | `ALT + A` | **Screenshot** region → annotate (satty) → clipboard |
