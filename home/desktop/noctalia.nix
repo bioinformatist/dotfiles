@@ -55,7 +55,7 @@ in
             telemetry_enabled = false;
             setup_wizard_enabled = false;
             external_ip_enabled = false;
-            polkit_agent = false;
+            polkit_agent = true;
             clipboard_enabled = false;
             screen_time_enabled = false;
             launch_apps_as_systemd_services = true;
