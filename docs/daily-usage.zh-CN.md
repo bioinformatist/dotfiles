@@ -129,8 +129,10 @@ Settings 中分别连接 Google。ICS 订阅归 Google 管理；`~/.local/state/
 
 托盘显示应用自己导出的 StatusNotifierItem（SNI）图标。Clash Verge、Fcitx 和微信
 在实际导出时使用各自官方托盘项，不添加第二个启动器或弹窗。AnyRun 索引微信软件包
-自带的 `com.tencent.wechat.desktop` 条目；仓库不定义重复条目。微信没有窗口时，
-`SUPER + W` 会启动微信；已有窗口时，则在 `special:wechat` 与当前工作区之间移动。
+自带的 `com.tencent.wechat.desktop` 条目；仓库不定义重复条目。该条目与
+`SUPER + W` 共用同一条受管启动路径。`SUPER + W` 会启动或恢复缺失的微信主窗口，
+并把当前已映射的所有微信子窗口作为一个保留状态的窗口组一起隐藏或显示。在微信主
+窗口按 `SUPER + C` 会退出整个应用；在微信子窗口按同一快捷键只关闭当前子窗口。
 Battle.net 只有在 Wine 应用实际导出 SNI 时才会出现；缺失只是一项观察，不代表需要
 添加兼容桥。
 
@@ -205,12 +207,12 @@ Compose（组合键）通过一段短按键序列输入单个字符，不改变�
 | 快捷键 | 操作 |
 | :--- | :--- |
 | `SUPER + SHIFT + Q` | **强制注销**（终止 Hyprland 会话） |
-| `SUPER + C` | **关闭**当前窗口 |
+| `SUPER + C` | 关闭当前窗口；焦点在微信主窗口时退出整个微信应用 |
 | `SUPER + V` | 切换**浮动** |
 | `SUPER + F` | 切换**全屏** |
 | `SUPER + Return` | 启动**终端**（Ghostty） |
 | `SUPER + B` | 启动**浏览器**（Chrome） |
-| `SUPER + W` | **微信**不存在时启动；否则在 `special:wechat` 与当前工作区之间隐藏/显示 |
+| `SUPER + W` | 启动或恢复**微信**，并把已映射窗口作为一个保留状态的窗口组隐藏/显示 |
 | `SUPER + L` | **锁屏**（hyprlock） |
 | `SUPER + R` | 进入**调整大小模式**（方向键调整，`Escape` 退出） |
 | `ALT + A` | **截图**选区 → 标注（satty） → 剪贴板 |

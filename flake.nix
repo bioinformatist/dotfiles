@@ -459,10 +459,57 @@
             linglong =
               self.nixosConfigurations.linglong.config.home-manager.users.ysun.xdg.configFile."noctalia/palettes/dotfiles.json".source;
           };
+          wechatDisabledHomePCHyprlandConfig =
+            (self.nixosConfigurations.homePC.extendModules {
+              modules = [
+                {
+                  dotfiles.workstation.wechat.enable = lib.mkForce false;
+                }
+              ];
+            }).config.home-manager.users.ysun.xdg.configFile."hypr/hyprland.conf".source;
           globalMattPocockSkillsEnabled =
             self.nixosConfigurations.homePC.config.home-manager.users.ysun.dotfiles.codex.mattPocockSkills.enable;
         in
         {
+          wechat-control =
+            pkgs.runCommand "wechat-control-check"
+              {
+                nativeBuildInputs = [
+                  pkgs.bash
+                  pkgs.coreutils
+                  pkgs.jq
+                  pkgs.shellcheck-minimal
+                  pkgs.util-linux
+                ];
+              }
+              ''
+                ${lib.getExe pkgs.bash} -n \
+                  ${./nixos/wechat-control} \
+                  ${./nixos/wechat-control-test}
+                shellcheck \
+                  ${./nixos/wechat-control} \
+                  ${./nixos/wechat-control-test}
+                ${lib.getExe pkgs.bash} \
+                  ${./nixos/wechat-control-test} \
+                  ${./nixos/wechat-control}
+
+                disabled_super_c_binding=
+                while IFS= read -r line; do
+                  if [[ "$line" == 'bind = $mainMod, C, exec, '* ]]; then
+                    disabled_super_c_binding="$line"
+                    break
+                  fi
+                done < ${wechatDisabledHomePCHyprlandConfig}
+                if [[ "$disabled_super_c_binding" != *'command -v wechat-control'* \
+                  || "$disabled_super_c_binding" != *'hyprctl dispatch killactive'* ]]; then
+                  echo "disabled-WeChat SUPER+C binding lacks its native close fallback" >&2
+                  exit 1
+                fi
+
+                mkdir -p "$out"
+                touch "$out/ok"
+              '';
+
           noctalia-config =
             pkgs.runCommand "noctalia-config-check"
               {

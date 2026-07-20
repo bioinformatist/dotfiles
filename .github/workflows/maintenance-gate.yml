@@ -48,6 +48,9 @@ jobs:
 
       - uses: cachix/install-nix-action@v31
 
+      - name: WeChat controller regression
+        run: nix build -L .#checks.x86_64-linux.wechat-control
+
       - name: Global dry-run
         shell: bash
         run: |
