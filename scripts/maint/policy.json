@@ -26,6 +26,7 @@
     "home-manager-generation",
     "user-environment",
     "user-units",
+    "X-Reload-Triggers-",
     "X-Restart-Triggers-",
     "unit-",
     "unit-home-manager-",

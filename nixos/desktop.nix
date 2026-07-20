@@ -246,7 +246,6 @@ in
           xclip # X11 clipboard bridge (for XWayland apps like WeChat)
           jq # JSON processor (used by screenshot keybind to get active monitor)
           nwg-displays # GUI monitor layout tool (like Windows display settings)
-          kdePackages.polkit-kde-agent-1
         ])
         ++ lib.optionals config.dotfiles.workstation.wechat.enable [
           wechat-uos-fcitx
