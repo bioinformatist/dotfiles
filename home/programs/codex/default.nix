@@ -388,15 +388,17 @@ let
   improveExec = pkgs.writeShellApplication {
     name = "codex-improve-exec";
     runtimeInputs = [
+      pkgs.bash
       codexPkg
       pkgs.coreutils
       pkgs.gitMinimal
       pkgs.gnused
+      pkgs.jq
     ];
     text = builtins.readFile ./improve/codex-improve-exec;
     checkPhase = ''
       runHook preCheck
-      export PATH=${lib.makeBinPath [ pkgs.coreutils pkgs.gitMinimal pkgs.gnused ]}:$PATH
+      export PATH=${lib.makeBinPath [ pkgs.bash pkgs.coreutils pkgs.gitMinimal pkgs.gnused pkgs.jq ]}:$PATH
       bash -n "$target"
       ${lib.getExe pkgs.shellcheck-minimal} "$target"
       bash ${./improve/tests/exec-runner.bash} ${./improve/codex-improve-exec}
@@ -449,6 +451,14 @@ let
 
     [features]
     multi_agent = false
+
+    # Provisional, metrics-calibrated executor budget.
+    [features.rollout_budget]
+    enabled = true
+    limit_tokens = 100000
+    reminder_at_remaining_tokens = [50000, 25000, 10000]
+    sampling_token_weight = 1.0
+    prefill_token_weight = 1.0
   '';
   improveExecutorDeepProfile = ''
     model = "gpt-5.6-sol"
@@ -462,6 +472,14 @@ let
 
     [features]
     multi_agent = false
+
+    # Provisional, metrics-calibrated executor budget.
+    [features.rollout_budget]
+    enabled = true
+    limit_tokens = 160000
+    reminder_at_remaining_tokens = [80000, 40000, 15000]
+    sampling_token_weight = 1.0
+    prefill_token_weight = 1.0
   '';
   improveReviewerProfile = ''
     model = "gpt-5.6-sol"

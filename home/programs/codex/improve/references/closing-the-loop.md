@@ -40,7 +40,11 @@ Use `--deep` only for a plan whose ambiguity or technical depth justifies the hi
 codex-improve-exec --deep <plan-artifact-path>
 ```
 
-The helper creates a branch and worktree from the current `HEAD`, selects `improve-executor` or `improve-executor-deep`, inlines the entire plan, disables recursive multi-agent work through the profile, and preserves the worktree even if execution fails. It prints stable handoff fields:
+The helper creates a branch and worktree from the current `HEAD`, selects
+`improve-executor` or `improve-executor-deep`, inlines the entire plan, disables
+recursive multi-agent work through the profile, and preserves the worktree and
+diagnostic artifacts even if execution fails. It prints the validated executor
+report once, followed by stable handoff fields:
 
 ```text
 IMPROVE_MODE=initial
@@ -49,6 +53,20 @@ IMPROVE_BRANCH=...
 IMPROVE_BASE=...
 IMPROVE_PROFILE=...
 IMPROVE_EXEC_EXIT=...
+IMPROVE_EXEC_RESULT=...
+IMPROVE_EXEC_EXIT_REASON=...
+IMPROVE_EXEC_ELAPSED_SECONDS=...
+IMPROVE_EXEC_MAX_EVENT_GAP_SECONDS=...
+IMPROVE_EXEC_QUIET_INTERVAL_OBSERVED=...
+IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS=...
+IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT=...
+IMPROVE_EXEC_EVENT_LOG_LIMIT_HIT=...
+IMPROVE_EXEC_ARTIFACT_DIR=...
+IMPROVE_EXEC_PROMPT=...
+IMPROVE_EXEC_EVENT_LOG=...
+IMPROVE_EXEC_FINAL_OUTPUT=...
+IMPROVE_EXEC_DIAGNOSTIC_LOG=...
+IMPROVE_EXEC_METRICS=...
 ```
 
 The executor must touch only in-scope files, run verification, honor STOP conditions, and leave changes uncommitted. It must not merge, push, modify the plan index, remove the worktree, or launch other agents.
@@ -57,6 +75,50 @@ Executor worktrees live under `$XDG_STATE_HOME/codex-improve/worktrees`, falling
 back to `~/.local/state`, so an interruption or reboot does not silently discard
 uncommitted work that is awaiting review or a user decision. Runtime processes
 remain disposable; the worktree is the persistent recovery surface.
+
+Each invocation snapshots its complete prompt once and keeps the prompt, Codex
+JSONL events, final message, stderr diagnostics, and GNU timeout's verbose
+signal record private under
+`$XDG_STATE_HOME/codex-improve/executions`, falling back to `~/.local/state`.
+Raw Codex output is never streamed to the caller. While Codex runs, the helper
+prints at most one content-free heartbeat per minute with elapsed time, event
+count, and event bytes. It records an observation after three minutes without a
+new event but does not interrupt quiet reasoning solely for that reason.
+
+The helper validates both the JSONL transport and the executor's final report.
+A valid `COMPLETE` or model-level `STOPPED` is conclusive, uses exit reason
+`completed`, and returns zero. Absolute timeout, event-log overflow, caller
+signal, nonzero Codex exit, malformed JSONL, or invalid final output is
+`INCONCLUSIVE` and returns one. `IMPROVE_EXEC_EXIT` always retains the raw Codex
+or GNU timeout status. A private timeout signal record, rather than status 124
+or 137 alone, identifies a real deadline. The helper never retries
+automatically. Every outcome preserves the worktree, prompt snapshot, event
+log, final output, diagnostic log, and timeout record for recovery and
+investigation.
+
+Normal initial execution has a provisional 20-minute absolute timeout and
+100,000-token rollout budget; deep initial execution has a provisional
+30-minute timeout and 160,000-token budget. Normal and deep revisions reuse
+their profile token budgets with provisional 12-minute and 18-minute timeouts,
+respectively. The provisional transport fuses use a five-second hard-kill
+grace, a 32 MiB event-log limit, and a 64 KiB final-output limit. All of these
+numeric values are metrics-calibrated safeguards, not product or compatibility
+contracts.
+
+Content-free execution metrics are appended to
+`$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl`, with the same state
+fallback. They contain mode, profile, outcome, reason, elapsed time, event
+bytes, token counts, tool-event count, maximum event gap, quiet observation,
+active limits, and fuse flags. They never include prompt or final content,
+repository or worktree paths, plan names, command output, or diffs.
+
+Inspect the preserved diagnostics whenever any fuse triggers. After at least 10
+executions, compare time and token distributions separately by mode. Consider
+raising a limit when normal completions frequently exceed 80% of it. When
+ordinary work remains far below the limits but an executor loops, prefer
+tightening the prompt or timeout over raising the token ceiling. Change runner
+constants, executor profiles, this documentation, and exact-value tests
+together; do not tune limits automatically.
 
 ### Revise Before Integration
 
@@ -85,12 +147,13 @@ codex-improve-exec --deep --revise "$IMPROVE_WORKTREE" <dossier-file>
 
 The helper validates that the path is the root of a registered linked Git
 worktree on `refs/heads/codex/improve-*`, reuses it without creating or removing
-a branch or worktree, and passes the complete dossier exactly once to a fresh
-ephemeral executor. The executor preserves the existing diff, does not reload
-Improve or Ponytail, performs no broad recon, edits only dossier-authorized
-paths, and runs only named affected checks. New scope, an Engineering-contract
-edit, contradictory semantics, an unrecognized checkpoint, or a missing
-original profile is a STOP.
+a branch or worktree, snapshots and passes the complete dossier exactly once to
+a fresh ephemeral executor, and uses the same private bounded transport as an
+initial run. The executor preserves the existing diff, does not reload Improve
+or Ponytail, performs no broad recon, edits only dossier-authorized paths, and
+runs only named affected checks. New scope, an Engineering-contract edit,
+contradictory semantics, an unrecognized checkpoint, or a missing original
+profile is a STOP.
 
 A changed requirement or new scope or contract returns to planning rather than
 revision. An unrelated environment failure preserves the current acceptance

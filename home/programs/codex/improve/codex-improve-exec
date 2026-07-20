@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set +e
+set -uo pipefail
 
 usage() {
   cat <<'EOF'
@@ -21,8 +22,23 @@ fail_input() {
   exit 2
 }
 
+# Provisional, metrics-calibrated executor limits.
+normal_initial_seconds=1200
+deep_initial_seconds=1800
+normal_revision_seconds=720
+deep_revision_seconds=1080
+normal_token_limit=100000
+deep_token_limit=160000
+kill_after_seconds=5
+heartbeat_seconds=60
+quiet_seconds=180
+event_log_limit_bytes=33554432
+final_output_limit_bytes=65536
+poll_seconds=1
+
 profile="improve-executor"
 mode="initial"
+deep=0
 case "${1:-}" in
   -h|--help)
     usage
@@ -30,12 +46,29 @@ case "${1:-}" in
     ;;
   --deep)
     profile="improve-executor-deep"
+    deep=1
     shift
     ;;
 esac
 if [ "${1:-}" = "--revise" ]; then
   mode="revision"
   shift
+fi
+
+if [ "$deep" -eq 1 ]; then
+  token_limit="$deep_token_limit"
+  if [ "$mode" = "revision" ]; then
+    absolute_seconds="$deep_revision_seconds"
+  else
+    absolute_seconds="$deep_initial_seconds"
+  fi
+else
+  token_limit="$normal_token_limit"
+  if [ "$mode" = "revision" ]; then
+    absolute_seconds="$normal_revision_seconds"
+  else
+    absolute_seconds="$normal_initial_seconds"
+  fi
 fi
 
 emit_report_contract() {
@@ -52,6 +85,329 @@ STOPPED BECAUSE: only when stopped
 FILES CHANGED: list
 NOTES: deviations, surprises, and judgment calls
 EOF
+}
+
+prepare_artifacts() {
+  umask 077
+  state_home="${XDG_STATE_HOME:-$HOME/.local/state}"
+  artifact_parent="$state_home/codex-improve/executions"
+  mkdir -p "$artifact_parent" ||
+    fail_input "cannot create execution artifact directory"
+  artifact_dir="$(mktemp -d "$artifact_parent/$(date -u +%Y%m%dT%H%M%SZ)-$mode-XXXXXX")" ||
+    fail_input "cannot create execution artifact directory"
+  event_log="$artifact_dir/events.jsonl"
+  final_output="$artifact_dir/final.txt"
+  diagnostic_log="$artifact_dir/stderr.log"
+  timeout_log="$artifact_dir/timeout.log"
+  prompt_file="$artifact_dir/prompt.txt"
+  metrics_file="$state_home/codex-improve/execution-metrics.jsonl"
+  if ! {
+    : >"$event_log" &&
+      : >"$final_output" &&
+      : >"$diagnostic_log" &&
+      : >"$timeout_log"
+  }; then
+    fail_input "cannot initialize execution artifacts"
+  fi
+}
+
+validate_event_log() {
+  jq -Rse '
+    split("\n") as $lines
+    | (if $lines[-1] == "" then $lines[:-1] else $lines end)
+    | length > 0
+      and all(.[]; . != "" and (try (fromjson | type == "object") catch false))
+  ' "$event_log" >/dev/null 2>&1
+}
+
+validate_final_report() {
+  final_size="$(wc -c <"$final_output")"
+  if [ "$final_size" -eq 0 ]; then
+    final_validation_reason="empty_final_output"
+    return 1
+  fi
+  if [ "$final_size" -gt "$final_output_limit_bytes" ]; then
+    final_validation_reason="final_output_limit"
+    return 1
+  fi
+
+  count_report_lines() {
+    report_count="$({ cat "$final_output" && printf '\n'; } | sed -n "$1" | wc -l)" || return 1
+    case "$report_count" in
+      ''|*[!0-9]*) return 1 ;;
+    esac
+    printf '%s\n' "$report_count"
+  }
+
+  if ! status_count="$(count_report_lines '/^STATUS: \(COMPLETE\|STOPPED\)$/p')" ||
+    ! steps_count="$(count_report_lines '/^STEPS:/p')" ||
+    ! files_count="$(count_report_lines '/^FILES CHANGED:/p')" ||
+    ! notes_count="$(count_report_lines '/^NOTES:/p')" ||
+    ! stopped_count="$(count_report_lines '/^STOPPED BECAUSE:/p')"; then
+    final_validation_reason="invalid_final_output"
+    return 1
+  fi
+  if [ "$status_count" -ne 1 ] ||
+    [ "$steps_count" -ne 1 ] ||
+    [ "$files_count" -ne 1 ] ||
+    [ "$notes_count" -ne 1 ]; then
+    final_validation_reason="invalid_final_output"
+    return 1
+  fi
+
+  report_status="$(sed -n 's/^STATUS: //p' "$final_output")"
+  case "$report_status" in
+    COMPLETE)
+      if [ "$stopped_count" -ne 0 ]; then
+        final_validation_reason="invalid_final_output"
+        return 1
+      fi
+      ;;
+    STOPPED)
+      if [ "$stopped_count" -ne 1 ]; then
+        final_validation_reason="invalid_final_output"
+        return 1
+      fi
+      ;;
+    *)
+      final_validation_reason="invalid_final_output"
+      return 1
+      ;;
+  esac
+  return 0
+}
+
+run_execution() {
+  started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  started_epoch="$(date +%s)"
+  cancelled=""
+  event_log_limit_hit=0
+  supervisor_pid=""
+
+  # shellcheck disable=SC2329 # Invoked by INT and TERM traps.
+  cancel_execution() {
+    cancelled="$1"
+    if [ -n "$supervisor_pid" ]; then
+      kill -s "$1" "$supervisor_pid" 2>/dev/null || true
+    fi
+  }
+
+  trap 'cancel_execution INT' INT
+  trap 'cancel_execution TERM' TERM
+
+  if [ "${LC_ALL+x}" = x ]; then
+    caller_lc_all_set=1
+    caller_lc_all="$LC_ALL"
+  else
+    caller_lc_all_set=0
+    caller_lc_all=""
+  fi
+
+  # shellcheck disable=SC2016 # The inner Bash expands these parameters.
+  LC_ALL=C timeout \
+    --verbose \
+    --signal=INT \
+    --kill-after="${kill_after_seconds}s" \
+    "${absolute_seconds}s" \
+    bash -c 'diagnostic_log="$1"; caller_lc_all_set="$2"; caller_lc_all="$3"; shift 3
+      if [ "$caller_lc_all_set" -eq 1 ]; then
+        export LC_ALL="$caller_lc_all"
+      else
+        unset LC_ALL
+      fi
+      exec "$@" 2>"$diagnostic_log"' \
+    bash "$diagnostic_log" "$caller_lc_all_set" "$caller_lc_all" \
+    codex exec --strict-config --ephemeral --json \
+    --output-last-message "$final_output" -C "$worktree" -p "$profile" - \
+    <"$prompt_file" \
+    >"$event_log" \
+    2>"$timeout_log" &
+  supervisor_pid="$!"
+
+  last_event_epoch="$started_epoch"
+  last_event_count=0
+  max_event_gap_seconds=0
+  quiet_interval_observed=0
+  next_heartbeat_epoch="$((started_epoch + heartbeat_seconds))"
+  while kill -0 "$supervisor_pid" 2>/dev/null; do
+    sleep "$poll_seconds"
+    now_epoch="$(date +%s)"
+    event_count="$(wc -l <"$event_log")"
+    event_bytes="$(wc -c <"$event_log")"
+    if [ "$event_count" -gt "$last_event_count" ]; then
+      last_event_count="$event_count"
+      last_event_epoch="$now_epoch"
+    fi
+    event_gap_seconds="$((now_epoch - last_event_epoch))"
+    if [ "$event_gap_seconds" -gt "$max_event_gap_seconds" ]; then
+      max_event_gap_seconds="$event_gap_seconds"
+    fi
+    if [ "$event_gap_seconds" -ge "$quiet_seconds" ] &&
+      [ "$quiet_interval_observed" -eq 0 ]; then
+      quiet_interval_observed=1
+    fi
+    if [ "$now_epoch" -ge "$next_heartbeat_epoch" ]; then
+      printf 'codex-improve-exec: elapsed=%ss events=%s bytes=%s\n' \
+        "$((now_epoch - started_epoch))" "$event_count" "$event_bytes" >&2
+      next_heartbeat_epoch="$((now_epoch + heartbeat_seconds))"
+    fi
+    if [ "$event_bytes" -gt "$event_log_limit_bytes" ]; then
+      event_log_limit_hit=1
+      kill -INT "$supervisor_pid" 2>/dev/null || true
+      break
+    fi
+  done
+
+  wait "$supervisor_pid"
+  codex_status="$?"
+  timeout_fired=0
+  timeout_marker="$(sed -n '/^timeout: sending signal INT to command /{p;q;}' "$timeout_log")"
+  timeout_marker_status="$?"
+  if [ "$timeout_marker_status" -eq 0 ] && [ -n "$timeout_marker" ]; then
+    timeout_fired=1
+  fi
+
+  # GNU timeout owns the Codex process group; drain any descendant that outlived it.
+  if kill -0 -- "-$supervisor_pid" 2>/dev/null; then
+    kill -TERM -- "-$supervisor_pid" 2>/dev/null || true
+    sleep 0.1
+    kill -KILL -- "-$supervisor_pid" 2>/dev/null || true
+  fi
+  trap '' INT TERM
+
+  finished_epoch="$(date +%s)"
+  elapsed_seconds="$((finished_epoch - started_epoch))"
+  event_bytes="$(wc -c <"$event_log")"
+  final_gap="$((finished_epoch - last_event_epoch))"
+  if [ "$final_gap" -gt "$max_event_gap_seconds" ]; then
+    max_event_gap_seconds="$final_gap"
+  fi
+  if [ "$max_event_gap_seconds" -ge "$quiet_seconds" ]; then
+    quiet_interval_observed=1
+  fi
+
+  result="INCONCLUSIVE"
+  exit_reason=""
+  event_log_valid=0
+  if [ -n "$cancelled" ]; then
+    exit_reason="wrapper_signal_$cancelled"
+  elif [ "$event_log_limit_hit" -eq 1 ]; then
+    exit_reason="event_log_limit"
+  elif [ "$timeout_fired" -eq 1 ]; then
+    exit_reason="absolute_timeout"
+  elif [ "$codex_status" -ne 0 ]; then
+    exit_reason="codex_exit_$codex_status"
+  elif ! validate_event_log; then
+    exit_reason="invalid_event_log"
+  else
+    event_log_valid=1
+    if validate_final_report; then
+      result="$report_status"
+      exit_reason="completed"
+    else
+      exit_reason="$final_validation_reason"
+    fi
+  fi
+
+  # Valid JSONL remains useful for content-free metrics even when transport fails later.
+  if [ "$event_log_valid" -eq 0 ] && validate_event_log; then
+    event_log_valid=1
+  fi
+  stats='{"token_usage":{"input_tokens":0,"cached_input_tokens":0,"output_tokens":0},"tool_event_count":0}'
+  if [ "$event_log_valid" -eq 1 ]; then
+    stats="$(jq -c -s '
+      def n: if type == "number" then . else 0 end;
+      ([.[] | select(.type? == "turn.completed") | .usage? | select(type == "object")] | last // {}) as $usage
+      | {
+          token_usage: {
+            input_tokens: (($usage.input_tokens // 0) | n),
+            cached_input_tokens: (($usage.cached_input_tokens // 0) | n),
+            output_tokens: (($usage.output_tokens // 0) | n)
+          },
+          tool_event_count: ([.[]
+            | select(.type? == "item.completed")
+            | .item.type?
+            | select(. != "reasoning" and . != "agent_message")] | length)
+        }
+    ' "$event_log")"
+  fi
+
+  metric="$(jq -nc \
+    --arg timestamp "$started_at" \
+    --arg mode "$mode" \
+    --arg profile "$profile" \
+    --arg result "$result" \
+    --arg exit_reason "$exit_reason" \
+    --argjson elapsed_seconds "$elapsed_seconds" \
+    --argjson event_bytes "$event_bytes" \
+    --argjson stats "$stats" \
+    --argjson max_event_gap_seconds "$max_event_gap_seconds" \
+    --argjson quiet_interval_observed "$quiet_interval_observed" \
+    --argjson active_timeout_seconds "$absolute_seconds" \
+    --argjson active_token_limit "$token_limit" \
+    --argjson timeout_fuse "$([ "$exit_reason" = "absolute_timeout" ] && echo 1 || echo 0)" \
+    --argjson event_log_fuse "$event_log_limit_hit" \
+    --argjson signal_fuse "$([ -n "$cancelled" ] && echo 1 || echo 0)" \
+    '{
+      timestamp: $timestamp,
+      mode: $mode,
+      profile: $profile,
+      result: $result,
+      exit_reason: $exit_reason,
+      elapsed_seconds: $elapsed_seconds,
+      event_bytes: $event_bytes,
+      token_usage: $stats.token_usage,
+      tool_event_count: $stats.tool_event_count,
+      max_event_gap_seconds: $max_event_gap_seconds,
+      quiet_interval_observed: ($quiet_interval_observed == 1),
+      active_timeout_seconds: $active_timeout_seconds,
+      active_token_limit: $active_token_limit,
+      fuse_flags: {
+        absolute_timeout: ($timeout_fuse == 1),
+        event_log_limit: ($event_log_fuse == 1),
+        wrapper_signal: ($signal_fuse == 1)
+      }
+    }')"
+  state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/codex-improve"
+  if mkdir -p "$state_dir" 2>/dev/null; then
+    printf '%s\n' "$metric" >>"$metrics_file" 2>/dev/null ||
+      printf 'codex-improve-exec: metrics unavailable\n' >&2
+  else
+    printf 'codex-improve-exec: metrics unavailable\n' >&2
+  fi
+
+  if [ "$result" = "COMPLETE" ] || [ "$result" = "STOPPED" ]; then
+    cat "$final_output"
+    case "$(tail -c 1 "$final_output" 2>/dev/null)" in
+      '') ;;
+      *) printf '\n' ;;
+    esac
+  fi
+
+  printf 'IMPROVE_MODE=%s\n' "$mode"
+  printf 'IMPROVE_WORKTREE=%s\n' "$worktree"
+  printf 'IMPROVE_BRANCH=%s\n' "$branch"
+  if [ "$mode" = "initial" ]; then
+    printf 'IMPROVE_BASE=%s\n' "$base"
+  fi
+  printf 'IMPROVE_PROFILE=%s\n' "$profile"
+  printf 'IMPROVE_EXEC_EXIT=%s\n' "$codex_status"
+  printf 'IMPROVE_EXEC_RESULT=%s\n' "$result"
+  printf 'IMPROVE_EXEC_EXIT_REASON=%s\n' "$exit_reason"
+  printf 'IMPROVE_EXEC_ELAPSED_SECONDS=%s\n' "$elapsed_seconds"
+  printf 'IMPROVE_EXEC_MAX_EVENT_GAP_SECONDS=%s\n' "$max_event_gap_seconds"
+  printf 'IMPROVE_EXEC_QUIET_INTERVAL_OBSERVED=%s\n' "$quiet_interval_observed"
+  printf 'IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS=%s\n' "$absolute_seconds"
+  printf 'IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT=%s\n' "$token_limit"
+  printf 'IMPROVE_EXEC_EVENT_LOG_LIMIT_HIT=%s\n' "$event_log_limit_hit"
+  printf 'IMPROVE_EXEC_ARTIFACT_DIR=%s\n' "$artifact_dir"
+  printf 'IMPROVE_EXEC_PROMPT=%s\n' "$prompt_file"
+  printf 'IMPROVE_EXEC_EVENT_LOG=%s\n' "$event_log"
+  printf 'IMPROVE_EXEC_FINAL_OUTPUT=%s\n' "$final_output"
+  printf 'IMPROVE_EXEC_DIAGNOSTIC_LOG=%s\n' "$diagnostic_log"
+  printf 'IMPROVE_EXEC_METRICS=%s\n' "$metrics_file"
+
+  [ "$result" != "INCONCLUSIVE" ]
 }
 
 if [ "$mode" = "revision" ]; then
@@ -125,7 +481,7 @@ if [ "$mode" = "revision" ]; then
     fail_input "cannot resolve dossier: $2"
   branch="${branch_ref#refs/heads/}"
 
-  set +e
+  prepare_artifacts
   {
     cat <<'EOF'
 You are revising one existing Improve implementation. Work only in the named
@@ -148,16 +504,10 @@ EOF
     printf '%s\n' '--- BEGIN REVISION DOSSIER ---'
     cat "$dossier"
     printf '%s\n' '--- END REVISION DOSSIER ---'
-  } | codex exec --strict-config --ephemeral -C "$worktree" -p "$profile" -
-  exec_status="$?"
-  set -e
+  } >"$prompt_file" || fail_input "cannot snapshot revision dossier"
 
-  printf '\nIMPROVE_MODE=revision\n'
-  printf 'IMPROVE_WORKTREE=%s\n' "$worktree"
-  printf 'IMPROVE_BRANCH=%s\n' "$branch"
-  printf 'IMPROVE_PROFILE=%s\n' "$profile"
-  printf 'IMPROVE_EXEC_EXIT=%s\n' "$exec_status"
-  exit "$exec_status"
+  run_execution
+  exit "$?"
 fi
 
 if [ "$#" -ne 1 ]; then
@@ -198,7 +548,7 @@ if ! git -C "$repo" worktree add -b "$branch" "$worktree" "$base"; then
   exit 1
 fi
 
-set +e
+prepare_artifacts
 {
   cat <<'EOF'
 You are the executor for the implementation plan below. Work only in the
@@ -215,14 +565,7 @@ EOF
   printf '%s\n' '--- BEGIN PLAN ---'
   cat "$plan"
   printf '%s\n' '--- END PLAN ---'
-} | codex exec --strict-config --ephemeral -C "$worktree" -p "$profile" -
-exec_status="$?"
-set -e
+} >"$prompt_file" || fail_input "cannot snapshot execution plan"
 
-printf '\nIMPROVE_MODE=initial\n'
-printf 'IMPROVE_WORKTREE=%s\n' "$worktree"
-printf 'IMPROVE_BRANCH=%s\n' "$branch"
-printf 'IMPROVE_BASE=%s\n' "$base"
-printf 'IMPROVE_PROFILE=%s\n' "$profile"
-printf 'IMPROVE_EXEC_EXIT=%s\n' "$exec_status"
-exit "$exec_status"
+run_execution
+exit "$?"
