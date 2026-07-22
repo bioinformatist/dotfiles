@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.5`
+Contract version: `1.0.0-codex.6`
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -111,6 +111,34 @@ location or publication behavior. That convention takes precedence. Otherwise,
 plans are local-only by default, and Improve must not change ignore or
 publication policy implicitly. Publishing any plan or finding still requires
 explicit user confirmation.
+
+## Executor routing
+
+Every generated plan records `Executor lane: spark | standard | deep` and
+`Executor routing evidence` in its status block. The advisor makes this
+auditable decision while planning; the main agent explicitly invokes the
+recorded lane without asking the user to approve each Spark dispatch. The
+runner never parses a plan to choose a model and never falls back between
+lanes.
+
+Use `spark` only when every implementation decision is settled, the plan gives
+exact paths and commands, behavior has deterministic gates, no broad
+reconnaissance or visual input is needed, and the complete task fits Spark's
+128k text-only context. Spark is a research-preview model optimized for fast,
+targeted edits, so the plan must explicitly require every verification command.
+
+Do not select Spark for planning or review; new abstractions, modules, public
+APIs, dependencies, migrations, or compatibility layers; security or
+authentication work; complex concurrency; Engineering-contract changes;
+unresolved diagnosis; visual-acceptance-led UI work; or broad refactors. Narrow
+existing-pattern documentation or configuration edits, mechanical propagation,
+a focused regression fix with an exact failing test, and a bounded revision
+dossier are representative candidates, not automatic guarantees.
+
+Use `standard` for work that does not meet every Spark eligibility condition.
+Use `deep` only when ambiguity or technical depth justifies its higher reasoning
+budget. Spark is never an advisor, scout, reviewer, automatic classifier,
+fallback, or default executor.
 
 ## Verification and acceptance
 

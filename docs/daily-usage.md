@@ -361,6 +361,33 @@ For example, `192.168.0.116:7890`:
 
 Clash Verge profile data is persisted at `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` and survives reboots. Remote subscription links are no longer managed by this repository; configure profiles in the Clash Verge GUI using the currently supported provider flow.
 
+### Preventing direct OpenAI/ChatGPT QUIC traffic
+
+This repository does not disable QUIC globally with Chrome's `QuicAllowed = false` policy because that would also affect local HTTP/3 web application development and testing. The following Clash Verge rules reject UDP only for OpenAI and ChatGPT, causing the browser to fall back to proxied TCP.
+
+The rules survive an ordinary reboot. Check and restore them after reinstalling the system, re-importing a subscription, resetting its enhancements, or switching to a new primary subscription:
+
+1. Open the **Profiles** page in Clash Verge.
+2. Right-click the active subscription and select **Edit Rules**.
+3. Remove duplicate custom OpenAI/ChatGPT rules, then place these four rules at the start of the rule list in this order:
+   ```yaml
+   AND,((NETWORK,UDP),(DOMAIN-SUFFIX,openai.com)),REJECT
+   AND,((NETWORK,UDP),(DOMAIN-SUFFIX,chatgpt.com)),REJECT
+   DOMAIN-SUFFIX,openai.com,Proxy
+   DOMAIN-SUFFIX,chatgpt.com,Proxy
+   ```
+4. Save and refresh the active subscription so the enhanced rules are applied to the generated runtime configuration.
+
+`Proxy` must be the name of an existing proxy policy group in the subscription. If the subscription uses another name, replace `Proxy` in the last two rules. These rules must precede the subscription's general rules and its `MATCH` rule.
+
+To verify the result, open `chatgpt.com`, perform a Google sign-in, and inspect the Clash Verge logs:
+
+- UDP 443 for OpenAI/ChatGPT should show `using REJECT`.
+- TCP 443 for the same domains should show `using Proxy[...]`.
+- OpenAI/ChatGPT UDP must no longer show `using DIRECT`.
+
+Adding only `DOMAIN-SUFFIX,...,Proxy` does not cover every case. When a UDP request selects a proxy node without UDP support, Mihomo continues matching subsequent rules and may eventually use `DIRECT`. The first two rules reject QUIC so the browser cannot expose its location through a direct connection.
+
 ---
 
 ## 🎮 Gaming (`homePC` Only)

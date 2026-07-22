@@ -218,6 +218,10 @@ assert_not_invoked() {
   [ ! -s "$FAKE_COUNT_FILE" ] || fail "$1 invoked Codex"
 }
 
+invocation_profile() {
+  sed -n '/^-p$/{n;p;q;}' "$FAKE_INVOCATION_LOG"
+}
+
 assert_transport_case() {
   expected_status="$1"
   expected_result="$2"
@@ -249,12 +253,30 @@ run_runner --help
 assert_eq "$status" 0 "help status"
 grep -F -- "--deep --revise WORKTREE DOSSIER" "$output" >/dev/null ||
   fail "help omits deep revision mode"
+grep -F -- "--spark PLAN" "$output" >/dev/null ||
+  fail "help omits Spark initial mode"
+grep -F -- "--spark --revise WORKTREE DOSSIER" "$output" >/dev/null ||
+  fail "help omits Spark revision mode"
 assert_not_invoked help
 
 start_case invalid
 run_runner --revise
 assert_eq "$status" 2 "invalid argument status"
 assert_not_invoked invalid
+
+start_case spark_then_deep
+run_runner --spark --deep "plans/001 plan.md"
+assert_eq "$status" 2 "Spark/deep argument status"
+grep -F -- "--spark and --deep are mutually exclusive" "$errors" >/dev/null ||
+  fail "Spark/deep rejection reason missing"
+assert_not_invoked spark_then_deep
+
+start_case deep_then_spark
+run_runner --deep --spark "plans/001 plan.md"
+assert_eq "$status" 2 "deep/Spark argument status"
+grep -F -- "--spark and --deep are mutually exclusive" "$errors" >/dev/null ||
+  fail "deep/Spark rejection reason missing"
+assert_not_invoked deep_then_spark
 
 printf '%s\n' "dirty caller" >"$repo/dirty.txt"
 start_case initial complete
@@ -305,6 +327,26 @@ assert_transport_case 0 COMPLETE completed
 assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep "deep profile"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 7 "deep initial timeout"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 "deep token limit"
+
+start_case spark complete
+run_runner --spark "plans/001 plan.md"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark "Spark profile"
+assert_eq "$(invocation_profile)" improve-executor-spark "Spark invoked profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 5 "Spark initial timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 100000 "Spark token limit"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "Spark invocation count"
+grep -F -- "The user explicitly requires every verification command in the plan." \
+  "$FAKE_PROMPT_LOG" >/dev/null || fail "Spark initial verification requirement missing"
+
+start_case spark_nonzero nonzero
+run_runner --spark "plans/001 plan.md"
+assert_transport_case 1 INCONCLUSIVE codex_exit_17
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark "failed Spark profile"
+assert_eq "$(invocation_profile)" improve-executor-spark "failed Spark invoked profile"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "failed Spark invocation count"
+spark_failure_worktree="$(field "$output" IMPROVE_WORKTREE)"
+[ -d "$spark_failure_worktree" ] || fail "failed Spark worktree was not preserved"
 
 transport_failure() {
   name="$1"
@@ -483,6 +525,18 @@ assert_eq "$(git -C "$repo" worktree list --porcelain)" "$worktrees_before" "rev
 assert_eq "$(grep -o TOP_SECRET_DOSSIER "$FAKE_PROMPT_LOG" | wc -l)" 1 "dossier insertion count"
 grep -F -- "Do not load or reread the" "$FAKE_PROMPT_LOG" >/dev/null ||
   fail "revision recon prohibition missing"
+
+start_case spark_revision complete
+run_runner --spark --revise "$revision_worktree" "$dossier"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark "Spark revision profile"
+assert_eq "$(invocation_profile)" improve-executor-spark "Spark revision invoked profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 4 "Spark revision timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 100000 "Spark revision token limit"
+assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "Spark revision diff preservation"
+assert_eq "$(git -C "$repo" worktree list --porcelain)" "$worktrees_before" "Spark revision worktree reuse"
+grep -F -- "The user explicitly requires every verification command named by the dossier." \
+  "$FAKE_PROMPT_LOG" >/dev/null || fail "Spark revision verification requirement missing"
 
 start_case deep_revision complete
 run_runner --deep --revise "$revision_worktree" "$dossier"

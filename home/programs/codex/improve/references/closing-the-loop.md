@@ -34,17 +34,28 @@ Run one executor:
 codex-improve-exec <plan-artifact-path>
 ```
 
+Use `--spark` only when the plan records the Spark lane and satisfies every
+eligibility rule in the planning contract:
+
+```console
+codex-improve-exec --spark <plan-artifact-path>
+```
+
 Use `--deep` only for a plan whose ambiguity or technical depth justifies the higher reasoning cost:
 
 ```console
 codex-improve-exec --deep <plan-artifact-path>
 ```
 
+The advisor records the lane and routing evidence; the main agent explicitly
+invokes it without a per-dispatch user prompt. `--spark` and `--deep` are
+mutually exclusive. The helper never parses the plan to select a lane.
+
 The helper creates a branch and worktree from the current `HEAD`, selects
-`improve-executor` or `improve-executor-deep`, inlines the entire plan, disables
-recursive multi-agent work through the profile, and preserves the worktree and
-diagnostic artifacts even if execution fails. It prints the validated executor
-report once, followed by stable handoff fields:
+`improve-executor`, `improve-executor-spark`, or `improve-executor-deep`, inlines
+the entire plan, disables recursive multi-agent work through the profile, and
+preserves the worktree and diagnostic artifacts even if execution fails. It
+prints the validated executor report once, followed by stable handoff fields:
 
 ```text
 IMPROVE_MODE=initial
@@ -96,14 +107,19 @@ automatically. Every outcome preserves the worktree, prompt snapshot, event
 log, final output, diagnostic log, and timeout record for recovery and
 investigation.
 
-Normal initial execution has a provisional 20-minute absolute timeout and
-100,000-token rollout budget; deep initial execution has a provisional
-30-minute timeout and 160,000-token budget. Normal and deep revisions reuse
-their profile token budgets with provisional 12-minute and 18-minute timeouts,
-respectively. The provisional transport fuses use a five-second hard-kill
-grace, a 32 MiB event-log limit, and a 64 KiB final-output limit. All of these
-numeric values are metrics-calibrated safeguards, not product or compatibility
-contracts.
+A Spark model or entitlement failure is the same nonzero Codex failure as any
+other executor failure: the result is `INCONCLUSIVE`, every artifact is
+preserved, and control returns to the main agent. The helper never retries with
+Spark, standard, or deep and never consumes another lane as a fallback.
+
+Normal and Spark initial execution have a provisional 20-minute absolute
+timeout and 100,000-token rollout budget; deep initial execution has a
+provisional 30-minute timeout and 160,000-token budget. Normal and Spark
+revisions reuse their profile token budgets with a provisional 12-minute
+timeout; deep revisions use 18 minutes. The provisional transport fuses use a
+five-second hard-kill grace, a 32 MiB event-log limit, and a 64 KiB final-output
+limit. All of these numeric values are metrics-calibrated safeguards, not
+product or compatibility contracts.
 
 Content-free execution metrics are appended to
 `$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl`, with the same state
@@ -120,6 +136,11 @@ tightening the prompt or timeout over raising the token ceiling. Change runner
 constants, executor profiles, this documentation, and exact-value tests
 together; do not tune limits automatically.
 
+After at least 10 Spark initial executions, the main agent may prepare a manual
+calibration review using the existing content-free metrics and observed
+acceptance defects. Do not tune thresholds or broaden Spark routing without
+explicit user approval.
+
 ### Revise Before Integration
 
 A failed review or acceptance against the still-current pre-integration
@@ -127,8 +148,8 @@ worktree may receive at most two narrow revision rounds. Prepare a complete
 revision dossier containing:
 
 - the complete current plan and semantic anchors;
-- revision round, current checkpoint, branch, worktree, original normal or deep
-  profile, and diff identity;
+- revision round, current checkpoint, branch, worktree, original Spark,
+  standard, or deep profile, and diff identity;
 - exact failing review or acceptance evidence;
 - classification as an in-scope defect, changed requirement, unrelated
   environment failure, or new scope or Engineering contract;
@@ -142,6 +163,7 @@ Dispatch the dossier through the same helper and the original profile:
 
 ```console
 codex-improve-exec --revise "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-exec --spark --revise "$IMPROVE_WORKTREE" <dossier-file>
 codex-improve-exec --deep --revise "$IMPROVE_WORKTREE" <dossier-file>
 ```
 
