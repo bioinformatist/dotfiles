@@ -123,12 +123,12 @@ Standard initial execution has a provisional 20-minute absolute timeout and a
 execution keeps the 20-minute timeout and 100,000-token budget with
 50,000/25,000/10,000 reminders. Deep initial execution keeps the provisional
 30-minute timeout and 160,000-token budget with 80,000/40,000/15,000 reminders.
-Standard and Spark revisions reuse their profile token budgets with a
-provisional 12-minute timeout; deep revisions reuse the Deep budget with an
-18-minute timeout. The provisional transport fuses use a five-second hard-kill
-grace, a 32 MiB event-log limit, and a 64 KiB final-output limit. All of these
-numeric values are metrics-calibrated safeguards, not product or compatibility
-contracts.
+Standard and Spark revisions and recovery slices reuse their profile token
+budgets with a provisional 12-minute timeout; deep revisions and recovery
+slices reuse the Deep budget with an 18-minute timeout. The provisional
+transport fuses use a five-second hard-kill grace, a 32 MiB event-log limit,
+and a 64 KiB final-output limit. All of these numeric values are
+metrics-calibrated safeguards, not product or compatibility contracts.
 
 Content-free execution metrics are appended to
 `$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl`, with the same state
@@ -150,6 +150,79 @@ After at least 10 Spark initial executions, the main agent may prepare a manual
 calibration review using the existing content-free metrics and observed
 acceptance defects. Do not tune thresholds or broaden Spark routing without
 explicit user approval.
+
+### Recover An Inconclusive Initial Execution
+
+Automatic recovery is available only when an initial execution is
+`INCONCLUSIVE` with exit reason `rollout_budget_exhausted` or
+`absolute_timeout`. Every other initial failure halts with the exact private
+artifact paths and requires explicit user approval before another model call or
+a plan change. A model-level `STOPPED` is conclusive and does not trigger
+recovery. Revision and review `INCONCLUSIVE` outcomes retain the same
+explicit-approval policy; recovery never applies to them.
+
+Before recovery, the main agent inspects the complete original plan, preserved
+diff, final output, JSONL events, diagnostics, timeout record, and relevant
+implementation gates. Reconcile each done criterion and Engineering-contract
+row as completed, partially completed, or remaining, and verify that every
+existing hunk still traces to the approved plan and settled semantic anchors.
+New scope, a changed Engineering contract, or contradictory semantics rejects
+recovery and returns to planning or user approval. An inconclusive initial run
+that left no required edits still needs one verification-and-closeout slice;
+never convert it directly to approval merely because the diff is empty.
+
+The main agent may decompose the remaining work once into one to three
+dependency-ordered recovery slice dossiers. Store them beside the original plan
+in the repository's existing plan artifact directory, using
+`<plan>-recovery-1-<slice-number>-<slug>.md` unless that repository defines a
+more specific naming convention. They inherit that directory's tracked,
+ignored, and publication policy; Improve must not change any of those policies.
+Runtime prompts, events, final output, diagnostics, timeout records, and metrics
+remain private XDG state and never enter a repository dossier.
+
+Each recovery dossier is self-contained for exactly one slice and contains:
+
+- original plan artifact path, immutable plan hash, original execution profile,
+  checkpoint, branch, worktree, and current diff identity;
+- slice number, dependency order, objective, and the completed and remaining
+  original criteria relevant to that slice;
+- only the applicable semantic anchors and Engineering-contract rows;
+- only the permitted modification paths and required read-only evidence paths;
+- exact implementation gates, verification commands, expected evidence, and
+  preserved execution artifact paths needed to understand the remainder; and
+- explicit slice STOP conditions, including new scope, Engineering-contract
+  change, contradictory semantics, and an unrecognized checkpoint.
+
+Choose Spark, standard, or deep independently for the actual remaining slice.
+The original plan lane is not a constraint, and a recorded recovery seam is
+only a hint. Use Spark only when the slice independently satisfies every Spark
+eligibility rule; never force it for telemetry. Invoke exactly the selected
+lane:
+
+```console
+codex-improve-exec --recover "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-exec --spark --recover "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-exec --deep --recover "$IMPROVE_WORKTREE" <dossier-file>
+```
+
+The helper validates and reuses the same registered linked
+`refs/heads/codex/improve-*` worktree as revision mode, snapshots the dossier
+once, and runs one fresh ephemeral executor through the selected profile's
+existing revision timeout and token budget. It does not parse the dossier,
+infer a lane, retry, fall back, or invoke a second Codex process. The slice
+executor preserves the existing diff and settled semantics, touches only the
+dossier's paths, and runs every named check. Its `COMPLETE` report means only
+that one slice is complete.
+
+Recovery is sequential in the same persistent worktree. After each completed
+slice, the main agent reads the whole new diff, verifies that it remains within
+the original plan and current dossier, and runs the slice's gates before
+dispatching the next dependency. Any recovery slice `STOPPED` or
+`INCONCLUSIVE`, scope or semantic drift, failed gate, or Engineering-contract
+change halts the attempt with the exact worktree, dossier, and private execution
+artifact paths. Never decompose or recover a recovery slice. After all slices,
+run the full original plan gates and continue through the ordinary
+implementation review below.
 
 ### Revise Before Integration
 

@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.7`
+Contract version: `1.0.0-codex.8`
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -120,6 +120,15 @@ auditable decision while planning; the main agent explicitly invokes the
 recorded lane without asking the user to approve each Spark dispatch. The
 runner never parses a plan to choose a model and never falls back between
 lanes.
+
+Every generated plan also records `Recovery seams`. Atomic plans record
+`none`. A standard or deep plan spanning multiple subsystems records one to
+three dependency-ordered seams, each with the applicable paths and gates and a
+candidate `spark`, `standard`, or `deep` lane. These are recovery decomposition
+hints, not pre-dispatch, a reserved executor call, or guaranteed Spark
+selection. After a qualifying inconclusive initial execution, the main agent
+reconciles the actual remainder and reclassifies each bounded slice
+independently under the current routing rules.
 
 Use `spark` only when every implementation decision is settled, the plan gives
 exact paths and commands, behavior has deterministic gates, no broad

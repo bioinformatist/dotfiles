@@ -215,7 +215,7 @@ let
             '## Status
 
     - **Status**: TODO
-    - **Improve contract**: `1.0.0-codex.7`
+    - **Improve contract**: `1.0.0-codex.8`
     - **Implementation review**: PENDING
     - **Checkpoint**: NONE
     - **External acceptance**: NOT REQUIRED | PENDING
@@ -225,7 +225,8 @@ let
             '- **Risk**: LOW | MED | HIGH' \
             '- **Risk**: LOW | MED | HIGH
     - **Executor lane**: spark | standard | deep
-    - **Executor routing evidence**: <why this lane satisfies the Improve routing contract>' \
+    - **Executor routing evidence**: <why this lane satisfies the Improve routing contract>
+    - **Recovery seams**: none | <one to three dependency-ordered seams, each with relevant paths, gates, and a candidate lane>' \
           --replace-fail \
             '- **Issue**: <GitHub issue URL — only when published via `--issues`; omit otherwise>
 
