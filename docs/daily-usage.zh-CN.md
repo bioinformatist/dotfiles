@@ -345,6 +345,33 @@ git push
 
 Clash Verge 的配置文件数据持久化在 `~/.local/share/io.github.clash-verge-rev.clash-verge-rev/` 中，重启后保留。远程订阅链接不再通过本仓库托管；需要时请在 Clash Verge GUI 中按当前服务商支持的方式配置。
 
+### 防止 OpenAI/ChatGPT 的 QUIC 流量直连
+
+本仓库不会通过 Chrome 的 `QuicAllowed = false` 策略全局禁用 QUIC，因为这也会影响本地 HTTP/3 Web 应用的开发和测试。Clash Verge 中的以下规则只拒绝 OpenAI/ChatGPT 的 UDP 流量，使浏览器回退到经代理转发的 TCP。
+
+普通重启后不需要重复设置。重装系统、重新导入订阅、重置订阅增强配置，或者更换主订阅后，应检查并恢复这些规则：
+
+1. 打开 Clash Verge 的 **Profiles** 页面。
+2. 右键当前使用的订阅，选择 **Edit Rules**（编辑规则）。
+3. 删除重复的 OpenAI/ChatGPT 自定义规则，然后按以下顺序将四条规则放在规则列表最前面：
+   ```yaml
+   AND,((NETWORK,UDP),(DOMAIN-SUFFIX,openai.com)),REJECT
+   AND,((NETWORK,UDP),(DOMAIN-SUFFIX,chatgpt.com)),REJECT
+   DOMAIN-SUFFIX,openai.com,Proxy
+   DOMAIN-SUFFIX,chatgpt.com,Proxy
+   ```
+4. 保存并刷新当前订阅，使增强规则重新生成运行配置。
+
+这里的 `Proxy` 必须是订阅中实际存在的代理策略组名称；如果订阅使用其他名称，应同步替换后两条规则中的 `Proxy`。这些规则必须位于订阅的一般规则和 `MATCH` 规则之前。
+
+验证时，在 Clash Verge 日志中访问一次 `chatgpt.com` 并执行 Google 登录：
+
+- OpenAI/ChatGPT 的 UDP 443 应显示 `using REJECT`。
+- 同一域名的 TCP 443 应显示 `using Proxy[...]`。
+- 不应再出现 OpenAI/ChatGPT UDP `using DIRECT`。
+
+仅添加 `DOMAIN-SUFFIX,...,Proxy` 不足以覆盖所有情况。Mihomo 在 UDP 请求匹配到不支持 UDP 的代理节点时会继续向下匹配，最终可能使用 `DIRECT`；前两条规则通过拒绝 QUIC，阻止浏览器从直连出口暴露所在地区。
+
 ---
 
 ## 🎮 游戏（仅 `homePC`）
