@@ -4,7 +4,7 @@ description: Audit a codebase as a read-only senior advisor, prioritize evidence
 license: MIT
 metadata:
   author: shadcn
-  version: "1.0.0-codex.5"
+  version: "1.0.0-codex.6"
 ---
 
 # Improve

@@ -215,12 +215,17 @@ let
             '## Status
 
     - **Status**: TODO
-    - **Improve contract**: `1.0.0-codex.5`
+    - **Improve contract**: `1.0.0-codex.6`
     - **Implementation review**: PENDING
     - **Checkpoint**: NONE
     - **External acceptance**: NOT REQUIRED | PENDING
     - **Checkpoint ID**: none
     - **Priority**: P1 | P2 | P3' \
+          --replace-fail \
+            '- **Risk**: LOW | MED | HIGH' \
+            '- **Risk**: LOW | MED | HIGH
+    - **Executor lane**: spark | standard | deep
+    - **Executor routing evidence**: <why this lane satisfies the Improve routing contract>' \
           --replace-fail \
             '- **Issue**: <GitHub issue URL — only when published via `--issues`; omit otherwise>
 
@@ -442,6 +447,27 @@ let
   improveExecutorProfile = ''
     model = "gpt-5.6-sol"
     model_reasoning_effort = "medium"
+    model_verbosity = "medium"
+    sandbox_mode = "workspace-write"
+    approval_policy = "never"
+
+    [sandbox_workspace_write]
+    writable_roots = []
+
+    [features]
+    multi_agent = false
+
+    # Provisional, metrics-calibrated executor budget.
+    [features.rollout_budget]
+    enabled = true
+    limit_tokens = 100000
+    reminder_at_remaining_tokens = [50000, 25000, 10000]
+    sampling_token_weight = 1.0
+    prefill_token_weight = 1.0
+  '';
+  improveExecutorSparkProfile = ''
+    model = "gpt-5.3-codex-spark"
+    model_reasoning_effort = "high"
     model_verbosity = "medium"
     sandbox_mode = "workspace-write"
     approval_policy = "never"
@@ -769,6 +795,11 @@ in
     home.file.".codex/improve-executor.config.toml" = lib.mkIf config.dotfiles.codex.improve.enable {
       text = improveExecutorProfile;
     };
+    home.file.".codex/improve-executor-spark.config.toml" =
+      lib.mkIf config.dotfiles.codex.improve.enable
+        {
+          text = improveExecutorSparkProfile;
+        };
     home.file.".codex/improve-executor-deep.config.toml" =
       lib.mkIf config.dotfiles.codex.improve.enable
         {
