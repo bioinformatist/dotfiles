@@ -49,6 +49,7 @@ if [ ! -r "$schema" ] || ! jq -e . "$schema" >/dev/null 2>&1; then
 fi
 
 absolute_seconds=480
+review_token_limit=100000
 quiet_seconds=180
 kill_after_seconds=5
 poll_seconds=1
@@ -79,7 +80,7 @@ evidence gap that the dossier does not settle.
 Build coverage only for the requested implementation checks. A named runtime,
 physical, human, or external check owned after implementation review belongs in
 deferred_acceptance; it is not coverage, a finding, or a review_blocker. At
-40000 weighted tokens remaining, stop broad recon. At 20000, pursue only named
+50000 weighted tokens remaining, stop broad recon. At 25000, pursue only named
 evidence gaps. At 10000, stop tool use and render the verdict. Return only the
 JSON object required by the output schema, with evidence for every finding,
 coverage item, blocker, and deferred acceptance.
@@ -106,6 +107,24 @@ EOF
 }
 
 emit_review_prompt >"$prompt_file" || fail_input "cannot snapshot review dossier"
+
+has_rollout_budget_exhaustion() {
+  jq -Rse '
+    split("\n") as $lines
+    | (if $lines[-1] == "" then $lines[:-1] else $lines end) as $lines
+    | if ($lines | length) > 0 and all($lines[]; test("\\S")) then
+        try (($lines | map(fromjson)) as $events
+          | if all($events[]; type == "object") then
+              any($events[];
+                .type == "error"
+                  and .message == "shared rollout token budget exhausted")
+            else false
+            end)
+        catch false
+      else false
+      end
+  ' "$event_log" >/dev/null 2>&1
+}
 
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 started_epoch="$(date +%s)"
@@ -188,10 +207,16 @@ fi
 result="INCONCLUSIVE"
 exit_reason=""
 event_log_valid=0
+rollout_budget_exhausted=0
+if has_rollout_budget_exhaustion; then
+  rollout_budget_exhausted=1
+fi
 if [ -n "$cancelled" ]; then
   exit_reason="wrapper_signal_$cancelled"
 elif [ "$codex_status" -eq 124 ] || [ "$codex_status" -eq 137 ]; then
   exit_reason="absolute_timeout"
+elif [ "$codex_status" -ne 0 ] && [ "$rollout_budget_exhausted" -eq 1 ]; then
+  exit_reason="rollout_budget_exhausted"
 elif [ "$codex_status" -ne 0 ]; then
   exit_reason="codex_exit_$codex_status"
 elif ! jq -Rse '
@@ -266,10 +291,14 @@ metric="$(jq -nc \
   --argjson max_event_gap_seconds "$max_event_gap_seconds" \
   --argjson quiet_interval_observed "$quiet_interval_observed" \
   --argjson exit_status "$codex_status" \
+  --argjson active_token_limit "$review_token_limit" \
+  --argjson rollout_budget_exhausted "$rollout_budget_exhausted" \
   '{timestamp: $timestamp, role: $role, profile: $profile, elapsed_seconds: $elapsed_seconds,
     token_usage: $stats.token_usage, tool_event_count: $stats.tool_event_count,
     max_event_gap_seconds: $max_event_gap_seconds,
-    quiet_interval_observed: ($quiet_interval_observed == 1), exit_status: $exit_status}
+    quiet_interval_observed: ($quiet_interval_observed == 1), exit_status: $exit_status,
+    active_token_limit: $active_token_limit,
+    fuse_flags: {rollout_budget_exhausted: ($rollout_budget_exhausted == 1)}}
    + if $result == "INCONCLUSIVE" then {inconclusive_reason: $reason} else {verdict: $result} end')"
 state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/codex-improve"
 if mkdir -p "$state_dir" 2>/dev/null; then
@@ -285,6 +314,8 @@ printf 'IMPROVE_REVIEW_RESULT=%s\n' "$result"
 printf 'IMPROVE_REVIEW_ELAPSED_SECONDS=%s\n' "$elapsed_seconds"
 printf 'IMPROVE_REVIEW_MAX_EVENT_GAP_SECONDS=%s\n' "$max_event_gap_seconds"
 printf 'IMPROVE_REVIEW_QUIET_INTERVAL_OBSERVED=%s\n' "$quiet_interval_observed"
+printf 'IMPROVE_REVIEW_ACTIVE_TOKEN_LIMIT=%s\n' "$review_token_limit"
+printf 'IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED=%s\n' "$rollout_budget_exhausted"
 printf 'IMPROVE_REVIEW_EVENT_LOG=%s\n' "$event_log"
 printf 'IMPROVE_REVIEW_FINAL_OUTPUT=%s\n' "$final_output"
 printf 'IMPROVE_REVIEW_DIAGNOSTIC_LOG=%s\n' "$diagnostic_log"

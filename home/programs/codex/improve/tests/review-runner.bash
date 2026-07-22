@@ -21,7 +21,7 @@ cat >>"$fake_bin/codex" <<'FAKE_CODEX'
 set -u
 
 : "${FAKE_CODEX_MODE:?}" "${FAKE_COUNT_FILE:?}" "${FAKE_INVOCATION_LOG:?}" "${FAKE_PROMPT_LOG:?}"
-printf '%s\n' 1 >"$FAKE_COUNT_FILE"
+printf '%s\n' invoked >>"$FAKE_COUNT_FILE"
 printf '%s\n' "$@" >"$FAKE_INVOCATION_LOG"
 
 final_output=""
@@ -85,6 +85,19 @@ case "$FAKE_CODEX_MODE" in
     ;;
   nonzero)
     emit_usage
+    exit 17
+    ;;
+  rollout_budget_exhausted)
+    printf '%s\n' '{"type":"error","message":"shared rollout token budget exhausted","request_id":"test"}'
+    exit 1
+    ;;
+  rollout_budget_with_malformed_jsonl)
+    printf '%s\n' '{"type":"error","message":"shared rollout token budget exhausted","request_id":"test"}'
+    printf '%s\n' 'not-json'
+    exit 1
+    ;;
+  nested_rollout_budget_text)
+    printf '%s\n' '{"type":"item.completed","item":{"type":"agent_message","text":"shared rollout token budget exhausted"}}'
     exit 17
     ;;
   timeout)
@@ -159,6 +172,11 @@ run_case() {
   assert_eq "$status" "$expected_status" "$case_name status"
   assert_eq "$(field "$case_dir/stdout" IMPROVE_REVIEW_RESULT)" "$expected_result" "$case_name result"
   assert_eq "$(field "$case_dir/stdout" IMPROVE_REVIEW_EXIT_REASON)" "$expected_reason" "$case_name reason"
+  assert_eq "$(field "$case_dir/stdout" IMPROVE_REVIEW_ACTIVE_TOKEN_LIMIT)" 100000 "$case_name token limit"
+  case "$(field "$case_dir/stdout" IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED)" in
+    0|1) ;;
+    *) fail "$case_name budget flag is not 0 or 1" ;;
+  esac
   event_log="$(field "$case_dir/stdout" IMPROVE_REVIEW_EVENT_LOG)"
   case "$event_log" in
     "$case_dir/state/codex-improve/reviews/"*) ;;
@@ -166,6 +184,9 @@ run_case() {
   esac
   metric="$case_dir/state/codex-improve/review-metrics.jsonl"
   [ -s "$metric" ] || fail "$case_name metric missing"
+  jq -e '.active_token_limit == 100000
+    and (.fuse_flags.rollout_budget_exhausted | type) == "boolean"' "$metric" >/dev/null ||
+    fail "$case_name budget metric fields"
   if grep -F -e TOP_SECRET -e /private/repository/path "$metric" >/dev/null; then
     fail "$case_name metric leaked review content"
   fi
@@ -186,9 +207,13 @@ grep -Fx -- improve-reviewer "$approve_dir/invocation" >/dev/null || fail "corre
 grep -Fx -- --strict-config "$approve_dir/invocation" >/dev/null || fail "strict config missing"
 grep -Fx -- --output-schema "$approve_dir/invocation" >/dev/null || fail "output schema missing"
 assert_eq "$(grep -o TOP_SECRET_DOSSIER "$approve_dir/prompt" | wc -l)" 1 "dossier pass count"
+assert_eq "$(field "$approve_dir/stdout" IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED)" 0 "approve budget flag"
+assert_eq "$(wc -l <"$approve_dir/count")" 1 "approve invocation count"
 jq -e '
   .token_usage == {"input_tokens":10,"cached_input_tokens":2,"output_tokens":3}
   and .tool_event_count == 1 and .verdict == "APPROVE"
+  and .active_token_limit == 100000
+  and .fuse_flags.rollout_budget_exhausted == false
 ' "$approve_dir/state/codex-improve/review-metrics.jsonl" >/dev/null || fail "approve metric"
 
 run_case approve_deferred correctness approve_deferred 0 APPROVE completed
@@ -212,6 +237,33 @@ run_case multiple correctness multiple_verdicts 1 INCONCLUSIVE invalid_final_out
 run_case invalid_jsonl correctness invalid_jsonl 1 INCONCLUSIVE invalid_event_log
 run_case concatenated_jsonl correctness concatenated_jsonl 1 INCONCLUSIVE invalid_event_log
 run_case nonzero correctness nonzero 1 INCONCLUSIVE codex_exit_17
+run_case rollout_budget_exhausted correctness rollout_budget_exhausted 1 INCONCLUSIVE rollout_budget_exhausted
+budget_dir="$test_root/cases/rollout_budget_exhausted"
+assert_eq "$(field "$budget_dir/stdout" IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED)" 1 "budget flag"
+assert_eq "$(wc -l <"$budget_dir/count")" 1 "budget invocation count"
+jq -e '.fuse_flags.rollout_budget_exhausted == true' \
+  "$budget_dir/state/codex-improve/review-metrics.jsonl" >/dev/null || fail "budget metric fuse"
+for budget_artifact_field in IMPROVE_REVIEW_EVENT_LOG IMPROVE_REVIEW_FINAL_OUTPUT IMPROVE_REVIEW_DIAGNOSTIC_LOG; do
+  [ -e "$(field "$budget_dir/stdout" "$budget_artifact_field")" ] ||
+    fail "budget artifact missing: $budget_artifact_field"
+done
+run_case rollout_budget_with_malformed_jsonl correctness rollout_budget_with_malformed_jsonl 1 INCONCLUSIVE codex_exit_1
+malformed_budget_dir="$test_root/cases/rollout_budget_with_malformed_jsonl"
+assert_eq "$(field "$malformed_budget_dir/stdout" IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED)" 0 "malformed budget flag"
+assert_eq "$(wc -l <"$malformed_budget_dir/count")" 1 "malformed budget invocation count"
+jq -e '.fuse_flags.rollout_budget_exhausted == false' \
+  "$malformed_budget_dir/state/codex-improve/review-metrics.jsonl" >/dev/null ||
+  fail "malformed budget metric fuse"
+for budget_artifact_field in IMPROVE_REVIEW_EVENT_LOG IMPROVE_REVIEW_FINAL_OUTPUT IMPROVE_REVIEW_DIAGNOSTIC_LOG; do
+  [ -e "$(field "$malformed_budget_dir/stdout" "$budget_artifact_field")" ] ||
+    fail "malformed budget artifact missing: $budget_artifact_field"
+done
+run_case nested_rollout_budget_text correctness nested_rollout_budget_text 1 INCONCLUSIVE codex_exit_17
+nested_dir="$test_root/cases/nested_rollout_budget_text"
+assert_eq "$(field "$nested_dir/stdout" IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED)" 0 "nested budget flag"
+jq -e '.fuse_flags.rollout_budget_exhausted == false' \
+  "$nested_dir/state/codex-improve/review-metrics.jsonl" >/dev/null ||
+  fail "nested budget text set metric fuse"
 run_case timeout correctness timeout 1 INCONCLUSIVE absolute_timeout 1 5
 
 run_case descendant correctness descendant 1 INCONCLUSIVE absolute_timeout 1 5

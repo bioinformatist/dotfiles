@@ -215,7 +215,7 @@ let
             '## Status
 
     - **Status**: TODO
-    - **Improve contract**: `1.0.0-codex.6`
+    - **Improve contract**: `1.0.0-codex.7`
     - **Implementation review**: PENDING
     - **Checkpoint**: NONE
     - **External acceptance**: NOT REQUIRED | PENDING
@@ -460,8 +460,8 @@ let
     # Provisional, metrics-calibrated executor budget.
     [features.rollout_budget]
     enabled = true
-    limit_tokens = 100000
-    reminder_at_remaining_tokens = [50000, 25000, 10000]
+    limit_tokens = 120000
+    reminder_at_remaining_tokens = [60000, 30000, 10000]
     sampling_token_weight = 1.0
     prefill_token_weight = 1.0
   '';
@@ -520,8 +520,8 @@ let
     # Provisional reviewer-only calibration; see closing-the-loop.md.
     [features.rollout_budget]
     enabled = true
-    limit_tokens = 80000
-    reminder_at_remaining_tokens = [40000, 20000, 10000]
+    limit_tokens = 100000
+    reminder_at_remaining_tokens = [50000, 25000, 10000]
     sampling_token_weight = 1.0
     prefill_token_weight = 1.0
   '';
