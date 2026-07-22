@@ -4,7 +4,7 @@ description: Audit a codebase as a read-only senior advisor, prioritize evidence
 license: MIT
 metadata:
   author: shadcn
-  version: "1.0.0-codex.7"
+  version: "1.0.0-codex.8"
 ---
 
 # Improve
@@ -60,7 +60,7 @@ Read [references/planning-contract.md](references/planning-contract.md) and [ref
 - `next`, `features`, or `roadmap`: investigate grounded product direction only.
 - `plan <description>`: skip the broad audit and write one plan after targeted recon.
 - `review-plan <file>`: reread the planning contract and plan evidence, preserve semantic anchors, and internally converge to `READY` or `BLOCKED`.
-- `execute <plan>`: follow [references/closing-the-loop.md](references/closing-the-loop.md).
+- `execute <plan>`: follow [references/closing-the-loop.md](references/closing-the-loop.md), including its one-time sequential recovery protocol for qualifying inconclusive initial executions.
 - `reconcile`: reread the planning contract, verify lifecycle state and completed work, investigate blocked plans, and refresh drifted plans without losing persisted semantics.
 - `--issues`: publish selected plans only after the user explicitly requests it; confirm before exposing sensitive findings in a public repository.
 

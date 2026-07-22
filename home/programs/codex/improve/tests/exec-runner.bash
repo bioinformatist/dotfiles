@@ -161,8 +161,8 @@ assert_private() {
 }
 assert_no_private_content() {
   file="$1"
-  if grep -F -e TOP_SECRET_PLAN -e TOP_SECRET_DIFF -e TOP_SECRET_STDERR \
-    -e /private/repository/path "$file" >/dev/null; then
+  if grep -F -e TOP_SECRET_PLAN -e TOP_SECRET_DOSSIER -e TOP_SECRET_DIFF \
+    -e TOP_SECRET_STDERR -e /private/repository/path "$file" >/dev/null; then
     fail "private execution content leaked into $file"
   fi
 }
@@ -276,6 +276,12 @@ grep -F -- "--spark PLAN" "$output" >/dev/null ||
   fail "help omits Spark initial mode"
 grep -F -- "--spark --revise WORKTREE DOSSIER" "$output" >/dev/null ||
   fail "help omits Spark revision mode"
+grep -F -- "codex-improve-exec --recover WORKTREE DOSSIER" "$output" >/dev/null ||
+  fail "help omits standard recovery mode"
+grep -F -- "--spark --recover WORKTREE DOSSIER" "$output" >/dev/null ||
+  fail "help omits Spark recovery mode"
+grep -F -- "--deep --recover WORKTREE DOSSIER" "$output" >/dev/null ||
+  fail "help omits deep recovery mode"
 assert_not_invoked help
 
 start_case invalid
@@ -589,6 +595,115 @@ assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep "deep revis
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 6 "deep revision timeout"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 "deep revision token limit"
 
+start_case recovery complete
+run_runner --recover "$revision_worktree" "$dossier"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_MODE)" recovery "recovery mode"
+assert_eq "$(field "$output" IMPROVE_BRANCH)" codex/improve-revision-test "recovery branch"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor "recovery profile"
+assert_eq "$(invocation_profile)" improve-executor "recovery invoked profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 4 "normal recovery timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 120000 "Standard recovery token limit"
+assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "recovery diff preservation"
+assert_eq "$(git -C "$repo" worktree list --porcelain)" "$worktrees_before" "recovery worktree reuse"
+assert_eq "$(grep -o TOP_SECRET_DOSSIER "$FAKE_PROMPT_LOG" | wc -l)" 1 "recovery dossier insertion count"
+grep -F -- "completing exactly one bounded recovery slice after an inconclusive" \
+  "$FAKE_PROMPT_LOG" >/dev/null || fail "recovery one-slice contract missing"
+grep -F -- "Preserve the existing diff and" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "recovery diff preservation contract missing"
+grep -F -- "only the dossier's permitted paths" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "recovery path boundary missing"
+grep -F -- "COMPLETE means" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "recovery completion boundary missing"
+grep -F -- "Never decompose or recover this slice." "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "recursive recovery prohibition missing"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "recovery invocation count"
+jq -e '
+  .mode == "recovery"
+  and .profile == "improve-executor"
+  and .result == "COMPLETE"
+  and .exit_reason == "completed"
+  and .active_timeout_seconds == 4
+  and .active_token_limit == 120000
+  and .token_usage == {"input_tokens":10,"cached_input_tokens":2,"output_tokens":3}
+  and .tool_event_count == 1
+' "$metric" >/dev/null || fail "recovery metric"
+
+start_case spark_recovery complete
+run_runner --spark --recover "$revision_worktree" "$dossier"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_MODE)" recovery "Spark recovery mode"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark "Spark recovery profile"
+assert_eq "$(invocation_profile)" improve-executor-spark "Spark recovery invoked profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 4 "Spark recovery timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 100000 "Spark recovery token limit"
+assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "Spark recovery diff preservation"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "Spark recovery invocation count"
+
+start_case deep_recovery complete
+run_runner --deep --recover "$revision_worktree" "$dossier"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_MODE)" recovery "deep recovery mode"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep "deep recovery profile"
+assert_eq "$(invocation_profile)" improve-executor-deep "deep recovery invoked profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 6 "deep recovery timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 "deep recovery token limit"
+assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "deep recovery diff preservation"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "deep recovery invocation count"
+
+recovery_transport_case() {
+  name="$1"
+  fake_mode="$2"
+  expected_status="$3"
+  expected_result="$4"
+  expected_reason="$5"
+  start_case "$name" "$fake_mode"
+  run_runner --recover "$revision_worktree" "$dossier"
+  assert_transport_case "$expected_status" "$expected_result" "$expected_reason"
+  assert_eq "$(field "$output" IMPROVE_MODE)" recovery "$name mode"
+  assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "$name invocation count"
+  assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "$name diff preservation"
+}
+
+recovery_transport_case recovery_stopped stopped 0 STOPPED completed
+recovery_transport_case recovery_nonzero nonzero 1 INCONCLUSIVE codex_exit_17
+recovery_transport_case recovery_budget rollout_budget_exhausted 1 INCONCLUSIVE rollout_budget_exhausted
+recovery_transport_case recovery_timeout timeout 1 INCONCLUSIVE absolute_timeout
+recovery_transport_case recovery_malformed malformed_jsonl 1 INCONCLUSIVE invalid_event_log
+
+start_case recovery_signal signal
+copy_runner
+output="$case_dir/output"
+errors="$case_dir/errors"
+(
+  cd "$repo"
+  exec bash "$runner" --recover "$revision_worktree" "$dossier"
+) >"$output" 2>"$errors" &
+wrapper_pid="$!"
+for _ in $(seq 1 50); do
+  [ -s "$FAKE_CHILD_PID_FILE" ] && break
+  sleep 0.1
+done
+[ -s "$FAKE_CHILD_PID_FILE" ] || fail "recovery signal case did not start descendant"
+kill -TERM "$wrapper_pid"
+set +e
+wait "$wrapper_pid"
+status="$?"
+set -e
+assert_transport_case 1 INCONCLUSIVE wrapper_signal_TERM
+assert_eq "$(field "$output" IMPROVE_MODE)" recovery "recovery signal mode"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "recovery signal invocation count"
+assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "recovery signal diff preservation"
+recovery_signal_child_pid="$(<"$FAKE_CHILD_PID_FILE")"
+for _ in $(seq 1 20); do
+  kill -0 "$recovery_signal_child_pid" 2>/dev/null || break
+  sleep 0.1
+done
+if kill -0 "$recovery_signal_child_pid" 2>/dev/null; then
+  kill -KILL "$recovery_signal_child_pid" 2>/dev/null || true
+  fail "recovery signal-resistant descendant survived cancellation"
+fi
+
 reject_case() {
   name="$1"
   shift
@@ -602,13 +717,22 @@ reject_case main_worktree --revise "$repo" "$dossier"
 mkdir -p "$revision_worktree/subdir"
 reject_case subdirectory --revise "$revision_worktree/subdir" "$dossier"
 reject_case missing_dossier --revise "$revision_worktree" "$test_root/missing.md"
+reject_case repeated_recovery --recover --recover "$revision_worktree" "$dossier"
+reject_case revision_then_recovery --revise --recover "$revision_worktree" "$dossier"
+reject_case recovery_then_revision --recover --revise "$revision_worktree" "$dossier"
+reject_case lane_after_recovery --recover --spark "$revision_worktree" "$dossier"
+reject_case recovery_main_worktree --recover "$repo" "$dossier"
+reject_case recovery_subdirectory --recover "$revision_worktree/subdir" "$dossier"
+reject_case recovery_missing_dossier --recover "$revision_worktree" "$test_root/missing.md"
 
 other_worktree="$test_root/other worktree"
 git -C "$repo" worktree add -q -b feature/not-improve "$other_worktree" HEAD
 reject_case non_improve_branch --revise "$other_worktree" "$dossier"
+reject_case recovery_non_improve_branch --recover "$other_worktree" "$dossier"
 
 copied_worktree="$test_root/copied worktree"
 cp -a "$revision_worktree" "$copied_worktree"
 reject_case unregistered_worktree --revise "$copied_worktree" "$dossier"
+reject_case recovery_unregistered_worktree --recover "$copied_worktree" "$dossier"
 
 echo "exec-runner: all tests passed"
