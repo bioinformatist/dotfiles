@@ -595,6 +595,7 @@ let
     sandbox_mode = "workspace-write"
     approval_policy = "on-request"
     web_search = "live"
+    mcp_oauth_credentials_store = "file"
 
     [sandbox_workspace_write]
     writable_roots = ${writableRootsToml}
