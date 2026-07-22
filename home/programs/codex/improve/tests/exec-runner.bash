@@ -78,6 +78,19 @@ EOF
     emit_usage
     exit 17
     ;;
+  rollout_budget_exhausted)
+    printf '%s\n' '{"type":"error","message":"shared rollout token budget exhausted","request_id":"test"}'
+    exit 1
+    ;;
+  rollout_budget_with_malformed_jsonl)
+    printf '%s\n' '{"type":"error","message":"shared rollout token budget exhausted","request_id":"test"}'
+    printf '%s\n' 'not-json'
+    exit 1
+    ;;
+  nested_rollout_budget_text)
+    printf '%s\n' '{"type":"item.completed","item":{"type":"agent_message","text":"shared rollout token budget exhausted"}}'
+    exit 17
+    ;;
   exit_124)
     emit_usage
     exit 124
@@ -229,6 +242,10 @@ assert_transport_case() {
   assert_eq "$status" "$expected_status" "$case_name status"
   assert_eq "$(field "$output" IMPROVE_EXEC_RESULT)" "$expected_result" "$case_name result"
   assert_eq "$(field "$output" IMPROVE_EXEC_EXIT_REASON)" "$expected_reason" "$case_name reason"
+  case "$(field "$output" IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED)" in
+    0|1) ;;
+    *) fail "$case_name budget flag is not 0 or 1" ;;
+  esac
   artifact_dir="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
   case "$artifact_dir" in
     "$XDG_STATE_HOME/codex-improve/executions/"*) ;;
@@ -243,6 +260,8 @@ assert_transport_case() {
   metric="$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl"
   [ -s "$metric" ] || fail "$case_name metric missing"
   assert_private "$metric"
+  jq -e '(.fuse_flags.rollout_budget_exhausted | type) == "boolean"' "$metric" >/dev/null ||
+    fail "$case_name budget metric fuse is not Boolean"
   assert_no_private_content "$output"
   assert_no_private_content "$errors"
   assert_no_private_content "$metric"
@@ -287,7 +306,8 @@ assert_eq "$(field "$output" IMPROVE_MODE)" initial "initial mode"
 assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor "initial profile"
 assert_eq "$(field "$output" IMPROVE_EXEC_EXIT)" 0 "initial raw Codex status"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 5 "normal initial timeout"
-assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 100000 "normal token limit"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 120000 "Standard token limit"
+assert_eq "$(field "$output" IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED)" 0 "initial budget flag"
 initial_worktree="$(field "$output" IMPROVE_WORKTREE)"
 [ -d "$initial_worktree" ] || fail "initial worktree was not preserved"
 [ ! -e "$initial_worktree/dirty.txt" ] || fail "dirty caller state entered initial worktree"
@@ -297,19 +317,24 @@ grep -Fx -- --ephemeral "$FAKE_INVOCATION_LOG" >/dev/null || fail "ephemeral mod
 grep -Fx -- --json "$FAKE_INVOCATION_LOG" >/dev/null || fail "JSONL mode missing"
 grep -Fx -- --output-last-message "$FAKE_INVOCATION_LOG" >/dev/null ||
   fail "final-message output missing"
+grep -F -- "Do not load or reread the Improve skill" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "initial no-Improve/Ponytail boundary missing"
+grep -F -- "A targeted reread is allowed after editing that" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "initial targeted-reread boundary missing"
 jq -e '
   .mode == "initial"
   and .profile == "improve-executor"
   and .result == "COMPLETE"
   and .exit_reason == "completed"
   and .active_timeout_seconds == 5
-  and .active_token_limit == 100000
+  and .active_token_limit == 120000
   and .token_usage == {"input_tokens":10,"cached_input_tokens":2,"output_tokens":3}
   and .tool_event_count == 1
   and .fuse_flags == {
     "absolute_timeout":false,
     "event_log_limit":false,
-    "wrapper_signal":false
+    "wrapper_signal":false,
+    "rollout_budget_exhausted":false
   }
 ' "$metric" >/dev/null || fail "initial metric"
 
@@ -361,6 +386,22 @@ transport_failure() {
 
 transport_failure nonzero nonzero codex_exit_17
 assert_eq "$(field "$output" IMPROVE_EXEC_EXIT)" 17 "nonzero raw Codex status"
+transport_failure rollout_budget_exhausted rollout_budget_exhausted rollout_budget_exhausted
+assert_eq "$(field "$output" IMPROVE_EXEC_EXIT)" 1 "budget raw Codex status"
+assert_eq "$(field "$output" IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED)" 1 "budget flag"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "budget invocation count"
+jq -e '.fuse_flags.rollout_budget_exhausted == true' "$metric" >/dev/null ||
+  fail "budget metric fuse"
+transport_failure rollout_budget_with_malformed_jsonl rollout_budget_with_malformed_jsonl codex_exit_1
+assert_eq "$(field "$output" IMPROVE_EXEC_EXIT)" 1 "malformed budget raw Codex status"
+assert_eq "$(field "$output" IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED)" 0 "malformed budget flag"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "malformed budget invocation count"
+jq -e '.fuse_flags.rollout_budget_exhausted == false' "$metric" >/dev/null ||
+  fail "malformed budget metric fuse"
+transport_failure nested_rollout_budget_text nested_rollout_budget_text codex_exit_17
+assert_eq "$(field "$output" IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED)" 0 "nested budget flag"
+jq -e '.fuse_flags.rollout_budget_exhausted == false' "$metric" >/dev/null ||
+  fail "nested budget text set metric fuse"
 transport_failure exit_124 exit_124 codex_exit_124
 assert_eq "$(field "$output" IMPROVE_EXEC_EXIT)" 124 "natural 124 raw Codex status"
 jq -e '.fuse_flags.absolute_timeout == false' "$metric" >/dev/null ||
@@ -520,11 +561,14 @@ assert_eq "$(field "$output" IMPROVE_MODE)" revision "revision mode"
 assert_eq "$(field "$output" IMPROVE_BRANCH)" codex/improve-revision-test "revision branch"
 assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor "revision profile"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 4 "normal revision timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 120000 "Standard revision token limit"
 assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "revision diff preservation"
 assert_eq "$(git -C "$repo" worktree list --porcelain)" "$worktrees_before" "revision worktree reuse"
 assert_eq "$(grep -o TOP_SECRET_DOSSIER "$FAKE_PROMPT_LOG" | wc -l)" 1 "dossier insertion count"
 grep -F -- "Do not load or reread the" "$FAKE_PROMPT_LOG" >/dev/null ||
   fail "revision recon prohibition missing"
+grep -F -- "A targeted reread is allowed after editing that" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "revision targeted-reread boundary missing"
 
 start_case spark_revision complete
 run_runner --spark --revise "$revision_worktree" "$dossier"

@@ -71,6 +71,7 @@ IMPROVE_EXEC_MAX_EVENT_GAP_SECONDS=...
 IMPROVE_EXEC_QUIET_INTERVAL_OBSERVED=...
 IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS=...
 IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT=...
+IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED=...
 IMPROVE_EXEC_EVENT_LOG_LIMIT_HIT=...
 IMPROVE_EXEC_ARTIFACT_DIR=...
 IMPROVE_EXEC_PROMPT=...
@@ -80,7 +81,7 @@ IMPROVE_EXEC_DIAGNOSTIC_LOG=...
 IMPROVE_EXEC_METRICS=...
 ```
 
-The executor must touch only in-scope files, run verification, honor STOP conditions, and leave changes uncommitted. It must not merge, push, modify the plan index, remove the worktree, or launch other agents.
+The executor must touch only in-scope files, run verification, honor STOP conditions, and leave changes uncommitted. It must not merge, push, modify the plan index, remove the worktree, or launch other agents. It does not load or reread Improve, its references, or Ponytail; required repository skills remain available when an implementation need actually triggers them. It avoids purposeless repeated broad reads of unchanged long files and duplicate skill copies. Targeted rereads are allowed after editing the exact region, after truncated output, or to answer one named unresolved question.
 
 Executor worktrees live under `$XDG_STATE_HOME/codex-improve/worktrees`, falling
 back to `~/.local/state`, so an interruption or reboot does not silently discard
@@ -98,34 +99,43 @@ new event but does not interrupt quiet reasoning solely for that reason.
 
 The helper validates both the JSONL transport and the executor's final report.
 A valid `COMPLETE` or model-level `STOPPED` is conclusive, uses exit reason
-`completed`, and returns zero. Absolute timeout, event-log overflow, caller
-signal, nonzero Codex exit, malformed JSONL, or invalid final output is
-`INCONCLUSIVE` and returns one. `IMPROVE_EXEC_EXIT` always retains the raw Codex
-or GNU timeout status. A private timeout signal record, rather than status 124
-or 137 alone, identifies a real deadline. The helper never retries
-automatically. Every outcome preserves the worktree, prompt snapshot, event
-log, final output, diagnostic log, and timeout record for recovery and
-investigation.
+`completed`, and returns zero. Classification precedence is caller signal,
+event-log overflow, absolute timeout, an exact top-level JSONL object whose
+`type` is `error` and whose `message` is
+`shared rollout token budget exhausted` when Codex exits nonzero, then a generic
+nonzero Codex exit, followed by the existing transport and final-report
+validation. Extra fields on that error object are harmless; nested or quoted
+text is not a match. Every failure is `INCONCLUSIVE` and returns one.
+`IMPROVE_EXEC_EXIT` always retains the raw Codex or GNU timeout status, while
+`IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED` is always `0` or `1`. A private timeout
+signal record, rather than status 124 or 137 alone, identifies a real deadline.
+The helper never retries or invokes another profile. Every outcome preserves
+the worktree, prompt snapshot, event log, final output, diagnostic log, and
+timeout record for recovery and investigation.
 
 A Spark model or entitlement failure is the same nonzero Codex failure as any
 other executor failure: the result is `INCONCLUSIVE`, every artifact is
 preserved, and control returns to the main agent. The helper never retries with
 Spark, standard, or deep and never consumes another lane as a fallback.
 
-Normal and Spark initial execution have a provisional 20-minute absolute
-timeout and 100,000-token rollout budget; deep initial execution has a
-provisional 30-minute timeout and 160,000-token budget. Normal and Spark
-revisions reuse their profile token budgets with a provisional 12-minute
-timeout; deep revisions use 18 minutes. The provisional transport fuses use a
-five-second hard-kill grace, a 32 MiB event-log limit, and a 64 KiB final-output
-limit. All of these numeric values are metrics-calibrated safeguards, not
-product or compatibility contracts.
+Standard initial execution has a provisional 20-minute absolute timeout and a
+120,000-token rollout budget with 60,000/30,000/10,000 reminders. Spark initial
+execution keeps the 20-minute timeout and 100,000-token budget with
+50,000/25,000/10,000 reminders. Deep initial execution keeps the provisional
+30-minute timeout and 160,000-token budget with 80,000/40,000/15,000 reminders.
+Standard and Spark revisions reuse their profile token budgets with a
+provisional 12-minute timeout; deep revisions reuse the Deep budget with an
+18-minute timeout. The provisional transport fuses use a five-second hard-kill
+grace, a 32 MiB event-log limit, and a 64 KiB final-output limit. All of these
+numeric values are metrics-calibrated safeguards, not product or compatibility
+contracts.
 
 Content-free execution metrics are appended to
 `$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl`, with the same state
 fallback. They contain mode, profile, outcome, reason, elapsed time, event
 bytes, token counts, tool-event count, maximum event gap, quiet observation,
-active limits, and fuse flags. They never include prompt or final content,
+active limits, and Boolean fuse flags including `rollout_budget_exhausted`.
+They never include prompt or final content,
 repository or worktree paths, plan names, command output, or diffs.
 
 Inspect the preserved diagnostics whenever any fuse triggers. After at least 10
@@ -323,8 +333,8 @@ The reviewer does not reload the Improve skill, planning contract, audit
 playbook, or Ponytail skill. It reads each changed artifact completely at most
 once. Any reread names one unresolved question first and targets only the range
 needed to answer it.
-When rollout-budget reminders report 40,000 weighted tokens remaining, broad
-recon stops and the coverage matrix is completed. At 20,000, only one named
+When rollout-budget reminders report 50,000 weighted tokens remaining, broad
+recon stops and the coverage matrix is completed. At 25,000, only one named
 evidence gap may be pursued at a time. At 10,000, tool use stops and the verdict
 is rendered.
 
@@ -347,7 +357,8 @@ JSONL event is recorded as a quiet-interval observation but never treated as
 proof of a stalled model or used to interrupt the run. Bounded evidence and
 model-visible rollout budgets remain the primary convergence controls.
 
-The 80,000 weighted-token limit, 40,000/20,000/10,000 convergence gates,
+Both reviewer profiles use a 100,000 weighted-token limit with
+50,000/25,000/10,000 convergence gates. Those values, together with the
 1.0 sampling and prefill weights, eight-minute fuse, three-minute observation
 marker, and two-revision boundary are provisional reviewer-only calibrations.
 Observe elapsed time, token mix, tool events, maximum JSONL event gap, verdict,
@@ -355,15 +366,25 @@ and failure reason in subsequent reviews. Do not tune them automatically. A
 change requires evidence from observed runs and explicit user approval.
 
 The helper reports the role, profile, result, artifact paths, elapsed time,
-maximum event gap, quiet-interval observation, and exit reason. Its model output
+maximum event gap, quiet-interval observation, exit reason,
+`IMPROVE_REVIEW_ACTIVE_TOKEN_LIMIT=100000`, and the stable `0` or `1`
+`IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED` field. Its model output
 must satisfy [`review-verdict.schema.json`](review-verdict.schema.json) and keep
 the verdict coherent with its findings, implementation coverage, review
 blockers, and deferred acceptance. `APPROVE` may include deferred acceptance,
 but never a finding, failed coverage row, or review blocker. A model verdict is
 possible only when Codex exits successfully with valid JSONL and a
-coherent structured result; otherwise the result is `INCONCLUSIVE`. Invalid
+coherent structured result; otherwise the result is `INCONCLUSIVE`. After
+wrapper signals and absolute timeout, an exact top-level JSONL error object with
+the shared rollout-budget exhaustion message and a nonzero Codex status is
+classified as `rollout_budget_exhausted`; extra fields are allowed, while
+nested or quoted text does not match. A generic nonzero exit follows that
+classification, before existing validation and verdict behavior. Invalid
 caller input or unavailable local storage may terminate before a complete
-handoff. Metrics are content-free and best-effort. The helper never retries.
+handoff. Metrics are content-free and best-effort, include numeric
+`active_token_limit` and Boolean
+`fuse_flags.rollout_budget_exhausted`, and contain no paths or review content.
+The helper never retries or falls back to another role or profile.
 
 The correctness reviewer checks behavior, safety, regressions, meaningful
 tests, and plan and Engineering-contract compliance. The elegance reviewer

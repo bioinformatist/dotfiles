@@ -29,7 +29,8 @@ normal_initial_seconds=1200
 deep_initial_seconds=1800
 normal_revision_seconds=720
 deep_revision_seconds=1080
-normal_token_limit=100000
+standard_token_limit=120000
+spark_token_limit=100000
 deep_token_limit=160000
 kill_after_seconds=5
 heartbeat_seconds=60
@@ -40,7 +41,6 @@ poll_seconds=1
 
 profile="improve-executor"
 mode="initial"
-deep=0
 case "${1:-}" in
   -h|--help)
     usage
@@ -48,7 +48,6 @@ case "${1:-}" in
     ;;
   --deep)
     profile="improve-executor-deep"
-    deep=1
     shift
     ;;
   --spark)
@@ -66,24 +65,41 @@ if [ "${1:-}" = "--revise" ]; then
   shift
 fi
 
-if [ "$deep" -eq 1 ]; then
-  token_limit="$deep_token_limit"
-  if [ "$mode" = "revision" ]; then
-    absolute_seconds="$deep_revision_seconds"
-  else
-    absolute_seconds="$deep_initial_seconds"
-  fi
-else
-  token_limit="$normal_token_limit"
-  if [ "$mode" = "revision" ]; then
-    absolute_seconds="$normal_revision_seconds"
-  else
+case "$profile:$mode" in
+  improve-executor:initial)
+    token_limit="$standard_token_limit"
     absolute_seconds="$normal_initial_seconds"
-  fi
-fi
+    ;;
+  improve-executor:revision)
+    token_limit="$standard_token_limit"
+    absolute_seconds="$normal_revision_seconds"
+    ;;
+  improve-executor-spark:initial)
+    token_limit="$spark_token_limit"
+    absolute_seconds="$normal_initial_seconds"
+    ;;
+  improve-executor-spark:revision)
+    token_limit="$spark_token_limit"
+    absolute_seconds="$normal_revision_seconds"
+    ;;
+  improve-executor-deep:initial)
+    token_limit="$deep_token_limit"
+    absolute_seconds="$deep_initial_seconds"
+    ;;
+  improve-executor-deep:revision)
+    token_limit="$deep_token_limit"
+    absolute_seconds="$deep_revision_seconds"
+    ;;
+esac
 
 emit_report_contract() {
   cat <<'EOF'
+Do not load or reread the Improve skill, its references, or any Ponytail skill.
+Required repository skills remain allowed when an implementation need actually
+triggers them. Do not purposelessly repeat broad reads of unchanged long files
+or read duplicate skill copies. A targeted reread is allowed after editing that
+exact region, after truncated output, or to answer one named unresolved question.
+
 Do not commit, merge, push, open a pull request, update the plan or its index,
 remove the worktree, or launch subagents. Leave the complete diff uncommitted
 for the main agent to review.
@@ -128,6 +144,24 @@ validate_event_log() {
     | (if $lines[-1] == "" then $lines[:-1] else $lines end)
     | length > 0
       and all(.[]; . != "" and (try (fromjson | type == "object") catch false))
+  ' "$event_log" >/dev/null 2>&1
+}
+
+has_rollout_budget_exhaustion() {
+  jq -Rse '
+    split("\n") as $lines
+    | (if $lines[-1] == "" then $lines[:-1] else $lines end) as $lines
+    | if ($lines | length) > 0 and all($lines[]; test("\\S")) then
+        try (($lines | map(fromjson)) as $events
+          | if all($events[]; type == "object") then
+              any($events[];
+                .type == "error"
+                  and .message == "shared rollout token budget exhausted")
+            else false
+            end)
+        catch false
+      else false
+      end
   ' "$event_log" >/dev/null 2>&1
 }
 
@@ -300,12 +334,18 @@ run_execution() {
   result="INCONCLUSIVE"
   exit_reason=""
   event_log_valid=0
+  rollout_budget_exhausted=0
+  if has_rollout_budget_exhaustion; then
+    rollout_budget_exhausted=1
+  fi
   if [ -n "$cancelled" ]; then
     exit_reason="wrapper_signal_$cancelled"
   elif [ "$event_log_limit_hit" -eq 1 ]; then
     exit_reason="event_log_limit"
   elif [ "$timeout_fired" -eq 1 ]; then
     exit_reason="absolute_timeout"
+  elif [ "$codex_status" -ne 0 ] && [ "$rollout_budget_exhausted" -eq 1 ]; then
+    exit_reason="rollout_budget_exhausted"
   elif [ "$codex_status" -ne 0 ]; then
     exit_reason="codex_exit_$codex_status"
   elif ! validate_event_log; then
@@ -359,6 +399,7 @@ run_execution() {
     --argjson timeout_fuse "$([ "$exit_reason" = "absolute_timeout" ] && echo 1 || echo 0)" \
     --argjson event_log_fuse "$event_log_limit_hit" \
     --argjson signal_fuse "$([ -n "$cancelled" ] && echo 1 || echo 0)" \
+    --argjson rollout_budget_exhausted "$rollout_budget_exhausted" \
     '{
       timestamp: $timestamp,
       mode: $mode,
@@ -376,7 +417,8 @@ run_execution() {
       fuse_flags: {
         absolute_timeout: ($timeout_fuse == 1),
         event_log_limit: ($event_log_fuse == 1),
-        wrapper_signal: ($signal_fuse == 1)
+        wrapper_signal: ($signal_fuse == 1),
+        rollout_budget_exhausted: ($rollout_budget_exhausted == 1)
       }
     }')"
   state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/codex-improve"
@@ -410,6 +452,7 @@ run_execution() {
   printf 'IMPROVE_EXEC_QUIET_INTERVAL_OBSERVED=%s\n' "$quiet_interval_observed"
   printf 'IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS=%s\n' "$absolute_seconds"
   printf 'IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT=%s\n' "$token_limit"
+  printf 'IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED=%s\n' "$rollout_budget_exhausted"
   printf 'IMPROVE_EXEC_EVENT_LOG_LIMIT_HIT=%s\n' "$event_log_limit_hit"
   printf 'IMPROVE_EXEC_ARTIFACT_DIR=%s\n' "$artifact_dir"
   printf 'IMPROVE_EXEC_PROMPT=%s\n' "$prompt_file"

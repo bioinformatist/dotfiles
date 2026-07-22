@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.6`
+Contract version: `1.0.0-codex.7`
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
