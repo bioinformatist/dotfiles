@@ -579,7 +579,8 @@ let
   '';
 
   trustedProjects = lib.unique config.dotfiles.codex.trustedProjects;
-  writableRoots = lib.unique config.dotfiles.codex.writableRoots;
+  shellCacheHome = "${config.xdg.cacheHome}/codex-shell";
+  writableRoots = lib.unique ([ shellCacheHome ] ++ config.dotfiles.codex.writableRoots);
   writableRootsToml = builtins.toJSON writableRoots;
 
   trustedProjectsToml = lib.concatMapStringsSep "\n\n" (path: ''
@@ -612,7 +613,7 @@ let
     status_line = ["model-with-reasoning", "current-dir", "context-remaining", "five-hour-limit", "weekly-limit", "thread-title"]
 
     [shell_environment_policy]
-    set = { XDG_CACHE_HOME = "/tmp/codex-nix-cache" }
+    set = { XDG_CACHE_HOME = "${shellCacheHome}" }
 
     ${trustedProjectsToml}
 
