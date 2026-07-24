@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.8`
+Contract version: `1.0.0-codex.11`
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -112,6 +112,68 @@ plans are local-only by default, and Improve must not change ignore or
 publication policy implicitly. Publishing any plan or finding still requires
 explicit user confirmation.
 
+## Execution units and isolation
+
+One plan is one integration, rollback, acceptance, and explicitly invoked
+execution unit. Do not put an execution-unit graph or a list of independently
+dispatched units inside one plan. Dependencies remain plan-level, and `--next`
+remains the explicit sequential continuation mechanism.
+
+Every generated plan has an `Execution isolation` section:
+
+```markdown
+## Execution isolation
+
+- **Dispatch**: serial
+- **Mutable stateful resources**: none
+```
+
+`serial` is the default and requires no isolation proof. Use
+`parallel-eligible` only when source dependencies permit concurrent execution
+and every mutable external resource is read-only, independently provisioned, or
+isolated by a distinct logical coordinate for each invocation. The runner does
+not enforce or dispatch parallel-eligible plans; concurrent invocation remains
+a main-agent scheduling decision.
+
+When a plan needs mutable external state, replace `none` with a compact table:
+
+```markdown
+| Resource | Isolation coordinate | Provision/select | Lifecycle owner | Cleanup |
+|---|---|---|---|---|
+| `<service>` | `<scope derived from execution ID or explicit handoff>` | `<exact commands>` | `<owner>` | `<policy/evidence>` |
+```
+
+Choose the narrowest isolation coordinate supported by the resource. Every
+client in one execution, including repo-local MCP servers, tests, CLI tools,
+and the application, must select the same logical scope. A shared transport
+endpoint, server process, or container neither proves shared state nor proves
+isolation; the logical write target decides. A shared daemon may remain shared
+when executions use distinct logical scopes and no executor owns its lifecycle.
+An executor must not start, stop, restart, or tear down a shared daemon unless
+the plan assigns that lifecycle explicitly.
+
+For every mutable resource, give the exact idempotent command that provisions
+and selects a new scope, including any schema, module import, fixture, migration,
+or other bootstrap it needs. Name the lifecycle owner and cleanup policy or
+evidence. If any mutable resource lacks an isolation coordinate or lifecycle
+owner, the plan is serial-only. Separate source worktrees alone are never
+evidence of parallel safety. Repo-local MCP servers remain available project
+capabilities; isolation plans coordinate their logical target rather than
+removing or globally rewriting them.
+
+Every initial, `--next`, revision, and recovery runner invocation creates and
+exports a fresh opaque `IMPROVE_EXECUTION_ID` to the executor and its child
+processes. The ID is an isolation input, not an automatic database, namespace,
+bucket, schema, tenant, lifecycle, or cleanup policy. Resource names remain out
+of content-free runner metrics.
+
+A fresh revision or recovery ID normally selects a fresh ephemeral resource.
+When a follow-up must reuse persistent state, its dossier or the plan's
+Operational handoff must name the existing logical resource and lifecycle owner
+explicitly instead of deriving a different resource from the fresh ID.
+Likewise, `--next` inherits source lineage only from its checkpoint; mutable
+state lineage exists only through an explicit handoff in the later plan.
+
 ## Executor routing
 
 Every generated plan records `Executor lane: spark | standard | deep` and
@@ -171,14 +233,36 @@ implementation gate. For each genuinely deferred acceptance, record its owner,
 environment, exact procedure, expected evidence, rollback or recovery path, and
 what drift invalidates the result.
 
+An Improve candidate is identified by its current `HEAD` and the full Git tree
+of the complete worktree state, including staged, unstaged, untracked, deleted,
+and executable-bit changes. Capture that identity with
+`codex-improve-exec --candidate WORKTREE`; the helper builds the tree with a
+temporary index and native `git write-tree` without changing the worktree's real
+index. An unmerged index is not a candidate.
+
+Execution output records `IMPROVE_CANDIDATE_AVAILABLE=1` with the candidate head
+and tree when post-run collection succeeds. When collection fails, it preserves
+the already-established execution result and transport evidence, records
+`IMPROVE_CANDIDATE_AVAILABLE=0` plus a content-free
+`IMPROVE_CANDIDATE_ERROR`, omits the head and tree, and returns nonzero. Such an
+execution cannot proceed to review until its candidate is identifiable.
+
+Pass the full `IMPROVE_CANDIDATE_TREE` explicitly to every review, revision, and
+recovery invocation. Each helper recomputes the complete current tree and
+rejects an abbreviated, missing, or stale expected tree before starting a model.
+Record `IMPROVE_REVIEWED_CANDIDATE_TREE` with review evidence. Any candidate
+change creates a new tree identity and invalidates conclusions that applied to
+the prior tree; capture and review the new identity rather than inferring
+continuity from a worktree path, branch, dossier, or conversation.
+
 Track implementation, integration, and external acceptance independently:
 
 - **Implementation review**: `PENDING`, `APPROVED`, `REVISE`, or `BLOCKED`.
 - **Checkpoint**: `NONE`, `RESUMABLE`, or `INTEGRATED`.
 - **External acceptance**: `NOT REQUIRED`, `PENDING`, `PASSED`, or `FAILED`.
-- **Checkpoint ID**: `none` or an exact persistent-worktree and diff identity,
-  commit SHA, branch or PR ref, deployment identity, or other repository-backed
-  identifier that lets the main agent recover the same change.
+- **Checkpoint ID**: `none` or an exact candidate head and tree, commit SHA,
+  branch or PR ref, deployment identity, or other repository-backed identifier
+  that lets the main agent recover the same change.
 
 Keep one authoritative current Checkpoint and Checkpoint ID. Whenever that
 identity moves between a persistent worktree and diff, commit, PR, integration,
@@ -188,6 +272,20 @@ evidence, and invalidated evidence. An identity change does not preserve review
 evidence by itself. Carry evidence forward only after proving the reviewed diff
 is unchanged; every material diff change invalidates the applicable checks and
 reviewer conclusions.
+
+After all required implementation reviews approve the exact candidate, and
+after any approval required for a commit, the main agent may create one local
+checkpoint with
+`codex-improve-exec --checkpoint WORKTREE EXPECTED_TREE COMMIT_MESSAGE`. The
+expected tree must be the full reviewed candidate tree. The helper stages that
+complete tree and runs normal commit hooks against an internal local ref. It
+atomically advances the Improve branch only after verifying the resulting
+commit tree. A failed or index-mutating hook leaves the Improve branch and
+worktree `HEAD` at the original commit and preserves the hook-produced index
+and worktree evidence. Checkpoint mode cleans its internal ref but does not
+reset or clean the worktree, bypass hooks, merge, push, publish, integrate, or
+remove any branch or worktree. The resulting local commit is `RESUMABLE`, not
+`INTEGRATED`, and authorizes none of those later actions.
 
 An asynchronous handoff for human or external acceptance requires a resumable
 checkpoint. Preparing it may require user approval for a commit, push, preview,
@@ -238,10 +336,17 @@ approach must change. An unrelated environment outage leaves acceptance
 pending with the outage evidence recorded.
 
 Dependencies require `DONE` by default. The only exception is a code-only
-dependency whose contract names an actual landing commit and an observable
-prerequisite that the dependent plan can verify. Inline that dependency
-contract in the dependent plan. Never require an executor to recover semantics
-from another plan or prior conversation.
+dependency whose contract names an exact approved checkpoint or landing commit
+and an observable prerequisite that the dependent plan can verify. Inline that
+dependency contract in the dependent plan; never require an executor to recover
+semantics from another plan or prior conversation.
+
+Start one dependent plan from a pre-integration checkpoint only through
+`codex-improve-exec --next CHECKPOINT PLAN`. `CHECKPOINT` must be the full
+commit ID at the current tip of a local `codex/improve-*` branch. The helper
+creates one isolated worktree from that exact commit and records it as the
+predecessor checkpoint. `--next` is an explicit one-plan action, not permission
+to schedule, lock, publish, integrate, or automatically chain plans.
 
 ## Convergence protocol
 

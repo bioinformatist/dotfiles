@@ -215,7 +215,7 @@ let
             '## Status
 
     - **Status**: TODO
-    - **Improve contract**: `1.0.0-codex.8`
+    - **Improve contract**: `1.0.0-codex.11`
     - **Implementation review**: PENDING
     - **Checkpoint**: NONE
     - **External acceptance**: NOT REQUIRED | PENDING
@@ -247,6 +247,17 @@ let
 
     | Stage | Identity | Superseded identity | Preserved evidence | Invalidated evidence |
     |-------|----------|---------------------|--------------------|----------------------|
+
+    ## Execution isolation
+
+    - **Dispatch**: serial
+    - **Mutable stateful resources**: none
+
+    When mutable external state is required, replace `none` with:
+
+    | Resource | Isolation coordinate | Provision/select | Lifecycle owner | Cleanup |
+    |----------|----------------------|------------------|-----------------|---------|
+    | `<service>` | `<scope derived from execution ID or explicit handoff>` | `<exact commands>` | `<owner>` | `<policy/evidence>` |
 
     ## Why this matters' \
           --replace-fail \
@@ -391,6 +402,112 @@ let
     };
   };
 
+  improveReviewerRole = {
+    model = "gpt-5.6-sol";
+    reasoningEffort = "high";
+    verbosity = "medium";
+    sandbox = "read-only";
+    approval = "never";
+    writableRoots = [ ];
+    tokenLimit = 100000;
+    reminders = [
+      50000
+      25000
+      10000
+    ];
+    initialTimeout = 480;
+    followupTimeout = null;
+  };
+  improveRoles = {
+    standard = {
+      profile = "improve-executor";
+      model = "gpt-5.6-sol";
+      reasoningEffort = "medium";
+      verbosity = "medium";
+      sandbox = "workspace-write";
+      approval = "never";
+      writableRoots = [ ];
+      tokenLimit = 120000;
+      reminders = [
+        60000
+        30000
+        10000
+      ];
+      initialTimeout = 1200;
+      followupTimeout = 720;
+    };
+    spark = {
+      profile = "improve-executor-spark";
+      model = "gpt-5.3-codex-spark";
+      reasoningEffort = "high";
+      verbosity = "medium";
+      sandbox = "workspace-write";
+      approval = "never";
+      writableRoots = [ ];
+      tokenLimit = 100000;
+      reminders = [
+        50000
+        25000
+        10000
+      ];
+      initialTimeout = 1200;
+      followupTimeout = 720;
+    };
+    deep = {
+      profile = "improve-executor-deep";
+      model = "gpt-5.6-sol";
+      reasoningEffort = "xhigh";
+      verbosity = "medium";
+      sandbox = "workspace-write";
+      approval = "never";
+      writableRoots = [ ];
+      tokenLimit = 160000;
+      reminders = [
+        80000
+        40000
+        15000
+      ];
+      initialTimeout = 1800;
+      followupTimeout = 1080;
+    };
+    correctness = improveReviewerRole // {
+      profile = "improve-reviewer";
+    };
+    elegance = improveReviewerRole // {
+      profile = "improve-elegance-reviewer";
+    };
+  };
+  improveRolesJson = builtins.toJSON improveRoles;
+  improveRunnerEnvironment = ''
+    export CODEX_IMPROVE_ROLES_JSON=${lib.escapeShellArg improveRolesJson}
+  '';
+  mkImproveProfile =
+    role:
+    (pkgs.formats.toml { }).generate "codex-${role.profile}.config.toml" (
+      {
+        model = role.model;
+        model_reasoning_effort = role.reasoningEffort;
+        model_verbosity = role.verbosity;
+        sandbox_mode = role.sandbox;
+        approval_policy = role.approval;
+        features = {
+          multi_agent = false;
+          goals = false;
+          memories = false;
+          rollout_budget = {
+            enabled = true;
+            limit_tokens = role.tokenLimit;
+            reminder_at_remaining_tokens = role.reminders;
+            sampling_token_weight = 1.0;
+            prefill_token_weight = 1.0;
+          };
+        };
+      }
+      // lib.optionalAttrs (role.sandbox == "workspace-write") {
+        sandbox_workspace_write.writable_roots = role.writableRoots;
+      }
+    );
+
   improveExec = pkgs.writeShellApplication {
     name = "codex-improve-exec";
     runtimeInputs = [
@@ -401,7 +518,7 @@ let
       pkgs.gnused
       pkgs.jq
     ];
-    text = builtins.readFile ./improve/codex-improve-exec;
+    text = improveRunnerEnvironment + builtins.readFile ./improve/codex-improve-exec;
     checkPhase = ''
       runHook preCheck
       export PATH=${lib.makeBinPath [ pkgs.bash pkgs.coreutils pkgs.gitMinimal pkgs.gnused pkgs.jq ]}:$PATH
@@ -422,6 +539,7 @@ let
     ];
     text = ''
       export CODEX_IMPROVE_REVIEW_SCHEMA="${improveSkill}/references/review-verdict.schema.json"
+      ${improveRunnerEnvironment}
       ${builtins.readFile ./improve/codex-improve-review}
     '';
     checkPhase = ''
@@ -445,87 +563,11 @@ let
     [features]
     multi_agent = false
   '';
-  improveExecutorProfile = ''
-    model = "gpt-5.6-sol"
-    model_reasoning_effort = "medium"
-    model_verbosity = "medium"
-    sandbox_mode = "workspace-write"
-    approval_policy = "never"
-
-    [sandbox_workspace_write]
-    writable_roots = []
-
-    [features]
-    multi_agent = false
-
-    # Provisional, metrics-calibrated executor budget.
-    [features.rollout_budget]
-    enabled = true
-    limit_tokens = 120000
-    reminder_at_remaining_tokens = [60000, 30000, 10000]
-    sampling_token_weight = 1.0
-    prefill_token_weight = 1.0
-  '';
-  improveExecutorSparkProfile = ''
-    model = "gpt-5.3-codex-spark"
-    model_reasoning_effort = "high"
-    model_verbosity = "medium"
-    sandbox_mode = "workspace-write"
-    approval_policy = "never"
-
-    [sandbox_workspace_write]
-    writable_roots = []
-
-    [features]
-    multi_agent = false
-
-    # Provisional, metrics-calibrated executor budget.
-    [features.rollout_budget]
-    enabled = true
-    limit_tokens = 100000
-    reminder_at_remaining_tokens = [50000, 25000, 10000]
-    sampling_token_weight = 1.0
-    prefill_token_weight = 1.0
-  '';
-  improveExecutorDeepProfile = ''
-    model = "gpt-5.6-sol"
-    model_reasoning_effort = "xhigh"
-    model_verbosity = "medium"
-    sandbox_mode = "workspace-write"
-    approval_policy = "never"
-
-    [sandbox_workspace_write]
-    writable_roots = []
-
-    [features]
-    multi_agent = false
-
-    # Provisional, metrics-calibrated executor budget.
-    [features.rollout_budget]
-    enabled = true
-    limit_tokens = 160000
-    reminder_at_remaining_tokens = [80000, 40000, 15000]
-    sampling_token_weight = 1.0
-    prefill_token_weight = 1.0
-  '';
-  improveReviewerProfile = ''
-    model = "gpt-5.6-sol"
-    model_reasoning_effort = "high"
-    model_verbosity = "medium"
-    sandbox_mode = "read-only"
-    approval_policy = "never"
-
-    [features]
-    multi_agent = false
-
-    # Provisional reviewer-only calibration; see closing-the-loop.md.
-    [features.rollout_budget]
-    enabled = true
-    limit_tokens = 100000
-    reminder_at_remaining_tokens = [50000, 25000, 10000]
-    sampling_token_weight = 1.0
-    prefill_token_weight = 1.0
-  '';
+  improveExecutorProfile = mkImproveProfile improveRoles.standard;
+  improveExecutorSparkProfile = mkImproveProfile improveRoles.spark;
+  improveExecutorDeepProfile = mkImproveProfile improveRoles.deep;
+  improveReviewerProfile = mkImproveProfile improveRoles.correctness;
+  improveEleganceReviewerProfile = mkImproveProfile improveRoles.elegance;
 
   githubMcpServer = pkgs.writeShellScriptBin "github-mcp-server" ''
     set -euo pipefail
@@ -796,25 +838,25 @@ in
       text = improveScoutProfile;
     };
     home.file.".codex/improve-executor.config.toml" = lib.mkIf config.dotfiles.codex.improve.enable {
-      text = improveExecutorProfile;
+      source = improveExecutorProfile;
     };
     home.file.".codex/improve-executor-spark.config.toml" =
       lib.mkIf config.dotfiles.codex.improve.enable
         {
-          text = improveExecutorSparkProfile;
+          source = improveExecutorSparkProfile;
         };
     home.file.".codex/improve-executor-deep.config.toml" =
       lib.mkIf config.dotfiles.codex.improve.enable
         {
-          text = improveExecutorDeepProfile;
+          source = improveExecutorDeepProfile;
         };
     home.file.".codex/improve-reviewer.config.toml" = lib.mkIf config.dotfiles.codex.improve.enable {
-      text = improveReviewerProfile;
+      source = improveReviewerProfile;
     };
     home.file.".codex/improve-elegance-reviewer.config.toml" =
       lib.mkIf config.dotfiles.codex.improve.enable
         {
-          text = improveReviewerProfile;
+          source = improveEleganceReviewerProfile;
         };
 
     # Codex keeps its own state under ~/.codex, which is ephemeral on this system.

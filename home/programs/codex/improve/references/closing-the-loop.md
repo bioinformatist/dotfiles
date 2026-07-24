@@ -18,7 +18,10 @@ Before dispatch:
   prerequisite is observable before dispatch; implementation state or an
   unnamed expectation is not sufficient.
 - Run the plan's drift check against the current `HEAD`.
-- Check that uncommitted source changes do not overlap the plan. The executor starts from `HEAD`; only the plan text is inlined.
+- Check that uncommitted source changes do not overlap the plan. Initial
+  execution starts from the caller's committed `HEAD`; `--next` starts from its
+  explicit predecessor checkpoint. Neither inherits uncommitted caller state;
+  only the plan text is inlined.
 - Verify that the Engineering-contract impact matrix covers every planned change
   trigger and its generated or packaged artifacts. Files outside modification
   scope remain in scope for read-only impact analysis.
@@ -33,6 +36,20 @@ Run one executor:
 ```console
 codex-improve-exec <plan-artifact-path>
 ```
+
+One explicit invocation runs one plan. Serial dispatch is the default. A plan
+may be scheduled concurrently with another unit only when its `Execution
+isolation` section says `parallel-eligible`, source dependencies permit it, and
+every mutable external resource has the required logical isolation and
+lifecycle evidence. The helper does not schedule, enforce, or infer parallel
+eligibility.
+
+Capture the returned worktree's complete identity with
+`codex-improve-exec --candidate "$IMPROVE_WORKTREE"`. Pass the full
+`IMPROVE_CANDIDATE_TREE` explicitly to every review, revision, and recovery;
+the dossier applies only to that exact tree. A post-run
+`IMPROVE_CANDIDATE_AVAILABLE=0` preserves the execution classification and
+diagnostics but returns nonzero and cannot proceed to review.
 
 Use `--spark` only when the plan records the Spark lane and satisfies every
 eligibility rule in the planning contract:
@@ -53,8 +70,13 @@ mutually exclusive. The helper never parses the plan to select a lane.
 
 The helper creates a branch and worktree from the current `HEAD`, selects
 `improve-executor`, `improve-executor-spark`, or `improve-executor-deep`, inlines
-the entire plan, disables recursive multi-agent work through the profile, and
-preserves the worktree and diagnostic artifacts even if execution fails. It
+the entire plan, and pins the lane model, reasoning effort, verbosity, sandbox,
+approval policy, writable roots, rollout budget, memory, goals, and multi-agent
+setting at CLI precedence. Project and user MCP servers, Web Search, hooks,
+apps, plugins, skills, project configuration, and repository instructions
+remain available. The runner does not ignore user configuration or treat MCP
+or Web use as a failure. It preserves the worktree and diagnostic artifacts
+even if execution fails. It
 prints the validated executor report once, followed by stable handoff fields:
 
 ```text
@@ -63,6 +85,7 @@ IMPROVE_WORKTREE=...
 IMPROVE_BRANCH=...
 IMPROVE_BASE=...
 IMPROVE_PROFILE=...
+IMPROVE_EXECUTION_ID=...
 IMPROVE_EXEC_EXIT=...
 IMPROVE_EXEC_RESULT=...
 IMPROVE_EXEC_EXIT_REASON=...
@@ -96,6 +119,30 @@ Raw Codex output is never streamed to the caller. While Codex runs, the helper
 prints at most one content-free heartbeat per minute with elapsed time, event
 count, and event bytes. It records an observation after three minutes without a
 new event but does not interrupt quiet reasoning solely for that reason.
+
+Each initial, `--next`, revision, and recovery invocation creates one fresh
+opaque lowercase execution identity from runtime-only values. The helper
+overwrites any ambient value and exports the exact identity as
+`IMPROVE_EXECUTION_ID` to Codex and its descendants. The prompt and stable
+output carry the same value as authoritative metadata. Reviewer runs do not
+receive an execution identity.
+
+The identity is an isolation input, not an automatic database, namespace,
+bucket, schema, tenant, lifecycle, or cleanup policy. A project plan chooses
+the narrowest supported logical coordinate and gives exact idempotent commands
+for every client—including repo-local MCP, tests, CLI tools, and the
+application—to provision and select the same scope. Bootstrap includes any
+required schema, module import, fixture, or migration. A shared endpoint,
+server, or container may remain shared when logical write targets are isolated;
+the executor does not start, stop, restart, or tear down a shared daemon unless
+the plan assigns it that lifecycle.
+
+Fresh IDs make retries and follow-ups use fresh ephemeral resources by default.
+When revision or recovery must reuse persistent state, its dossier or the
+plan's Operational handoff names the existing logical resource and lifecycle
+owner explicitly. `--next` receives a fresh ID and inherits source lineage only
+from its checkpoint; stateful-resource lineage requires an explicit handoff in
+the later plan. Resource names never enter content-free runner metrics.
 
 The helper validates both the JSONL transport and the executor's final report.
 A valid `COMPLETE` or model-level `STOPPED` is conclusive, uses exit reason
@@ -132,9 +179,13 @@ metrics-calibrated safeguards, not product or compatibility contracts.
 
 Content-free execution metrics are appended to
 `$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl`, with the same state
-fallback. They contain mode, profile, outcome, reason, elapsed time, event
-bytes, token counts, tool-event count, maximum event gap, quiet observation,
+fallback. They contain execution identity, mode, profile, outcome, reason,
+elapsed time, prompt and event byte counts, observed token counts, whether
+usage was observed, total tool-event count, command-execution, file-change,
+MCP-tool-call, and Web-search counts, maximum event gap, quiet observation,
 active limits, and Boolean fuse flags including `rollout_budget_exhausted`.
+Tool counts are diagnostic observations, not automatic success or failure
+criteria.
 They never include prompt or final content,
 repository or worktree paths, plan names, command output, or diffs.
 
@@ -200,9 +251,9 @@ eligibility rule; never force it for telemetry. Invoke exactly the selected
 lane:
 
 ```console
-codex-improve-exec --recover "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-exec --spark --recover "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-exec --deep --recover "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-exec --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --spark --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --deep --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
 ```
 
 The helper validates and reuses the same registered linked
@@ -245,9 +296,9 @@ revision dossier containing:
 Dispatch the dossier through the same helper and the original profile:
 
 ```console
-codex-improve-exec --revise "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-exec --spark --revise "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-exec --deep --revise "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-exec --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --spark --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --deep --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
 ```
 
 The helper validates that the path is the root of a registered linked Git
@@ -416,8 +467,8 @@ is rendered.
 Invoke only the applicable roles through the same bounded transport:
 
 ```console
-codex-improve-review elegance "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-review correctness "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-review elegance "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-review correctness "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
 ```
 
 The helper selects `improve-elegance-reviewer` or `improve-reviewer`, passes the
