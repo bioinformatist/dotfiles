@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.8`
+Contract version: `1.0.0-codex.10`
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -171,14 +171,36 @@ implementation gate. For each genuinely deferred acceptance, record its owner,
 environment, exact procedure, expected evidence, rollback or recovery path, and
 what drift invalidates the result.
 
+An Improve candidate is identified by its current `HEAD` and the full Git tree
+of the complete worktree state, including staged, unstaged, untracked, deleted,
+and executable-bit changes. Capture that identity with
+`codex-improve-exec --candidate WORKTREE`; the helper builds the tree with a
+temporary index and native `git write-tree` without changing the worktree's real
+index. An unmerged index is not a candidate.
+
+Execution output records `IMPROVE_CANDIDATE_AVAILABLE=1` with the candidate head
+and tree when post-run collection succeeds. When collection fails, it preserves
+the already-established execution result and transport evidence, records
+`IMPROVE_CANDIDATE_AVAILABLE=0` plus a content-free
+`IMPROVE_CANDIDATE_ERROR`, omits the head and tree, and returns nonzero. Such an
+execution cannot proceed to review until its candidate is identifiable.
+
+Pass the full `IMPROVE_CANDIDATE_TREE` explicitly to every review, revision, and
+recovery invocation. Each helper recomputes the complete current tree and
+rejects an abbreviated, missing, or stale expected tree before starting a model.
+Record `IMPROVE_REVIEWED_CANDIDATE_TREE` with review evidence. Any candidate
+change creates a new tree identity and invalidates conclusions that applied to
+the prior tree; capture and review the new identity rather than inferring
+continuity from a worktree path, branch, dossier, or conversation.
+
 Track implementation, integration, and external acceptance independently:
 
 - **Implementation review**: `PENDING`, `APPROVED`, `REVISE`, or `BLOCKED`.
 - **Checkpoint**: `NONE`, `RESUMABLE`, or `INTEGRATED`.
 - **External acceptance**: `NOT REQUIRED`, `PENDING`, `PASSED`, or `FAILED`.
-- **Checkpoint ID**: `none` or an exact persistent-worktree and diff identity,
-  commit SHA, branch or PR ref, deployment identity, or other repository-backed
-  identifier that lets the main agent recover the same change.
+- **Checkpoint ID**: `none` or an exact candidate head and tree, commit SHA,
+  branch or PR ref, deployment identity, or other repository-backed identifier
+  that lets the main agent recover the same change.
 
 Keep one authoritative current Checkpoint and Checkpoint ID. Whenever that
 identity moves between a persistent worktree and diff, commit, PR, integration,
@@ -188,6 +210,20 @@ evidence, and invalidated evidence. An identity change does not preserve review
 evidence by itself. Carry evidence forward only after proving the reviewed diff
 is unchanged; every material diff change invalidates the applicable checks and
 reviewer conclusions.
+
+After all required implementation reviews approve the exact candidate, and
+after any approval required for a commit, the main agent may create one local
+checkpoint with
+`codex-improve-exec --checkpoint WORKTREE EXPECTED_TREE COMMIT_MESSAGE`. The
+expected tree must be the full reviewed candidate tree. The helper stages that
+complete tree and runs normal commit hooks against an internal local ref. It
+atomically advances the Improve branch only after verifying the resulting
+commit tree. A failed or index-mutating hook leaves the Improve branch and
+worktree `HEAD` at the original commit and preserves the hook-produced index
+and worktree evidence. Checkpoint mode cleans its internal ref but does not
+reset or clean the worktree, bypass hooks, merge, push, publish, integrate, or
+remove any branch or worktree. The resulting local commit is `RESUMABLE`, not
+`INTEGRATED`, and authorizes none of those later actions.
 
 An asynchronous handoff for human or external acceptance requires a resumable
 checkpoint. Preparing it may require user approval for a commit, push, preview,
@@ -238,10 +274,17 @@ approach must change. An unrelated environment outage leaves acceptance
 pending with the outage evidence recorded.
 
 Dependencies require `DONE` by default. The only exception is a code-only
-dependency whose contract names an actual landing commit and an observable
-prerequisite that the dependent plan can verify. Inline that dependency
-contract in the dependent plan. Never require an executor to recover semantics
-from another plan or prior conversation.
+dependency whose contract names an exact approved checkpoint or landing commit
+and an observable prerequisite that the dependent plan can verify. Inline that
+dependency contract in the dependent plan; never require an executor to recover
+semantics from another plan or prior conversation.
+
+Start one dependent plan from a pre-integration checkpoint only through
+`codex-improve-exec --next CHECKPOINT PLAN`. `CHECKPOINT` must be the full
+commit ID at the current tip of a local `codex/improve-*` branch. The helper
+creates one isolated worktree from that exact commit and records it as the
+predecessor checkpoint. `--next` is an explicit one-plan action, not permission
+to schedule, lock, publish, integrate, or automatically chain plans.
 
 ## Convergence protocol
 

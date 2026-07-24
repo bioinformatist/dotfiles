@@ -123,6 +123,14 @@ chmod +x "$fake_bin/codex"
 repo="$test_root/repo"
 mkdir -p "$repo"
 git -C "$repo" init -q
+git -C "$repo" config user.email test@example.invalid
+git -C "$repo" config user.name "Improve Test"
+printf '%s\n' committed >"$repo/tracked.txt"
+git -C "$repo" add tracked.txt
+git -C "$repo" commit -qm "test: initial"
+review_worktree="$test_root/review worktree"
+git -C "$repo" worktree add -q -b codex/improve-review-test "$review_worktree" HEAD
+expected_tree="$(git -C "$review_worktree" rev-parse HEAD^{tree})"
 dossier="$test_root/dossier.md"
 printf '%s\n' 'TOP_SECRET_DOSSIER /private/repository/path' >"$dossier"
 
@@ -173,13 +181,16 @@ run_case() {
     -e 's/^poll_seconds=1$/poll_seconds=0.1/' \
     "$runner_source" >"$runner"
   set +e
-  bash "$runner" "$role" "$repo" "$dossier" >"$case_dir/stdout" 2>"$case_dir/stderr"
+  bash "$runner" "$role" "$review_worktree" "$expected_tree" "$dossier" \
+    >"$case_dir/stdout" 2>"$case_dir/stderr"
   status="$?"
   set -e
 
   assert_eq "$status" "$expected_status" "$case_name status"
   assert_eq "$(field "$case_dir/stdout" IMPROVE_REVIEW_RESULT)" "$expected_result" "$case_name result"
   assert_eq "$(field "$case_dir/stdout" IMPROVE_REVIEW_EXIT_REASON)" "$expected_reason" "$case_name reason"
+  assert_eq "$(field "$case_dir/stdout" IMPROVE_REVIEWED_CANDIDATE_TREE)" \
+    "$expected_tree" "$case_name reviewed candidate"
   assert_eq "$(field "$case_dir/stdout" IMPROVE_REVIEW_ACTIVE_TOKEN_LIMIT)" 100000 "$case_name token limit"
   case "$(field "$case_dir/stdout" IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED)" in
     0|1) ;;
@@ -203,7 +214,7 @@ run_case() {
 start_case invalid_input
 export FAKE_CODEX_MODE=approve
 set +e
-bash "$runner_source" unsupported "$repo" "$dossier" >/dev/null 2>&1
+bash "$runner_source" unsupported "$review_worktree" "$expected_tree" "$dossier" >/dev/null 2>&1
 invalid_status="$?"
 set -e
 assert_eq "$invalid_status" 2 "invalid role"
@@ -211,13 +222,52 @@ assert_eq "$(wc -c <"$FAKE_COUNT_FILE")" 0 "invalid role invocation count"
 
 start_case missing_generated_config
 set +e
-env -u CODEX_IMPROVE_ROLES_JSON bash "$runner_source" correctness "$repo" "$dossier" >/dev/null 2>"$case_dir/stderr"
+env -u CODEX_IMPROVE_ROLES_JSON bash "$runner_source" correctness \
+  "$review_worktree" "$expected_tree" "$dossier" >/dev/null 2>"$case_dir/stderr"
 missing_status="$?"
 set -e
 assert_eq "$missing_status" 2 "missing generated config status"
 grep -F "generated reviewer role configuration is missing or invalid" "$case_dir/stderr" >/dev/null ||
   fail "missing generated reviewer config reason"
 assert_eq "$(wc -c <"$FAKE_COUNT_FILE")" 0 "missing config invocation count"
+
+for old_role in correctness elegance; do
+  start_case "old_${old_role}_arity"
+  export FAKE_CODEX_MODE=approve
+  set +e
+  bash "$runner_source" "$old_role" "$review_worktree" "$dossier" \
+    >"$case_dir/stdout" 2>"$case_dir/stderr"
+  old_arity_status="$?"
+  set -e
+  assert_eq "$old_arity_status" 2 "old $old_role review arity status"
+  assert_eq "$(wc -c <"$FAKE_COUNT_FILE")" 0 "old $old_role review invocation count"
+done
+
+start_case stale_candidate
+export FAKE_CODEX_MODE=approve
+printf '%s\n' changed >>"$review_worktree/tracked.txt"
+set +e
+bash "$runner_source" correctness "$review_worktree" "$expected_tree" "$dossier" \
+  >"$case_dir/stdout" 2>"$case_dir/stderr"
+stale_status="$?"
+set -e
+assert_eq "$stale_status" 2 "stale candidate status"
+grep -F "candidate tree does not match expected tree" "$case_dir/stderr" >/dev/null ||
+  fail "stale candidate reason"
+assert_eq "$(wc -c <"$FAKE_COUNT_FILE")" 0 "stale candidate invocation count"
+git -C "$review_worktree" restore tracked.txt
+
+start_case abbreviated_candidate
+export FAKE_CODEX_MODE=approve
+set +e
+bash "$runner_source" correctness "$review_worktree" "${expected_tree:0:12}" "$dossier" \
+  >"$case_dir/stdout" 2>"$case_dir/stderr"
+abbreviated_status="$?"
+set -e
+assert_eq "$abbreviated_status" 2 "abbreviated candidate status"
+grep -F "expected tree must be the full object ID" "$case_dir/stderr" >/dev/null ||
+  fail "abbreviated candidate reason"
+assert_eq "$(wc -c <"$FAKE_COUNT_FILE")" 0 "abbreviated candidate invocation count"
 
 run_case approve correctness approve 0 APPROVE completed
 approve_dir="$test_root/cases/approve"
@@ -233,6 +283,8 @@ if grep -Fx -- --ignore-user-config "$approve_dir/invocation" >/dev/null; then
 fi
 grep -Fx -- --output-schema "$approve_dir/invocation" >/dev/null || fail "output schema missing"
 assert_eq "$(grep -o TOP_SECRET_DOSSIER "$approve_dir/prompt" | wc -l)" 1 "dossier pass count"
+grep -F -- "Expected Improve candidate tree: $expected_tree" "$approve_dir/prompt" >/dev/null ||
+  fail "expected candidate tree missing from review prompt"
 assert_eq "$(field "$approve_dir/stdout" IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED)" 0 "approve budget flag"
 assert_eq "$(wc -l <"$approve_dir/count")" 1 "approve invocation count"
 jq -e '

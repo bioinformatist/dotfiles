@@ -18,7 +18,10 @@ Before dispatch:
   prerequisite is observable before dispatch; implementation state or an
   unnamed expectation is not sufficient.
 - Run the plan's drift check against the current `HEAD`.
-- Check that uncommitted source changes do not overlap the plan. The executor starts from `HEAD`; only the plan text is inlined.
+- Check that uncommitted source changes do not overlap the plan. Initial
+  execution starts from the caller's committed `HEAD`; `--next` starts from its
+  explicit predecessor checkpoint. Neither inherits uncommitted caller state;
+  only the plan text is inlined.
 - Verify that the Engineering-contract impact matrix covers every planned change
   trigger and its generated or packaged artifacts. Files outside modification
   scope remain in scope for read-only impact analysis.
@@ -33,6 +36,13 @@ Run one executor:
 ```console
 codex-improve-exec <plan-artifact-path>
 ```
+
+Capture the returned worktree's complete identity with
+`codex-improve-exec --candidate "$IMPROVE_WORKTREE"`. Pass the full
+`IMPROVE_CANDIDATE_TREE` explicitly to every review, revision, and recovery;
+the dossier applies only to that exact tree. A post-run
+`IMPROVE_CANDIDATE_AVAILABLE=0` preserves the execution classification and
+diagnostics but returns nonzero and cannot proceed to review.
 
 Use `--spark` only when the plan records the Spark lane and satisfies every
 eligibility rule in the planning contract:
@@ -216,9 +226,9 @@ eligibility rule; never force it for telemetry. Invoke exactly the selected
 lane:
 
 ```console
-codex-improve-exec --recover "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-exec --spark --recover "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-exec --deep --recover "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-exec --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --spark --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --deep --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
 ```
 
 The helper validates and reuses the same registered linked
@@ -261,9 +271,9 @@ revision dossier containing:
 Dispatch the dossier through the same helper and the original profile:
 
 ```console
-codex-improve-exec --revise "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-exec --spark --revise "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-exec --deep --revise "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-exec --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --spark --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --deep --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
 ```
 
 The helper validates that the path is the root of a registered linked Git
@@ -432,8 +442,8 @@ is rendered.
 Invoke only the applicable roles through the same bounded transport:
 
 ```console
-codex-improve-review elegance "$IMPROVE_WORKTREE" <dossier-file>
-codex-improve-review correctness "$IMPROVE_WORKTREE" <dossier-file>
+codex-improve-review elegance "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-review correctness "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
 ```
 
 The helper selects `improve-elegance-reviewer` or `improve-reviewer`, passes the
