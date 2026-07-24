@@ -127,6 +127,10 @@ dossier="$test_root/dossier.md"
 printf '%s\n' 'TOP_SECRET_DOSSIER /private/repository/path' >"$dossier"
 
 export PATH="$fake_bin:$PATH"
+export CODEX_IMPROVE_ROLES_JSON='{
+  "correctness":{"profile":"improve-reviewer","model":"gpt-5.6-sol","reasoningEffort":"high","verbosity":"medium","sandbox":"read-only","approval":"never","writableRoots":[],"tokenLimit":100000,"reminders":[50000,25000,10000],"initialTimeout":5,"followupTimeout":null},
+  "elegance":{"profile":"improve-elegance-reviewer","model":"gpt-5.6-sol","reasoningEffort":"high","verbosity":"medium","sandbox":"read-only","approval":"never","writableRoots":[],"tokenLimit":100000,"reminders":[50000,25000,10000],"initialTimeout":5,"followupTimeout":null}
+}'
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 assert_eq() { [ "$1" = "$2" ] || fail "expected '$2', got '$1' ($3)"; }
@@ -158,8 +162,12 @@ run_case() {
   start_case "$case_name"
   export FAKE_CODEX_MODE="$mode"
   runner="$case_dir/review-runner"
+  CODEX_IMPROVE_ROLES_JSON="$(jq -c --argjson timeout "$absolute_seconds" '
+    .correctness.initialTimeout = $timeout
+    | .elegance.initialTimeout = $timeout
+  ' <<<"$CODEX_IMPROVE_ROLES_JSON")"
+  export CODEX_IMPROVE_ROLES_JSON
   sed \
-    -e "s/^absolute_seconds=480$/absolute_seconds=$absolute_seconds/" \
     -e "s/^quiet_seconds=180$/quiet_seconds=$quiet_seconds/" \
     -e 's/^kill_after_seconds=5$/kill_after_seconds=1/' \
     -e 's/^poll_seconds=1$/poll_seconds=0.1/' \
@@ -201,10 +209,28 @@ set -e
 assert_eq "$invalid_status" 2 "invalid role"
 assert_eq "$(wc -c <"$FAKE_COUNT_FILE")" 0 "invalid role invocation count"
 
+start_case missing_generated_config
+set +e
+env -u CODEX_IMPROVE_ROLES_JSON bash "$runner_source" correctness "$repo" "$dossier" >/dev/null 2>"$case_dir/stderr"
+missing_status="$?"
+set -e
+assert_eq "$missing_status" 2 "missing generated config status"
+grep -F "generated reviewer role configuration is missing or invalid" "$case_dir/stderr" >/dev/null ||
+  fail "missing generated reviewer config reason"
+assert_eq "$(wc -c <"$FAKE_COUNT_FILE")" 0 "missing config invocation count"
+
 run_case approve correctness approve 0 APPROVE completed
 approve_dir="$test_root/cases/approve"
 grep -Fx -- improve-reviewer "$approve_dir/invocation" >/dev/null || fail "correctness profile missing"
 grep -Fx -- --strict-config "$approve_dir/invocation" >/dev/null || fail "strict config missing"
+grep -Fx -- --model "$approve_dir/invocation" >/dev/null || fail "model pin missing"
+grep -Fx -- --sandbox "$approve_dir/invocation" >/dev/null || fail "sandbox pin missing"
+grep -Fx -- memories "$approve_dir/invocation" >/dev/null || fail "memory disable missing"
+grep -Fx -- goals "$approve_dir/invocation" >/dev/null || fail "goals disable missing"
+grep -Fx -- multi_agent "$approve_dir/invocation" >/dev/null || fail "multi-agent disable missing"
+if grep -Fx -- --ignore-user-config "$approve_dir/invocation" >/dev/null; then
+  fail "user config was disabled"
+fi
 grep -Fx -- --output-schema "$approve_dir/invocation" >/dev/null || fail "output schema missing"
 assert_eq "$(grep -o TOP_SECRET_DOSSIER "$approve_dir/prompt" | wc -l)" 1 "dossier pass count"
 assert_eq "$(field "$approve_dir/stdout" IMPROVE_REVIEW_ROLLOUT_BUDGET_EXHAUSTED)" 0 "approve budget flag"

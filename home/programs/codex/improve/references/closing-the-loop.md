@@ -53,8 +53,13 @@ mutually exclusive. The helper never parses the plan to select a lane.
 
 The helper creates a branch and worktree from the current `HEAD`, selects
 `improve-executor`, `improve-executor-spark`, or `improve-executor-deep`, inlines
-the entire plan, disables recursive multi-agent work through the profile, and
-preserves the worktree and diagnostic artifacts even if execution fails. It
+the entire plan, and pins the lane model, reasoning effort, verbosity, sandbox,
+approval policy, writable roots, rollout budget, memory, goals, and multi-agent
+setting at CLI precedence. Project and user MCP servers, Web Search, hooks,
+apps, plugins, skills, project configuration, and repository instructions
+remain available. The runner does not ignore user configuration or treat MCP
+or Web use as a failure. It preserves the worktree and diagnostic artifacts
+even if execution fails. It
 prints the validated executor report once, followed by stable handoff fields:
 
 ```text
@@ -63,6 +68,7 @@ IMPROVE_WORKTREE=...
 IMPROVE_BRANCH=...
 IMPROVE_BASE=...
 IMPROVE_PROFILE=...
+IMPROVE_EXECUTION_ID=...
 IMPROVE_EXEC_EXIT=...
 IMPROVE_EXEC_RESULT=...
 IMPROVE_EXEC_EXIT_REASON=...
@@ -96,6 +102,12 @@ Raw Codex output is never streamed to the caller. While Codex runs, the helper
 prints at most one content-free heartbeat per minute with elapsed time, event
 count, and event bytes. It records an observation after three minutes without a
 new event but does not interrupt quiet reasoning solely for that reason.
+
+Each executor invocation creates one opaque lowercase execution identity from
+runtime-only values. The prompt and stable `IMPROVE_EXECUTION_ID` output carry
+it as authoritative metadata. A project-specific resource plan may derive its
+own isolation identity from this value; Improve does not interpret the identity
+or define stateful-resource behavior. Reviewer runs do not create one.
 
 The helper validates both the JSONL transport and the executor's final report.
 A valid `COMPLETE` or model-level `STOPPED` is conclusive, uses exit reason
@@ -132,9 +144,13 @@ metrics-calibrated safeguards, not product or compatibility contracts.
 
 Content-free execution metrics are appended to
 `$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl`, with the same state
-fallback. They contain mode, profile, outcome, reason, elapsed time, event
-bytes, token counts, tool-event count, maximum event gap, quiet observation,
+fallback. They contain execution identity, mode, profile, outcome, reason,
+elapsed time, prompt and event byte counts, observed token counts, whether
+usage was observed, total tool-event count, command-execution, file-change,
+MCP-tool-call, and Web-search counts, maximum event gap, quiet observation,
 active limits, and Boolean fuse flags including `rollout_budget_exhausted`.
+Tool counts are diagnostic observations, not automatic success or failure
+criteria.
 They never include prompt or final content,
 repository or worktree paths, plan names, command output, or diffs.
 

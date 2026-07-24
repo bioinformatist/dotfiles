@@ -148,6 +148,11 @@ esac
 FAKE_CODEX
 chmod +x "$fake_bin/codex"
 export PATH="$fake_bin:$PATH"
+export CODEX_IMPROVE_ROLES_JSON='{
+  "standard":{"profile":"improve-executor","model":"gpt-5.6-sol","reasoningEffort":"medium","verbosity":"medium","sandbox":"workspace-write","approval":"never","writableRoots":[],"tokenLimit":120000,"reminders":[60000,30000,10000],"initialTimeout":5,"followupTimeout":4},
+  "spark":{"profile":"improve-executor-spark","model":"gpt-5.3-codex-spark","reasoningEffort":"high","verbosity":"medium","sandbox":"workspace-write","approval":"never","writableRoots":[],"tokenLimit":100000,"reminders":[50000,25000,10000],"initialTimeout":5,"followupTimeout":4},
+  "deep":{"profile":"improve-executor-deep","model":"gpt-5.6-sol","reasoningEffort":"xhigh","verbosity":"medium","sandbox":"workspace-write","approval":"never","writableRoots":[],"tokenLimit":160000,"reminders":[80000,40000,15000],"initialTimeout":7,"followupTimeout":6}
+}'
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 assert_eq() { [ "$1" = "$2" ] || fail "expected '$2', got '$1' ($3)"; }
@@ -201,10 +206,6 @@ start_case() {
 copy_runner() {
   runner="$case_dir/exec-runner"
   sed \
-    -e 's/^normal_initial_seconds=1200$/normal_initial_seconds=5/' \
-    -e 's/^deep_initial_seconds=1800$/deep_initial_seconds=7/' \
-    -e 's/^normal_revision_seconds=720$/normal_revision_seconds=4/' \
-    -e 's/^deep_revision_seconds=1080$/deep_revision_seconds=6/' \
     -e 's/^kill_after_seconds=5$/kill_after_seconds=1/' \
     -e 's/^heartbeat_seconds=60$/heartbeat_seconds=1/' \
     -e 's/^quiet_seconds=180$/quiet_seconds=1/' \
@@ -284,6 +285,33 @@ grep -F -- "--deep --recover WORKTREE DOSSIER" "$output" >/dev/null ||
   fail "help omits deep recovery mode"
 assert_not_invoked help
 
+start_case missing_generated_config
+copy_runner
+set +e
+env -u CODEX_IMPROVE_ROLES_JSON bash "$runner" --help >"$output" 2>"$errors"
+status="$?"
+set -e
+assert_eq "$status" 0 "help without generated config status"
+grep -F -- "codex-improve-exec PLAN" "$output" >/dev/null ||
+  fail "help without generated config omits usage"
+assert_not_invoked missing_generated_config
+
+start_case missing_generated_config_action
+copy_runner
+set +e
+(
+  cd "$repo"
+  env -u CODEX_IMPROVE_ROLES_JSON bash "$runner" "plans/001 plan.md"
+) >"$output" 2>"$errors"
+status="$?"
+set -e
+assert_eq "$status" 2 "missing generated config action status"
+grep -F "generated executor role configuration is missing or invalid" "$errors" >/dev/null ||
+  fail "missing generated config reason"
+assert_not_invoked missing_generated_config_action
+[ ! -e "$XDG_STATE_HOME/codex-improve/worktrees" ] ||
+  fail "missing generated config action created a worktree directory"
+
 start_case invalid
 run_runner --revise
 assert_eq "$status" 2 "invalid argument status"
@@ -321,6 +349,14 @@ assert_eq "$(grep -o TOP_SECRET_PLAN "$FAKE_PROMPT_LOG" | wc -l)" 1 "plan insert
 grep -Fx -- --strict-config "$FAKE_INVOCATION_LOG" >/dev/null || fail "strict config missing"
 grep -Fx -- --ephemeral "$FAKE_INVOCATION_LOG" >/dev/null || fail "ephemeral mode missing"
 grep -Fx -- --json "$FAKE_INVOCATION_LOG" >/dev/null || fail "JSONL mode missing"
+grep -Fx -- --model "$FAKE_INVOCATION_LOG" >/dev/null || fail "model pin missing"
+grep -Fx -- --sandbox "$FAKE_INVOCATION_LOG" >/dev/null || fail "sandbox pin missing"
+grep -Fx -- memories "$FAKE_INVOCATION_LOG" >/dev/null || fail "memory disable missing"
+grep -Fx -- goals "$FAKE_INVOCATION_LOG" >/dev/null || fail "goals disable missing"
+grep -Fx -- multi_agent "$FAKE_INVOCATION_LOG" >/dev/null || fail "multi-agent disable missing"
+if grep -Fx -- --ignore-user-config "$FAKE_INVOCATION_LOG" >/dev/null; then
+  fail "user config was disabled"
+fi
 grep -Fx -- --output-last-message "$FAKE_INVOCATION_LOG" >/dev/null ||
   fail "final-message output missing"
 grep -F -- "Do not load or reread the Improve skill" "$FAKE_PROMPT_LOG" >/dev/null ||
@@ -335,7 +371,14 @@ jq -e '
   and .active_timeout_seconds == 5
   and .active_token_limit == 120000
   and .token_usage == {"input_tokens":10,"cached_input_tokens":2,"output_tokens":3}
+  and .usage_observed == true
   and .tool_event_count == 1
+  and .command_execution_count == 1
+  and .file_change_count == 0
+  and .mcp_tool_call_count == 0
+  and .web_search_count == 0
+  and (.prompt_bytes | type) == "number"
+  and (.execution_id | test("^[a-z0-9-]+$"))
   and .fuse_flags == {
     "absolute_timeout":false,
     "event_log_limit":false,
@@ -343,6 +386,13 @@ jq -e '
     "rollout_budget_exhausted":false
   }
 ' "$metric" >/dev/null || fail "initial metric"
+execution_id="$(field "$output" IMPROVE_EXECUTION_ID)"
+case "$execution_id" in
+  *[!a-z0-9-]*|'') fail "invalid execution identity: $execution_id" ;;
+esac
+assert_eq "$(jq -r '.execution_id' "$metric")" "$execution_id" "metric execution identity"
+grep -F "Authoritative runtime metadata: IMPROVE_EXECUTION_ID=$execution_id" \
+  "$FAKE_PROMPT_LOG" >/dev/null || fail "prompt execution identity"
 
 start_case stopped stopped
 unset LC_ALL

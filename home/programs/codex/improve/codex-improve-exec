@@ -28,14 +28,33 @@ fail_input() {
   exit 2
 }
 
-# Provisional, metrics-calibrated executor limits.
-normal_initial_seconds=1200
-deep_initial_seconds=1800
-normal_revision_seconds=720
-deep_revision_seconds=1080
-standard_token_limit=120000
-spark_token_limit=100000
-deep_token_limit=160000
+case "${1:-}" in
+  -h|--help)
+    usage
+    exit 0
+    ;;
+esac
+
+roles_json="${CODEX_IMPROVE_ROLES_JSON:-}"
+if [ -z "$roles_json" ] || ! jq -e '
+  [.standard, .spark, .deep]
+  | all(.[];
+    (.profile | type == "string" and length > 0)
+      and (.model | type == "string" and length > 0)
+      and (.reasoningEffort | type == "string" and length > 0)
+      and (.verbosity | type == "string" and length > 0)
+      and (.sandbox | type == "string" and length > 0)
+      and (.approval | type == "string" and length > 0)
+      and (.writableRoots | type == "array")
+      and (.tokenLimit | type == "number")
+      and (.reminders | type == "array")
+      and (.initialTimeout | type == "number")
+      and (.followupTimeout | type == "number"))
+' <<<"$roles_json" >/dev/null 2>&1; then
+  fail_input "generated executor role configuration is missing or invalid"
+fi
+
+# Provisional transport limits; role-specific limits come from generated Nix data.
 kill_after_seconds=5
 heartbeat_seconds=60
 quiet_seconds=180
@@ -43,19 +62,15 @@ event_log_limit_bytes=33554432
 final_output_limit_bytes=65536
 poll_seconds=1
 
-profile="improve-executor"
+role_key="standard"
 mode="initial"
 case "${1:-}" in
-  -h|--help)
-    usage
-    exit 0
-    ;;
   --deep)
-    profile="improve-executor-deep"
+    role_key="deep"
     shift
     ;;
   --spark)
-    profile="improve-executor-spark"
+    role_key="spark"
     shift
     ;;
 esac
@@ -75,44 +90,22 @@ case "${1:-}" in
     ;;
 esac
 
-case "$profile:$mode" in
-  improve-executor:initial)
-    token_limit="$standard_token_limit"
-    absolute_seconds="$normal_initial_seconds"
-    ;;
-  improve-executor:revision)
-    token_limit="$standard_token_limit"
-    absolute_seconds="$normal_revision_seconds"
-    ;;
-  improve-executor:recovery)
-    token_limit="$standard_token_limit"
-    absolute_seconds="$normal_revision_seconds"
-    ;;
-  improve-executor-spark:initial)
-    token_limit="$spark_token_limit"
-    absolute_seconds="$normal_initial_seconds"
-    ;;
-  improve-executor-spark:revision)
-    token_limit="$spark_token_limit"
-    absolute_seconds="$normal_revision_seconds"
-    ;;
-  improve-executor-spark:recovery)
-    token_limit="$spark_token_limit"
-    absolute_seconds="$normal_revision_seconds"
-    ;;
-  improve-executor-deep:initial)
-    token_limit="$deep_token_limit"
-    absolute_seconds="$deep_initial_seconds"
-    ;;
-  improve-executor-deep:revision)
-    token_limit="$deep_token_limit"
-    absolute_seconds="$deep_revision_seconds"
-    ;;
-  improve-executor-deep:recovery)
-    token_limit="$deep_token_limit"
-    absolute_seconds="$deep_revision_seconds"
-    ;;
-esac
+role_json="$(jq -ce --arg role "$role_key" '.[$role]' <<<"$roles_json")" ||
+  fail_input "cannot select generated executor role configuration"
+profile="$(jq -r '.profile' <<<"$role_json")"
+model="$(jq -r '.model' <<<"$role_json")"
+reasoning_effort="$(jq -r '.reasoningEffort' <<<"$role_json")"
+verbosity="$(jq -r '.verbosity' <<<"$role_json")"
+sandbox="$(jq -r '.sandbox' <<<"$role_json")"
+approval="$(jq -r '.approval' <<<"$role_json")"
+writable_roots="$(jq -c '.writableRoots' <<<"$role_json")"
+token_limit="$(jq -r '.tokenLimit' <<<"$role_json")"
+reminders="$(jq -c '.reminders' <<<"$role_json")"
+if [ "$mode" = "initial" ]; then
+  absolute_seconds="$(jq -r '.initialTimeout' <<<"$role_json")"
+else
+  absolute_seconds="$(jq -r '.followupTimeout' <<<"$role_json")"
+fi
 
 emit_report_contract() {
   cat <<'EOF'
@@ -144,6 +137,9 @@ prepare_artifacts() {
     fail_input "cannot create execution artifact directory"
   artifact_dir="$(mktemp -d "$artifact_parent/$(date -u +%Y%m%dT%H%M%SZ)-$mode-XXXXXX")" ||
     fail_input "cannot create execution artifact directory"
+  execution_id="$(printf '%s-%s-%s' \
+    "$(date -u +%Y%m%dT%H%M%SZ)" "$$" "${artifact_dir##*-}" |
+    tr '[:upper:]' '[:lower:]')"
   event_log="$artifact_dir/events.jsonl"
   final_output="$artifact_dir/final.txt"
   diagnostic_log="$artifact_dir/stderr.log"
@@ -158,6 +154,10 @@ prepare_artifacts() {
   }; then
     fail_input "cannot initialize execution artifacts"
   fi
+}
+
+emit_runtime_metadata() {
+  printf 'Authoritative runtime metadata: IMPROVE_EXECUTION_ID=%s\n\n' "$execution_id"
 }
 
 validate_event_log() {
@@ -247,6 +247,7 @@ validate_final_report() {
 run_execution() {
   started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   started_epoch="$(date +%s)"
+  prompt_bytes="$(wc -c <"$prompt_file")"
   cancelled=""
   event_log_limit_hit=0
   supervisor_pid=""
@@ -285,6 +286,17 @@ run_execution() {
       exec "$@" 2>"$diagnostic_log"' \
     bash "$diagnostic_log" "$caller_lc_all_set" "$caller_lc_all" \
     codex exec --strict-config --ephemeral --json \
+    --model "$model" --sandbox "$sandbox" \
+    -c "model_reasoning_effort=\"$reasoning_effort\"" \
+    -c "model_verbosity=\"$verbosity\"" \
+    -c "approval_policy=\"$approval\"" \
+    -c "sandbox_workspace_write.writable_roots=$writable_roots" \
+    -c "features.rollout_budget.enabled=true" \
+    -c "features.rollout_budget.limit_tokens=$token_limit" \
+    -c "features.rollout_budget.reminder_at_remaining_tokens=$reminders" \
+    -c "features.rollout_budget.sampling_token_weight=1.0" \
+    -c "features.rollout_budget.prefill_token_weight=1.0" \
+    --disable multi_agent --disable goals --disable memories \
     --output-last-message "$final_output" -C "$worktree" -p "$profile" - \
     <"$prompt_file" \
     >"$event_log" \
@@ -386,33 +398,41 @@ run_execution() {
   if [ "$event_log_valid" -eq 0 ] && validate_event_log; then
     event_log_valid=1
   fi
-  stats='{"token_usage":{"input_tokens":0,"cached_input_tokens":0,"output_tokens":0},"tool_event_count":0}'
+  stats='{"token_usage":{"input_tokens":0,"cached_input_tokens":0,"output_tokens":0},"usage_observed":false,"tool_event_count":0,"command_execution_count":0,"file_change_count":0,"mcp_tool_call_count":0,"web_search_count":0}'
   if [ "$event_log_valid" -eq 1 ]; then
     stats="$(jq -c -s '
       def n: if type == "number" then . else 0 end;
-      ([.[] | select(.type? == "turn.completed") | .usage? | select(type == "object")] | last // {}) as $usage
+      ([.[] | select(.type? == "turn.completed") | .usage? | select(type == "object")]) as $usages
+      | ($usages | last // {}) as $usage
       | {
           token_usage: {
             input_tokens: (($usage.input_tokens // 0) | n),
             cached_input_tokens: (($usage.cached_input_tokens // 0) | n),
             output_tokens: (($usage.output_tokens // 0) | n)
           },
+          usage_observed: (($usages | length) > 0),
           tool_event_count: ([.[]
             | select(.type? == "item.completed")
             | .item.type?
-            | select(. != "reasoning" and . != "agent_message")] | length)
+            | select(. != "reasoning" and . != "agent_message")] | length),
+          command_execution_count: ([.[] | select(.type? == "item.completed" and .item.type? == "command_execution")] | length),
+          file_change_count: ([.[] | select(.type? == "item.completed" and .item.type? == "file_change")] | length),
+          mcp_tool_call_count: ([.[] | select(.type? == "item.completed" and .item.type? == "mcp_tool_call")] | length),
+          web_search_count: ([.[] | select(.type? == "item.completed" and .item.type? == "web_search")] | length)
         }
     ' "$event_log")"
   fi
 
   metric="$(jq -nc \
     --arg timestamp "$started_at" \
+    --arg execution_id "$execution_id" \
     --arg mode "$mode" \
     --arg profile "$profile" \
     --arg result "$result" \
     --arg exit_reason "$exit_reason" \
     --argjson elapsed_seconds "$elapsed_seconds" \
     --argjson event_bytes "$event_bytes" \
+    --argjson prompt_bytes "$prompt_bytes" \
     --argjson stats "$stats" \
     --argjson max_event_gap_seconds "$max_event_gap_seconds" \
     --argjson quiet_interval_observed "$quiet_interval_observed" \
@@ -424,14 +444,21 @@ run_execution() {
     --argjson rollout_budget_exhausted "$rollout_budget_exhausted" \
     '{
       timestamp: $timestamp,
+      execution_id: $execution_id,
       mode: $mode,
       profile: $profile,
       result: $result,
       exit_reason: $exit_reason,
       elapsed_seconds: $elapsed_seconds,
       event_bytes: $event_bytes,
+      prompt_bytes: $prompt_bytes,
       token_usage: $stats.token_usage,
+      usage_observed: $stats.usage_observed,
       tool_event_count: $stats.tool_event_count,
+      command_execution_count: $stats.command_execution_count,
+      file_change_count: $stats.file_change_count,
+      mcp_tool_call_count: $stats.mcp_tool_call_count,
+      web_search_count: $stats.web_search_count,
       max_event_gap_seconds: $max_event_gap_seconds,
       quiet_interval_observed: ($quiet_interval_observed == 1),
       active_timeout_seconds: $active_timeout_seconds,
@@ -466,6 +493,7 @@ run_execution() {
     printf 'IMPROVE_BASE=%s\n' "$base"
   fi
   printf 'IMPROVE_PROFILE=%s\n' "$profile"
+  printf 'IMPROVE_EXECUTION_ID=%s\n' "$execution_id"
   printf 'IMPROVE_EXEC_EXIT=%s\n' "$codex_status"
   printf 'IMPROVE_EXEC_RESULT=%s\n' "$result"
   printf 'IMPROVE_EXEC_EXIT_REASON=%s\n' "$exit_reason"
@@ -568,6 +596,7 @@ if [ "$mode" = "revision" ] || [ "$mode" = "recovery" ]; then
   prepare_artifacts
   if [ "$mode" = "revision" ]; then
     {
+      emit_runtime_metadata
       cat <<'EOF'
 You are revising one existing Improve implementation. Work only in the named
 current worktree and follow the closest AGENTS.md instructions. Host-injected
@@ -596,6 +625,7 @@ EOF
     } >"$prompt_file" || fail_input "cannot snapshot revision dossier"
   else
     {
+      emit_runtime_metadata
       cat <<'EOF'
 You are completing exactly one bounded recovery slice after an inconclusive
 initial Improve execution. Work only in the named current worktree and follow
@@ -664,6 +694,7 @@ fi
 
 prepare_artifacts
 {
+  emit_runtime_metadata
   cat <<'EOF'
 You are the executor for the implementation plan below. Work only in the
 current worktree and follow the closest AGENTS.md instructions. Repository

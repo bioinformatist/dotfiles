@@ -24,10 +24,37 @@ fi
 
 role="$1"
 case "$role" in
-  correctness) profile="improve-reviewer" ;;
-  elegance) profile="improve-elegance-reviewer" ;;
+  correctness|elegance) ;;
   *) fail_input "role must be correctness or elegance" ;;
 esac
+
+roles_json="${CODEX_IMPROVE_ROLES_JSON:-}"
+if [ -z "$roles_json" ] || ! role_json="$(jq -ce --arg role "$role" '
+  .[$role]
+  | select(
+    (.profile | type == "string" and length > 0)
+    and (.model | type == "string" and length > 0)
+    and (.reasoningEffort | type == "string" and length > 0)
+    and (.verbosity | type == "string" and length > 0)
+    and (.sandbox | type == "string" and length > 0)
+    and (.approval | type == "string" and length > 0)
+    and (.writableRoots | type == "array")
+    and (.tokenLimit | type == "number")
+    and (.reminders | type == "array")
+    and (.initialTimeout | type == "number"))
+' <<<"$roles_json" 2>/dev/null)"; then
+  fail_input "generated reviewer role configuration is missing or invalid"
+fi
+profile="$(jq -r '.profile' <<<"$role_json")"
+model="$(jq -r '.model' <<<"$role_json")"
+reasoning_effort="$(jq -r '.reasoningEffort' <<<"$role_json")"
+verbosity="$(jq -r '.verbosity' <<<"$role_json")"
+sandbox="$(jq -r '.sandbox' <<<"$role_json")"
+approval="$(jq -r '.approval' <<<"$role_json")"
+writable_roots="$(jq -c '.writableRoots' <<<"$role_json")"
+review_token_limit="$(jq -r '.tokenLimit' <<<"$role_json")"
+reminders="$(jq -c '.reminders' <<<"$role_json")"
+absolute_seconds="$(jq -r '.initialTimeout' <<<"$role_json")"
 
 worktree="$(realpath -- "$2" 2>/dev/null)" || fail_input "cannot resolve worktree: $2"
 git_root="$(git -C "$worktree" rev-parse --show-toplevel 2>/dev/null)" ||
@@ -48,8 +75,6 @@ if [ ! -r "$schema" ] || ! jq -e . "$schema" >/dev/null 2>&1; then
   fail_input "verdict schema is unavailable or invalid: $schema"
 fi
 
-absolute_seconds=480
-review_token_limit=100000
 quiet_seconds=180
 kill_after_seconds=5
 poll_seconds=1
@@ -150,6 +175,20 @@ timeout \
   --strict-config \
   --ephemeral \
   --json \
+  --model "$model" \
+  --sandbox "$sandbox" \
+  -c "model_reasoning_effort=\"$reasoning_effort\"" \
+  -c "model_verbosity=\"$verbosity\"" \
+  -c "approval_policy=\"$approval\"" \
+  -c "sandbox_workspace_write.writable_roots=$writable_roots" \
+  -c "features.rollout_budget.enabled=true" \
+  -c "features.rollout_budget.limit_tokens=$review_token_limit" \
+  -c "features.rollout_budget.reminder_at_remaining_tokens=$reminders" \
+  -c "features.rollout_budget.sampling_token_weight=1.0" \
+  -c "features.rollout_budget.prefill_token_weight=1.0" \
+  --disable multi_agent \
+  --disable goals \
+  --disable memories \
   --output-schema "$schema" \
   --output-last-message "$final_output" \
   -C "$worktree" \
