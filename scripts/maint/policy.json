@@ -67,6 +67,11 @@
     "-playwright-cli.drv",
     "-codex-improve-exec.drv",
     "-codex-improve-review.drv",
+    "-codex-improve-executor.config.toml.drv",
+    "-codex-improve-executor-deep.config.toml.drv",
+    "-codex-improve-executor-spark.config.toml.drv",
+    "-codex-improve-reviewer.config.toml.drv",
+    "-codex-improve-elegance-reviewer.config.toml.drv",
     "-zeroclaw-daemon.service.drv",
     "-appimage-exec.sh.drv",
     "-orca-ide-"
