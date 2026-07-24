@@ -62,6 +62,11 @@
     owner = "ysun";
     path = "/home/ysun/.ssh/id_ed25519_sctmes_ops";
   };
+  sops.secrets."be10000-ssh-key" = {
+    owner = "ysun";
+    mode = "0600";
+    path = "/home/ysun/.ssh/be10000_rsa";
+  };
   sops.secrets."github-mcp-token" = {
     owner = "ysun";
   };
