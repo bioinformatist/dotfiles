@@ -37,6 +37,13 @@ Run one executor:
 codex-improve-exec <plan-artifact-path>
 ```
 
+One explicit invocation runs one plan. Serial dispatch is the default. A plan
+may be scheduled concurrently with another unit only when its `Execution
+isolation` section says `parallel-eligible`, source dependencies permit it, and
+every mutable external resource has the required logical isolation and
+lifecycle evidence. The helper does not schedule, enforce, or infer parallel
+eligibility.
+
 Capture the returned worktree's complete identity with
 `codex-improve-exec --candidate "$IMPROVE_WORKTREE"`. Pass the full
 `IMPROVE_CANDIDATE_TREE` explicitly to every review, revision, and recovery;
@@ -113,11 +120,29 @@ prints at most one content-free heartbeat per minute with elapsed time, event
 count, and event bytes. It records an observation after three minutes without a
 new event but does not interrupt quiet reasoning solely for that reason.
 
-Each executor invocation creates one opaque lowercase execution identity from
-runtime-only values. The prompt and stable `IMPROVE_EXECUTION_ID` output carry
-it as authoritative metadata. A project-specific resource plan may derive its
-own isolation identity from this value; Improve does not interpret the identity
-or define stateful-resource behavior. Reviewer runs do not create one.
+Each initial, `--next`, revision, and recovery invocation creates one fresh
+opaque lowercase execution identity from runtime-only values. The helper
+overwrites any ambient value and exports the exact identity as
+`IMPROVE_EXECUTION_ID` to Codex and its descendants. The prompt and stable
+output carry the same value as authoritative metadata. Reviewer runs do not
+receive an execution identity.
+
+The identity is an isolation input, not an automatic database, namespace,
+bucket, schema, tenant, lifecycle, or cleanup policy. A project plan chooses
+the narrowest supported logical coordinate and gives exact idempotent commands
+for every client—including repo-local MCP, tests, CLI tools, and the
+application—to provision and select the same scope. Bootstrap includes any
+required schema, module import, fixture, or migration. A shared endpoint,
+server, or container may remain shared when logical write targets are isolated;
+the executor does not start, stop, restart, or tear down a shared daemon unless
+the plan assigns it that lifecycle.
+
+Fresh IDs make retries and follow-ups use fresh ephemeral resources by default.
+When revision or recovery must reuse persistent state, its dossier or the
+plan's Operational handoff names the existing logical resource and lifecycle
+owner explicitly. `--next` receives a fresh ID and inherits source lineage only
+from its checkpoint; stateful-resource lineage requires an explicit handoff in
+the later plan. Resource names never enter content-free runner metrics.
 
 The helper validates both the JSONL transport and the executor's final report.
 A valid `COMPLETE` or model-level `STOPPED` is conclusive, uses exit reason

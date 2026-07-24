@@ -594,7 +594,7 @@ run_execution() {
   fi
 
   # shellcheck disable=SC2016 # The inner Bash expands these parameters.
-  LC_ALL=C timeout \
+  IMPROVE_EXECUTION_ID="$execution_id" LC_ALL=C timeout \
     --verbose \
     --signal=INT \
     --kill-after="${kill_after_seconds}s" \

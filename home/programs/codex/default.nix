@@ -215,7 +215,7 @@ let
             '## Status
 
     - **Status**: TODO
-    - **Improve contract**: `1.0.0-codex.10`
+    - **Improve contract**: `1.0.0-codex.11`
     - **Implementation review**: PENDING
     - **Checkpoint**: NONE
     - **External acceptance**: NOT REQUIRED | PENDING
@@ -247,6 +247,17 @@ let
 
     | Stage | Identity | Superseded identity | Preserved evidence | Invalidated evidence |
     |-------|----------|---------------------|--------------------|----------------------|
+
+    ## Execution isolation
+
+    - **Dispatch**: serial
+    - **Mutable stateful resources**: none
+
+    When mutable external state is required, replace `none` with:
+
+    | Resource | Isolation coordinate | Provision/select | Lifecycle owner | Cleanup |
+    |----------|----------------------|------------------|-----------------|---------|
+    | `<service>` | `<scope derived from execution ID or explicit handoff>` | `<exact commands>` | `<owner>` | `<policy/evidence>` |
 
     ## Why this matters' \
           --replace-fail \

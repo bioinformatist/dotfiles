@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.10`
+Contract version: `1.0.0-codex.11`
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -111,6 +111,68 @@ location or publication behavior. That convention takes precedence. Otherwise,
 plans are local-only by default, and Improve must not change ignore or
 publication policy implicitly. Publishing any plan or finding still requires
 explicit user confirmation.
+
+## Execution units and isolation
+
+One plan is one integration, rollback, acceptance, and explicitly invoked
+execution unit. Do not put an execution-unit graph or a list of independently
+dispatched units inside one plan. Dependencies remain plan-level, and `--next`
+remains the explicit sequential continuation mechanism.
+
+Every generated plan has an `Execution isolation` section:
+
+```markdown
+## Execution isolation
+
+- **Dispatch**: serial
+- **Mutable stateful resources**: none
+```
+
+`serial` is the default and requires no isolation proof. Use
+`parallel-eligible` only when source dependencies permit concurrent execution
+and every mutable external resource is read-only, independently provisioned, or
+isolated by a distinct logical coordinate for each invocation. The runner does
+not enforce or dispatch parallel-eligible plans; concurrent invocation remains
+a main-agent scheduling decision.
+
+When a plan needs mutable external state, replace `none` with a compact table:
+
+```markdown
+| Resource | Isolation coordinate | Provision/select | Lifecycle owner | Cleanup |
+|---|---|---|---|---|
+| `<service>` | `<scope derived from execution ID or explicit handoff>` | `<exact commands>` | `<owner>` | `<policy/evidence>` |
+```
+
+Choose the narrowest isolation coordinate supported by the resource. Every
+client in one execution, including repo-local MCP servers, tests, CLI tools,
+and the application, must select the same logical scope. A shared transport
+endpoint, server process, or container neither proves shared state nor proves
+isolation; the logical write target decides. A shared daemon may remain shared
+when executions use distinct logical scopes and no executor owns its lifecycle.
+An executor must not start, stop, restart, or tear down a shared daemon unless
+the plan assigns that lifecycle explicitly.
+
+For every mutable resource, give the exact idempotent command that provisions
+and selects a new scope, including any schema, module import, fixture, migration,
+or other bootstrap it needs. Name the lifecycle owner and cleanup policy or
+evidence. If any mutable resource lacks an isolation coordinate or lifecycle
+owner, the plan is serial-only. Separate source worktrees alone are never
+evidence of parallel safety. Repo-local MCP servers remain available project
+capabilities; isolation plans coordinate their logical target rather than
+removing or globally rewriting them.
+
+Every initial, `--next`, revision, and recovery runner invocation creates and
+exports a fresh opaque `IMPROVE_EXECUTION_ID` to the executor and its child
+processes. The ID is an isolation input, not an automatic database, namespace,
+bucket, schema, tenant, lifecycle, or cleanup policy. Resource names remain out
+of content-free runner metrics.
+
+A fresh revision or recovery ID normally selects a fresh ephemeral resource.
+When a follow-up must reuse persistent state, its dossier or the plan's
+Operational handoff must name the existing logical resource and lifecycle owner
+explicitly instead of deriving a different resource from the fresh ID.
+Likewise, `--next` inherits source lineage only from its checkpoint; mutable
+state lineage exists only through an explicit handoff in the later plan.
 
 ## Executor routing
 

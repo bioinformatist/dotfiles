@@ -15,9 +15,10 @@ printf '#!%s\n' "$(command -v bash)" >"$fake_bin/codex"
 cat >>"$fake_bin/codex" <<'FAKE_CODEX'
 set -u
 
-: "${FAKE_CODEX_MODE:?}" "${FAKE_COUNT_FILE:?}" "${FAKE_INVOCATION_LOG:?}" "${FAKE_PROMPT_LOG:?}" "${FAKE_LOCALE_LOG:?}"
+: "${FAKE_CODEX_MODE:?}" "${FAKE_COUNT_FILE:?}" "${FAKE_INVOCATION_LOG:?}" "${FAKE_PROMPT_LOG:?}" "${FAKE_LOCALE_LOG:?}" "${FAKE_EXECUTION_ID_LOG:?}"
 printf '%s\n' invoked >>"$FAKE_COUNT_FILE"
 printf '%s\n' "$@" >"$FAKE_INVOCATION_LOG"
+printf '%s\n' "$IMPROVE_EXECUTION_ID" >"$FAKE_EXECUTION_ID_LOG"
 if [ "${LC_ALL+x}" = x ]; then
   printf 'set:%s\n' "$LC_ALL" >"$FAKE_LOCALE_LOG"
 else
@@ -213,6 +214,7 @@ start_case() {
   export FAKE_INVOCATION_LOG="$case_dir/invocation"
   export FAKE_PROMPT_LOG="$case_dir/prompt"
   export FAKE_LOCALE_LOG="$case_dir/locale"
+  export FAKE_EXECUTION_ID_LOG="$case_dir/execution-id"
   export FAKE_CHILD_PID_FILE="$case_dir/child-pid"
   export FAKE_CODEX_MODE="${2:-complete}"
   export TMPDIR="$case_dir/tmp"
@@ -292,6 +294,12 @@ assert_transport_case() {
   assert_no_private_content "$metric"
 }
 
+assert_execution_id_inherited() {
+  assert_eq "$(<"$FAKE_EXECUTION_ID_LOG")" \
+    "$(field "$output" IMPROVE_EXECUTION_ID)" \
+    "$case_name inherited execution identity"
+}
+
 start_case help
 run_runner --help
 assert_eq "$status" 0 "help status"
@@ -356,9 +364,13 @@ grep -F -- "--spark and --deep are mutually exclusive" "$errors" >/dev/null ||
 assert_not_invoked deep_then_spark
 
 printf '%s\n' "dirty caller" >"$repo/dirty.txt"
+export IMPROVE_EXECUTION_ID=ambient-caller-value
 start_case initial complete
 LC_ALL=C.UTF-8 run_runner "plans/001 plan.md"
 assert_transport_case 0 COMPLETE completed
+assert_execution_id_inherited
+[ "$(<"$FAKE_EXECUTION_ID_LOG")" != ambient-caller-value ] ||
+  fail "ambient execution identity was trusted"
 assert_eq "$(<"$FAKE_LOCALE_LOG")" "set:C.UTF-8" "explicit caller locale"
 assert_eq "$(field "$output" IMPROVE_MODE)" initial "initial mode"
 assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor "initial profile"
@@ -667,6 +679,7 @@ assert_transport_case 1 INCONCLUSIVE invalid_final_output
 start_case revision complete
 run_runner --revise "$revision_worktree" "$revision_tree" "$dossier"
 assert_transport_case 0 COMPLETE completed
+assert_execution_id_inherited
 assert_eq "$(field "$output" IMPROVE_MODE)" revision "revision mode"
 assert_eq "$(field "$output" IMPROVE_BRANCH)" codex/improve-revision-test "revision branch"
 assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor "revision profile"
@@ -702,6 +715,7 @@ assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 "deep revi
 start_case recovery complete
 run_runner --recover "$revision_worktree" "$revision_tree" "$dossier"
 assert_transport_case 0 COMPLETE completed
+assert_execution_id_inherited
 assert_eq "$(field "$output" IMPROVE_MODE)" recovery "recovery mode"
 assert_eq "$(field "$output" IMPROVE_BRANCH)" codex/improve-revision-test "recovery branch"
 assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor "recovery profile"
@@ -932,6 +946,7 @@ assert_eq "$(git -C "$revision_worktree" rev-parse HEAD^{tree})" "$revision_tree
 start_case next complete
 run_runner --next "$checkpoint" "plans/001 plan.md"
 assert_transport_case 0 COMPLETE completed
+assert_execution_id_inherited
 next_worktree="$(field "$output" IMPROVE_WORKTREE)"
 assert_eq "$(git -C "$next_worktree" rev-parse HEAD)" "$checkpoint" "next worktree base"
 assert_eq "$(field "$output" IMPROVE_BASE)" "$checkpoint" "next reported base"
