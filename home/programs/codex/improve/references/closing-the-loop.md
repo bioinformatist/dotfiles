@@ -71,12 +71,15 @@ mutually exclusive. The helper never parses the plan to select a lane.
 The helper creates a branch and worktree from the current `HEAD`, selects
 `improve-executor`, `improve-executor-spark`, or `improve-executor-deep`, inlines
 the entire plan, and pins the lane model, reasoning effort, verbosity, sandbox,
-approval policy, writable roots, rollout budget, memory, goals, and multi-agent
-setting at CLI precedence. Project and user MCP servers, Web Search, hooks,
-apps, plugins, skills, project configuration, and repository instructions
-remain available. The runner does not ignore user configuration or treat MCP
-or Web use as a failure. It preserves the worktree and diagnostic artifacts
-even if execution fails. It
+approval policy, unrestricted outbound network access with the network proxy
+disabled, writable roots, rollout budget, memory, goals, and multi-agent setting
+at CLI precedence. All three executor lanes receive that unrestricted outbound
+access; reviewer and scout profiles remain read-only and offline. Project and
+user MCP servers, Web Search, hooks, apps,
+plugins, skills, project configuration, and repository instructions remain
+available. The runner does not ignore user configuration or treat MCP or Web
+use as a failure. It preserves the worktree and diagnostic artifacts even if
+execution fails. It
 prints the validated executor report once, followed by stable handoff fields:
 
 ```text

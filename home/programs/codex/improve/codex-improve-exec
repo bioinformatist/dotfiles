@@ -403,6 +403,7 @@ if [ -z "$roles_json" ] || ! jq -e '
       and (.verbosity | type == "string" and length > 0)
       and (.sandbox | type == "string" and length > 0)
       and (.approval | type == "string" and length > 0)
+      and (.networkAccess | type == "boolean")
       and (.writableRoots | type == "array")
       and (.tokenLimit | type == "number")
       and (.reminders | type == "array")
@@ -420,6 +421,7 @@ reasoning_effort="$(jq -r '.reasoningEffort' <<<"$role_json")"
 verbosity="$(jq -r '.verbosity' <<<"$role_json")"
 sandbox="$(jq -r '.sandbox' <<<"$role_json")"
 approval="$(jq -r '.approval' <<<"$role_json")"
+network_access="$(jq -r '.networkAccess' <<<"$role_json")"
 writable_roots="$(jq -c '.writableRoots' <<<"$role_json")"
 token_limit="$(jq -r '.tokenLimit' <<<"$role_json")"
 reminders="$(jq -c '.reminders' <<<"$role_json")"
@@ -612,6 +614,7 @@ run_execution() {
     -c "model_reasoning_effort=\"$reasoning_effort\"" \
     -c "model_verbosity=\"$verbosity\"" \
     -c "approval_policy=\"$approval\"" \
+    -c "sandbox_workspace_write.network_access=$network_access" \
     -c "sandbox_workspace_write.writable_roots=$writable_roots" \
     -c "features.rollout_budget.enabled=true" \
     -c "features.rollout_budget.limit_tokens=$token_limit" \
