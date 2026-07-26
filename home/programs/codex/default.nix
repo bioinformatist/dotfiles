@@ -426,6 +426,7 @@ let
       verbosity = "medium";
       sandbox = "workspace-write";
       approval = "never";
+      networkAccess = true;
       writableRoots = [ ];
       tokenLimit = 120000;
       reminders = [
@@ -443,6 +444,7 @@ let
       verbosity = "medium";
       sandbox = "workspace-write";
       approval = "never";
+      networkAccess = true;
       writableRoots = [ ];
       tokenLimit = 100000;
       reminders = [
@@ -460,6 +462,7 @@ let
       verbosity = "medium";
       sandbox = "workspace-write";
       approval = "never";
+      networkAccess = true;
       writableRoots = [ ];
       tokenLimit = 160000;
       reminders = [
@@ -504,7 +507,10 @@ let
         };
       }
       // lib.optionalAttrs (role.sandbox == "workspace-write") {
-        sandbox_workspace_write.writable_roots = role.writableRoots;
+        sandbox_workspace_write = {
+          network_access = role.networkAccess;
+          writable_roots = role.writableRoots;
+        };
       }
     );
 

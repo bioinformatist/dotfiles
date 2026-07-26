@@ -158,10 +158,11 @@ FAKE_CODEX
 chmod +x "$fake_bin/codex"
 export PATH="$fake_bin:$PATH"
 export CODEX_IMPROVE_ROLES_JSON='{
-  "standard":{"profile":"improve-executor","model":"gpt-5.6-sol","reasoningEffort":"medium","verbosity":"medium","sandbox":"workspace-write","approval":"never","writableRoots":[],"tokenLimit":120000,"reminders":[60000,30000,10000],"initialTimeout":5,"followupTimeout":4},
-  "spark":{"profile":"improve-executor-spark","model":"gpt-5.3-codex-spark","reasoningEffort":"high","verbosity":"medium","sandbox":"workspace-write","approval":"never","writableRoots":[],"tokenLimit":100000,"reminders":[50000,25000,10000],"initialTimeout":5,"followupTimeout":4},
-  "deep":{"profile":"improve-executor-deep","model":"gpt-5.6-sol","reasoningEffort":"xhigh","verbosity":"medium","sandbox":"workspace-write","approval":"never","writableRoots":[],"tokenLimit":160000,"reminders":[80000,40000,15000],"initialTimeout":7,"followupTimeout":6}
+  "standard":{"profile":"improve-executor","model":"gpt-5.6-sol","reasoningEffort":"medium","verbosity":"medium","sandbox":"workspace-write","approval":"never","networkAccess":true,"writableRoots":[],"tokenLimit":120000,"reminders":[60000,30000,10000],"initialTimeout":5,"followupTimeout":4},
+  "spark":{"profile":"improve-executor-spark","model":"gpt-5.3-codex-spark","reasoningEffort":"high","verbosity":"medium","sandbox":"workspace-write","approval":"never","networkAccess":true,"writableRoots":[],"tokenLimit":100000,"reminders":[50000,25000,10000],"initialTimeout":5,"followupTimeout":4},
+  "deep":{"profile":"improve-executor-deep","model":"gpt-5.6-sol","reasoningEffort":"xhigh","verbosity":"medium","sandbox":"workspace-write","approval":"never","networkAccess":true,"writableRoots":[],"tokenLimit":160000,"reminders":[80000,40000,15000],"initialTimeout":7,"followupTimeout":6}
 }'
+valid_roles_json="$CODEX_IMPROVE_ROLES_JSON"
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 assert_eq() { [ "$1" = "$2" ] || fail "expected '$2', got '$1' ($3)"; }
@@ -262,6 +263,12 @@ invocation_profile() {
   sed -n '/^-p$/{n;p;q;}' "$FAKE_INVOCATION_LOG"
 }
 
+assert_network_access() {
+  grep -Fx -- "sandbox_workspace_write.network_access=true" \
+    "$FAKE_INVOCATION_LOG" >/dev/null ||
+    fail "$1 network access pin missing"
+}
+
 assert_transport_case() {
   expected_status="$1"
   expected_result="$2"
@@ -344,6 +351,35 @@ assert_not_invoked missing_generated_config_action
 [ ! -e "$XDG_STATE_HOME/codex-improve/worktrees" ] ||
   fail "missing generated config action created a worktree directory"
 
+for invalid_network_case in missing string null; do
+  start_case "invalid_network_access_$invalid_network_case"
+  case "$invalid_network_case" in
+    missing)
+      CODEX_IMPROVE_ROLES_JSON="$(
+        jq -c 'del(.standard.networkAccess)' <<<"$valid_roles_json"
+      )"
+      ;;
+    string)
+      CODEX_IMPROVE_ROLES_JSON="$(
+        jq -c '.spark.networkAccess = "true"' <<<"$valid_roles_json"
+      )"
+      ;;
+    null)
+      CODEX_IMPROVE_ROLES_JSON="$(
+        jq -c '.deep.networkAccess = null' <<<"$valid_roles_json"
+      )"
+      ;;
+  esac
+  export CODEX_IMPROVE_ROLES_JSON
+  run_runner "plans/001 plan.md"
+  assert_eq "$status" 2 "$invalid_network_case network access status"
+  grep -F "generated executor role configuration is missing or invalid" \
+    "$errors" >/dev/null ||
+    fail "$invalid_network_case network access rejection reason"
+  assert_not_invoked "invalid_network_access_$invalid_network_case"
+done
+export CODEX_IMPROVE_ROLES_JSON="$valid_roles_json"
+
 start_case invalid
 run_runner --revise
 assert_eq "$status" 2 "invalid argument status"
@@ -394,6 +430,7 @@ grep -Fx -- --ephemeral "$FAKE_INVOCATION_LOG" >/dev/null || fail "ephemeral mod
 grep -Fx -- --json "$FAKE_INVOCATION_LOG" >/dev/null || fail "JSONL mode missing"
 grep -Fx -- --model "$FAKE_INVOCATION_LOG" >/dev/null || fail "model pin missing"
 grep -Fx -- --sandbox "$FAKE_INVOCATION_LOG" >/dev/null || fail "sandbox pin missing"
+assert_network_access "standard initial"
 grep -Fx -- memories "$FAKE_INVOCATION_LOG" >/dev/null || fail "memory disable missing"
 grep -Fx -- goals "$FAKE_INVOCATION_LOG" >/dev/null || fail "goals disable missing"
 grep -Fx -- multi_agent "$FAKE_INVOCATION_LOG" >/dev/null || fail "multi-agent disable missing"
@@ -462,6 +499,7 @@ assert_transport_case 0 COMPLETE completed
 assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep "deep profile"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 7 "deep initial timeout"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 "deep token limit"
+assert_network_access "deep initial"
 
 start_case spark complete
 run_runner --spark "plans/001 plan.md"
@@ -471,6 +509,7 @@ assert_eq "$(invocation_profile)" improve-executor-spark "Spark invoked profile"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 5 "Spark initial timeout"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 100000 "Spark token limit"
 assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "Spark invocation count"
+assert_network_access "Spark initial"
 grep -F -- "The user explicitly requires every verification command in the plan." \
   "$FAKE_PROMPT_LOG" >/dev/null || fail "Spark initial verification requirement missing"
 
@@ -688,6 +727,7 @@ assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 120000 "Standard 
 assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "revision diff preservation"
 assert_eq "$(git -C "$repo" worktree list --porcelain)" "$worktrees_before" "revision worktree reuse"
 assert_eq "$(grep -o TOP_SECRET_DOSSIER "$FAKE_PROMPT_LOG" | wc -l)" 1 "dossier insertion count"
+assert_network_access "standard revision"
 grep -F -- "Do not load or reread the" "$FAKE_PROMPT_LOG" >/dev/null ||
   fail "revision recon prohibition missing"
 grep -F -- "A targeted reread is allowed after editing that" "$FAKE_PROMPT_LOG" >/dev/null ||
@@ -725,6 +765,7 @@ assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 120000 "Standard 
 assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "recovery diff preservation"
 assert_eq "$(git -C "$repo" worktree list --porcelain)" "$worktrees_before" "recovery worktree reuse"
 assert_eq "$(grep -o TOP_SECRET_DOSSIER "$FAKE_PROMPT_LOG" | wc -l)" 1 "recovery dossier insertion count"
+assert_network_access "standard recovery"
 grep -F -- "completing exactly one bounded recovery slice after an inconclusive" \
   "$FAKE_PROMPT_LOG" >/dev/null || fail "recovery one-slice contract missing"
 grep -F -- "Preserve the existing diff and" "$FAKE_PROMPT_LOG" >/dev/null ||
