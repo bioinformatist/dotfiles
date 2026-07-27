@@ -17,6 +17,7 @@ set -u
 
 : "${FAKE_CODEX_MODE:?}" "${FAKE_COUNT_FILE:?}" "${FAKE_INVOCATION_LOG:?}" "${FAKE_PROMPT_LOG:?}" "${FAKE_LOCALE_LOG:?}" "${FAKE_EXECUTION_ID_LOG:?}"
 printf '%s\n' invoked >>"$FAKE_COUNT_FILE"
+printf '%s\n' "${FAKE_LAUNCHER_MARKER:-unset}" >"$FAKE_CODEX_LAUNCHER_LOG"
 printf '%s\n' "$@" >"$FAKE_INVOCATION_LOG"
 printf '%s\n' "$IMPROVE_EXECUTION_ID" >"$FAKE_EXECUTION_ID_LOG"
 if [ "${LC_ALL+x}" = x ]; then
@@ -146,6 +147,11 @@ EOF
     emit_usage
     complete_report
     ;;
+  delayed_complete)
+    sleep 1.5
+    emit_usage
+    complete_report
+    ;;
   oversize_event)
     printf '{"type":"item.completed","item":{"type":"command_execution","aggregated_output":"'
     printf '%0600d' 0
@@ -156,6 +162,31 @@ EOF
 esac
 FAKE_CODEX
 chmod +x "$fake_bin/codex"
+
+printf '#!%s\n' "$(command -v bash)" >"$fake_bin/env-launcher"
+cat >>"$fake_bin/env-launcher" <<'FAKE_LAUNCHER'
+set -u
+printf '%s\n' invoked >>"$FAKE_LAUNCHER_COUNT"
+export FAKE_LAUNCHER_MARKER=visible
+exec "$@"
+FAKE_LAUNCHER
+chmod +x "$fake_bin/env-launcher"
+
+printf '#!%s\n' "$(command -v bash)" >"$fake_bin/env-probe"
+cat >>"$fake_bin/env-probe" <<'FAKE_PROBE'
+set -u
+printf 'marker=%s argc=%s' "${FAKE_LAUNCHER_MARKER:-unset}" "$#" >>"$FAKE_PROBE_LOG"
+printf ' <%s>' "$@" >>"$FAKE_PROBE_LOG"
+printf '\n' >>"$FAKE_PROBE_LOG"
+case "${FAKE_PROBE_MODE:-pass}" in
+  pass) exit 0 ;;
+  fail) printf '%s\n' private-probe-failure >&2; exit 23 ;;
+  timeout) while true; do sleep 1; done ;;
+  delay) sleep 0.6; exit 0 ;;
+  mutate) printf '%s\n' mutated >>"$FAKE_MUTATE_WORKTREE/tracked.txt"; exit 0 ;;
+esac
+FAKE_PROBE
+chmod +x "$fake_bin/env-probe"
 export PATH="$fake_bin:$PATH"
 export CODEX_IMPROVE_ROLES_JSON='{
   "standard":{"profile":"improve-executor","model":"gpt-5.6-sol","reasoningEffort":"medium","verbosity":"medium","sandbox":"workspace-write","approval":"never","networkAccess":true,"writableRoots":[],"tokenLimit":120000,"reminders":[60000,30000,10000],"initialTimeout":5,"followupTimeout":4},
@@ -217,12 +248,28 @@ start_case() {
   export FAKE_LOCALE_LOG="$case_dir/locale"
   export FAKE_EXECUTION_ID_LOG="$case_dir/execution-id"
   export FAKE_CHILD_PID_FILE="$case_dir/child-pid"
+  export FAKE_CODEX_LAUNCHER_LOG="$case_dir/codex-launcher"
+  export FAKE_LAUNCHER_COUNT="$case_dir/launcher-count"
+  export FAKE_PROBE_LOG="$case_dir/probes"
+  export FAKE_PROBE_MODE=pass
   export FAKE_CODEX_MODE="${2:-complete}"
   export TMPDIR="$case_dir/tmp"
   mkdir -p "$HOME" "$TMPDIR"
   : >"$FAKE_COUNT_FILE"
   : >"$FAKE_INVOCATION_LOG"
   : >"$FAKE_PROMPT_LOG"
+  : >"$FAKE_LAUNCHER_COUNT"
+  : >"$FAKE_PROBE_LOG"
+}
+
+start_resume_case() {
+  resume_case_name="$1"
+  resume_state_home="$2"
+  resume_home="$3"
+  resume_fake_mode="${4:-complete}"
+  start_case "$resume_case_name" "$resume_fake_mode"
+  export XDG_STATE_HOME="$resume_state_home"
+  export HOME="$resume_home"
 }
 
 copy_runner() {
@@ -254,6 +301,11 @@ assert_not_invoked() {
   [ ! -s "$FAKE_COUNT_FILE" ] || fail "$1 invoked Codex"
 }
 
+assert_preflight_not_invoked() {
+  assert_not_invoked "$1"
+  [ ! -s "$FAKE_LAUNCHER_COUNT" ] || fail "$1 invoked the launcher"
+}
+
 assert_no_candidate_indexes() {
   candidate_indexes=("$TMPDIR"/codex-improve-index.*)
   [ ! -e "${candidate_indexes[0]}" ] || fail "$1 left a temporary candidate index"
@@ -273,7 +325,14 @@ assert_transport_case() {
   expected_status="$1"
   expected_result="$2"
   expected_reason="$3"
+  if [ "$status" != "$expected_status" ]; then
+    sed 's/^/runner stderr: /' "$errors" >&2
+  fi
   assert_eq "$status" "$expected_status" "$case_name status"
+  if [ "$(field "$output" IMPROVE_EXEC_RESULT)" != "$expected_result" ]; then
+    sed 's/^/runner output: /' "$output" >&2
+    sed 's/^/runner stderr: /' "$errors" >&2
+  fi
   assert_eq "$(field "$output" IMPROVE_EXEC_RESULT)" "$expected_result" "$case_name result"
   assert_eq "$(field "$output" IMPROVE_EXEC_EXIT_REASON)" "$expected_reason" "$case_name reason"
   case "$(field "$output" IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED)" in
@@ -398,6 +457,486 @@ assert_eq "$status" 2 "deep/Spark argument status"
 grep -F -- "--spark and --deep are mutually exclusive" "$errors" >/dev/null ||
   fail "deep/Spark rejection reason missing"
 assert_not_invoked deep_then_spark
+
+valid_environment_json="$(
+  jq -nc \
+    --arg launcher "$fake_bin/env-launcher" \
+    --arg probe "$fake_bin/env-probe" \
+    '{
+      version: 1,
+      launcher: [$launcher],
+      probes: [
+        {argv: [$probe, "literal ; $(touch never)", "two words"], timeoutSeconds: 1},
+        {argv: [$probe, "second"], timeoutSeconds: 1}
+      ]
+    }'
+)"
+environment_plan="$repo/plans/012 environment.md"
+write_environment_artifact() {
+  target="$1"
+  json="$2"
+  {
+    printf '%s\n' '# Environment execution'
+    printf '%s\n' '- **Improve contract**: `1.0.0-codex.12`'
+    printf '%s\n' '```json codex-improve-environment'
+    printf '%s\n' "$json"
+    printf '%s\n' '```'
+    printf '%s\n' 'TOP_SECRET_PLAN /private/repository/path'
+  } >"$target"
+}
+write_environment_artifact "$environment_plan" "$valid_environment_json"
+
+start_case environment_missing_cli
+run_runner "$environment_plan"
+assert_eq "$status" 2 "missing environment CLI status"
+assert_not_invoked environment_missing_cli
+[ ! -e "$XDG_STATE_HOME/codex-improve/worktrees" ] ||
+  fail "missing environment CLI created a worktree"
+
+start_case environment_json_not_first
+run_runner --deep --environment-json "$valid_environment_json" "$environment_plan"
+assert_eq "$status" 2 "environment JSON order status"
+assert_preflight_not_invoked environment_json_not_first
+
+start_case environment_mismatch
+mismatched_environment="$(jq -c '.probes[0].timeoutSeconds = 2' <<<"$valid_environment_json")"
+run_runner --environment-json "$mismatched_environment" "$environment_plan"
+assert_eq "$status" 2 "mismatched environment status"
+assert_not_invoked environment_mismatch
+[ ! -e "$XDG_STATE_HOME/codex-improve/worktrees" ] ||
+  fail "mismatched environment created a worktree"
+
+start_case environment_extra_key
+invalid_environment="$(jq -c '.unexpected = true' <<<"$valid_environment_json")"
+invalid_plan="$repo/plans/012 invalid environment.md"
+write_environment_artifact "$invalid_plan" "$invalid_environment"
+run_runner --environment-json "$invalid_environment" "$invalid_plan"
+assert_eq "$status" 2 "extra environment key status"
+assert_not_invoked environment_extra_key
+
+invalid_environment_case() {
+  invalid_name="$1"
+  invalid_json="$2"
+  invalid_artifact="$repo/plans/012-$invalid_name.md"
+  write_environment_artifact "$invalid_artifact" "$invalid_json"
+  start_case "environment_$invalid_name"
+  run_runner --environment-json "$invalid_json" "$invalid_artifact"
+  assert_eq "$status" 2 "$invalid_name environment status"
+  assert_preflight_not_invoked "environment_$invalid_name"
+}
+
+invalid_environment_case malformed '{"version":'
+invalid_environment_case launcher_count "$(
+  jq -nc --arg probe "$fake_bin/env-probe" \
+    '{version:1,launcher:[range(0;17)|"launcher"],probes:[{argv:[$probe],timeoutSeconds:1}]}'
+)"
+invalid_environment_case probe_count "$(
+  jq -nc --arg probe "$fake_bin/env-probe" \
+    '{version:1,launcher:[],probes:[range(0;17)|{argv:[$probe],timeoutSeconds:1}]}'
+)"
+invalid_environment_case argv_count "$(
+  jq -nc '{version:1,launcher:[],probes:[{argv:[range(0;33)|"arg"],timeoutSeconds:1}]}'
+)"
+invalid_environment_case empty_argv \
+  '{"version":1,"launcher":[],"probes":[{"argv":[],"timeoutSeconds":1}]}'
+invalid_environment_case empty_argv_value \
+  '{"version":1,"launcher":[],"probes":[{"argv":[""],"timeoutSeconds":1}]}'
+invalid_environment_case empty_launcher_value \
+  '{"version":1,"launcher":[""],"probes":[{"argv":["true"],"timeoutSeconds":1}]}'
+invalid_environment_case probe_extra_key \
+  '{"version":1,"launcher":[],"probes":[{"argv":["true"],"timeoutSeconds":1,"extra":true}]}'
+invalid_environment_case control_character "$(
+  jq -nc '{version:1,launcher:["bad\u000aarg"],probes:[{argv:["true"],timeoutSeconds:1}]}'
+)"
+invalid_environment_case timeout_low \
+  '{"version":1,"launcher":[],"probes":[{"argv":["true"],"timeoutSeconds":0}]}'
+invalid_environment_case timeout_high \
+  '{"version":1,"launcher":[],"probes":[{"argv":["true"],"timeoutSeconds":901}]}'
+invalid_environment_case timeout_fraction \
+  '{"version":1,"launcher":[],"probes":[{"argv":["true"],"timeoutSeconds":1.5}]}'
+invalid_environment_case omission_missing \
+  '{"version":1,"launcher":[],"probes":[]}'
+invalid_environment_case omission_empty \
+  '{"version":1,"launcher":[],"probes":[],"probeOmissionReason":""}'
+invalid_environment_case omission_forbidden \
+  '{"version":1,"launcher":[],"probes":[{"argv":["true"],"timeoutSeconds":1}],"probeOmissionReason":"not empty"}'
+
+oversized_value="$(printf '%016500d' 0)"
+invalid_environment_case oversized "$(
+  jq -nc --arg value "$oversized_value" \
+    '{version:1,launcher:[$value],probes:[{argv:["true"],timeoutSeconds:1}]}'
+)"
+
+start_case environment_missing_block
+missing_block_plan="$repo/plans/012-missing-block.md"
+printf '%s\n' '- **Improve contract**: `1.0.0-codex.12`' >"$missing_block_plan"
+run_runner --environment-json "$valid_environment_json" "$missing_block_plan"
+assert_eq "$status" 2 "missing environment block status"
+assert_preflight_not_invoked environment_missing_block
+
+start_case environment_duplicate_block
+duplicate_plan="$repo/plans/012-duplicate-block.md"
+write_environment_artifact "$duplicate_plan" "$valid_environment_json"
+{
+  printf '%s\n' '```json codex-improve-environment'
+  printf '%s\n' "$valid_environment_json"
+  printf '%s\n' '```'
+} >>"$duplicate_plan"
+run_runner --environment-json "$valid_environment_json" "$duplicate_plan"
+assert_eq "$status" 2 "duplicate environment block status"
+assert_preflight_not_invoked environment_duplicate_block
+
+start_case environment_unterminated_block
+unterminated_plan="$repo/plans/012-unterminated-block.md"
+{
+  printf '%s\n' '- **Improve contract**: `1.0.0-codex.12`'
+  printf '%s\n' '```json codex-improve-environment'
+  printf '%s\n' "$valid_environment_json"
+} >"$unterminated_plan"
+run_runner --environment-json "$valid_environment_json" "$unterminated_plan"
+assert_eq "$status" 2 "unterminated environment block status"
+assert_preflight_not_invoked environment_unterminated_block
+
+future_contract_plan="$repo/plans/013-future-contract.md"
+write_environment_artifact "$future_contract_plan" "$valid_environment_json"
+sed -i 's/1\.0\.0-codex\.12/1.0.0-codex.13/' "$future_contract_plan"
+start_case environment_future_contract
+run_runner --environment-json "$valid_environment_json" "$future_contract_plan"
+assert_eq "$status" 2 "future environment contract status"
+assert_preflight_not_invoked environment_future_contract
+
+legacy_environment_plan="$repo/plans/011-environment.md"
+write_environment_artifact "$legacy_environment_plan" "$valid_environment_json"
+sed -i 's/1\.0\.0-codex\.12/1.0.0-codex.11/' "$legacy_environment_plan"
+start_case environment_legacy_opt_in complete
+run_runner --environment-json "$valid_environment_json" "$legacy_environment_plan"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "legacy environment opt-in status"
+
+omitted_environment_json='{"version":1,"launcher":[],"probes":[],"probeOmissionReason":"No project probe is required."}'
+omitted_environment_plan="$repo/plans/012-omitted-probes.md"
+write_environment_artifact "$omitted_environment_plan" "$omitted_environment_json"
+start_case environment_valid_omission complete
+run_runner --environment-json "$omitted_environment_json" "$omitted_environment_plan"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_COUNT)" 0 \
+  "approved empty probe count"
+
+start_case environment_success complete
+run_runner --environment-json "$valid_environment_json" "$environment_plan"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_EXEC_INVOKED)" 1 "environment invoked marker"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed "environment preflight status"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_COUNT)" 2 "environment preflight count"
+assert_eq "$(wc -l <"$FAKE_LAUNCHER_COUNT")" 1 "single launcher invocation"
+assert_eq "$(<"$FAKE_CODEX_LAUNCHER_LOG")" visible "Codex launcher marker"
+assert_eq "$(wc -l <"$FAKE_PROBE_LOG")" 2 "sequential probe count"
+grep -F 'marker=visible argc=2' "$FAKE_PROBE_LOG" >/dev/null ||
+  fail "literal probe arguments or launcher marker missing"
+sed -n '2p' "$FAKE_PROBE_LOG" | grep -F '<second>' >/dev/null ||
+  fail "second probe did not run after the first"
+[ ! -e "$repo/never" ] || fail "probe argument metacharacters were evaluated"
+environment_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+for private_file in environment.json preflight.log preflight-status executor-invoked \
+  prompt-body.txt; do
+  assert_eq "$(stat -c '%a' "$environment_artifact/$private_file")" 600 \
+    "$private_file permissions"
+done
+assert_eq "$(stat -c '%a' "$environment_artifact/environment-wrapper")" 700 \
+  "environment wrapper permissions"
+environment_hash="$(field "$output" IMPROVE_EXEC_ENVIRONMENT_HASH)"
+jq -e --arg environment_hash "$environment_hash" '
+  .executor_invoked == true
+    and .environment_hash == $environment_hash
+    and .preflight_count == 2
+    and .preflight_status == "passed"
+' "$metric" >/dev/null || fail "environment metric fields"
+environment_worktree="$(field "$output" IMPROVE_WORKTREE)"
+environment_tree="$(field "$output" IMPROVE_CANDIDATE_TREE)"
+environment_state_home="$XDG_STATE_HOME"
+environment_home="$HOME"
+
+start_case environment_spark complete
+run_runner --environment-json "$valid_environment_json" --spark "$environment_plan"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark \
+  "environment Spark profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "environment Spark preflight status"
+
+start_case environment_deep complete
+run_runner --environment-json "$valid_environment_json" --deep "$environment_plan"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep \
+  "environment deep profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "environment deep preflight status"
+
+empty_launcher_json="$(
+  jq -c '.launcher = [] | .probes = [.probes[0]]' <<<"$valid_environment_json"
+)"
+empty_launcher_plan="$repo/plans/012-empty-launcher.md"
+write_environment_artifact "$empty_launcher_plan" "$empty_launcher_json"
+start_case environment_empty_launcher complete
+run_runner --environment-json "$empty_launcher_json" "$empty_launcher_plan"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(wc -l <"$FAKE_LAUNCHER_COUNT")" 0 "empty launcher invocation count"
+assert_eq "$(<"$FAKE_CODEX_LAUNCHER_LOG")" unset "empty launcher Codex marker"
+grep -F 'marker=unset' "$FAKE_PROBE_LOG" >/dev/null ||
+  fail "empty launcher probe inherited a launcher marker"
+
+start_case environment_probe_timeout complete
+export FAKE_PROBE_MODE=timeout
+run_runner --environment-json "$empty_launcher_json" "$empty_launcher_plan"
+assert_transport_case 0 STOPPED environment_preflight_failed
+assert_eq "$(field "$output" IMPROVE_EXEC_INVOKED)" 0 "timed-out probe invoked marker"
+assert_preflight_not_invoked environment_probe_timeout
+
+start_case environment_preflight_signal complete
+export FAKE_PROBE_MODE=timeout
+copy_runner
+output="$case_dir/output"
+errors="$case_dir/errors"
+(
+  cd "$repo"
+  exec bash "$runner" --environment-json \
+    "$empty_launcher_json" "$empty_launcher_plan"
+) >"$output" 2>"$errors" &
+wrapper_pid="$!"
+for _ in $(seq 1 50); do
+  [ -s "$FAKE_PROBE_LOG" ] && break
+  sleep 0.1
+done
+[ -s "$FAKE_PROBE_LOG" ] || fail "preflight signal case did not start its probe"
+kill -TERM "$wrapper_pid"
+set +e
+wait "$wrapper_pid"
+status="$?"
+set -e
+assert_transport_case 1 INCONCLUSIVE wrapper_signal_TERM
+assert_eq "$(field "$output" IMPROVE_EXEC_INVOKED)" 0 \
+  "preflight signal invoked marker"
+[ -z "$(field "$output" IMPROVE_EXEC_RESUME_MANIFEST)" ] ||
+  fail "preflight signal produced a resume manifest"
+assert_preflight_not_invoked environment_preflight_signal
+
+delay_environment_json="$(
+  jq -c '.launcher = [] | .probes = [.probes[0]]' <<<"$valid_environment_json"
+)"
+delay_environment_plan="$repo/plans/012-delay.md"
+write_environment_artifact "$delay_environment_plan" "$delay_environment_json"
+start_case environment_timeout_independence delayed_complete
+export FAKE_PROBE_MODE=delay
+CODEX_IMPROVE_ROLES_JSON="$(jq -c '.standard.initialTimeout = 2' <<<"$valid_roles_json")"
+export CODEX_IMPROVE_ROLES_JSON
+run_runner --environment-json "$delay_environment_json" "$delay_environment_plan"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 2 \
+  "model retained full timeout after probe"
+export CODEX_IMPROVE_ROLES_JSON="$valid_roles_json"
+
+start_case environment_upgrade_failure complete
+mkdir -p "$XDG_STATE_HOME/codex-improve/worktrees"
+chmod 700 "$XDG_STATE_HOME/codex-improve"
+chmod 755 "$XDG_STATE_HOME/codex-improve/worktrees"
+export FAKE_PROBE_MODE=fail
+run_runner --environment-json "$valid_environment_json" "$environment_plan"
+assert_transport_case 0 STOPPED environment_preflight_failed
+assert_eq "$(stat -c '%a' "$XDG_STATE_HOME/codex-improve/worktrees")" 700 \
+  "legacy worktree root was made private"
+upgrade_worktree="$(field "$output" IMPROVE_WORKTREE)"
+upgrade_tree="$(field "$output" IMPROVE_CANDIDATE_TREE)"
+upgrade_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+upgrade_state_home="$XDG_STATE_HOME"
+upgrade_home="$HOME"
+
+start_resume_case environment_upgrade_resume \
+  "$upgrade_state_home" "$upgrade_home" complete
+run_runner --resume "$upgrade_worktree" "$upgrade_tree" "$upgrade_artifact"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_EXEC_INVOKED)" 1 \
+  "upgraded state resume invoked marker"
+
+start_case environment_failure complete
+export FAKE_PROBE_MODE=fail
+run_runner --environment-json "$valid_environment_json" "$environment_plan"
+assert_transport_case 0 STOPPED environment_preflight_failed
+assert_eq "$(field "$output" IMPROVE_EXEC_INVOKED)" 0 "failed preflight invoked marker"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" failed "failed preflight status"
+assert_not_invoked environment_failure
+failure_worktree="$(field "$output" IMPROVE_WORKTREE)"
+failure_tree="$(field "$output" IMPROVE_CANDIDATE_TREE)"
+failure_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+failure_manifest="$(field "$output" IMPROVE_EXEC_RESUME_MANIFEST)"
+failure_state_home="$XDG_STATE_HOME"
+failure_home="$HOME"
+[ -s "$failure_manifest" ] || fail "preflight failure resume manifest missing"
+assert_private "$failure_manifest"
+jq -e '
+  .improveContract == "1.0.0-codex.12"
+    and .reason == "environment_preflight_failed"
+    and .executorInvoked == false
+    and .resumeAttempt == 0
+' "$failure_manifest" >/dev/null || fail "preflight failure manifest schema"
+jq -e --arg head "$(field "$output" IMPROVE_CANDIDATE_HEAD)" \
+  --arg tree "$failure_tree" '
+  .candidateHead == $head
+    and .candidateTree == $tree
+    and .base == $head
+    and .environmentSha256 != ""
+    and .promptBodySha256 != ""
+' "$failure_manifest" >/dev/null || fail "preflight failure manifest identity"
+assert_no_private_content "$output"
+assert_no_private_content "$errors"
+assert_no_private_content "$metric"
+
+manifest_backup="$test_root/resume-manifest.backup"
+manifest_hash_backup="$test_root/resume-manifest.sha256.backup"
+environment_backup="$test_root/resume-environment.backup"
+prompt_body_backup="$test_root/resume-prompt-body.backup"
+cp "$failure_manifest" "$manifest_backup"
+cp "$failure_artifact/resume-manifest.sha256" "$manifest_hash_backup"
+cp "$failure_artifact/environment.json" "$environment_backup"
+cp "$failure_artifact/prompt-body.txt" "$prompt_body_backup"
+
+reject_modified_manifest() {
+  rejection_name="$1"
+  rejection_filter="$2"
+  jq "$rejection_filter" "$manifest_backup" >"$failure_manifest"
+  sha256sum "$failure_manifest" | sed 's/[[:space:]].*$//' \
+    >"$failure_artifact/resume-manifest.sha256"
+  start_resume_case "$rejection_name" "$failure_state_home" "$failure_home"
+  run_runner --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+  assert_eq "$status" 2 "$rejection_name status"
+  assert_preflight_not_invoked "$rejection_name"
+  cp "$manifest_backup" "$failure_manifest"
+  cp "$manifest_hash_backup" "$failure_artifact/resume-manifest.sha256"
+}
+
+reject_modified_manifest resume_legacy '.improveContract = "1.0.0-codex.11"'
+reject_modified_manifest resume_wrong_reason '.reason = "environment_preflight_mutated_candidate"'
+reject_modified_manifest resume_model_invoked '.executorInvoked = true'
+reject_modified_manifest resume_inconclusive '.result = "INCONCLUSIVE"'
+reject_modified_manifest resume_already_attempted '.resumeAttempt = 1'
+reject_modified_manifest resume_wrong_tree '.candidateTree = .candidateHead'
+reject_modified_manifest resume_stale_role '.role.profile = "stale-profile"'
+reject_modified_manifest resume_wrong_user '.userId += 1'
+
+printf '%s\n' 'tampered' >>"$failure_manifest"
+start_resume_case resume_tampered "$failure_state_home" "$failure_home"
+run_runner --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+assert_eq "$status" 2 "tampered resume status"
+assert_preflight_not_invoked resume_tampered
+cp "$manifest_backup" "$failure_manifest"
+
+printf '%s\n' 'tampered' >>"$failure_artifact/environment.json"
+start_resume_case resume_environment_tampered "$failure_state_home" "$failure_home"
+run_runner --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+assert_eq "$status" 2 "tampered resume environment status"
+assert_preflight_not_invoked resume_environment_tampered
+cp "$environment_backup" "$failure_artifact/environment.json"
+
+printf '%s\n' 'tampered' >>"$failure_artifact/prompt-body.txt"
+start_resume_case resume_prompt_tampered "$failure_state_home" "$failure_home"
+run_runner --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+assert_eq "$status" 2 "tampered resume prompt status"
+assert_preflight_not_invoked resume_prompt_tampered
+cp "$prompt_body_backup" "$failure_artifact/prompt-body.txt"
+
+chmod 644 "$failure_manifest"
+start_resume_case resume_permissive "$failure_state_home" "$failure_home"
+run_runner --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+assert_eq "$status" 2 "permissive resume status"
+assert_preflight_not_invoked resume_permissive
+chmod 600 "$failure_manifest"
+
+start_case resume_outside_xdg
+mkdir -p "$XDG_STATE_HOME/codex-improve/executions" \
+  "$XDG_STATE_HOME/codex-improve/worktrees"
+chmod 700 "$XDG_STATE_HOME/codex-improve" \
+  "$XDG_STATE_HOME/codex-improve/executions" \
+  "$XDG_STATE_HOME/codex-improve/worktrees"
+run_runner --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+assert_eq "$status" 2 "outside-XDG resume status"
+assert_preflight_not_invoked resume_outside_xdg
+
+start_resume_case resume_override "$failure_state_home" "$failure_home"
+run_runner --deep --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+assert_eq "$status" 2 "resume override status"
+assert_preflight_not_invoked resume_override
+
+failure_tracked_backup="$test_root/failure-tracked.backup"
+cp "$failure_worktree/tracked.txt" "$failure_tracked_backup"
+printf '%s\n' 'stale candidate' >>"$failure_worktree/tracked.txt"
+start_resume_case resume_stale_candidate "$failure_state_home" "$failure_home"
+run_runner --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+assert_eq "$status" 2 "stale resume candidate status"
+assert_preflight_not_invoked resume_stale_candidate
+cp "$failure_tracked_backup" "$failure_worktree/tracked.txt"
+
+start_resume_case environment_resume "$failure_state_home" "$failure_home" complete
+export FAKE_PROBE_MODE=pass
+run_runner --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_EXEC_INVOKED)" 1 "resumed invoked marker"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed "resumed preflight status"
+[ "$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)" != "$failure_artifact" ] ||
+  fail "resume reused original artifact directory"
+assert_eq "$(wc -l <"$FAKE_LAUNCHER_COUNT")" 1 "resume launcher invocation count"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor "resume profile"
+grep -F "$(field "$output" IMPROVE_EXECUTION_ID)" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "resume prompt omitted fresh execution identity"
+
+start_resume_case environment_resume_repeated "$failure_state_home" "$failure_home"
+run_runner --resume "$failure_worktree" "$failure_tree" "$failure_artifact"
+assert_eq "$status" 2 "repeated resume status"
+assert_not_invoked environment_resume_repeated
+assert_eq "$(wc -l <"$FAKE_LAUNCHER_COUNT")" 0 "repeated resume launcher count"
+
+start_case environment_repeated_failure_seed complete
+export FAKE_PROBE_MODE=fail
+run_runner --environment-json "$valid_environment_json" "$environment_plan"
+assert_transport_case 0 STOPPED environment_preflight_failed
+repeat_worktree="$(field "$output" IMPROVE_WORKTREE)"
+repeat_tree="$(field "$output" IMPROVE_CANDIDATE_TREE)"
+repeat_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+repeat_state_home="$XDG_STATE_HOME"
+repeat_home="$HOME"
+repeat_parent_hash="$(<"$repeat_artifact/resume-manifest.sha256")"
+
+start_resume_case environment_repeated_failure "$repeat_state_home" "$repeat_home"
+export FAKE_PROBE_MODE=fail
+run_runner --resume "$repeat_worktree" "$repeat_tree" "$repeat_artifact"
+assert_transport_case 0 STOPPED environment_preflight_failed
+repeat_child_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+repeat_child_manifest="$(field "$output" IMPROVE_EXEC_RESUME_MANIFEST)"
+jq -e --arg parent_hash "$repeat_parent_hash" '
+  .resumeAttempt == 1
+    and .parentManifestSha256 == $parent_hash
+    and .originalExecutionId != .executionId
+' "$repeat_child_manifest" >/dev/null || fail "repeated preflight manifest lineage"
+
+start_resume_case environment_repeated_failure_blocked \
+  "$repeat_state_home" "$repeat_home"
+run_runner --resume "$repeat_worktree" "$repeat_tree" "$repeat_child_artifact"
+assert_eq "$status" 2 "repeated preflight second resume status"
+assert_preflight_not_invoked environment_repeated_failure_blocked
+
+environment_dossier="$repo/plans/012 environment dossier.md"
+write_environment_artifact "$environment_dossier" "$valid_environment_json"
+start_resume_case environment_mutation \
+  "$environment_state_home" "$environment_home" complete
+export FAKE_PROBE_MODE=mutate
+export FAKE_MUTATE_WORKTREE="$environment_worktree"
+run_runner --environment-json "$valid_environment_json" --revise \
+  "$environment_worktree" "$environment_tree" "$environment_dossier"
+assert_transport_case 0 STOPPED environment_preflight_mutated_candidate
+assert_eq "$(field "$output" IMPROVE_EXEC_INVOKED)" 0 "mutation invoked marker"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" mutated "mutation status"
+[ -z "$(field "$output" IMPROVE_EXEC_RESUME_MANIFEST)" ] ||
+  fail "mutation produced a resume manifest"
+assert_not_invoked environment_mutation
 
 printf '%s\n' "dirty caller" >"$repo/dirty.txt"
 export IMPROVE_EXECUTION_ID=ambient-caller-value
@@ -612,7 +1151,8 @@ copy_runner
 runtime_bin="$case_dir/runtime-bin"
 mkdir -p "$runtime_bin"
 for command in \
-  bash basename cat codex date git jq mkdir mktemp realpath rm sed sleep tail timeout wc; do
+  bash basename cat chmod codex cp date git id jq mkdir mktemp mv realpath rm \
+  sed sha256sum sleep stat tail timeout tr wc; do
   ln -s "$(command -v "$command")" "$runtime_bin/$command"
 done
 output="$case_dir/output"
@@ -752,6 +1292,85 @@ assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep "deep revis
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 6 "deep revision timeout"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 "deep revision token limit"
 
+contract_state_home="$test_root/contract-state"
+contract_home="$test_root/contract-home"
+contract_worktree_root="$contract_state_home/codex-improve/worktrees"
+contract_worktree="$contract_worktree_root/revision-test"
+mkdir -p "$contract_worktree_root" "$contract_home"
+chmod 700 "$contract_state_home/codex-improve" "$contract_worktree_root"
+git -C "$repo" worktree add -q -b codex/improve-contract-revision-test \
+  "$contract_worktree" HEAD
+chmod 700 "$contract_worktree"
+printf '%s\n' "preserve this contracted diff" >>"$contract_worktree/tracked.txt"
+contract_tree="$(candidate_tree "$contract_worktree")"
+
+start_contract_case() {
+  start_case "$@"
+  export XDG_STATE_HOME="$contract_state_home"
+  export HOME="$contract_home"
+}
+
+start_case environment_revision_outside_xdg complete
+run_runner --environment-json "$valid_environment_json" --revise \
+  "$revision_worktree" "$revision_tree" "$environment_dossier"
+assert_eq "$status" 2 "outside-XDG contracted revision status"
+assert_preflight_not_invoked environment_revision_outside_xdg
+
+start_contract_case environment_revision complete
+run_runner --environment-json "$valid_environment_json" --revise \
+  "$contract_worktree" "$contract_tree" "$environment_dossier"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor \
+  "environment revision profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "environment revision preflight status"
+
+start_contract_case environment_spark_revision complete
+run_runner --environment-json "$valid_environment_json" --spark --revise \
+  "$contract_worktree" "$contract_tree" "$environment_dossier"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark \
+  "environment Spark revision profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "environment Spark revision preflight status"
+
+start_case environment_deep_revision_failure complete
+mkdir -p "$XDG_STATE_HOME/codex-improve/worktrees"
+chmod 700 "$XDG_STATE_HOME/codex-improve"
+chmod 755 "$XDG_STATE_HOME/codex-improve/worktrees"
+deep_revision_worktree="$XDG_STATE_HOME/codex-improve/worktrees/revision-test"
+git -C "$repo" worktree add -q -b codex/improve-resume-revision-test \
+  "$deep_revision_worktree" HEAD
+chmod 755 "$deep_revision_worktree"
+printf '%s\n' "preserve this resumable diff" >>"$deep_revision_worktree/tracked.txt"
+deep_revision_tree="$(candidate_tree "$deep_revision_worktree")"
+export FAKE_PROBE_MODE=fail
+run_runner --environment-json "$valid_environment_json" --deep --revise \
+  "$deep_revision_worktree" "$deep_revision_tree" "$environment_dossier"
+assert_transport_case 0 STOPPED environment_preflight_failed
+assert_eq "$(stat -c '%a' "$XDG_STATE_HOME/codex-improve/worktrees")" 700 \
+  "legacy revision worktree root was made private"
+assert_eq "$(stat -c '%a' "$deep_revision_worktree")" 700 \
+  "legacy revision worktree was made private"
+deep_revision_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+deep_revision_state_home="$XDG_STATE_HOME"
+deep_revision_home="$HOME"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep \
+  "failed environment deep revision profile"
+
+start_resume_case environment_deep_revision_resume \
+  "$deep_revision_state_home" "$deep_revision_home" complete
+run_runner --resume "$deep_revision_worktree" "$deep_revision_tree" \
+  "$deep_revision_artifact"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_MODE)" revision \
+  "resumed environment revision mode"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep \
+  "resumed environment deep revision profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 6 \
+  "resumed environment deep revision timeout"
+worktrees_before="$(git -C "$repo" worktree list --porcelain)"
+
 start_case recovery complete
 run_runner --recover "$revision_worktree" "$revision_tree" "$dossier"
 assert_transport_case 0 COMPLETE completed
@@ -809,6 +1428,53 @@ assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 6 "deep recov
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 "deep recovery token limit"
 assert_eq "$(git -C "$revision_worktree" status --short)" "$revision_status_before" "deep recovery diff preservation"
 assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "deep recovery invocation count"
+
+chmod 755 "$contract_worktree_root" "$contract_worktree"
+start_contract_case environment_recovery_upgrade_failure complete
+export FAKE_PROBE_MODE=fail
+run_runner --environment-json "$valid_environment_json" --recover \
+  "$contract_worktree" "$contract_tree" "$environment_dossier"
+assert_transport_case 0 STOPPED environment_preflight_failed
+assert_eq "$(stat -c '%a' "$contract_worktree_root")" 700 \
+  "legacy recovery worktree root was made private"
+assert_eq "$(stat -c '%a' "$contract_worktree")" 700 \
+  "legacy recovery worktree was made private"
+recovery_upgrade_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+
+start_resume_case environment_recovery_upgrade_resume \
+  "$contract_state_home" "$contract_home" complete
+run_runner --resume "$contract_worktree" "$contract_tree" \
+  "$recovery_upgrade_artifact"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_MODE)" recovery \
+  "resumed environment recovery mode"
+
+start_contract_case environment_recovery complete
+run_runner --environment-json "$valid_environment_json" --recover \
+  "$contract_worktree" "$contract_tree" "$environment_dossier"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor \
+  "environment recovery profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "environment recovery preflight status"
+
+start_contract_case environment_spark_recovery complete
+run_runner --environment-json "$valid_environment_json" --spark --recover \
+  "$contract_worktree" "$contract_tree" "$environment_dossier"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark \
+  "environment Spark recovery profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "environment Spark recovery preflight status"
+
+start_contract_case environment_deep_recovery complete
+run_runner --environment-json "$valid_environment_json" --deep --recover \
+  "$contract_worktree" "$contract_tree" "$environment_dossier"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep \
+  "environment deep recovery profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "environment deep recovery preflight status"
 
 recovery_transport_case() {
   name="$1"
@@ -997,6 +1663,38 @@ assert_eq "$(git -C "$repo" rev-parse HEAD)" "$(git -C "$repo" rev-parse main)" 
 grep -F "$checkpoint" "$FAKE_PROMPT_LOG" >/dev/null || fail "next prompt omits predecessor"
 grep -F "starts from explicit predecessor checkpoint $checkpoint" "$errors" >/dev/null ||
   fail "next dirty-caller warning is inaccurate"
+
+start_case environment_next complete
+run_runner --environment-json "$valid_environment_json" --next \
+  "$checkpoint" "$environment_plan"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "environment next preflight status"
+assert_eq "$(field "$output" IMPROVE_PREDECESSOR_CHECKPOINT)" "$checkpoint" \
+  "environment next predecessor"
+
+start_case environment_next_failure complete
+export FAKE_PROBE_MODE=fail
+run_runner --environment-json "$valid_environment_json" --next \
+  "$checkpoint" "$environment_plan"
+assert_transport_case 0 STOPPED environment_preflight_failed
+next_failure_worktree="$(field "$output" IMPROVE_WORKTREE)"
+next_failure_tree="$(field "$output" IMPROVE_CANDIDATE_TREE)"
+next_failure_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+next_failure_state_home="$XDG_STATE_HOME"
+next_failure_home="$HOME"
+
+start_resume_case environment_next_resume \
+  "$next_failure_state_home" "$next_failure_home" complete
+run_runner --resume \
+  "$next_failure_worktree" "$next_failure_tree" "$next_failure_artifact"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_MODE)" initial \
+  "resumed environment next mode"
+assert_eq "$(field "$output" IMPROVE_BASE)" "$checkpoint" \
+  "resumed environment next base"
+assert_eq "$(field "$output" IMPROVE_PREDECESSOR_CHECKPOINT)" "$checkpoint" \
+  "resumed environment next predecessor"
 
 start_case next_abbreviated
 run_runner --next "${checkpoint:0:12}" "plans/001 plan.md"

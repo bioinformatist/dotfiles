@@ -4,6 +4,71 @@ The advisor never edits source code. An executor works in a new persistent Git
 worktree; the main agent verifies the result and returns an implementation
 verdict. The worktree is preserved until the user decides what to do with it.
 
+## Environment preflight and resume
+
+For `.12`, pass the artifact's environment JSON as the first option:
+
+```console
+codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] <artifact>
+codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] --revise WORKTREE EXPECTED_TREE DOSSIER
+codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] --recover WORKTREE EXPECTED_TREE DOSSIER
+codex-improve-exec --environment-json '<exact-json>' --next CHECKPOINT PLAN
+```
+
+The runner validates the JSON against the artifact before creating or reusing a
+worktree. It runs the declared probes before Codex and prints these stable
+fields with every model-capable execution:
+
+```text
+IMPROVE_EXEC_INVOKED=0|1
+IMPROVE_EXEC_ENVIRONMENT_HASH=...
+IMPROVE_EXEC_PREFLIGHT_COUNT=...
+IMPROVE_EXEC_PREFLIGHT_STATUS=legacy_unchecked|passed|failed|mutated
+IMPROVE_EXEC_PREFLIGHT_LOG=...
+IMPROVE_EXEC_RESUME_MANIFEST=...
+```
+
+The preflight log, wrapper, and optional resume manifest are private execution
+artifacts. Content-free metrics contain only the invoked Boolean, environment
+hash, probe count, and status; they never contain argv, output, paths, names,
+candidate identities, or manifest contents.
+
+Before a contracted execution launches preflight, the runner verifies
+current-user ownership and makes the per-user Improve root, worktree root, and
+specific worktree mode 0700. Initial and `--next` create that worktree beneath
+the configured XDG root; revision and recovery must already reuse a worktree
+beneath the same root. This repairs state created by the `.11` runner before
+its private umask took effect. A contracted follow-up outside that boundary is
+rejected before its launcher runs. Legacy unchecked execution keeps its
+existing path.
+
+A failed probe with an unchanged candidate returns conclusive `STOPPED`,
+`environment_preflight_failed`, and `IMPROVE_EXEC_INVOKED=0`. It consumes
+neither the initial-run recovery allowance nor a revision round. Correct the
+external environment, then invoke the exact one-time handoff:
+
+```console
+codex-improve-exec --resume WORKTREE EXPECTED_TREE ARTIFACT_DIR
+```
+
+Resume accepts no lane or environment override. It validates current-user
+private state, exact file modes and ownership, artifact hashes, generated role
+data, repository and registered-worktree identity, candidate identity, original
+mode, profile, environment, limits, base, and predecessor. It creates a fresh
+execution ID and artifact directory. If preflight fails again, the new manifest
+records attempt 1 and its parent; do not resume it again. Return `BLOCKED`.
+
+If preflight changes the candidate, return
+`environment_preflight_mutated_candidate` without a manifest. Caller signals
+and other transport failures are also nonresumable. Never retry automatically,
+migrate legacy artifacts, or ask an executor to call candidate, checkpoint, or
+resume.
+
+Artifacts declaring `.11`, or no Improve contract, retain
+`legacy_unchecked` behavior when no environment JSON is supplied. They may opt
+in by carrying a matching block and CLI value. Any other declared contract
+version fails closed.
+
 ## Execute A Plan
 
 ### Preconditions
@@ -34,7 +99,7 @@ Before dispatch:
 Run one executor:
 
 ```console
-codex-improve-exec <plan-artifact-path>
+codex-improve-exec --environment-json '<exact-json>' <plan-artifact-path>
 ```
 
 One explicit invocation runs one plan. Serial dispatch is the default. A plan
@@ -55,13 +120,13 @@ Use `--spark` only when the plan records the Spark lane and satisfies every
 eligibility rule in the planning contract:
 
 ```console
-codex-improve-exec --spark <plan-artifact-path>
+codex-improve-exec --environment-json '<exact-json>' --spark <plan-artifact-path>
 ```
 
 Use `--deep` only for a plan whose ambiguity or technical depth justifies the higher reasoning cost:
 
 ```console
-codex-improve-exec --deep <plan-artifact-path>
+codex-improve-exec --environment-json '<exact-json>' --deep <plan-artifact-path>
 ```
 
 The advisor records the lane and routing evidence; the main agent explicitly
@@ -99,6 +164,12 @@ IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS=...
 IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT=...
 IMPROVE_EXEC_ROLLOUT_BUDGET_EXHAUSTED=...
 IMPROVE_EXEC_EVENT_LOG_LIMIT_HIT=...
+IMPROVE_EXEC_INVOKED=...
+IMPROVE_EXEC_ENVIRONMENT_HASH=...
+IMPROVE_EXEC_PREFLIGHT_COUNT=...
+IMPROVE_EXEC_PREFLIGHT_STATUS=...
+IMPROVE_EXEC_PREFLIGHT_LOG=...
+IMPROVE_EXEC_RESUME_MANIFEST=...
 IMPROVE_EXEC_ARTIFACT_DIR=...
 IMPROVE_EXEC_PROMPT=...
 IMPROVE_EXEC_EVENT_LOG=...
@@ -187,6 +258,8 @@ elapsed time, prompt and event byte counts, observed token counts, whether
 usage was observed, total tool-event count, command-execution, file-change,
 MCP-tool-call, and Web-search counts, maximum event gap, quiet observation,
 active limits, and Boolean fuse flags including `rollout_budget_exhausted`.
+For the environment contract, they add only the executor-invoked Boolean,
+environment hash, preflight count, and preflight status.
 Tool counts are diagnostic observations, not automatic success or failure
 criteria.
 They never include prompt or final content,
@@ -254,9 +327,9 @@ eligibility rule; never force it for telemetry. Invoke exactly the selected
 lane:
 
 ```console
-codex-improve-exec --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
-codex-improve-exec --spark --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
-codex-improve-exec --deep --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --environment-json '<exact-json>' --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --environment-json '<exact-json>' --spark --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --environment-json '<exact-json>' --deep --recover "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
 ```
 
 The helper validates and reuses the same registered linked
@@ -299,9 +372,9 @@ revision dossier containing:
 Dispatch the dossier through the same helper and the original profile:
 
 ```console
-codex-improve-exec --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
-codex-improve-exec --spark --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
-codex-improve-exec --deep --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --environment-json '<exact-json>' --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --environment-json '<exact-json>' --spark --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
+codex-improve-exec --environment-json '<exact-json>' --deep --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
 ```
 
 The helper validates that the path is the root of a registered linked Git
