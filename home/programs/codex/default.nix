@@ -215,7 +215,7 @@ let
             '## Status
 
     - **Status**: TODO
-    - **Improve contract**: `1.0.0-codex.11`
+    - **Improve contract**: `1.0.0-codex.12`
     - **Implementation review**: PENDING
     - **Checkpoint**: NONE
     - **External acceptance**: NOT REQUIRED | PENDING
@@ -247,6 +247,24 @@ let
 
     | Stage | Identity | Superseded identity | Preserved evidence | Invalidated evidence |
     |-------|----------|---------------------|--------------------|----------------------|
+
+    ## Execution environment
+
+    Declare the exact launcher and literal preflight probes for this execution.
+    Use an empty launcher to inherit the runner environment. Empty probes require
+    `probeOmissionReason`.
+
+    ```json codex-improve-environment
+    {
+      "version": 1,
+      "launcher": [],
+      "probes": [],
+      "probeOmissionReason": "<why no project-specific probe is required>"
+    }
+    ```
+
+    The main agent passes this exact reviewed JSON first through
+    `--environment-json`. Do not include secrets or environment-variable values.
 
     ## Execution isolation
 

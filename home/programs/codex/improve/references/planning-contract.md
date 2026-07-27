@@ -1,6 +1,55 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.11`
+Contract version: `1.0.0-codex.12`
+
+## Execution environment contract
+
+Every new plan, revision dossier, and recovery dossier contains exactly one
+fenced `json codex-improve-environment` block. The caller passes the same JSON
+as the first CLI option through `--environment-json`. The runner compares the
+normalized values and rejects a missing or unequal declaration before worktree
+creation or model invocation.
+
+```json codex-improve-environment
+{
+  "version": 1,
+  "launcher": [],
+  "probes": [],
+  "probeOmissionReason": "This plan needs only the repository's default environment."
+}
+```
+
+Keys are exactly `version`, `launcher`, and `probes`, plus
+`probeOmissionReason` only when probes are empty. Version is integer 1.
+Launcher contains 0–16 nonempty control-character-free strings. There are 0–16
+probes; each has exactly `argv` (1–32 such strings) and an integer timeout from
+1 through 900. Empty probes require a nonempty omission reason, forbidden
+otherwise. The CLI JSON and fenced payload are each at most 16 KiB.
+
+The launcher is an argv prefix, never shell source; an empty launcher inherits
+the runner environment. Probes are literal argv arrays, not shell strings. Do
+not include secret values, environment-variable contents, or credentials.
+Choose probes only from repository evidence. Improve never assumes, infers, or
+bundles Cargo, Rust, Node, Python, Nix, or another project toolchain.
+
+The runner checks the candidate, creates a private wrapper, and invokes the
+launcher once. Inside that invocation the wrapper runs the probes sequentially
+with their own timeouts, checks the candidate again, and then starts Codex with
+the full lane timeout. The outer failsafe includes probe time, model time, and
+its hard-kill grace; probe time does not reduce the model timeout.
+
+Before any contracted execution launches preflight, the runner verifies
+current-user ownership and establishes mode 0700 on the per-user Improve root,
+worktree root, and specific worktree. Initial and `--next` create the worktree
+beneath that configured XDG root. Revision and recovery reject a worktree
+outside it before invoking the launcher. This safely upgrades state created by
+the legacy runner before its private umask took effect.
+
+Artifacts declaring `.12` require this contract and fail closed. Artifacts
+declaring `.11`, or carrying no Improve contract declaration, keep their
+legacy-unchecked behavior unless they opt in with a matching environment block
+and CLI value. Any other declared contract version is unsupported. Legacy
+artifacts are not migrated.
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -342,11 +391,12 @@ dependency contract in the dependent plan; never require an executor to recover
 semantics from another plan or prior conversation.
 
 Start one dependent plan from a pre-integration checkpoint only through
-`codex-improve-exec --next CHECKPOINT PLAN`. `CHECKPOINT` must be the full
-commit ID at the current tip of a local `codex/improve-*` branch. The helper
-creates one isolated worktree from that exact commit and records it as the
-predecessor checkpoint. `--next` is an explicit one-plan action, not permission
-to schedule, lock, publish, integrate, or automatically chain plans.
+`codex-improve-exec --environment-json '<exact-json>' --next CHECKPOINT PLAN`.
+`CHECKPOINT` must be the full commit ID at the current tip of a local
+`codex/improve-*` branch. The helper creates one isolated worktree from that
+exact commit and records it as the predecessor checkpoint. `--next` is an
+explicit one-plan action, not permission to schedule, lock, publish, integrate,
+or automatically chain plans.
 
 ## Convergence protocol
 
