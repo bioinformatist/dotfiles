@@ -6,13 +6,13 @@ verdict. The worktree is preserved until the user decides what to do with it.
 
 ## Environment preflight and resume
 
-For `.12`, pass the artifact's environment JSON as the first option:
+For `.13`, pass the artifact's environment JSON as the first option:
 
 ```console
 codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] <artifact>
 codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] --revise WORKTREE EXPECTED_TREE DOSSIER
 codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] --recover WORKTREE EXPECTED_TREE DOSSIER
-codex-improve-exec --environment-json '<exact-json>' --next CHECKPOINT PLAN
+codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] --next CHECKPOINT PLAN
 ```
 
 The runner validates the JSON against the artifact before creating or reusing a
@@ -64,10 +64,11 @@ and other transport failures are also nonresumable. Never retry automatically,
 migrate legacy artifacts, or ask an executor to call candidate, checkpoint, or
 resume.
 
-Artifacts declaring `.11`, or no Improve contract, retain
-`legacy_unchecked` behavior when no environment JSON is supplied. They may opt
-in by carrying a matching block and CLI value. Any other declared contract
-version fails closed.
+Artifacts declaring `.12` are unsupported and must be re-reviewed and
+restamped before execution. Artifacts declaring `.11`, or no Improve contract,
+retain `legacy_unchecked` behavior when no environment JSON is supplied. They
+may opt in by carrying a matching block and CLI value. Any other declared
+contract version fails closed.
 
 ## Execute A Plan
 
@@ -320,7 +321,8 @@ Each recovery dossier is self-contained for exactly one slice and contains:
 - explicit slice STOP conditions, including new scope, Engineering-contract
   change, contradictory semantics, and an unrecognized checkpoint.
 
-Choose Spark, standard, or deep independently for the actual remaining slice.
+Choose Spark, standard, or deep independently for the actual remaining
+execution unit.
 The original plan lane is not a constraint, and a recorded recovery seam is
 only a hint. Use Spark only when the slice independently satisfies every Spark
 eligibility rule; never force it for telemetry. Invoke exactly the selected
@@ -359,7 +361,8 @@ revision dossier containing:
 
 - the complete current plan and semantic anchors;
 - revision round, current checkpoint, branch, worktree, original Spark,
-  standard, or deep profile, and diff identity;
+  standard, or deep execution lane/profile as provenance, selected revision
+  lane, current routing evidence, and diff identity;
 - exact failing review or acceptance evidence;
 - classification as an in-scope defect, changed requirement, unrelated
   environment failure, or new scope or Engineering contract;
@@ -369,7 +372,10 @@ revision dossier containing:
   and
 - explicit STOP conditions.
 
-Dispatch the dossier through the same helper and the original profile:
+Classify the bounded revision under the current routing rules independently of
+the original execution lane. Preserve the original lane/profile as provenance,
+record `Selected revision lane` and its current routing evidence, and explicitly
+dispatch that selected lane through the same helper:
 
 ```console
 codex-improve-exec --environment-json '<exact-json>' --revise "$IMPROVE_WORKTREE" "$IMPROVE_CANDIDATE_TREE" <dossier-file>
@@ -384,8 +390,9 @@ a fresh ephemeral executor, and uses the same private bounded transport as an
 initial run. The executor preserves the existing diff, does not reload Improve
 or Ponytail, performs no broad recon, edits only dossier-authorized paths, and
 runs only named affected checks. New scope, an Engineering-contract edit,
-contradictory semantics, an unrecognized checkpoint, or a missing original
-profile is a STOP.
+contradictory semantics, an unrecognized checkpoint, missing original execution
+provenance, or missing selected-lane routing evidence is a STOP. A selected
+revision profile differing from the original profile is not a STOP.
 
 A changed requirement or new scope or contract returns to planning rather than
 revision. An unrelated environment failure preserves the current acceptance

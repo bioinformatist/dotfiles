@@ -13,7 +13,9 @@ Usage:
   codex-improve-exec --candidate WORKTREE
   codex-improve-exec --checkpoint WORKTREE EXPECTED_TREE COMMIT_MESSAGE
   codex-improve-exec --next CHECKPOINT PLAN
-  codex-improve-exec --environment-json '<json>' --next CHECKPOINT PLAN
+  codex-improve-exec --spark --next CHECKPOINT PLAN
+  codex-improve-exec --deep --next CHECKPOINT PLAN
+  codex-improve-exec --environment-json '<json>' [--spark|--deep] --next CHECKPOINT PLAN
   codex-improve-exec --revise WORKTREE EXPECTED_TREE DOSSIER
   codex-improve-exec --spark --revise WORKTREE EXPECTED_TREE DOSSIER
   codex-improve-exec --deep --revise WORKTREE EXPECTED_TREE DOSSIER
@@ -162,9 +164,9 @@ validate_artifact_environment() {
   local artifact="$1"
   artifact_contract "$artifact"
   case "$declared_contract" in
-    1.0.0-codex.12)
+    1.0.0-codex.13)
       if [ "$environment_json_supplied" -ne 1 ]; then
-        fail_input "Improve contract 1.0.0-codex.12 requires --environment-json"
+        fail_input "Improve contract 1.0.0-codex.13 requires --environment-json"
       fi
       ;;
     ''|1.0.0-codex.11)
@@ -478,6 +480,7 @@ case "${1:-}" in
 esac
 
 if [ "$operation" != "execute" ] &&
+  [ "$operation" != "next" ] &&
   [ "$operation" != "resume" ] &&
   [ "$role_key" != "standard" ]; then
   fail_input "lane selectors are not supported with --$operation"
@@ -919,7 +922,7 @@ write_resume_manifest() {
     fail_input "cannot normalize role configuration"
   jq -nS \
     --argjson version 1 \
-    --arg improveContract "1.0.0-codex.12" \
+    --arg improveContract "1.0.0-codex.13" \
     --arg originalExecutionId "$original_execution_id" \
     --arg executionId "$execution_id" \
     --arg result "$result" \
@@ -1454,7 +1457,7 @@ validate_resume_and_load() {
       "userId", "version", "worktree"
     ]
       and .version == 1
-      and .improveContract == "1.0.0-codex.12"
+      and .improveContract == "1.0.0-codex.13"
       and .result == "STOPPED"
       and .reason == "environment_preflight_failed"
       and .executorInvoked == false
@@ -1651,9 +1654,10 @@ Run each one and report its actual result even when the executor model normally
 uses a lightweight verification style.
 
 STOP immediately for new scope, an Engineering-contract edit, contradictory
-semantics, an unrecognized checkpoint, a missing original profile, or any
-dossier STOP condition. Do not perform broad reconnaissance or improvise beyond
-the dossier.
+semantics, an unrecognized checkpoint, missing original execution provenance,
+missing selected-lane routing evidence, or any dossier STOP condition. The
+selected lane may differ from the original execution lane. Do not perform broad
+reconnaissance or improvise beyond the dossier.
 EOF
       emit_report_contract
       printf 'EXPECTED IMPROVE CANDIDATE TREE: %s\n' "$expected_tree"

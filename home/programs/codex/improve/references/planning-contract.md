@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.12`
+Contract version: `1.0.0-codex.13`
 
 ## Execution environment contract
 
@@ -45,11 +45,12 @@ beneath that configured XDG root. Revision and recovery reject a worktree
 outside it before invoking the launcher. This safely upgrades state created by
 the legacy runner before its private umask took effect.
 
-Artifacts declaring `.12` require this contract and fail closed. Artifacts
-declaring `.11`, or carrying no Improve contract declaration, keep their
-legacy-unchecked behavior unless they opt in with a matching environment block
-and CLI value. Any other declared contract version is unsupported. Legacy
-artifacts are not migrated.
+Artifacts declaring `.13` require this contract and fail closed. Artifacts
+declaring `.12` are unsupported and must be re-reviewed and restamped before
+execution. Artifacts declaring `.11`, or carrying no Improve contract
+declaration, keep their legacy-unchecked behavior unless they opt in with a
+matching environment block and CLI value. Any other declared contract version
+is unsupported. Legacy artifacts are not migrated.
 
 This reference governs `plan`, `review-plan`, and `reconcile`. A plan is the
 durable handoff to an executor with no conversation context. It preserves the
@@ -136,6 +137,12 @@ One plan represents one true integration, rollback, and acceptance boundary.
 Combine work only when it must land, be reverted, and be accepted atomically.
 Sharing a product area or directory is not sufficient evidence for combining
 independently landable changes.
+
+During planning, consider whether independently landable parts would use
+different executor lanes. Split only when every resulting plan has standalone
+value, exact verification, a valid checkpoint, and an explicit dependency
+contract. Keep one plan when its pieces must land, roll back, or be accepted
+atomically. Never create a synthetic split merely to increase Spark usage.
 
 During recon, discover and inline the applicable Engineering contract: build,
 test, lint, type, CI, policy, classifier, compatibility, release, deployment,
@@ -241,24 +248,35 @@ selection. After a qualifying inconclusive initial execution, the main agent
 reconciles the actual remainder and reclassifies each bounded slice
 independently under the current routing rules.
 
-Use `spark` only when every implementation decision is settled, the plan gives
-exact paths and commands, behavior has deterministic gates, no broad
-reconnaissance or visual input is needed, and the complete task fits Spark's
-128k text-only context. Spark is a research-preview model optimized for fast,
-targeted edits, so the plan must explicitly require every verification command.
+Select lanes in this deterministic order:
 
-Do not select Spark for planning or review; new abstractions, modules, public
-APIs, dependencies, migrations, or compatibility layers; security or
-authentication work; complex concurrency; Engineering-contract changes;
-unresolved diagnosis; visual-acceptance-led UI work; or broad refactors. Narrow
-existing-pattern documentation or configuration edits, mechanical propagation,
-a focused regression fix with an exact failing test, and a bounded revision
-dossier are representative candidates, not automatic guarantees.
+1. Use `spark` when product, architecture, compatibility, and implementation
+   decisions are settled; the execution unit has exact modification paths and
+   deterministic gates; no broad reconnaissance, unresolved diagnosis, or
+   visual input is needed; the complete unit fits Spark's 128k text-only
+   context; and none of the hard disqualifiers below applies. The plan must
+   explicitly require every verification command.
+2. Use `standard` when at least one named Spark requirement is false. Its
+   routing evidence must name the concrete Spark disqualifier.
+3. Use `deep` only when the bounded work also needs materially greater technical
+   reasoning than Standard. Its routing evidence must name both the concrete
+   Spark disqualifier and the reason for Deep.
 
-Use `standard` for work that does not meet every Spark eligibility condition.
-Use `deep` only when ambiguity or technical depth justifies its higher reasoning
-budget. Spark is never an advisor, scout, reviewer, automatic classifier,
-fallback, or default executor.
+Hard Spark disqualifiers are security or authentication decisions, complex
+concurrency, state migration, unresolved diagnosis, broad refactors,
+visual-led UI acceptance, and new architecture or interface design. A file
+category alone is not a disqualifier: mechanical, already-decided edits may
+touch CI workflows, dependency declarations, lockfiles, configuration,
+generated companions, or public-contract files. Selecting a dependency,
+designing an interface, changing CI policy, or making another substantive
+Engineering-contract decision remains non-Spark work.
+
+Classify every initial plan, dependent `--next` plan, revision, and recovery by
+its actual bounded execution work. Split only at the independently
+checkpointable plan boundaries above, never automatically. Spark is never an
+advisor, scout, reviewer, automatic classifier, fallback, ratio target, or
+metric source. The runner never infers a lane from Markdown, paths, or file
+categories and never schedules or retries execution.
 
 ## Verification and acceptance
 
@@ -391,7 +409,8 @@ dependency contract in the dependent plan; never require an executor to recover
 semantics from another plan or prior conversation.
 
 Start one dependent plan from a pre-integration checkpoint only through
-`codex-improve-exec --environment-json '<exact-json>' --next CHECKPOINT PLAN`.
+`codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] --next
+CHECKPOINT PLAN`.
 `CHECKPOINT` must be the full commit ID at the current tip of a local
 `codex/improve-*` branch. The helper creates one isolated worktree from that
 exact commit and records it as the predecessor checkpoint. `--next` is an

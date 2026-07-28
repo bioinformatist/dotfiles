@@ -381,6 +381,12 @@ grep -F -- "--spark --recover WORKTREE EXPECTED_TREE DOSSIER" "$output" >/dev/nu
   fail "help omits Spark recovery mode"
 grep -F -- "--deep --recover WORKTREE EXPECTED_TREE DOSSIER" "$output" >/dev/null ||
   fail "help omits deep recovery mode"
+grep -F -- "--spark --next CHECKPOINT PLAN" "$output" >/dev/null ||
+  fail "help omits Spark next mode"
+grep -F -- "--deep --next CHECKPOINT PLAN" "$output" >/dev/null ||
+  fail "help omits deep next mode"
+grep -F -- "--environment-json '<json>' [--spark|--deep] --next CHECKPOINT PLAN" \
+  "$output" >/dev/null || fail "help omits environment-backed lane-aware next mode"
 assert_not_invoked help
 
 start_case missing_generated_config
@@ -477,7 +483,7 @@ write_environment_artifact() {
   json="$2"
   {
     printf '%s\n' '# Environment execution'
-    printf '%s\n' '- **Improve contract**: `1.0.0-codex.12`'
+    printf '%s\n' '- **Improve contract**: `1.0.0-codex.13`'
     printf '%s\n' '```json codex-improve-environment'
     printf '%s\n' "$json"
     printf '%s\n' '```'
@@ -569,7 +575,7 @@ invalid_environment_case oversized "$(
 
 start_case environment_missing_block
 missing_block_plan="$repo/plans/012-missing-block.md"
-printf '%s\n' '- **Improve contract**: `1.0.0-codex.12`' >"$missing_block_plan"
+printf '%s\n' '- **Improve contract**: `1.0.0-codex.13`' >"$missing_block_plan"
 run_runner --environment-json "$valid_environment_json" "$missing_block_plan"
 assert_eq "$status" 2 "missing environment block status"
 assert_preflight_not_invoked environment_missing_block
@@ -589,7 +595,7 @@ assert_preflight_not_invoked environment_duplicate_block
 start_case environment_unterminated_block
 unterminated_plan="$repo/plans/012-unterminated-block.md"
 {
-  printf '%s\n' '- **Improve contract**: `1.0.0-codex.12`'
+  printf '%s\n' '- **Improve contract**: `1.0.0-codex.13`'
   printf '%s\n' '```json codex-improve-environment'
   printf '%s\n' "$valid_environment_json"
 } >"$unterminated_plan"
@@ -597,9 +603,19 @@ run_runner --environment-json "$valid_environment_json" "$unterminated_plan"
 assert_eq "$status" 2 "unterminated environment block status"
 assert_preflight_not_invoked environment_unterminated_block
 
-future_contract_plan="$repo/plans/013-future-contract.md"
+unsupported_contract_plan="$repo/plans/012-unsupported-contract.md"
+write_environment_artifact "$unsupported_contract_plan" "$valid_environment_json"
+sed -i 's/1\.0\.0-codex\.13/1.0.0-codex.12/' "$unsupported_contract_plan"
+start_case environment_unsupported_contract
+run_runner --environment-json "$valid_environment_json" "$unsupported_contract_plan"
+assert_eq "$status" 2 "unsupported .12 environment contract status"
+assert_preflight_not_invoked environment_unsupported_contract
+[ ! -e "$XDG_STATE_HOME/codex-improve/worktrees" ] ||
+  fail "unsupported .12 contract created a worktree"
+
+future_contract_plan="$repo/plans/014-future-contract.md"
 write_environment_artifact "$future_contract_plan" "$valid_environment_json"
-sed -i 's/1\.0\.0-codex\.12/1.0.0-codex.13/' "$future_contract_plan"
+sed -i 's/1\.0\.0-codex\.13/1.0.0-codex.14/' "$future_contract_plan"
 start_case environment_future_contract
 run_runner --environment-json "$valid_environment_json" "$future_contract_plan"
 assert_eq "$status" 2 "future environment contract status"
@@ -607,7 +623,7 @@ assert_preflight_not_invoked environment_future_contract
 
 legacy_environment_plan="$repo/plans/011-environment.md"
 write_environment_artifact "$legacy_environment_plan" "$valid_environment_json"
-sed -i 's/1\.0\.0-codex\.12/1.0.0-codex.11/' "$legacy_environment_plan"
+sed -i 's/1\.0\.0-codex\.13/1.0.0-codex.11/' "$legacy_environment_plan"
 start_case environment_legacy_opt_in complete
 run_runner --environment-json "$valid_environment_json" "$legacy_environment_plan"
 assert_transport_case 0 COMPLETE completed
@@ -774,7 +790,7 @@ failure_home="$HOME"
 [ -s "$failure_manifest" ] || fail "preflight failure resume manifest missing"
 assert_private "$failure_manifest"
 jq -e '
-  .improveContract == "1.0.0-codex.12"
+  .improveContract == "1.0.0-codex.13"
     and .reason == "environment_preflight_failed"
     and .executorInvoked == false
     and .resumeAttempt == 0
@@ -1222,7 +1238,12 @@ revision_worktree="$test_root/revision worktree"
 git -C "$repo" worktree add -q -b codex/improve-revision-test "$revision_worktree" HEAD
 printf '%s\n' "preserve this diff" >>"$revision_worktree/tracked.txt"
 dossier="$test_root/revision dossier.md"
-printf '%s\n' "TOP_SECRET_DOSSIER /private/repository/path" >"$dossier"
+{
+  printf '%s\n' "TOP_SECRET_DOSSIER /private/repository/path"
+  printf '%s\n' "Original execution profile: improve-executor-deep"
+  printf '%s\n' "Selected revision lane: supplied explicitly by the caller"
+  printf '%s\n' "Routing evidence: the bounded revision was classified independently"
+} >"$dossier"
 revision_status_before="$(git -C "$revision_worktree" status --short)"
 revision_tree="$(candidate_tree "$revision_worktree")"
 worktrees_before="$(git -C "$repo" worktree list --porcelain)"
@@ -1663,21 +1684,108 @@ assert_eq "$(git -C "$repo" rev-parse HEAD)" "$(git -C "$repo" rev-parse main)" 
 grep -F "$checkpoint" "$FAKE_PROMPT_LOG" >/dev/null || fail "next prompt omits predecessor"
 grep -F "starts from explicit predecessor checkpoint $checkpoint" "$errors" >/dev/null ||
   fail "next dirty-caller warning is inaccurate"
+assert_eq "$(field "$output" IMPROVE_MODE)" initial "standard next mode"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor "standard next profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 5 \
+  "standard next timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 120000 \
+  "standard next token limit"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "standard next invocation count"
+assert_network_access "standard next"
 
-start_case environment_next complete
-run_runner --environment-json "$valid_environment_json" --next \
+start_case spark_next complete
+run_runner --spark --next "$checkpoint" "plans/001 plan.md"
+assert_transport_case 0 COMPLETE completed
+spark_next_worktree="$(field "$output" IMPROVE_WORKTREE)"
+assert_eq "$(git -C "$spark_next_worktree" rev-parse HEAD)" "$checkpoint" \
+  "Spark next worktree base"
+assert_eq "$(field "$output" IMPROVE_MODE)" initial "Spark next mode"
+assert_eq "$(field "$output" IMPROVE_BASE)" "$checkpoint" "Spark next reported base"
+assert_eq "$(field "$output" IMPROVE_PREDECESSOR_CHECKPOINT)" "$checkpoint" \
+  "Spark next predecessor"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark \
+  "Spark next profile"
+assert_eq "$(invocation_profile)" improve-executor-spark "Spark next invoked profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 5 \
+  "Spark next timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 100000 \
+  "Spark next token limit"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "Spark next invocation count"
+assert_network_access "Spark next"
+grep -F "$checkpoint" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "Spark next prompt omits predecessor"
+
+start_case deep_next complete
+run_runner --deep --next "$checkpoint" "plans/001 plan.md"
+assert_transport_case 0 COMPLETE completed
+deep_next_worktree="$(field "$output" IMPROVE_WORKTREE)"
+assert_eq "$(git -C "$deep_next_worktree" rev-parse HEAD)" "$checkpoint" \
+  "deep next worktree base"
+assert_eq "$(field "$output" IMPROVE_MODE)" initial "deep next mode"
+assert_eq "$(field "$output" IMPROVE_BASE)" "$checkpoint" "deep next reported base"
+assert_eq "$(field "$output" IMPROVE_PREDECESSOR_CHECKPOINT)" "$checkpoint" \
+  "deep next predecessor"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep \
+  "deep next profile"
+assert_eq "$(invocation_profile)" improve-executor-deep "deep next invoked profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 7 \
+  "deep next timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 \
+  "deep next token limit"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "deep next invocation count"
+assert_network_access "deep next"
+grep -F "$checkpoint" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "deep next prompt omits predecessor"
+
+start_case environment_spark_next complete
+run_runner --environment-json "$valid_environment_json" --spark --next \
   "$checkpoint" "$environment_plan"
 assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark \
+  "environment Spark next profile"
+assert_eq "$(invocation_profile)" improve-executor-spark \
+  "environment Spark next invoked profile"
 assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
-  "environment next preflight status"
+  "environment Spark next preflight status"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_COUNT)" 2 \
+  "environment Spark next probe count"
 assert_eq "$(field "$output" IMPROVE_PREDECESSOR_CHECKPOINT)" "$checkpoint" \
-  "environment next predecessor"
+  "environment Spark next predecessor"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 5 \
+  "environment Spark next timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 100000 \
+  "environment Spark next token limit"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 \
+  "environment Spark next invocation count"
+assert_network_access "environment Spark next"
 
-start_case environment_next_failure complete
+start_case environment_deep_next complete
+run_runner --environment-json "$valid_environment_json" --deep --next \
+  "$checkpoint" "$environment_plan"
+assert_transport_case 0 COMPLETE completed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep \
+  "environment deep next profile"
+assert_eq "$(invocation_profile)" improve-executor-deep \
+  "environment deep next invoked profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" passed \
+  "environment deep next preflight status"
+assert_eq "$(field "$output" IMPROVE_PREDECESSOR_CHECKPOINT)" "$checkpoint" \
+  "environment deep next predecessor"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 7 \
+  "environment deep next timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 \
+  "environment deep next token limit"
+assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 \
+  "environment deep next invocation count"
+assert_network_access "environment deep next"
+
+start_case environment_spark_next_failure complete
 export FAKE_PROBE_MODE=fail
-run_runner --environment-json "$valid_environment_json" --next \
+run_runner --environment-json "$valid_environment_json" --spark --next \
   "$checkpoint" "$environment_plan"
 assert_transport_case 0 STOPPED environment_preflight_failed
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark \
+  "failed environment Spark next profile"
 next_failure_worktree="$(field "$output" IMPROVE_WORKTREE)"
 next_failure_tree="$(field "$output" IMPROVE_CANDIDATE_TREE)"
 next_failure_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
@@ -1695,6 +1803,14 @@ assert_eq "$(field "$output" IMPROVE_BASE)" "$checkpoint" \
   "resumed environment next base"
 assert_eq "$(field "$output" IMPROVE_PREDECESSOR_CHECKPOINT)" "$checkpoint" \
   "resumed environment next predecessor"
+assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-spark \
+  "resumed environment Spark next profile"
+assert_eq "$(invocation_profile)" improve-executor-spark \
+  "resumed environment Spark next invoked profile"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 5 \
+  "resumed environment Spark next timeout"
+assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 100000 \
+  "resumed environment Spark next token limit"
 
 start_case next_abbreviated
 run_runner --next "${checkpoint:0:12}" "plans/001 plan.md"
@@ -1779,8 +1895,11 @@ reject_case spark_candidate --spark --candidate "$candidate_worktree"
 reject_case deep_candidate --deep --candidate "$candidate_worktree"
 reject_case spark_checkpoint --spark --checkpoint "$revision_worktree" "$revision_tree" message
 reject_case deep_checkpoint --deep --checkpoint "$revision_worktree" "$revision_tree" message
-reject_case spark_next --spark --next "$checkpoint" "plans/001 plan.md"
-reject_case deep_next --deep --next "$checkpoint" "plans/001 plan.md"
+reject_case lane_after_next --next --spark "$checkpoint" "plans/001 plan.md"
+reject_case environment_after_lane_next --spark --environment-json \
+  "$valid_environment_json" --next "$checkpoint" "$environment_plan"
+reject_case resume_spark_override --resume --spark \
+  "$next_failure_worktree" "$next_failure_tree" "$next_failure_artifact"
 
 sha_repo="$test_root/sha256 repo"
 if git init -q --object-format=sha256 "$sha_repo" 2>/dev/null; then
