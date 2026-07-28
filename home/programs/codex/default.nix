@@ -911,6 +911,13 @@ in
         mechanism, main tradeoff, and concrete verification or next action.
       - Do not make the user ask follow-up questions merely to discover what a
         proposed component is or why it is needed.
+      - When publishing an issue or pull request from an evidence-rich
+        investigation, carry forward the material facts a reviewer needs to
+        evaluate the claim, such as affected and tested versions, reproduction
+        conditions and quantitative results, ruled-out alternatives, root
+        cause, compatibility boundaries, and validation. Omit irrelevant
+        investigation detail, but do not collapse the evidence into a generic
+        summary or checklist.
 
       ## Git And Nix
 
