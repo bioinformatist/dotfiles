@@ -6,8 +6,8 @@
 
 let
   pname = "orca-ide";
-  orcaVersion = "1.4.159";
-  orcaHash = "sha256-GaK6tQqn1lydFrnl6F6JJC3+fkN+wxA4Z0lE58HuAQs=";
+  orcaVersion = "1.4.160";
+  orcaHash = "sha256-XUjTMfbCFIBKtKvO5T9q/4UT0Xj4aQIjhUofZyDjm7M=";
 
   src = fetchurl {
     url = "https://github.com/stablyai/orca/releases/download/v${orcaVersion}/orca-linux.AppImage";
