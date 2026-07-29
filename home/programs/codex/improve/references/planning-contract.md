@@ -254,7 +254,9 @@ Select lanes in this deterministic order:
    decisions are settled; the execution unit has exact modification paths and
    deterministic gates; no broad reconnaissance, unresolved diagnosis, or
    visual input is needed; the complete unit fits Spark's 128k text-only
-   context; and none of the hard disqualifiers below applies. The plan must
+   context; a fresh initial unit does not reconstruct or import a candidate from
+   an earlier execution or inherit that execution's implementation or review
+   evidence; and none of the hard disqualifiers below applies. The plan must
    explicitly require every verification command.
 2. Use `standard` when at least one named Spark requirement is false. Its
    routing evidence must name the concrete Spark disqualifier.
@@ -264,12 +266,19 @@ Select lanes in this deterministic order:
 
 Hard Spark disqualifiers are security or authentication decisions, complex
 concurrency, state migration, unresolved diagnosis, broad refactors,
-visual-led UI acceptance, and new architecture or interface design. A file
-category alone is not a disqualifier: mechanical, already-decided edits may
-touch CI workflows, dependency declarations, lockfiles, configuration,
-generated companions, or public-contract files. Selecting a dependency,
-designing an interface, changing CI policy, or making another substantive
-Engineering-contract decision remains non-Spark work.
+visual-led UI acceptance, new architecture or interface design, and
+cross-execution candidate reconstruction or inherited gate/review evidence in
+a fresh initial plan. A file category alone is not a disqualifier: mechanical,
+already-decided edits may touch CI workflows, dependency declarations,
+lockfiles, configuration, generated companions, or public-contract files.
+Selecting a dependency, designing an interface, changing CI policy, or making
+another substantive Engineering-contract decision remains non-Spark work.
+
+A bounded revision or recovery in the same registered worktree does not
+reconstruct cross-execution lineage: the runner validates its explicit input
+tree and the dossier states which evidence remains valid. Classify that actual
+remaining unit normally, and use Spark only when it independently satisfies all
+other Spark requirements.
 
 Classify every initial plan, dependent `--next` plan, revision, and recovery by
 its actual bounded execution work. Split only at the independently
@@ -339,6 +348,13 @@ evidence, and invalidated evidence. An identity change does not preserve review
 evidence by itself. Carry evidence forward only after proving the reviewed diff
 is unchanged; every material diff change invalidates the applicable checks and
 reviewer conclusions.
+
+Candidate-tree capture is an outer-runner responsibility. Plans must not ask an
+executor to calculate or report its own candidate tree, call candidate or
+checkpoint operations, or stage/unstage files through the real Git index to
+derive an identity. Executor gates may report working-tree status, file hashes,
+and diff hashes; after the run, the main agent captures the authoritative tree
+with `codex-improve-exec --candidate`.
 
 After all required implementation reviews approve the exact candidate, and
 after any approval required for a commit, the main agent may create one local

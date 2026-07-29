@@ -651,12 +651,26 @@ for the main agent to review.
 
 Do not call codex-improve-exec candidate, checkpoint, or resume operations.
 Candidate preservation and lifecycle transitions are owned by the outer runner.
+Do not calculate a candidate tree yourself or mutate the real Git index to
+derive one. Report working-tree status and content or diff hashes instead; the
+outer runner captures the authoritative candidate after you exit.
 
-Finish with exactly this report shape:
+Finish with exactly one of these report shapes.
 
-STATUS: COMPLETE | STOPPED
+For a completed execution, omit `STOPPED BECAUSE:` entirely; do not write
+`STOPPED BECAUSE: none`:
+
+STATUS: COMPLETE
 STEPS: per step, done or skipped, with verification result
-STOPPED BECAUSE: only when stopped
+FILES CHANGED: list
+NOTES: deviations, surprises, and judgment calls
+
+For a stopped execution, include one concrete nonempty reason; never use
+`none`:
+
+STATUS: STOPPED
+STEPS: per step, done or skipped, with verification result
+STOPPED BECAUSE: concrete reason
 FILES CHANGED: list
 NOTES: deviations, surprises, and judgment calls
 EOF
@@ -883,15 +897,22 @@ validate_final_report() {
   fi
 
   report_status="$(sed -n 's/^STATUS: //p' "$final_output")"
+  stopped_reason="$(
+    sed -n 's/^STOPPED BECAUSE:[[:space:]]*//p' "$final_output" |
+      sed 's/[[:space:]]*$//'
+  )"
   case "$report_status" in
     COMPLETE)
-      if [ "$stopped_count" -ne 0 ]; then
+      if [ "$stopped_count" -gt 1 ] ||
+        { [ "$stopped_count" -eq 1 ] && [ "$stopped_reason" != "none" ]; }; then
         final_validation_reason="invalid_final_output"
         return 1
       fi
       ;;
     STOPPED)
-      if [ "$stopped_count" -ne 1 ]; then
+      if [ "$stopped_count" -ne 1 ] ||
+        [ -z "$stopped_reason" ] ||
+        [ "$stopped_reason" = "none" ]; then
         final_validation_reason="invalid_final_output"
         return 1
       fi

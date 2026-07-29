@@ -59,6 +59,12 @@ verification, a valid checkpoint, and an explicit dependency contract. Keep
 work together when it must land, roll back, or be accepted atomically; never
 fragment a plan merely to increase Spark usage.
 
+Use Standard for a fresh plan that reconstructs or imports a candidate from an
+earlier execution, or inherits that execution's implementation or review
+evidence. A same-worktree bounded revision or recovery may still use Spark when
+the runner validates the exact input tree and the remaining work independently
+meets every Spark rule.
+
 ## Variants
 
 - `quick`, `standard`, or `deep`: set audit effort.

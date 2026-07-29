@@ -57,6 +57,26 @@ case "$FAKE_CODEX_MODE" in
     emit_usage
     complete_report
     ;;
+  complete_with_stopped_none)
+    emit_usage
+    cat >"$final_output" <<'EOF'
+STATUS: COMPLETE
+STEPS: all steps done; verification passed
+STOPPED BECAUSE: none
+FILES CHANGED: scoped files
+NOTES: no deviations
+EOF
+    ;;
+  complete_with_stopped_reason)
+    emit_usage
+    cat >"$final_output" <<'EOF'
+STATUS: COMPLETE
+STEPS: all steps done; verification passed
+STOPPED BECAUSE: contradictory reason
+FILES CHANGED: scoped files
+NOTES: no deviations
+EOF
+    ;;
   complete_unmerged_candidate)
     emit_usage
     complete_report
@@ -80,6 +100,16 @@ case "$FAKE_CODEX_MODE" in
 STATUS: STOPPED
 STEPS: stopped at the required condition
 STOPPED BECAUSE: deterministic test stop
+FILES CHANGED: none
+NOTES: worktree preserved
+EOF
+    ;;
+  stopped_with_none)
+    emit_usage
+    cat >"$final_output" <<'EOF'
+STATUS: STOPPED
+STEPS: stopped at the required condition
+STOPPED BECAUSE: none
 FILES CHANGED: none
 NOTES: worktree preserved
 EOF
@@ -998,6 +1028,12 @@ grep -F -- "Do not load or reread the Improve skill" "$FAKE_PROMPT_LOG" >/dev/nu
   fail "initial no-Improve/Ponytail boundary missing"
 grep -F -- "A targeted reread is allowed after editing that" "$FAKE_PROMPT_LOG" >/dev/null ||
   fail "initial targeted-reread boundary missing"
+grep -F -- "Do not calculate a candidate tree yourself" "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "initial outer-runner candidate boundary missing"
+grep -F -- 'For a completed execution, omit `STOPPED BECAUSE:` entirely' \
+  "$FAKE_PROMPT_LOG" >/dev/null || fail "initial COMPLETE report boundary missing"
+grep -F -- 'For a stopped execution, include one concrete nonempty reason' \
+  "$FAKE_PROMPT_LOG" >/dev/null || fail "initial STOPPED report boundary missing"
 jq -e '
   .mode == "initial"
   and .profile == "improve-executor"
@@ -1035,6 +1071,12 @@ run_runner "plans/001 plan.md"
 assert_transport_case 0 STOPPED completed
 assert_eq "$(<"$FAKE_LOCALE_LOG")" unset "unset caller locale"
 grep -Fx -- "STATUS: STOPPED" "$output" >/dev/null || fail "STOPPED report not printed"
+
+start_case complete_with_stopped_none complete_with_stopped_none
+run_runner "plans/001 plan.md"
+assert_transport_case 0 COMPLETE completed
+grep -Fx -- "STOPPED BECAUSE: none" "$output" >/dev/null ||
+  fail "equivalent COMPLETE report was not preserved"
 
 start_case complete_unmerged_candidate complete_unmerged_candidate
 run_runner "plans/001 plan.md"
@@ -1116,6 +1158,8 @@ jq -e '.fuse_flags.absolute_timeout == false' "$metric" >/dev/null ||
   fail "natural 137 set timeout fuse"
 transport_failure malformed_jsonl malformed_jsonl invalid_event_log
 transport_failure malformed_final malformed_final invalid_final_output
+transport_failure complete_with_stopped_reason complete_with_stopped_reason invalid_final_output
+transport_failure stopped_with_none stopped_with_none invalid_final_output
 transport_failure missing_final missing_final empty_final_output
 transport_failure oversize_final oversize_final final_output_limit
 transport_failure timeout timeout absolute_timeout

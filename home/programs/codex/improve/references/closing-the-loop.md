@@ -117,6 +117,11 @@ the dossier applies only to that exact tree. A post-run
 `IMPROVE_CANDIDATE_AVAILABLE=0` preserves the execution classification and
 diagnostics but returns nonzero and cannot proceed to review.
 
+The plan must not ask the executor to calculate a candidate tree or mutate the
+real Git index to derive one. The executor may report status and content/diff
+hashes; authoritative candidate capture belongs to the outer runner after the
+model exits.
+
 Use `--spark` only when the plan records the Spark lane and satisfies every
 eligibility rule in the planning contract:
 
@@ -133,6 +138,13 @@ codex-improve-exec --environment-json '<exact-json>' --deep <plan-artifact-path>
 The advisor records the lane and routing evidence; the main agent explicitly
 invokes it without a per-dispatch user prompt. `--spark` and `--deep` are
 mutually exclusive. The helper never parses the plan to select a lane.
+
+A fresh replacement plan that reconstructs or imports a candidate from an
+earlier execution, or inherits its implementation or review evidence, uses
+Standard even when the final edit is mechanical. A bounded revision or recovery
+in the same registered worktree may still use Spark when the runner validates
+the exact input tree and the remaining unit independently satisfies every
+Spark requirement.
 
 The helper creates a branch and worktree from the current `HEAD`, selects
 `improve-executor`, `improve-executor-spark`, or `improve-executor-deep`, inlines
@@ -234,6 +246,12 @@ signal record, rather than status 124 or 137 alone, identifies a real deadline.
 The helper never retries or invokes another profile. Every outcome preserves
 the worktree, prompt snapshot, event log, final output, diagnostic log, and
 timeout record for recovery and investigation.
+
+A `COMPLETE` report should omit `STOPPED BECAUSE:`. The validator accepts the
+exact harmless line `STOPPED BECAUSE: none` as equivalent to omission while
+preserving the raw report; any other stopped reason with `COMPLETE` remains
+invalid. A `STOPPED` report requires exactly one concrete, nonempty reason and
+rejects `none`.
 
 A Spark model or entitlement failure is the same nonzero Codex failure as any
 other executor failure: the result is `INCONCLUSIVE`, every artifact is
