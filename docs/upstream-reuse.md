@@ -18,6 +18,14 @@ Downstream repositories should only consume these flake outputs:
 
 Do not import internal paths like `./nixos/*.nix`, `./home/*.nix`, or `./hosts/*` from downstream.
 
+## Home Manager boundaries
+
+`homeManagerModules.devHeadless` provides the shell, Codex, Helix, and Yazi
+development baseline. It intentionally does not install or configure a
+terminal multiplexer. Consumers that want generic Zellij can also compose
+`homeManagerModules.tui`; consumers can instead provide their own workspace
+layer.
+
 ## Profile boundaries
 
 `profiles.headless` provides the reusable base layer:

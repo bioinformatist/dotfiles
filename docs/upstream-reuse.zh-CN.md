@@ -18,6 +18,12 @@
 
 不要在下游直接 import 本仓库内部路径，例如 `./nixos/*.nix`、`./home/*.nix` 或 `./hosts/*`。
 
+## Home Manager 边界
+
+`homeManagerModules.devHeadless` 提供 shell、Codex、Helix 与 Yazi
+开发基线，并且有意不安装或配置终端多路复用器。需要通用 Zellij 的消费者可以额外组合
+`homeManagerModules.tui`；消费者也可以改为提供自己的工作区层。
+
 ## Profile 边界
 
 `profiles.headless` 提供可复用的基础层：
