@@ -862,13 +862,19 @@ has_rollout_budget_exhaustion() {
 }
 
 validate_final_report() {
-  final_size="$(wc -c <"$final_output")"
+  if ! final_size="$(wc -c <"$final_output")"; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="header_scan_failed"
+    return 1
+  fi
   if [ "$final_size" -eq 0 ]; then
     final_validation_reason="empty_final_output"
+    final_validation_detail="empty_final_output"
     return 1
   fi
   if [ "$final_size" -gt "$final_output_limit_bytes" ]; then
     final_validation_reason="final_output_limit"
+    final_validation_detail="final_output_limit"
     return 1
   fi
 
@@ -880,48 +886,112 @@ validate_final_report() {
     printf '%s\n' "$report_count"
   }
 
-  if ! status_count="$(count_report_lines '/^STATUS: \(COMPLETE\|STOPPED\)$/p')" ||
+  if ! status_header_count="$(count_report_lines '/^STATUS:/p')" ||
+    ! status_count="$(count_report_lines '/^STATUS: \(COMPLETE\|STOPPED\)$/p')" ||
     ! steps_count="$(count_report_lines '/^STEPS:/p')" ||
     ! files_count="$(count_report_lines '/^FILES CHANGED:/p')" ||
     ! notes_count="$(count_report_lines '/^NOTES:/p')" ||
     ! stopped_count="$(count_report_lines '/^STOPPED BECAUSE:/p')"; then
     final_validation_reason="invalid_final_output"
+    final_validation_detail="header_scan_failed"
     return 1
   fi
-  if [ "$status_count" -ne 1 ] ||
-    [ "$steps_count" -ne 1 ] ||
-    [ "$files_count" -ne 1 ] ||
-    [ "$notes_count" -ne 1 ]; then
+  if [ "$status_header_count" -eq 0 ]; then
     final_validation_reason="invalid_final_output"
+    final_validation_detail="missing_header_status"
+    return 1
+  fi
+  if [ "$status_header_count" -gt 1 ]; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="duplicate_header_status"
+    return 1
+  fi
+  if [ "$status_count" -ne 1 ]; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="invalid_status_value"
+    return 1
+  fi
+  if [ "$steps_count" -eq 0 ]; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="missing_header_steps"
+    return 1
+  fi
+  if [ "$steps_count" -gt 1 ]; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="duplicate_header_steps"
+    return 1
+  fi
+  if [ "$files_count" -eq 0 ]; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="missing_header_files_changed"
+    return 1
+  fi
+  if [ "$files_count" -gt 1 ]; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="duplicate_header_files_changed"
+    return 1
+  fi
+  if [ "$notes_count" -eq 0 ]; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="missing_header_notes"
+    return 1
+  fi
+  if [ "$notes_count" -gt 1 ]; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="duplicate_header_notes"
     return 1
   fi
 
-  report_status="$(sed -n 's/^STATUS: //p' "$final_output")"
-  stopped_reason="$(
-    sed -n 's/^STOPPED BECAUSE:[[:space:]]*//p' "$final_output" |
-      sed 's/[[:space:]]*$//'
-  )"
+  if ! report_status="$(sed -n 's/^STATUS: //p' "$final_output")"; then
+    final_validation_reason="invalid_final_output"
+    final_validation_detail="header_scan_failed"
+    return 1
+  fi
   case "$report_status" in
     COMPLETE)
-      if [ "$stopped_count" -gt 1 ] ||
-        { [ "$stopped_count" -eq 1 ] && [ "$stopped_reason" != "none" ]; }; then
+      if [ "$stopped_count" -ne 0 ]; then
         final_validation_reason="invalid_final_output"
+        final_validation_detail="complete_contains_stopped_because"
         return 1
       fi
       ;;
     STOPPED)
-      if [ "$stopped_count" -ne 1 ] ||
-        [ -z "$stopped_reason" ] ||
-        [ "$stopped_reason" = "none" ]; then
+      if [ "$stopped_count" -eq 0 ]; then
         final_validation_reason="invalid_final_output"
+        final_validation_detail="stopped_missing_reason"
+        return 1
+      fi
+      if [ "$stopped_count" -gt 1 ]; then
+        final_validation_reason="invalid_final_output"
+        final_validation_detail="stopped_duplicate_reason"
+        return 1
+      fi
+      if ! stopped_reason="$(
+        sed -n 's/^STOPPED BECAUSE:[[:space:]]*//p' "$final_output" |
+          sed 's/[[:space:]]*$//'
+      )"; then
+        final_validation_reason="invalid_final_output"
+        final_validation_detail="header_scan_failed"
+        return 1
+      fi
+      if [ -z "$stopped_reason" ]; then
+        final_validation_reason="invalid_final_output"
+        final_validation_detail="stopped_empty_reason"
+        return 1
+      fi
+      if [ "$stopped_reason" = "none" ]; then
+        final_validation_reason="invalid_final_output"
+        final_validation_detail="stopped_placeholder_reason"
         return 1
       fi
       ;;
     *)
       final_validation_reason="invalid_final_output"
+      final_validation_detail="invalid_status_value"
       return 1
       ;;
   esac
+  final_validation_detail="valid"
   return 0
 }
 
@@ -1019,6 +1089,7 @@ run_execution() {
   supervisor_pid=""
   executor_invoked=1
   resume_manifest=""
+  final_validation_detail="not_checked"
 
   # shellcheck disable=SC2329 # Invoked by INT and TERM traps.
   cancel_execution() {
@@ -1260,6 +1331,7 @@ run_execution() {
     --arg profile "$profile" \
     --arg result "$result" \
     --arg exit_reason "$exit_reason" \
+    --arg final_validation_detail "$final_validation_detail" \
     --argjson elapsed_seconds "$elapsed_seconds" \
     --argjson event_bytes "$event_bytes" \
     --argjson prompt_bytes "$prompt_bytes" \
@@ -1283,6 +1355,7 @@ run_execution() {
       profile: $profile,
       result: $result,
       exit_reason: $exit_reason,
+      final_validation_detail: $final_validation_detail,
       elapsed_seconds: $elapsed_seconds,
       event_bytes: $event_bytes,
       prompt_bytes: $prompt_bytes,
@@ -1344,6 +1417,7 @@ run_execution() {
   printf 'IMPROVE_EXEC_EXIT=%s\n' "$codex_status"
   printf 'IMPROVE_EXEC_RESULT=%s\n' "$result"
   printf 'IMPROVE_EXEC_EXIT_REASON=%s\n' "$exit_reason"
+  printf 'IMPROVE_EXEC_FINAL_VALIDATION_DETAIL=%s\n' "$final_validation_detail"
   printf 'IMPROVE_EXEC_ELAPSED_SECONDS=%s\n' "$elapsed_seconds"
   printf 'IMPROVE_EXEC_MAX_EVENT_GAP_SECONDS=%s\n' "$max_event_gap_seconds"
   printf 'IMPROVE_EXEC_QUIET_INTERVAL_OBSERVED=%s\n' "$quiet_interval_observed"

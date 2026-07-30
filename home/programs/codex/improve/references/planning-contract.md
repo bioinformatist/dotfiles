@@ -254,10 +254,10 @@ Select lanes in this deterministic order:
    decisions are settled; the execution unit has exact modification paths and
    deterministic gates; no broad reconnaissance, unresolved diagnosis, or
    visual input is needed; the complete unit fits Spark's 128k text-only
-   context; a fresh initial unit does not reconstruct or import a candidate from
-   an earlier execution or inherit that execution's implementation or review
-   evidence; and none of the hard disqualifiers below applies. The plan must
-   explicitly require every verification command.
+   context; and none of the hard disqualifiers below applies. The plan must
+   explicitly require every verification command. Complete execution work
+   includes implementation, every mandatory gate, expected failure handling,
+   and final reporting.
 2. Use `standard` when at least one named Spark requirement is false. Its
    routing evidence must name the concrete Spark disqualifier.
 3. Use `deep` only when the bounded work also needs materially greater technical
@@ -266,19 +266,27 @@ Select lanes in this deterministic order:
 
 Hard Spark disqualifiers are security or authentication decisions, complex
 concurrency, state migration, unresolved diagnosis, broad refactors,
-visual-led UI acceptance, new architecture or interface design, and
-cross-execution candidate reconstruction or inherited gate/review evidence in
-a fresh initial plan. A file category alone is not a disqualifier: mechanical,
-already-decided edits may touch CI workflows, dependency declarations,
-lockfiles, configuration, generated companions, or public-contract files.
-Selecting a dependency, designing an interface, changing CI policy, or making
-another substantive Engineering-contract decision remains non-Spark work.
+visual-led UI acceptance, and new architecture or interface design. A file
+category alone is not a disqualifier: mechanical, already-decided edits may
+touch CI workflows, dependency declarations, lockfiles, configuration,
+generated companions, or public-contract files. Selecting a dependency,
+designing an interface, changing CI policy, or making another substantive
+Engineering-contract decision remains non-Spark work.
 
-A bounded revision or recovery in the same registered worktree does not
-reconstruct cross-execution lineage: the runner validates its explicit input
-tree and the dossier states which evidence remains valid. Classify that actual
-remaining unit normally, and use Spark only when it independently satisfies all
-other Spark requirements.
+Candidate provenance is not a lane classifier. Cross-execution work remains
+Spark-eligible only when the runner or main agent resolves lineage and validates
+the exact input identity, drift, and applicability of inherited evidence before
+dispatch, leaving no lineage judgment for the executor.
+
+Every load-bearing implementation shape in a Spark unit must already be proven
+by a current repository pattern, a completed planning-time probe, or exact
+inherited evidence whose identity, drift, and applicability were validated
+before dispatch. Spark verification is confirmatory: expected success is known,
+and a failure permits one bounded local correction or triggers STOP. It must not
+ask the executor to discover an API, syntax, compatibility rule, root cause,
+test method, or implementation shape. Verification that performs such diagnosis
+uses Standard. If target behavior is still undecided, leave the plan `BLOCKED`
+instead of dispatching it.
 
 Classify every initial plan, dependent `--next` plan, revision, and recovery by
 its actual bounded execution work. Split only at the independently

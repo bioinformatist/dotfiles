@@ -114,6 +114,94 @@ FILES CHANGED: none
 NOTES: worktree preserved
 EOF
     ;;
+  complete_with_duplicate_stopped)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: COMPLETE' \
+      'STEPS: all steps done' \
+      'STOPPED BECAUSE: first' \
+      'STOPPED BECAUSE: second' \
+      'FILES CHANGED: none' \
+      'NOTES: preserved' >"$final_output"
+    ;;
+  invalid_status)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: UNKNOWN' 'STEPS: done' 'FILES CHANGED: none' \
+      'NOTES: preserved' >"$final_output"
+    ;;
+  missing_status)
+    emit_usage
+    printf '%s\n' \
+      'STEPS: done' 'FILES CHANGED: none' \
+      'NOTES: preserved' >"$final_output"
+    ;;
+  duplicate_status)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: COMPLETE' 'STATUS: STOPPED' 'STEPS: done' \
+      'FILES CHANGED: none' 'NOTES: preserved' >"$final_output"
+    ;;
+  missing_steps)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: COMPLETE' 'FILES CHANGED: none' \
+      'NOTES: preserved' >"$final_output"
+    ;;
+  duplicate_steps)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: COMPLETE' 'STEPS: one' 'STEPS: two' \
+      'FILES CHANGED: none' 'NOTES: preserved' >"$final_output"
+    ;;
+  missing_files_changed)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: COMPLETE' 'STEPS: done' 'NOTES: preserved' >"$final_output"
+    ;;
+  duplicate_files_changed)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: COMPLETE' 'STEPS: done' 'FILES CHANGED: one' \
+      'FILES CHANGED: two' 'NOTES: preserved' >"$final_output"
+    ;;
+  missing_notes)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: COMPLETE' 'STEPS: done' \
+      'FILES CHANGED: none' >"$final_output"
+    ;;
+  duplicate_notes)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: COMPLETE' 'STEPS: done' 'FILES CHANGED: none' \
+      'NOTES: one' 'NOTES: two' >"$final_output"
+    ;;
+  stopped_missing_reason)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: STOPPED' 'STEPS: stopped' 'FILES CHANGED: none' \
+      'NOTES: preserved' >"$final_output"
+    ;;
+  stopped_duplicate_reason)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: STOPPED' 'STEPS: stopped' 'STOPPED BECAUSE: first' \
+      'STOPPED BECAUSE: second' 'FILES CHANGED: none' \
+      'NOTES: preserved' >"$final_output"
+    ;;
+  stopped_empty_reason)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: STOPPED' 'STEPS: stopped' 'STOPPED BECAUSE:' \
+      'FILES CHANGED: none' 'NOTES: preserved' >"$final_output"
+    ;;
+  stopped_whitespace_reason)
+    emit_usage
+    printf '%s\n' \
+      'STATUS: STOPPED' 'STEPS: stopped' 'STOPPED BECAUSE:   ' \
+      'FILES CHANGED: none' 'NOTES: preserved' >"$final_output"
+    ;;
   nonzero)
     emit_usage
     exit 17
@@ -383,11 +471,40 @@ assert_transport_case() {
   metric="$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl"
   [ -s "$metric" ] || fail "$case_name metric missing"
   assert_private "$metric"
+  final_validation_detail="$(
+    field "$output" IMPROVE_EXEC_FINAL_VALIDATION_DETAIL
+  )"
+  case "$final_validation_detail" in
+    not_checked|valid|empty_final_output|final_output_limit|header_scan_failed|\
+missing_header_status|duplicate_header_status|invalid_status_value|\
+missing_header_steps|duplicate_header_steps|\
+missing_header_files_changed|duplicate_header_files_changed|\
+missing_header_notes|duplicate_header_notes|\
+complete_contains_stopped_because|stopped_missing_reason|\
+stopped_duplicate_reason|stopped_empty_reason|stopped_placeholder_reason) ;;
+    *) fail "$case_name invalid final validation detail: $final_validation_detail" ;;
+  esac
+  assert_eq "$(jq -s -r 'last.final_validation_detail' "$metric")" \
+    "$final_validation_detail" "$case_name metric final validation detail"
   jq -e '(.fuse_flags.rollout_budget_exhausted | type) == "boolean"' "$metric" >/dev/null ||
     fail "$case_name budget metric fuse is not Boolean"
   assert_no_private_content "$output"
   assert_no_private_content "$errors"
   assert_no_private_content "$metric"
+}
+
+assert_final_detail() {
+  assert_eq "$(field "$output" IMPROVE_EXEC_FINAL_VALIDATION_DETAIL)" \
+    "$1" "$case_name final validation detail"
+}
+
+assert_invalid_report_preserved() {
+  preserved_worktree="$(field "$output" IMPROVE_WORKTREE)"
+  [ -d "$preserved_worktree" ] || fail "$case_name worktree was not preserved"
+  [ -d "$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)" ] ||
+    fail "$case_name artifacts were not preserved"
+  assert_eq "$(field "$output" IMPROVE_CANDIDATE_AVAILABLE)" 1 \
+    "$case_name candidate availability"
 }
 
 assert_execution_id_inherited() {
@@ -989,6 +1106,7 @@ export IMPROVE_EXECUTION_ID=ambient-caller-value
 start_case initial complete
 LC_ALL=C.UTF-8 run_runner "plans/001 plan.md"
 assert_transport_case 0 COMPLETE completed
+assert_final_detail valid
 assert_execution_id_inherited
 [ "$(<"$FAKE_EXECUTION_ID_LOG")" != ambient-caller-value ] ||
   fail "ambient execution identity was trusted"
@@ -1069,14 +1187,15 @@ start_case stopped stopped
 unset LC_ALL
 run_runner "plans/001 plan.md"
 assert_transport_case 0 STOPPED completed
+assert_final_detail valid
 assert_eq "$(<"$FAKE_LOCALE_LOG")" unset "unset caller locale"
 grep -Fx -- "STATUS: STOPPED" "$output" >/dev/null || fail "STOPPED report not printed"
 
 start_case complete_with_stopped_none complete_with_stopped_none
 run_runner "plans/001 plan.md"
-assert_transport_case 0 COMPLETE completed
-grep -Fx -- "STOPPED BECAUSE: none" "$output" >/dev/null ||
-  fail "equivalent COMPLETE report was not preserved"
+assert_transport_case 1 INCONCLUSIVE invalid_final_output
+assert_final_detail complete_contains_stopped_because
+assert_invalid_report_preserved
 
 start_case complete_unmerged_candidate complete_unmerged_candidate
 run_runner "plans/001 plan.md"
@@ -1123,9 +1242,11 @@ transport_failure() {
   name="$1"
   fake_mode="$2"
   expected_reason="$3"
+  expected_detail="${4:-not_checked}"
   start_case "$name" "$fake_mode"
   run_runner "plans/001 plan.md"
   assert_transport_case 1 INCONCLUSIVE "$expected_reason"
+  assert_final_detail "$expected_detail"
   preserved_worktree="$(field "$output" IMPROVE_WORKTREE)"
   [ -d "$preserved_worktree" ] || fail "$name worktree was not preserved"
 }
@@ -1157,11 +1278,41 @@ assert_eq "$(field "$output" IMPROVE_EXEC_EXIT)" 137 "natural 137 raw Codex stat
 jq -e '.fuse_flags.absolute_timeout == false' "$metric" >/dev/null ||
   fail "natural 137 set timeout fuse"
 transport_failure malformed_jsonl malformed_jsonl invalid_event_log
-transport_failure malformed_final malformed_final invalid_final_output
-transport_failure complete_with_stopped_reason complete_with_stopped_reason invalid_final_output
-transport_failure stopped_with_none stopped_with_none invalid_final_output
-transport_failure missing_final missing_final empty_final_output
-transport_failure oversize_final oversize_final final_output_limit
+transport_failure malformed_final malformed_final invalid_final_output missing_header_steps
+assert_invalid_report_preserved
+transport_failure complete_with_stopped_reason complete_with_stopped_reason \
+  invalid_final_output complete_contains_stopped_because
+assert_invalid_report_preserved
+transport_failure complete_with_duplicate_stopped complete_with_duplicate_stopped \
+  invalid_final_output complete_contains_stopped_because
+assert_invalid_report_preserved
+transport_failure stopped_with_none stopped_with_none \
+  invalid_final_output stopped_placeholder_reason
+assert_invalid_report_preserved
+transport_failure missing_final missing_final empty_final_output empty_final_output
+transport_failure oversize_final oversize_final final_output_limit final_output_limit
+
+invalid_report_case() {
+  invalid_name="$1"
+  invalid_detail="$2"
+  transport_failure "$invalid_name" "$invalid_name" \
+    invalid_final_output "$invalid_detail"
+  assert_invalid_report_preserved
+}
+
+invalid_report_case missing_status missing_header_status
+invalid_report_case invalid_status invalid_status_value
+invalid_report_case duplicate_status duplicate_header_status
+invalid_report_case missing_steps missing_header_steps
+invalid_report_case duplicate_steps duplicate_header_steps
+invalid_report_case missing_files_changed missing_header_files_changed
+invalid_report_case duplicate_files_changed duplicate_header_files_changed
+invalid_report_case missing_notes missing_header_notes
+invalid_report_case duplicate_notes duplicate_header_notes
+invalid_report_case stopped_missing_reason stopped_missing_reason
+invalid_report_case stopped_duplicate_reason stopped_duplicate_reason
+invalid_report_case stopped_empty_reason stopped_empty_reason
+invalid_report_case stopped_whitespace_reason stopped_empty_reason
 transport_failure timeout timeout absolute_timeout
 jq -e '.fuse_flags.absolute_timeout == true' "$metric" >/dev/null ||
   fail "deadline omitted timeout fuse"
@@ -1319,6 +1470,8 @@ set +e
 status="$?"
 set -e
 assert_transport_case 1 INCONCLUSIVE invalid_final_output
+assert_final_detail header_scan_failed
+assert_invalid_report_preserved
 
 start_case revision complete
 run_runner --revise "$revision_worktree" "$revision_tree" "$dossier"

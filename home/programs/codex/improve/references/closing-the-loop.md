@@ -139,12 +139,11 @@ The advisor records the lane and routing evidence; the main agent explicitly
 invokes it without a per-dispatch user prompt. `--spark` and `--deep` are
 mutually exclusive. The helper never parses the plan to select a lane.
 
-A fresh replacement plan that reconstructs or imports a candidate from an
-earlier execution, or inherits its implementation or review evidence, uses
-Standard even when the final edit is mechanical. A bounded revision or recovery
-in the same registered worktree may still use Spark when the runner validates
-the exact input tree and the remaining unit independently satisfies every
-Spark requirement.
+Candidate provenance does not select the lane. Cross-execution work may use
+Spark only after the runner or main agent resolves lineage and validates the
+exact input identity, drift, and applicability of inherited evidence, so the
+executor has no lineage judgment to make. Classify the actual bounded work
+under the planning contract's settledness and confirmatory-verification rules.
 
 The helper creates a branch and worktree from the current `HEAD`, selects
 `improve-executor`, `improve-executor-spark`, or `improve-executor-deep`, inlines
@@ -247,11 +246,13 @@ The helper never retries or invokes another profile. Every outcome preserves
 the worktree, prompt snapshot, event log, final output, diagnostic log, and
 timeout record for recovery and investigation.
 
-A `COMPLETE` report should omit `STOPPED BECAUSE:`. The validator accepts the
-exact harmless line `STOPPED BECAUSE: none` as equivalent to omission while
-preserving the raw report; any other stopped reason with `COMPLETE` remains
+A `COMPLETE` report must omit `STOPPED BECAUSE:`. Any such line makes the report
 invalid. A `STOPPED` report requires exactly one concrete, nonempty reason and
-rejects `none`.
+rejects `none`. Invalid report shapes remain `INCONCLUSIVE` with
+`IMPROVE_EXEC_EXIT_REASON=invalid_final_output`. Every stable execution result
+also prints `IMPROVE_EXEC_FINAL_VALIDATION_DETAIL`; its fixed, content-free
+value distinguishes a valid shape, a skipped validation, transport size/read
+failures, and the first missing, duplicate, or contradictory report header.
 
 A Spark model or entitlement failure is the same nonzero Codex failure as any
 other executor failure: the result is `INCONCLUSIVE`, every artifact is
@@ -273,10 +274,11 @@ metrics-calibrated safeguards, not product or compatibility contracts.
 Content-free execution metrics are appended to
 `$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl`, with the same state
 fallback. They contain execution identity, mode, profile, outcome, reason,
-elapsed time, prompt and event byte counts, observed token counts, whether
-usage was observed, total tool-event count, command-execution, file-change,
-MCP-tool-call, and Web-search counts, maximum event gap, quiet observation,
-active limits, and Boolean fuse flags including `rollout_budget_exhausted`.
+the same `final_validation_detail`, elapsed time, prompt and event byte counts,
+observed token counts, whether usage was observed, total tool-event count,
+command-execution, file-change, MCP-tool-call, and Web-search counts, maximum
+event gap, quiet observation, active limits, and Boolean fuse flags including
+`rollout_budget_exhausted`.
 For the environment contract, they add only the executor-invoked Boolean,
 environment hash, preflight count, and preflight status.
 Tool counts are diagnostic observations, not automatic success or failure
@@ -342,8 +344,12 @@ Each recovery dossier is self-contained for exactly one slice and contains:
 Choose Spark, standard, or deep independently for the actual remaining
 execution unit.
 The original plan lane is not a constraint, and a recorded recovery seam is
-only a hint. Use Spark only when the slice independently satisfies every Spark
-eligibility rule; never force it for telemetry. Invoke exactly the selected
+only a hint. A Spark recovery after budget exhaustion requires a
+diagnosed decisive failure, an exact correction, and an explicit list of the mandatory
+gates whose evidence remains valid. Use Spark only when the slice independently
+satisfies every Spark eligibility rule; never force it for telemetry.
+`invalid_final_output`, an environment or network failure, or an authorization
+STOP does not by itself justify changing lanes. Invoke exactly the selected
 lane:
 
 ```console
