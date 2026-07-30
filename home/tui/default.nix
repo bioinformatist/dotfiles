@@ -2,6 +2,5 @@
   imports = [
     ./helix
     ./yazi
-    ./zellij
   ];
 }
