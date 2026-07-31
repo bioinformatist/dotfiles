@@ -235,6 +235,19 @@ The helper never retries or invokes another profile. Every outcome preserves
 the worktree, prompt snapshot, event log, final output, diagnostic log, and
 timeout record for recovery and investigation.
 
+Executor model output is internally constrained by
+`references/executor-report.schema.json` and preserved as private `final.json`.
+The Runner independently requires the exact five fields, nonblank string-array
+items, and at least one step. `COMPLETE` requires `stoppedBecause: null`;
+`STOPPED` requires a trimmed, nonempty reason other than case-insensitive
+`none`.
+Only then does the Runner atomically render compatible `final.txt`, with one
+physical `STATUS:`, `STEPS:`, `FILES CHANGED:`, and `NOTES:` line and a
+`STOPPED BECAUSE:` line only for `STOPPED`; arrays use compact JSON so embedded
+newlines remain escaped. `IMPROVE_EXEC_FINAL_OUTPUT`, result/reason fields,
+candidate fields, return codes, metrics, and lifecycle behavior remain
+unchanged, and no public structured-output field is added.
+
 A Spark model or entitlement failure is the same nonzero Codex failure as any
 other executor failure: the result is `INCONCLUSIVE`, every artifact is
 preserved, and control returns to the main agent. The helper never retries with

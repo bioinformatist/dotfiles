@@ -188,6 +188,7 @@ let
         cp ${improveSource}/skills/improve/references/plan-template.md "$out/references/plan-template.md"
         cp ${./improve/references/closing-the-loop.md} "$out/references/closing-the-loop.md"
         cp ${./improve/references/planning-contract.md} "$out/references/planning-contract.md"
+        cp ${./improve/references/executor-report.schema.json} "$out/references/executor-report.schema.json"
         cp ${./improve/references/review-verdict.schema.json} "$out/references/review-verdict.schema.json"
 
         substituteInPlace "$out/references/plan-template.md" \
@@ -542,12 +543,17 @@ let
       pkgs.gnused
       pkgs.jq
     ];
-    text = improveRunnerEnvironment + builtins.readFile ./improve/codex-improve-exec;
+    text = ''
+      export CODEX_IMPROVE_EXEC_SCHEMA="${improveSkill}/references/executor-report.schema.json"
+      ${improveRunnerEnvironment}
+      ${builtins.readFile ./improve/codex-improve-exec}
+    '';
     checkPhase = ''
       runHook preCheck
       export PATH=${lib.makeBinPath [ pkgs.bash pkgs.coreutils pkgs.gitMinimal pkgs.gnused pkgs.jq ]}:$PATH
       bash -n "$target"
       ${lib.getExe pkgs.shellcheck-minimal} "$target"
+      export CODEX_IMPROVE_EXEC_SCHEMA=${./improve/references/executor-report.schema.json}
       bash ${./improve/tests/exec-runner.bash} ${./improve/codex-improve-exec}
       runHook postCheck
     '';

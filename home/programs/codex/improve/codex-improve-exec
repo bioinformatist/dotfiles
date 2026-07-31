@@ -599,6 +599,13 @@ if [ "$operation" = "checkpoint" ]; then
   exit 0
 fi
 
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+executor_schema="${CODEX_IMPROVE_EXEC_SCHEMA:-$script_dir/references/executor-report.schema.json}"
+if [ ! -r "$executor_schema" ] ||
+  ! jq -e . "$executor_schema" >/dev/null 2>&1; then
+  fail_input "executor report schema is unavailable or invalid: $executor_schema"
+fi
+
 roles_json="${CODEX_IMPROVE_ROLES_JSON:-}"
 if [ -z "$roles_json" ] || ! jq -e '
   [.standard, .spark, .deep]
@@ -652,13 +659,10 @@ for the main agent to review.
 Do not call codex-improve-exec candidate, checkpoint, or resume operations.
 Candidate preservation and lifecycle transitions are owned by the outer runner.
 
-Finish with exactly this report shape:
-
-STATUS: COMPLETE | STOPPED
-STEPS: per step, done or skipped, with verification result
-STOPPED BECAUSE: only when stopped
-FILES CHANGED: list
-NOTES: deviations, surprises, and judgment calls
+Return one JSON object matching the provided output schema. Use status COMPLETE
+or STOPPED. Report each step, changed file, and note as one array item.
+For COMPLETE, set stoppedBecause to null. For STOPPED, set stoppedBecause to
+one concrete nonempty reason other than `none` in any letter case.
 EOF
 }
 
@@ -674,6 +678,7 @@ prepare_artifacts() {
     "$(date -u +%Y%m%dT%H%M%SZ)" "$$" "${artifact_dir##*-}" |
     tr '[:upper:]' '[:lower:]')"
   event_log="$artifact_dir/events.jsonl"
+  structured_output="$artifact_dir/final.json"
   final_output="$artifact_dir/final.txt"
   diagnostic_log="$artifact_dir/stderr.log"
   timeout_log="$artifact_dir/timeout.log"
@@ -687,6 +692,7 @@ prepare_artifacts() {
   metrics_file="$state_home/codex-improve/execution-metrics.jsonl"
   if ! {
     : >"$event_log" &&
+      : >"$structured_output" &&
       : >"$final_output" &&
       : >"$diagnostic_log" &&
       : >"$timeout_log" &&
@@ -848,7 +854,10 @@ has_rollout_budget_exhaustion() {
 }
 
 validate_final_report() {
-  final_size="$(wc -c <"$final_output")"
+  if ! final_size="$(wc -c <"$structured_output")"; then
+    final_validation_reason="invalid_final_output"
+    return 1
+  fi
   if [ "$final_size" -eq 0 ]; then
     final_validation_reason="empty_final_output"
     return 1
@@ -858,49 +867,59 @@ validate_final_report() {
     return 1
   fi
 
-  count_report_lines() {
-    report_count="$({ cat "$final_output" && printf '\n'; } | sed -n "$1" | wc -l)" || return 1
-    case "$report_count" in
-      ''|*[!0-9]*) return 1 ;;
-    esac
-    printf '%s\n' "$report_count"
-  }
-
-  if ! status_count="$(count_report_lines '/^STATUS: \(COMPLETE\|STOPPED\)$/p')" ||
-    ! steps_count="$(count_report_lines '/^STEPS:/p')" ||
-    ! files_count="$(count_report_lines '/^FILES CHANGED:/p')" ||
-    ! notes_count="$(count_report_lines '/^NOTES:/p')" ||
-    ! stopped_count="$(count_report_lines '/^STOPPED BECAUSE:/p')"; then
+  if ! validated_report="$(jq -ce -s '
+    def nonblank: type == "string" and test("\\S");
+    def trimmed: gsub("^\\s+|\\s+$"; "");
+    if length == 1 then .[0] else empty end
+    | select(type == "object")
+    | select(
+        keys ==
+          (["filesChanged","notes","status","steps","stoppedBecause"] | sort)
+        and (.status == "COMPLETE" or .status == "STOPPED")
+        and (.steps
+          | type == "array" and length > 0 and all(.[]; nonblank))
+        and (.filesChanged
+          | type == "array" and all(.[]; nonblank))
+        and (.notes
+          | type == "array" and all(.[]; nonblank))
+        and (if .status == "COMPLETE" then
+          .stoppedBecause == null
+        else
+          (.stoppedBecause
+            | type == "string"
+              and (trimmed | length > 0)
+              and ((trimmed | ascii_downcase) != "none"))
+        end)
+      )
+  ' "$structured_output")"; then
     final_validation_reason="invalid_final_output"
     return 1
   fi
-  if [ "$status_count" -ne 1 ] ||
-    [ "$steps_count" -ne 1 ] ||
-    [ "$files_count" -ne 1 ] ||
-    [ "$notes_count" -ne 1 ]; then
+
+  if ! report_status="$(jq -r '.status' <<<"$validated_report")"; then
     final_validation_reason="invalid_final_output"
     return 1
   fi
-
-  report_status="$(sed -n 's/^STATUS: //p' "$final_output")"
-  case "$report_status" in
-    COMPLETE)
-      if [ "$stopped_count" -ne 0 ]; then
-        final_validation_reason="invalid_final_output"
-        return 1
-      fi
-      ;;
-    STOPPED)
-      if [ "$stopped_count" -ne 1 ]; then
-        final_validation_reason="invalid_final_output"
-        return 1
-      fi
-      ;;
-    *)
-      final_validation_reason="invalid_final_output"
-      return 1
-      ;;
-  esac
+  rendered_output="$artifact_dir/final.txt.tmp.$$"
+  if ! jq -r '
+    def trimmed: gsub("^\\s+|\\s+$"; "");
+    "STATUS: \(.status)",
+    "STEPS: \(.steps | tojson)",
+    (if .status == "STOPPED" then
+      "STOPPED BECAUSE: \(.stoppedBecause | trimmed)"
+    else empty end),
+    "FILES CHANGED: \(.filesChanged | tojson)",
+    "NOTES: \(.notes | tojson)"
+  ' <<<"$validated_report" >"$rendered_output"; then
+    rm -f -- "$rendered_output"
+    final_validation_reason="invalid_final_output"
+    return 1
+  fi
+  if ! mv -- "$rendered_output" "$final_output"; then
+    rm -f -- "$rendered_output"
+    final_validation_reason="invalid_final_output"
+    return 1
+  fi
   return 0
 }
 
@@ -1032,7 +1051,8 @@ run_execution() {
     -c "features.rollout_budget.sampling_token_weight=1.0" \
     -c "features.rollout_budget.prefill_token_weight=1.0" \
     --disable multi_agent --disable goals --disable memories \
-    --output-last-message "$final_output" -C "$worktree" -p "$profile" -
+    --output-schema "$executor_schema" \
+    --output-last-message "$structured_output" -C "$worktree" -p "$profile" -
   )
 
   if [ "$environment_enabled" -eq 1 ]; then
