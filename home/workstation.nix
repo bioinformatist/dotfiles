@@ -13,6 +13,7 @@ in
     ./core.nix
     ./shell
     ./tui
+    ./tui/zellij
     (import ./desktop { inherit inputs; })
     (import ./programs/workstation.nix { inherit inputs; })
   ];
