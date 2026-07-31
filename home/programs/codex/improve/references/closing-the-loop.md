@@ -117,11 +117,6 @@ the dossier applies only to that exact tree. A post-run
 `IMPROVE_CANDIDATE_AVAILABLE=0` preserves the execution classification and
 diagnostics but returns nonzero and cannot proceed to review.
 
-The plan must not ask the executor to calculate a candidate tree or mutate the
-real Git index to derive one. The executor may report status and content/diff
-hashes; authoritative candidate capture belongs to the outer runner after the
-model exits.
-
 Use `--spark` only when the plan records the Spark lane and satisfies every
 eligibility rule in the planning contract:
 
@@ -138,12 +133,6 @@ codex-improve-exec --environment-json '<exact-json>' --deep <plan-artifact-path>
 The advisor records the lane and routing evidence; the main agent explicitly
 invokes it without a per-dispatch user prompt. `--spark` and `--deep` are
 mutually exclusive. The helper never parses the plan to select a lane.
-
-Candidate provenance does not select the lane. Cross-execution work may use
-Spark only after the runner or main agent resolves lineage and validates the
-exact input identity, drift, and applicability of inherited evidence, so the
-executor has no lineage judgment to make. Classify the actual bounded work
-under the planning contract's settledness and confirmatory-verification rules.
 
 The helper creates a branch and worktree from the current `HEAD`, selects
 `improve-executor`, `improve-executor-spark`, or `improve-executor-deep`, inlines
@@ -246,13 +235,17 @@ The helper never retries or invokes another profile. Every outcome preserves
 the worktree, prompt snapshot, event log, final output, diagnostic log, and
 timeout record for recovery and investigation.
 
-A `COMPLETE` report must omit `STOPPED BECAUSE:`. Any such line makes the report
-invalid. A `STOPPED` report requires exactly one concrete, nonempty reason and
-rejects `none`. Invalid report shapes remain `INCONCLUSIVE` with
-`IMPROVE_EXEC_EXIT_REASON=invalid_final_output`. Every stable execution result
-also prints `IMPROVE_EXEC_FINAL_VALIDATION_DETAIL`; its fixed, content-free
-value distinguishes a valid shape, a skipped validation, transport size/read
-failures, and the first missing, duplicate, or contradictory report header.
+Executor model output is internally constrained by
+`references/executor-report.schema.json` and preserved as private `final.json`.
+The Runner independently requires the exact five fields, nonblank string-array
+items, and at least one step. `COMPLETE` requires `stoppedBecause: null`;
+`STOPPED` requires a trimmed, nonempty reason other than lowercase `none`.
+Only then does the Runner atomically render compatible `final.txt`, with one
+physical `STATUS:`, `STEPS:`, `FILES CHANGED:`, and `NOTES:` line and a
+`STOPPED BECAUSE:` line only for `STOPPED`; arrays use compact JSON so embedded
+newlines remain escaped. `IMPROVE_EXEC_FINAL_OUTPUT`, result/reason fields,
+candidate fields, return codes, metrics, and lifecycle behavior remain
+unchanged, and no public structured-output field is added.
 
 A Spark model or entitlement failure is the same nonzero Codex failure as any
 other executor failure: the result is `INCONCLUSIVE`, every artifact is
@@ -274,11 +267,10 @@ metrics-calibrated safeguards, not product or compatibility contracts.
 Content-free execution metrics are appended to
 `$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl`, with the same state
 fallback. They contain execution identity, mode, profile, outcome, reason,
-the same `final_validation_detail`, elapsed time, prompt and event byte counts,
-observed token counts, whether usage was observed, total tool-event count,
-command-execution, file-change, MCP-tool-call, and Web-search counts, maximum
-event gap, quiet observation, active limits, and Boolean fuse flags including
-`rollout_budget_exhausted`.
+elapsed time, prompt and event byte counts, observed token counts, whether
+usage was observed, total tool-event count, command-execution, file-change,
+MCP-tool-call, and Web-search counts, maximum event gap, quiet observation,
+active limits, and Boolean fuse flags including `rollout_budget_exhausted`.
 For the environment contract, they add only the executor-invoked Boolean,
 environment hash, preflight count, and preflight status.
 Tool counts are diagnostic observations, not automatic success or failure
@@ -344,12 +336,8 @@ Each recovery dossier is self-contained for exactly one slice and contains:
 Choose Spark, standard, or deep independently for the actual remaining
 execution unit.
 The original plan lane is not a constraint, and a recorded recovery seam is
-only a hint. A Spark recovery after budget exhaustion requires a
-diagnosed decisive failure, an exact correction, and an explicit list of the mandatory
-gates whose evidence remains valid. Use Spark only when the slice independently
-satisfies every Spark eligibility rule; never force it for telemetry.
-`invalid_final_output`, an environment or network failure, or an authorization
-STOP does not by itself justify changing lanes. Invoke exactly the selected
+only a hint. Use Spark only when the slice independently satisfies every Spark
+eligibility rule; never force it for telemetry. Invoke exactly the selected
 lane:
 
 ```console

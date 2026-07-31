@@ -59,12 +59,6 @@ verification, a valid checkpoint, and an explicit dependency contract. Keep
 work together when it must land, roll back, or be accepted atomically; never
 fragment a plan merely to increase Spark usage.
 
-Candidate provenance is lane-neutral. Use Spark only when every load-bearing
-implementation shape is already proven and every mandatory gate is
-confirmatory; verification that must discover a shape, rule, or diagnosis uses
-Standard. Resolve cross-execution lineage and evidence applicability before
-dispatch.
-
 ## Variants
 
 - `quick`, `standard`, or `deep`: set audit effort.

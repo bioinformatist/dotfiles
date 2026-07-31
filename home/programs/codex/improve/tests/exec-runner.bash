@@ -5,6 +5,10 @@ set -euo pipefail
 [ "$#" -eq 1 ] || { echo "usage: exec-runner.bash EXEC_RUNNER" >&2; exit 2; }
 runner_source="$(realpath -- "$1")"
 [ -f "$runner_source" ] || { echo "exec runner does not exist: $runner_source" >&2; exit 2; }
+executor_schema="${CODEX_IMPROVE_EXEC_SCHEMA:-$(dirname -- "$runner_source")/references/executor-report.schema.json}"
+[ -r "$executor_schema" ] || { echo "executor schema does not exist: $executor_schema" >&2; exit 2; }
+executor_schema="$(realpath -- "$executor_schema")"
+export CODEX_IMPROVE_EXEC_SCHEMA="$executor_schema"
 
 test_root="$(mktemp -d)"
 trap 'rm -rf "$test_root"' EXIT
@@ -27,14 +31,17 @@ else
 fi
 
 final_output=""
+output_schema=""
 execution_worktree=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --output-schema) output_schema="$2"; shift 2 ;;
     --output-last-message) final_output="$2"; shift 2 ;;
     -C) execution_worktree="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
+[ -r "$output_schema" ] || exit 88
 cat >"$FAKE_PROMPT_LOG"
 printf '%s\n' 'TOP_SECRET_STDERR /private/repository/path' >&2
 
@@ -44,12 +51,9 @@ emit_usage() {
 }
 
 complete_report() {
-  cat >"$final_output" <<'EOF'
-STATUS: COMPLETE
-STEPS: all steps done; verification passed
-FILES CHANGED: scoped files
-NOTES: no deviations
-EOF
+  printf '%s\n' \
+    '{"status":"COMPLETE","steps":["all steps done; verification passed"],"stoppedBecause":null,"filesChanged":["scoped files"],"notes":["no deviations"]}' \
+    >"$final_output"
 }
 
 case "$FAKE_CODEX_MODE" in
@@ -57,25 +61,17 @@ case "$FAKE_CODEX_MODE" in
     emit_usage
     complete_report
     ;;
-  complete_with_stopped_none)
+  structured_multiple_steps_notes)
     emit_usage
-    cat >"$final_output" <<'EOF'
-STATUS: COMPLETE
-STEPS: all steps done; verification passed
-STOPPED BECAUSE: none
-FILES CHANGED: scoped files
-NOTES: no deviations
-EOF
+    printf '%s\n' \
+      '{"status":"COMPLETE","steps":["step 1","step 2","step 3","step 4","step 5","step 6","step 7"],"stoppedBecause":null,"filesChanged":["one","two"],"notes":["note 1","note 2","note 3"]}' \
+      >"$final_output"
     ;;
   complete_with_stopped_reason)
     emit_usage
-    cat >"$final_output" <<'EOF'
-STATUS: COMPLETE
-STEPS: all steps done; verification passed
-STOPPED BECAUSE: contradictory reason
-FILES CHANGED: scoped files
-NOTES: no deviations
-EOF
+    printf '%s\n' \
+      '{"status":"COMPLETE","steps":["done"],"stoppedBecause":"contradictory reason","filesChanged":[],"notes":[]}' \
+      >"$final_output"
     ;;
   complete_unmerged_candidate)
     emit_usage
@@ -87,120 +83,76 @@ EOF
     ;;
   unterminated_final)
     emit_usage
-    {
-      printf '%s\n' 'STATUS: COMPLETE'
-      printf '%s\n' 'STEPS: all steps done; verification passed'
-      printf '%s\n' 'FILES CHANGED: scoped files'
-      printf '%s' 'NOTES: no deviations'
-    } >"$final_output"
+    printf '%s' \
+      '{"status":"COMPLETE","steps":["done"],"stoppedBecause":null,"filesChanged":[],"notes":[]}' \
+      >"$final_output"
     ;;
   stopped)
     emit_usage
-    cat >"$final_output" <<'EOF'
-STATUS: STOPPED
-STEPS: stopped at the required condition
-STOPPED BECAUSE: deterministic test stop
-FILES CHANGED: none
-NOTES: worktree preserved
-EOF
+    printf '%s\n' \
+      '{"status":"STOPPED","steps":["stopped at the required condition"],"stoppedBecause":"  deterministic test stop  ","filesChanged":[],"notes":["worktree preserved"]}' \
+      >"$final_output"
     ;;
   stopped_with_none)
     emit_usage
-    cat >"$final_output" <<'EOF'
-STATUS: STOPPED
-STEPS: stopped at the required condition
-STOPPED BECAUSE: none
-FILES CHANGED: none
-NOTES: worktree preserved
-EOF
-    ;;
-  complete_with_duplicate_stopped)
-    emit_usage
     printf '%s\n' \
-      'STATUS: COMPLETE' \
-      'STEPS: all steps done' \
-      'STOPPED BECAUSE: first' \
-      'STOPPED BECAUSE: second' \
-      'FILES CHANGED: none' \
-      'NOTES: preserved' >"$final_output"
+      '{"status":"STOPPED","steps":["stopped"],"stoppedBecause":"none","filesChanged":[],"notes":[]}' \
+      >"$final_output"
     ;;
   invalid_status)
     emit_usage
     printf '%s\n' \
-      'STATUS: UNKNOWN' 'STEPS: done' 'FILES CHANGED: none' \
-      'NOTES: preserved' >"$final_output"
+      '{"status":"UNKNOWN","steps":["done"],"stoppedBecause":null,"filesChanged":[],"notes":[]}' \
+      >"$final_output"
     ;;
-  missing_status)
+  missing_report_field)
     emit_usage
     printf '%s\n' \
-      'STEPS: done' 'FILES CHANGED: none' \
-      'NOTES: preserved' >"$final_output"
+      '{"steps":["done"],"stoppedBecause":null,"filesChanged":[],"notes":[]}' \
+      >"$final_output"
     ;;
-  duplicate_status)
+  extra_report_field)
     emit_usage
     printf '%s\n' \
-      'STATUS: COMPLETE' 'STATUS: STOPPED' 'STEPS: done' \
-      'FILES CHANGED: none' 'NOTES: preserved' >"$final_output"
+      '{"status":"COMPLETE","steps":["done"],"stoppedBecause":null,"filesChanged":[],"notes":[],"detail":"not public"}' \
+      >"$final_output"
     ;;
-  missing_steps)
+  multiple_json_values)
     emit_usage
     printf '%s\n' \
-      'STATUS: COMPLETE' 'FILES CHANGED: none' \
-      'NOTES: preserved' >"$final_output"
+      '{"status":"COMPLETE","steps":["done"],"stoppedBecause":null,"filesChanged":[],"notes":[]}' \
+      '{"status":"STOPPED","steps":["done"],"stoppedBecause":"reason","filesChanged":[],"notes":[]}' \
+      >"$final_output"
     ;;
-  duplicate_steps)
+  empty_steps)
     emit_usage
     printf '%s\n' \
-      'STATUS: COMPLETE' 'STEPS: one' 'STEPS: two' \
-      'FILES CHANGED: none' 'NOTES: preserved' >"$final_output"
+      '{"status":"COMPLETE","steps":[],"stoppedBecause":null,"filesChanged":[],"notes":[]}' \
+      >"$final_output"
     ;;
-  missing_files_changed)
+  wrong_array_item_type)
     emit_usage
     printf '%s\n' \
-      'STATUS: COMPLETE' 'STEPS: done' 'NOTES: preserved' >"$final_output"
+      '{"status":"COMPLETE","steps":["done"],"stoppedBecause":null,"filesChanged":[7],"notes":[]}' \
+      >"$final_output"
     ;;
-  duplicate_files_changed)
+  blank_array_item)
     emit_usage
     printf '%s\n' \
-      'STATUS: COMPLETE' 'STEPS: done' 'FILES CHANGED: one' \
-      'FILES CHANGED: two' 'NOTES: preserved' >"$final_output"
+      '{"status":"COMPLETE","steps":["done"],"stoppedBecause":null,"filesChanged":[],"notes":[" "]}' \
+      >"$final_output"
     ;;
-  missing_notes)
+  stopped_with_null_reason)
     emit_usage
     printf '%s\n' \
-      'STATUS: COMPLETE' 'STEPS: done' \
-      'FILES CHANGED: none' >"$final_output"
+      '{"status":"STOPPED","steps":["stopped"],"stoppedBecause":null,"filesChanged":[],"notes":[]}' \
+      >"$final_output"
     ;;
-  duplicate_notes)
+  stopped_with_blank_reason)
     emit_usage
     printf '%s\n' \
-      'STATUS: COMPLETE' 'STEPS: done' 'FILES CHANGED: none' \
-      'NOTES: one' 'NOTES: two' >"$final_output"
-    ;;
-  stopped_missing_reason)
-    emit_usage
-    printf '%s\n' \
-      'STATUS: STOPPED' 'STEPS: stopped' 'FILES CHANGED: none' \
-      'NOTES: preserved' >"$final_output"
-    ;;
-  stopped_duplicate_reason)
-    emit_usage
-    printf '%s\n' \
-      'STATUS: STOPPED' 'STEPS: stopped' 'STOPPED BECAUSE: first' \
-      'STOPPED BECAUSE: second' 'FILES CHANGED: none' \
-      'NOTES: preserved' >"$final_output"
-    ;;
-  stopped_empty_reason)
-    emit_usage
-    printf '%s\n' \
-      'STATUS: STOPPED' 'STEPS: stopped' 'STOPPED BECAUSE:' \
-      'FILES CHANGED: none' 'NOTES: preserved' >"$final_output"
-    ;;
-  stopped_whitespace_reason)
-    emit_usage
-    printf '%s\n' \
-      'STATUS: STOPPED' 'STEPS: stopped' 'STOPPED BECAUSE:   ' \
-      'FILES CHANGED: none' 'NOTES: preserved' >"$final_output"
+      '{"status":"STOPPED","steps":["stopped"],"stoppedBecause":"   ","filesChanged":[],"notes":[]}' \
+      >"$final_output"
     ;;
   nonzero)
     emit_usage
@@ -233,7 +185,7 @@ EOF
     ;;
   malformed_final)
     emit_usage
-    printf '%s\n' 'STATUS: COMPLETE' >"$final_output"
+    printf '%s\n' '{"status":' >"$final_output"
     ;;
   missing_final)
     emit_usage
@@ -241,7 +193,7 @@ EOF
   oversize_final)
     emit_usage
     complete_report
-    printf '%0200d\n' 0 >>"$final_output"
+    printf '%0300d\n' 0 >>"$final_output"
     ;;
   timeout)
     trap 'exit 130' INT TERM
@@ -419,6 +371,41 @@ assert_not_invoked() {
   [ ! -s "$FAKE_COUNT_FILE" ] || fail "$1 invoked Codex"
 }
 
+assert_schema_input_failure() {
+  schema_case="$1"
+  schema_fixture="$2"
+  start_case "$schema_case"
+  schema_path="$case_dir/executor-report.schema.json"
+  case "$schema_fixture" in
+    missing) ;;
+    unreadable)
+      cp -- "$executor_schema" "$schema_path"
+      chmod 000 "$schema_path"
+      ;;
+    invalid)
+      printf '%s\n' '{"type":' >"$schema_path"
+      ;;
+    *) fail "unknown schema fixture: $schema_fixture" ;;
+  esac
+  copy_runner
+  output="$case_dir/output"
+  errors="$case_dir/errors"
+  set +e
+  (
+    cd "$repo"
+    CODEX_IMPROVE_EXEC_SCHEMA="$schema_path" \
+      bash "$runner" "plans/001 plan.md"
+  ) >"$output" 2>"$errors"
+  status="$?"
+  set -e
+  assert_eq "$status" 2 "$schema_case input status"
+  grep -F "executor report schema is unavailable or invalid" "$errors" >/dev/null ||
+    fail "$schema_case input reason"
+  assert_not_invoked "$schema_case"
+  [ ! -e "$XDG_STATE_HOME/codex-improve/executions" ] ||
+    fail "$schema_case initialized execution artifacts"
+}
+
 assert_preflight_not_invoked() {
   assert_not_invoked "$1"
   [ ! -s "$FAKE_LAUNCHER_COUNT" ] || fail "$1 invoked the launcher"
@@ -464,45 +451,36 @@ assert_transport_case() {
   esac
   [ -d "$artifact_dir" ] || fail "$case_name artifact directory missing"
   assert_private "$artifact_dir"
-  for artifact in prompt.txt events.jsonl final.txt stderr.log timeout.log; do
+  for artifact in prompt.txt events.jsonl final.json final.txt stderr.log timeout.log; do
     [ -e "$artifact_dir/$artifact" ] || fail "$case_name missing $artifact"
     assert_private "$artifact_dir/$artifact"
   done
   metric="$XDG_STATE_HOME/codex-improve/execution-metrics.jsonl"
   [ -s "$metric" ] || fail "$case_name metric missing"
   assert_private "$metric"
-  final_validation_detail="$(
-    field "$output" IMPROVE_EXEC_FINAL_VALIDATION_DETAIL
-  )"
-  case "$final_validation_detail" in
-    not_checked|valid|empty_final_output|final_output_limit|header_scan_failed|\
-missing_header_status|duplicate_header_status|invalid_status_value|\
-missing_header_steps|duplicate_header_steps|\
-missing_header_files_changed|duplicate_header_files_changed|\
-missing_header_notes|duplicate_header_notes|\
-complete_contains_stopped_because|stopped_missing_reason|\
-stopped_duplicate_reason|stopped_empty_reason|stopped_placeholder_reason) ;;
-    *) fail "$case_name invalid final validation detail: $final_validation_detail" ;;
-  esac
-  assert_eq "$(jq -s -r 'last.final_validation_detail' "$metric")" \
-    "$final_validation_detail" "$case_name metric final validation detail"
   jq -e '(.fuse_flags.rollout_budget_exhausted | type) == "boolean"' "$metric" >/dev/null ||
     fail "$case_name budget metric fuse is not Boolean"
+  ! grep -Fq 'IMPROVE_EXEC_STRUCTURED_OUTPUT=' "$output" ||
+    fail "$case_name exposed a private structured output field"
+  ! grep -Fq 'IMPROVE_EXEC_FINAL_VALIDATION_DETAIL=' "$output" ||
+    fail "$case_name exposed a private final validation detail field"
+  jq -e -s 'all(.[]; has("final_validation_detail") | not)' "$metric" >/dev/null ||
+    fail "$case_name exposed a final validation detail metric"
   assert_no_private_content "$output"
   assert_no_private_content "$errors"
   assert_no_private_content "$metric"
 }
 
-assert_final_detail() {
-  assert_eq "$(field "$output" IMPROVE_EXEC_FINAL_VALIDATION_DETAIL)" \
-    "$1" "$case_name final validation detail"
-}
-
 assert_invalid_report_preserved() {
   preserved_worktree="$(field "$output" IMPROVE_WORKTREE)"
   [ -d "$preserved_worktree" ] || fail "$case_name worktree was not preserved"
-  [ -d "$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)" ] ||
+  preserved_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+  [ -d "$preserved_artifact" ] ||
     fail "$case_name artifacts were not preserved"
+  [ -s "$preserved_artifact/events.jsonl" ] ||
+    fail "$case_name event evidence was not preserved"
+  [ -s "$preserved_artifact/final.json" ] ||
+    fail "$case_name raw report evidence was not preserved"
   assert_eq "$(field "$output" IMPROVE_CANDIDATE_AVAILABLE)" 1 \
     "$case_name candidate availability"
 }
@@ -535,6 +513,10 @@ grep -F -- "--deep --next CHECKPOINT PLAN" "$output" >/dev/null ||
 grep -F -- "--environment-json '<json>' [--spark|--deep] --next CHECKPOINT PLAN" \
   "$output" >/dev/null || fail "help omits environment-backed lane-aware next mode"
 assert_not_invoked help
+
+assert_schema_input_failure missing_schema missing
+assert_schema_input_failure unreadable_schema unreadable
+assert_schema_input_failure invalid_schema invalid
 
 start_case missing_generated_config
 copy_runner
@@ -1106,7 +1088,6 @@ export IMPROVE_EXECUTION_ID=ambient-caller-value
 start_case initial complete
 LC_ALL=C.UTF-8 run_runner "plans/001 plan.md"
 assert_transport_case 0 COMPLETE completed
-assert_final_detail valid
 assert_execution_id_inherited
 [ "$(<"$FAKE_EXECUTION_ID_LOG")" != ambient-caller-value ] ||
   fail "ambient execution identity was trusted"
@@ -1142,16 +1123,16 @@ if grep -Fx -- --ignore-user-config "$FAKE_INVOCATION_LOG" >/dev/null; then
 fi
 grep -Fx -- --output-last-message "$FAKE_INVOCATION_LOG" >/dev/null ||
   fail "final-message output missing"
+grep -Fx -- --output-schema "$FAKE_INVOCATION_LOG" >/dev/null ||
+  fail "output schema missing"
+assert_eq "$(sed -n '/^--output-schema$/{n;p;q;}' "$FAKE_INVOCATION_LOG")" \
+  "$executor_schema" "standard schema path"
 grep -F -- "Do not load or reread the Improve skill" "$FAKE_PROMPT_LOG" >/dev/null ||
   fail "initial no-Improve/Ponytail boundary missing"
 grep -F -- "A targeted reread is allowed after editing that" "$FAKE_PROMPT_LOG" >/dev/null ||
   fail "initial targeted-reread boundary missing"
-grep -F -- "Do not calculate a candidate tree yourself" "$FAKE_PROMPT_LOG" >/dev/null ||
-  fail "initial outer-runner candidate boundary missing"
-grep -F -- 'For a completed execution, omit `STOPPED BECAUSE:` entirely' \
-  "$FAKE_PROMPT_LOG" >/dev/null || fail "initial COMPLETE report boundary missing"
-grep -F -- 'For a stopped execution, include one concrete nonempty reason' \
-  "$FAKE_PROMPT_LOG" >/dev/null || fail "initial STOPPED report boundary missing"
+grep -F -- "Return one JSON object matching the provided output schema." \
+  "$FAKE_PROMPT_LOG" >/dev/null || fail "structured report contract missing"
 jq -e '
   .mode == "initial"
   and .profile == "improve-executor"
@@ -1187,15 +1168,41 @@ start_case stopped stopped
 unset LC_ALL
 run_runner "plans/001 plan.md"
 assert_transport_case 0 STOPPED completed
-assert_final_detail valid
 assert_eq "$(<"$FAKE_LOCALE_LOG")" unset "unset caller locale"
 grep -Fx -- "STATUS: STOPPED" "$output" >/dev/null || fail "STOPPED report not printed"
+grep -Fx -- "STOPPED BECAUSE: deterministic test stop" "$output" >/dev/null ||
+  fail "STOPPED reason was not trimmed and rendered"
 
-start_case complete_with_stopped_none complete_with_stopped_none
+start_case structured_multiple_steps_notes structured_multiple_steps_notes
 run_runner "plans/001 plan.md"
-assert_transport_case 1 INCONCLUSIVE invalid_final_output
-assert_final_detail complete_contains_stopped_because
-assert_invalid_report_preserved
+assert_transport_case 0 COMPLETE completed
+structured_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+jq -e '
+  (.steps | length) == 7
+    and (.notes | length) == 3
+    and .stoppedBecause == null
+' "$structured_artifact/final.json" >/dev/null ||
+  fail "structured_multiple_steps_notes raw artifact"
+for prefix in STATUS STEPS "FILES CHANGED" NOTES; do
+  assert_eq "$(grep -c "^$prefix:" "$structured_artifact/final.txt")" 1 \
+    "structured_multiple_steps_notes $prefix prefix count"
+done
+assert_eq "$(wc -l <"$structured_artifact/final.txt")" 4 \
+  "structured_multiple_steps_notes rendered line count"
+grep -Fx -- \
+  'STEPS: ["step 1","step 2","step 3","step 4","step 5","step 6","step 7"]' \
+  "$structured_artifact/final.txt" >/dev/null ||
+  fail "structured_multiple_steps_notes compact steps"
+grep -Fx -- 'FILES CHANGED: ["one","two"]' \
+  "$structured_artifact/final.txt" >/dev/null ||
+  fail "structured_multiple_steps_notes compact files"
+grep -Fx -- 'NOTES: ["note 1","note 2","note 3"]' \
+  "$structured_artifact/final.txt" >/dev/null ||
+  fail "structured_multiple_steps_notes compact notes"
+! grep -q '^STOPPED BECAUSE:' "$structured_artifact/final.txt" ||
+  fail "structured_multiple_steps_notes rendered stopped prefix"
+assert_eq "$(field "$output" IMPROVE_EXEC_FINAL_OUTPUT)" \
+  "$structured_artifact/final.txt" "compatible final output path"
 
 start_case complete_unmerged_candidate complete_unmerged_candidate
 run_runner "plans/001 plan.md"
@@ -1216,6 +1223,8 @@ assert_eq "$(field "$output" IMPROVE_PROFILE)" improve-executor-deep "deep profi
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 7 "deep initial timeout"
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 160000 "deep token limit"
 assert_network_access "deep initial"
+assert_eq "$(sed -n '/^--output-schema$/{n;p;q;}' "$FAKE_INVOCATION_LOG")" \
+  "$executor_schema" "deep schema path"
 
 start_case spark complete
 run_runner --spark "plans/001 plan.md"
@@ -1226,6 +1235,8 @@ assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TIMEOUT_SECONDS)" 5 "Spark init
 assert_eq "$(field "$output" IMPROVE_EXEC_ACTIVE_TOKEN_LIMIT)" 100000 "Spark token limit"
 assert_eq "$(wc -l <"$FAKE_COUNT_FILE")" 1 "Spark invocation count"
 assert_network_access "Spark initial"
+assert_eq "$(sed -n '/^--output-schema$/{n;p;q;}' "$FAKE_INVOCATION_LOG")" \
+  "$executor_schema" "Spark schema path"
 grep -F -- "The user explicitly requires every verification command in the plan." \
   "$FAKE_PROMPT_LOG" >/dev/null || fail "Spark initial verification requirement missing"
 
@@ -1242,11 +1253,9 @@ transport_failure() {
   name="$1"
   fake_mode="$2"
   expected_reason="$3"
-  expected_detail="${4:-not_checked}"
   start_case "$name" "$fake_mode"
   run_runner "plans/001 plan.md"
   assert_transport_case 1 INCONCLUSIVE "$expected_reason"
-  assert_final_detail "$expected_detail"
   preserved_worktree="$(field "$output" IMPROVE_WORKTREE)"
   [ -d "$preserved_worktree" ] || fail "$name worktree was not preserved"
 }
@@ -1278,41 +1287,32 @@ assert_eq "$(field "$output" IMPROVE_EXEC_EXIT)" 137 "natural 137 raw Codex stat
 jq -e '.fuse_flags.absolute_timeout == false' "$metric" >/dev/null ||
   fail "natural 137 set timeout fuse"
 transport_failure malformed_jsonl malformed_jsonl invalid_event_log
-transport_failure malformed_final malformed_final invalid_final_output missing_header_steps
+transport_failure malformed_final malformed_final invalid_final_output
 assert_invalid_report_preserved
 transport_failure complete_with_stopped_reason complete_with_stopped_reason \
-  invalid_final_output complete_contains_stopped_because
-assert_invalid_report_preserved
-transport_failure complete_with_duplicate_stopped complete_with_duplicate_stopped \
-  invalid_final_output complete_contains_stopped_because
+  invalid_final_output
 assert_invalid_report_preserved
 transport_failure stopped_with_none stopped_with_none \
-  invalid_final_output stopped_placeholder_reason
+  invalid_final_output
 assert_invalid_report_preserved
-transport_failure missing_final missing_final empty_final_output empty_final_output
-transport_failure oversize_final oversize_final final_output_limit final_output_limit
+transport_failure missing_final missing_final empty_final_output
+transport_failure oversize_final oversize_final final_output_limit
 
 invalid_report_case() {
   invalid_name="$1"
-  invalid_detail="$2"
-  transport_failure "$invalid_name" "$invalid_name" \
-    invalid_final_output "$invalid_detail"
+  transport_failure "$invalid_name" "$invalid_name" invalid_final_output
   assert_invalid_report_preserved
 }
 
-invalid_report_case missing_status missing_header_status
-invalid_report_case invalid_status invalid_status_value
-invalid_report_case duplicate_status duplicate_header_status
-invalid_report_case missing_steps missing_header_steps
-invalid_report_case duplicate_steps duplicate_header_steps
-invalid_report_case missing_files_changed missing_header_files_changed
-invalid_report_case duplicate_files_changed duplicate_header_files_changed
-invalid_report_case missing_notes missing_header_notes
-invalid_report_case duplicate_notes duplicate_header_notes
-invalid_report_case stopped_missing_reason stopped_missing_reason
-invalid_report_case stopped_duplicate_reason stopped_duplicate_reason
-invalid_report_case stopped_empty_reason stopped_empty_reason
-invalid_report_case stopped_whitespace_reason stopped_empty_reason
+invalid_report_case invalid_status
+invalid_report_case multiple_json_values
+invalid_report_case missing_report_field
+invalid_report_case extra_report_field
+invalid_report_case empty_steps
+invalid_report_case wrong_array_item_type
+invalid_report_case blank_array_item
+invalid_report_case stopped_with_null_reason
+invalid_report_case stopped_with_blank_reason
 transport_failure timeout timeout absolute_timeout
 jq -e '.fuse_flags.absolute_timeout == true' "$metric" >/dev/null ||
   fail "deadline omitted timeout fuse"
@@ -1453,12 +1453,19 @@ run_runner --revise "$revision_worktree" "${revision_tree:0:12}" "$dossier"
 assert_eq "$status" 2 "abbreviated revision status"
 assert_not_invoked abbreviated_revision
 
-start_case count_failure complete
+start_case structured_validation_command_failure complete
 copy_runner
 failure_bin="$case_dir/failure-bin"
 mkdir -p "$failure_bin"
-printf '#!%s\nexit 9\n' "$(command -v bash)" >"$failure_bin/sed"
-chmod +x "$failure_bin/sed"
+real_jq="$(command -v jq)"
+{
+  printf '#!%s\n' "$(command -v bash)"
+  printf '%s\n' 'for argument in "$@"; do'
+  printf '%s\n' '  case "$argument" in *"def nonblank"*) exit 9 ;; esac'
+  printf '%s\n' 'done'
+  printf 'exec %q "$@"\n' "$real_jq"
+} >"$failure_bin/jq"
+chmod +x "$failure_bin/jq"
 output="$case_dir/output"
 errors="$case_dir/errors"
 set +e
@@ -1470,7 +1477,6 @@ set +e
 status="$?"
 set -e
 assert_transport_case 1 INCONCLUSIVE invalid_final_output
-assert_final_detail header_scan_failed
 assert_invalid_report_preserved
 
 start_case revision complete

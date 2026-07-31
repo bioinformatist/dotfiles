@@ -255,9 +255,7 @@ Select lanes in this deterministic order:
    deterministic gates; no broad reconnaissance, unresolved diagnosis, or
    visual input is needed; the complete unit fits Spark's 128k text-only
    context; and none of the hard disqualifiers below applies. The plan must
-   explicitly require every verification command. Complete execution work
-   includes implementation, every mandatory gate, expected failure handling,
-   and final reporting.
+   explicitly require every verification command.
 2. Use `standard` when at least one named Spark requirement is false. Its
    routing evidence must name the concrete Spark disqualifier.
 3. Use `deep` only when the bounded work also needs materially greater technical
@@ -272,21 +270,6 @@ touch CI workflows, dependency declarations, lockfiles, configuration,
 generated companions, or public-contract files. Selecting a dependency,
 designing an interface, changing CI policy, or making another substantive
 Engineering-contract decision remains non-Spark work.
-
-Candidate provenance is not a lane classifier. Cross-execution work remains
-Spark-eligible only when the runner or main agent resolves lineage and validates
-the exact input identity, drift, and applicability of inherited evidence before
-dispatch, leaving no lineage judgment for the executor.
-
-Every load-bearing implementation shape in a Spark unit must already be proven
-by a current repository pattern, a completed planning-time probe, or exact
-inherited evidence whose identity, drift, and applicability were validated
-before dispatch. Spark verification is confirmatory: expected success is known,
-and a failure permits one bounded local correction or triggers STOP. It must not
-ask the executor to discover an API, syntax, compatibility rule, root cause,
-test method, or implementation shape. Verification that performs such diagnosis
-uses Standard. If target behavior is still undecided, leave the plan `BLOCKED`
-instead of dispatching it.
 
 Classify every initial plan, dependent `--next` plan, revision, and recovery by
 its actual bounded execution work. Split only at the independently
@@ -356,13 +339,6 @@ evidence, and invalidated evidence. An identity change does not preserve review
 evidence by itself. Carry evidence forward only after proving the reviewed diff
 is unchanged; every material diff change invalidates the applicable checks and
 reviewer conclusions.
-
-Candidate-tree capture is an outer-runner responsibility. Plans must not ask an
-executor to calculate or report its own candidate tree, call candidate or
-checkpoint operations, or stage/unstage files through the real Git index to
-derive an identity. Executor gates may report working-tree status, file hashes,
-and diff hashes; after the run, the main agent captures the authoritative tree
-with `codex-improve-exec --candidate`.
 
 After all required implementation reviews approve the exact candidate, and
 after any approval required for a commit, the main agent may create one local
