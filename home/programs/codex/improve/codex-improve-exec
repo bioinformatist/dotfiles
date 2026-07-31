@@ -662,7 +662,7 @@ Candidate preservation and lifecycle transitions are owned by the outer runner.
 Return one JSON object matching the provided output schema. Use status COMPLETE
 or STOPPED. Report each step, changed file, and note as one array item.
 For COMPLETE, set stoppedBecause to null. For STOPPED, set stoppedBecause to
-one concrete nonempty reason other than lowercase `none`.
+one concrete nonempty reason other than `none` in any letter case.
 EOF
 }
 
@@ -888,7 +888,7 @@ validate_final_report() {
           (.stoppedBecause
             | type == "string"
               and (trimmed | length > 0)
-              and (trimmed != "none"))
+              and ((trimmed | ascii_downcase) != "none"))
         end)
       )
   ' "$structured_output")"; then

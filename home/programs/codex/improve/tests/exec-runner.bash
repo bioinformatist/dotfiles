@@ -99,6 +99,24 @@ case "$FAKE_CODEX_MODE" in
       '{"status":"STOPPED","steps":["stopped"],"stoppedBecause":"none","filesChanged":[],"notes":[]}' \
       >"$final_output"
     ;;
+  stopped_with_none_titlecase)
+    emit_usage
+    printf '%s\n' \
+      '{"status":"STOPPED","steps":["stopped"],"stoppedBecause":"None","filesChanged":[],"notes":[]}' \
+      >"$final_output"
+    ;;
+  stopped_with_none_uppercase)
+    emit_usage
+    printf '%s\n' \
+      '{"status":"STOPPED","steps":["stopped"],"stoppedBecause":"NONE","filesChanged":[],"notes":[]}' \
+      >"$final_output"
+    ;;
+  stopped_with_none_mixedcase_whitespace)
+    emit_usage
+    printf '%s\n' \
+      '{"status":"STOPPED","steps":["stopped"],"stoppedBecause":" NoNe ","filesChanged":[],"notes":[]}' \
+      >"$final_output"
+    ;;
   invalid_status)
     emit_usage
     printf '%s\n' \
@@ -1294,6 +1312,15 @@ transport_failure complete_with_stopped_reason complete_with_stopped_reason \
 assert_invalid_report_preserved
 transport_failure stopped_with_none stopped_with_none \
   invalid_final_output
+assert_invalid_report_preserved
+transport_failure stopped_with_none_titlecase stopped_with_none_titlecase \
+  invalid_final_output
+assert_invalid_report_preserved
+transport_failure stopped_with_none_uppercase stopped_with_none_uppercase \
+  invalid_final_output
+assert_invalid_report_preserved
+transport_failure stopped_with_none_mixedcase_whitespace \
+  stopped_with_none_mixedcase_whitespace invalid_final_output
 assert_invalid_report_preserved
 transport_failure missing_final missing_final empty_final_output
 transport_failure oversize_final oversize_final final_output_limit
