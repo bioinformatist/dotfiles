@@ -1,4 +1,0 @@
-[opener]
-edit = [
-    { run = 'nu ~/.config/yazi/hx_file.nu "$1"', desc = "Open File in a new pane" },
-]

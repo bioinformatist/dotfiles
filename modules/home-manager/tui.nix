@@ -8,6 +8,7 @@ in
 {
   imports = [
     ../../home/tui
+    ../../home/tui/zellij
   ];
 
   programs = {
