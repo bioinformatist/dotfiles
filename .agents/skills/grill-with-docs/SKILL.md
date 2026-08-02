@@ -10,7 +10,7 @@ to stay enabled for `homePC`; that global skill subset provides the
 `$grilling` dependency used by this workflow.
 
 Run `$grilling` to stress-test the user's dotfiles design one question
-at a time. Keep `$domain-modeling` active as decisions settle:
+at a time. Keep `$dotfiles-domain-modeling` active as decisions settle:
 
 - Update `CONTEXT.md` when a durable dotfiles domain term is introduced
   or sharpened.

@@ -31,7 +31,7 @@ interface and deeper in implementation.
    wants to explore.
 
 After the user picks a candidate, use `$grilling` to walk the design
-tree with them. Use `$domain-modeling` to update `CONTEXT.md` or offer
+tree with them. Use `$dotfiles-domain-modeling` to update `CONTEXT.md` or offer
 an ADR when the conversation produces durable domain terms or decisions.
 
 See [HTML-REPORT.md](HTML-REPORT.md) for the report scaffold, diagram
