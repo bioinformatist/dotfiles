@@ -93,8 +93,8 @@ required gate 还会 dry-run 一个合成的 `ci@headless` Home Manager 配置�
 China gate 会同时记录更新后 head closure 的完整结果，以及相对 `main`
 的差分。auto-merge 准入以 delta 为准：GitHub 冷 runner 暴露出来的无关
 full-head miss 是诊断用 baseline debt，不应冻结每个 leaf PR。固定输出 release
-直连 fetch 只有在维护 policy 中声明过 marker 时才允许，目前是 Codex、Orca 和
-ZeroClaw。
+直连 fetch 只有在维护 policy 中声明过 marker 时才允许，目前是 Codex、Orca、
+Playwright CLI 和 ZeroClaw。
 
 可复用的 marker 基线放在 `scripts/maint/policy.json`，GUI 专属增量放在
 `scripts/maint/policy-workstation.json`。flake 将两者合成为
@@ -201,7 +201,7 @@ maint-switch --boot
 - `chromium`、`electron`
 - `serenityos-emoji-font`、`nanoemoji`
 
-允许列表只覆盖生成式 glue 和轻量包装：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex、Orca 和 ZeroClaw 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
+允许列表只覆盖生成式 glue 和轻量包装：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex、Orca、Playwright CLI 和 ZeroClaw 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
 
 ## 并发策略
 

@@ -27,7 +27,7 @@
       flake = false;
     };
     mattpocock-skills = {
-      url = "github:mattpocock/skills/v1.0.1";
+      url = "github:mattpocock/skills/2ab958093e83e0ec752e6c1c5932da465bf23e0c";
       flake = false;
     };
     shadcn-improve = {
@@ -102,16 +102,35 @@
           source = "${inputs.fieldcraft}/skills/product-form-ux";
         }
         {
-          name = "domain-modeling";
+          name = "dotfiles-domain-modeling";
           source = "${inputs.mattpocock-skills}/skills/engineering/domain-modeling";
+          skillMd =
+            builtins.replaceStrings
+              [
+                ''
+                  ---
+                  name: domain-modeling
+                  description: Build and sharpen a project's domain model. Use when the user wants to pin down domain terminology or a ubiquitous language, record an architectural decision, or when another skill needs to maintain the domain model.
+                  ---
+                ''
+              ]
+              [
+                ''
+                  ---
+                  name: dotfiles-domain-modeling
+                  description: Explicit-only workflow for sharpening this dotfiles project's domain terminology, ubiquitous language, and ADR-worthy decisions. Use only when the user explicitly invokes dotfiles-domain-modeling or asks to actively maintain dotfiles domain docs.
+                  ---
+                ''
+              ]
+              (builtins.readFile "${inputs.mattpocock-skills}/skills/engineering/domain-modeling/SKILL.md");
           openaiYaml = ''
             interface:
-              display_name: "Domain Modeling"
+              display_name: "Dotfiles Domain Modeling"
               short_description: "Sharpen dotfiles domain terms and ADRs"
-              default_prompt: "Use $domain-modeling to clarify dotfiles domain terms or record an ADR-worthy decision."
+              default_prompt: "Use $dotfiles-domain-modeling to clarify dotfiles domain terms or record an ADR-worthy decision."
 
             policy:
-              allow_implicit_invocation: true
+              allow_implicit_invocation: false
           '';
         }
         {
@@ -130,7 +149,7 @@
             `$grilling` dependency used by this workflow.
 
             Run `$grilling` to stress-test the user's dotfiles design one question
-            at a time. Keep `$domain-modeling` active as decisions settle:
+            at a time. Keep `$dotfiles-domain-modeling` active as decisions settle:
 
             - Update `CONTEXT.md` when a durable dotfiles domain term is introduced
               or sharpened.
@@ -186,7 +205,7 @@
                wants to explore.
 
             After the user picks a candidate, use `$grilling` to walk the design
-            tree with them. Use `$domain-modeling` to update `CONTEXT.md` or offer
+            tree with them. Use `$dotfiles-domain-modeling` to update `CONTEXT.md` or offer
             an ADR when the conversation produces durable domain terms or decisions.
 
             See [HTML-REPORT.md](HTML-REPORT.md) for the report scaffold, diagram
@@ -664,6 +683,13 @@
               '(/codebase-design|/grilling|/domain-modeling|/improve-codebase-architecture|Agent tool|subagent_type|xdg-open <path>|open <path>|start <path>)' \
               ${./.agents/skills}; then
               echo "repo-local skills contain stale host-agent wording; adapt vendored skills for Codex first" >&2
+              exit 1
+            fi
+
+            if grep -n -F '$domain-modeling' \
+              ${./.agents/skills}/grill-with-docs/SKILL.md \
+              ${./.agents/skills}/improve-codebase-architecture/SKILL.md; then
+              echo "dotfiles workflow wrappers contain stale \$domain-modeling references" >&2
               exit 1
             fi
 

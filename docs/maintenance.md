@@ -100,7 +100,7 @@ The China gate records both the full updated head closure and the delta against
 `main`. Auto-merge eligibility is based on the delta: unrelated full-head misses
 from a cold GitHub runner are diagnostic baseline debt and must not freeze every
 leaf PR. Fixed-output release fetches are allowed only when their marker is
-declared in the maintenance policy, currently Codex, Orca, and ZeroClaw.
+declared in the maintenance policy, currently Codex, Orca, Playwright CLI, and ZeroClaw.
 
 The reusable marker base lives in `scripts/maint/policy.json`, while
 `scripts/maint/policy-workstation.json` contains GUI-only additions. The flake
@@ -222,7 +222,7 @@ Default blocking markers include:
 - `chromium`, `electron`
 - `serenityos-emoji-font`, `nanoemoji`
 
-The allowlist is intentionally limited to generated glue and lightweight wrappers: Home Manager files/generations, NixOS unit/restart/activation files, generated manifests, repo-local Codex skill packaging, and declared MCP wrapper derivations may proceed. Declared fixed-output direct release fetches for Codex, Orca, and ZeroClaw may also proceed through the configured maintenance proxy. Other local builds are treated as gate failures, and heavy components such as kernel, Mesa, systemd packages, Hyprland packages, GCC/Rust toolchains, Chromium/Electron, and large font pipelines remain blocked.
+The allowlist is intentionally limited to generated glue and lightweight wrappers: Home Manager files/generations, NixOS unit/restart/activation files, generated manifests, repo-local Codex skill packaging, and declared MCP wrapper derivations may proceed. Declared fixed-output direct release fetches for Codex, Orca, Playwright CLI, and ZeroClaw may also proceed through the configured maintenance proxy. Other local builds are treated as gate failures, and heavy components such as kernel, Mesa, systemd packages, Hyprland packages, GCC/Rust toolchains, Chromium/Electron, and large font pipelines remain blocked.
 
 ## Concurrency
 

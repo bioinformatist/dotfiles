@@ -82,6 +82,7 @@
     "-codex-x86_64-unknown-linux-musl.tar.gz",
     "-codex-0.",
     "-orca-linux.AppImage",
+    "-playwright-cli-0.",
     "-zeroclaw-x86_64-unknown-linux-gnu.tar.gz",
     "-zeroclaw-0."
   ],

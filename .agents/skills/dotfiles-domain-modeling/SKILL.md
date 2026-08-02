@@ -1,6 +1,6 @@
 ---
-name: domain-modeling
-description: Build and sharpen a project's domain model. Use when the user wants to pin down domain terminology or a ubiquitous language, record an architectural decision, or when another skill needs to maintain the domain model.
+name: dotfiles-domain-modeling
+description: Explicit-only workflow for sharpening this dotfiles project's domain terminology, ubiquitous language, and ADR-worthy decisions. Use only when the user explicitly invokes dotfiles-domain-modeling or asks to actively maintain dotfiles domain docs.
 ---
 
 # Domain Modeling
