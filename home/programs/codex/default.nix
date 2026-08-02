@@ -20,6 +20,7 @@ let
   codexNode = pkgs.nodejs_24;
   playwrightCliVersion = "0.1.17";
   playwrightCliSource = pkgs.fetchFromGitHub {
+    name = "playwright-cli-${playwrightCliVersion}-source";
     owner = "microsoft";
     repo = "playwright-cli";
     rev = "v${playwrightCliVersion}";
