@@ -13,10 +13,10 @@ let
   #   fixing a concrete bug or security issue.
   # - Flake-input skills are updated through their input plus sync/check commands.
   codexToolPkgs = inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-  codexVersion = "0.146.0";
+  codexVersion = "0.146.1";
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
-  codexHash = "sha256-W6O5QFVDlTCB9mHQhU0mb3biq75R1BNJNVo23nZzd2o=";
+  codexHash = "sha256-9VgQWuwSv2+zNXB5Ot/Aifi0HcMqztYLi0+6m0UYJKw=";
   codexNode = pkgs.nodejs_24;
   playwrightCliVersion = "0.1.17";
   playwrightCliSource = pkgs.fetchFromGitHub {
