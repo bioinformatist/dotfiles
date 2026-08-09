@@ -9,22 +9,21 @@ Usage:
   codex-improve-exec PLAN
   codex-improve-exec --spark PLAN
   codex-improve-exec --deep PLAN
-  codex-improve-exec --environment-json '<json>' [--spark|--deep] PLAN
   codex-improve-exec --environment-json '<json>' [--allow-protected-path .agents] [--allow-protected-path .codex] [--spark|--deep] PLAN
   codex-improve-exec --candidate WORKTREE
   codex-improve-exec --checkpoint WORKTREE EXPECTED_TREE COMMIT_MESSAGE
   codex-improve-exec --next CHECKPOINT PLAN
   codex-improve-exec --spark --next CHECKPOINT PLAN
   codex-improve-exec --deep --next CHECKPOINT PLAN
-  codex-improve-exec --environment-json '<json>' [--spark|--deep] --next CHECKPOINT PLAN
+  codex-improve-exec --environment-json '<json>' [--allow-protected-path .agents] [--allow-protected-path .codex] [--spark|--deep] --next CHECKPOINT PLAN
   codex-improve-exec --revise WORKTREE EXPECTED_TREE DOSSIER
   codex-improve-exec --spark --revise WORKTREE EXPECTED_TREE DOSSIER
   codex-improve-exec --deep --revise WORKTREE EXPECTED_TREE DOSSIER
-  codex-improve-exec --environment-json '<json>' [--spark|--deep] --revise WORKTREE EXPECTED_TREE DOSSIER
+  codex-improve-exec --environment-json '<json>' [--allow-protected-path .agents] [--allow-protected-path .codex] [--spark|--deep] --revise WORKTREE EXPECTED_TREE DOSSIER
   codex-improve-exec --recover WORKTREE EXPECTED_TREE DOSSIER
   codex-improve-exec --spark --recover WORKTREE EXPECTED_TREE DOSSIER
   codex-improve-exec --deep --recover WORKTREE EXPECTED_TREE DOSSIER
-  codex-improve-exec --environment-json '<json>' [--spark|--deep] --recover WORKTREE EXPECTED_TREE DOSSIER
+  codex-improve-exec --environment-json '<json>' [--allow-protected-path .agents] [--allow-protected-path .codex] [--spark|--deep] --recover WORKTREE EXPECTED_TREE DOSSIER
   codex-improve-exec --resume WORKTREE EXPECTED_TREE ARTIFACT_DIR
 
 Initial mode creates an isolated worktree at the current HEAD, executes PLAN,
@@ -62,6 +61,8 @@ improve_contract="undeclared"
 protected_paths_json='[]'
 allow_agents=0
 allow_codex=0
+resume_environment_snapshot=""
+resume_prompt_body_snapshot=""
 
 byte_length() {
   LC_ALL=C printf '%s' "$1" | wc -c
@@ -169,6 +170,11 @@ validate_environment_schema() {
 validate_artifact_environment() {
   local artifact="$1"
   artifact_contract "$artifact"
+  improve_contract="${declared_contract:-undeclared}"
+  if [ "$protected_paths_json" != '[]' ] &&
+    [ "$declared_contract" != "1.0.0-codex.14" ]; then
+    fail_input "--allow-protected-path requires Improve contract 1.0.0-codex.14"
+  fi
   case "$declared_contract" in
     1.0.0-codex.13|1.0.0-codex.14)
       if [ "$environment_json_supplied" -ne 1 ]; then
@@ -185,12 +191,6 @@ validate_artifact_environment() {
       fail_input "artifact declares an unsupported Improve contract: $declared_contract"
       ;;
   esac
-
-  improve_contract="${declared_contract:-undeclared}"
-  if [ "$protected_paths_json" != '[]' ] &&
-    [ "$declared_contract" != "1.0.0-codex.14" ]; then
-    fail_input "--allow-protected-path requires Improve contract 1.0.0-codex.14"
-  fi
 
   extract_environment_payload "$artifact"
   validate_environment_schema "$environment_payload"
@@ -221,6 +221,17 @@ cleanup_candidate_index() {
   fi
 }
 
+cleanup_resume_snapshots() {
+  if [ -n "$resume_environment_snapshot" ]; then
+    rm -f -- "$resume_environment_snapshot"
+    resume_environment_snapshot=""
+  fi
+  if [ -n "$resume_prompt_body_snapshot" ]; then
+    rm -f -- "$resume_prompt_body_snapshot"
+    resume_prompt_body_snapshot=""
+  fi
+}
+
 checkpoint_original_ref=""
 checkpoint_internal_ref=""
 cleanup_checkpoint_state() {
@@ -243,6 +254,7 @@ cleanup_checkpoint_state() {
 # shellcheck disable=SC2329
 cleanup() {
   cleanup_candidate_index
+  cleanup_resume_snapshots
   cleanup_checkpoint_state || true
 }
 trap cleanup EXIT
@@ -391,6 +403,38 @@ require_current_candidate() {
   if [ "$candidate_tree" != "$expected_tree" ]; then
     fail_input "candidate tree does not match expected tree"
   fi
+}
+
+validate_granted_protected_roots() {
+  local validation_contract="$1"
+  local validation_paths="$2"
+  local validation_worktree="$3"
+  local -a granted_roots=()
+  local protected_path
+  local protected_root
+
+  [ "$validation_contract" = "1.0.0-codex.14" ] || return 0
+  case "$validation_paths" in
+    '[]') ;;
+    '[".agents"]') granted_roots=(.agents) ;;
+    '[".codex"]') granted_roots=(.codex) ;;
+    '[".agents",".codex"]') granted_roots=(.agents .codex) ;;
+    *)
+      printf '%s\n' \
+        'codex-improve-exec: internal protected-path set is invalid' >&2
+      return 2
+      ;;
+  esac
+  for protected_path in "${granted_roots[@]}"; do
+    protected_root="$validation_worktree/$protected_path"
+    if [ -L "$protected_root" ] ||
+      { [ -e "$protected_root" ] && [ ! -d "$protected_root" ]; }; then
+      printf 'codex-improve-exec: granted protected path must be absent or a physical directory: %s\n' \
+        "$protected_path" >&2
+      return 1
+    fi
+  done
+  return 0
 }
 
 validate_dossier() {
@@ -781,6 +825,7 @@ prepare_preflight_wrapper() {
 
   {
     printf '#!%s\n' "$bash_path"
+    declare -f validate_granted_protected_roots
     cat <<'EOF'
 set +e
 set -uo pipefail
@@ -802,7 +847,9 @@ model_timeout="${15}"
 kill_after="${16}"
 caller_lc_all_set="${17}"
 caller_lc_all="${18}"
-shift 18
+improve_contract="${19}"
+protected_paths_json="${20}"
+shift 20
 
 atomic_status() {
   printf '%s\n' "$1" >"$preflight_status_file.tmp.$$" || exit 1
@@ -850,6 +897,12 @@ if [ "$candidate_status" -ne 0 ] || [ "$candidate_tree" != "$expected_tree" ]; t
   exit 191
 fi
 
+if ! validate_granted_protected_roots \
+  "$improve_contract" "$protected_paths_json" "$worktree" \
+  >>"$preflight_log" 2>&1; then
+  atomic_status mutated
+  exit 191
+fi
 atomic_status passed
 : >"$invocation_marker.tmp.$$" || exit 1
 "$mv_path" "$invocation_marker.tmp.$$" "$invocation_marker" || exit 1
@@ -961,6 +1014,10 @@ validate_final_report() {
 write_resume_manifest() {
   resume_manifest="$artifact_dir/resume-manifest.json"
   manifest_hash_file="$artifact_dir/resume-manifest.sha256"
+  local manifest_contract="$improve_contract"
+  if [ "$manifest_contract" != "1.0.0-codex.14" ]; then
+    manifest_contract="1.0.0-codex.13"
+  fi
   prompt_body_hash="$(sha256sum "$prompt_body_file" | sed 's/[[:space:]].*$//')" ||
     fail_input "cannot hash prompt body"
   environment_file_hash="$(sha256sum "$environment_file" | sed 's/[[:space:]].*$//')" ||
@@ -976,7 +1033,7 @@ write_resume_manifest() {
     fail_input "cannot normalize role configuration"
   jq -nS \
     --argjson version 1 \
-    --arg improveContract "$improve_contract" \
+    --arg improveContract "$manifest_contract" \
     --argjson protectedPaths "$protected_paths_json" \
     --arg originalExecutionId "$original_execution_id" \
     --arg executionId "$execution_id" \
@@ -1136,6 +1193,7 @@ run_execution() {
       "$rm_path" "$sed_path" "$diagnostic_log" \
       "$absolute_seconds" "$kill_after_seconds" \
       "$caller_lc_all_set" "$caller_lc_all" \
+      "$improve_contract" "$protected_paths_json" \
       "${codex_command[@]}" \
       <"$prompt_file" >"$event_log" 2>"$timeout_log" &
   else
@@ -1491,6 +1549,21 @@ prepare_resumable_worktree_state() {
   prepare_private_directory "$worktree"
 }
 
+capture_resume_inputs() {
+  resume_environment_snapshot="$(
+    mktemp "$state_home/codex-improve/resume-environment.XXXXXX"
+  )" || fail_input "cannot create private resume environment snapshot"
+  resume_prompt_body_snapshot="$(
+    mktemp "$state_home/codex-improve/resume-prompt-body.XXXXXX"
+  )" || fail_input "cannot create private resume prompt snapshot"
+  cp -- "$source_environment" "$resume_environment_snapshot" 2>/dev/null ||
+    fail_input "cannot snapshot resume environment"
+  cp -- "$source_prompt_body" "$resume_prompt_body_snapshot" 2>/dev/null ||
+    fail_input "cannot snapshot resume prompt body"
+  chmod 600 -- "$resume_environment_snapshot" "$resume_prompt_body_snapshot" ||
+    fail_input "cannot protect resume input snapshots"
+}
+
 validate_resume_and_load() {
   state_home="${XDG_STATE_HOME:-$HOME/.local/state}"
   state_home="$(realpath -- "$state_home" 2>/dev/null)" ||
@@ -1640,25 +1713,31 @@ validate_resume_and_load() {
   input_candidate_head="$candidate_head"
   input_candidate_tree="$candidate_tree"
 
+  improve_contract="$(jq -r '.improveContract' <<<"$manifest_snapshot")"
+  protected_paths_json="$(jq -c '.protectedPaths // []' <<<"$manifest_snapshot")"
+  validate_granted_protected_roots \
+    "$improve_contract" "$protected_paths_json" "$worktree" || exit 2
+
   source_environment="$source_artifact/environment.json"
   source_prompt_body="$source_artifact/prompt-body.txt"
   require_private_path "$source_environment" 600 file
   require_private_path "$source_prompt_body" 600 file
+  capture_resume_inputs
   source_environment_hash="$(
-    sha256sum "$source_environment" | sed 's/[[:space:]].*$//'
+    sha256sum "$resume_environment_snapshot" | sed 's/[[:space:]].*$//'
   )" || fail_input "cannot hash resume environment"
   manifest_environment_hash="$(jq -r '.environmentSha256' <<<"$manifest_snapshot")" ||
     fail_input "cannot read resume environment hash"
   [ "$source_environment_hash" = "$manifest_environment_hash" ] ||
     fail_input "resume environment hash does not match"
   source_prompt_body_hash="$(
-    sha256sum "$source_prompt_body" | sed 's/[[:space:]].*$//'
+    sha256sum "$resume_prompt_body_snapshot" | sed 's/[[:space:]].*$//'
   )" || fail_input "cannot hash resume prompt body"
   manifest_prompt_body_hash="$(jq -r '.promptBodySha256' <<<"$manifest_snapshot")" ||
     fail_input "cannot read resume prompt body hash"
   [ "$source_prompt_body_hash" = "$manifest_prompt_body_hash" ] ||
     fail_input "resume prompt body hash does not match"
-  environment_normalized="$(<"$source_environment")"
+  environment_normalized="$(<"$resume_environment_snapshot")"
   validate_environment_schema "$environment_normalized"
   [ "$(jq -cS . <<<"$environment_normalized")" = "$environment_normalized" ] ||
     fail_input "resume environment is not normalized"
@@ -1666,8 +1745,6 @@ validate_resume_and_load() {
     sed 's/[[:space:]].*$//')"
   preflight_count="$(jq -r '.probes | length' <<<"$environment_normalized")"
   environment_enabled=1
-  improve_contract="$(jq -r '.improveContract' <<<"$manifest_snapshot")"
-  protected_paths_json="$(jq -c '.protectedPaths // []' <<<"$manifest_snapshot")"
 
   role_key="$(jq -r '.roleKey' <<<"$manifest_snapshot")"
   role_json="$(jq -ce --arg role "$role_key" '.[$role]' <<<"$roles_json")" ||
@@ -1711,8 +1788,13 @@ validate_resume_and_load() {
     fail_input "cannot protect resume consumption marker"
 
   prepare_artifacts
-  cp -- "$source_prompt_body" "$prompt_body_file" ||
+  cp -- "$resume_environment_snapshot" "$environment_file" 2>/dev/null ||
+    fail_input "cannot copy verified resume environment"
+  cp -- "$resume_prompt_body_snapshot" "$prompt_body_file" 2>/dev/null ||
     fail_input "cannot copy verified resume prompt body"
+  chmod 600 -- "$environment_file" "$prompt_body_file" ||
+    fail_input "cannot protect verified resume inputs"
+  cleanup_resume_snapshots
   write_prompt
 }
 
@@ -1738,6 +1820,8 @@ if [ "$mode" = "revision" ] || [ "$mode" = "recovery" ]; then
   input_candidate_head="$candidate_head"
   input_candidate_tree="$candidate_tree"
   base="$candidate_head"
+  validate_granted_protected_roots \
+    "$improve_contract" "$protected_paths_json" "$worktree" || exit 2
 
   prepare_artifacts
   if [ "$mode" = "revision" ]; then
@@ -1883,6 +1967,8 @@ fi
 compute_candidate_strict
 input_candidate_head="$candidate_head"
 input_candidate_tree="$candidate_tree"
+validate_granted_protected_roots \
+  "$improve_contract" "$protected_paths_json" "$worktree" || exit 2
 prepare_artifacts
 {
   cat <<'EOF'

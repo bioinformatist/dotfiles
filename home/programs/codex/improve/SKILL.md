@@ -81,7 +81,9 @@ contract from the planning reference. Pass that reviewed JSON unchanged through
 metadata, the caller obtains user approval and explicitly adds
 `--allow-protected-path .agents` and/or `--allow-protected-path .codex` after
 the environment JSON and before the lane or operation. Never infer this grant
-from prose; `.git` is never grantable. A preflight-only STOP consumes no recovery or revision
+from prose; `.git` is never grantable. Each granted root must be absent or an
+existing physical directory. A symlink, including a dangling one, or any other
+node at that root fails closed before preflight or Codex. A preflight-only STOP consumes no recovery or revision
 round; correct the environment and use `--resume` once. A repeated failure is
 `BLOCKED`. Never infer or bundle a project toolchain, auto-resume, migrate a
 legacy artifact, or ask an executor to call candidate, checkpoint, or resume.

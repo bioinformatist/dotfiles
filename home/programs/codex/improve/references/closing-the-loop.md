@@ -33,7 +33,14 @@ IMPROVE_EXEC_RESUME_MANIFEST=...
 
 The grant is never inferred from artifact prose. Only `.agents` and `.codex`
 are accepted, `.git` is always forbidden, and no flag retains the existing
-denial. `.13` artifacts retain legacy execution and resume semantics and reject
+denial. A granted root must be absent or a physical directory when the runner
+checks the exact worktree. Root symlinks (including dangling symlinks) and
+non-directory nodes fail closed before preflight or Codex. The runner checks
+before the launcher and probes and repeats the check after probes and candidate
+verification, immediately before Codex. A failure at the second boundary uses
+the nonresumable mutated-preflight classification. Symlinks nested below a
+physical granted directory remain governed by the sandbox. `.13`
+artifacts retain legacy execution and resume semantics and reject
 the new option. Revisions and recoveries must restate the approved set; resume
 reconstructs it from the authenticated manifest and accepts no override.
 
@@ -65,7 +72,9 @@ Resume accepts no lane or environment override. It validates current-user
 private state, exact file modes and ownership, artifact hashes, generated role
 data, repository and registered-worktree identity, candidate identity, original
 mode, profile, environment, limits, base, and predecessor. It creates a fresh
-execution ID and artifact directory. If preflight fails again, the new manifest
+execution ID and artifact directory. Environment and prompt inputs are each
+captured once; the runner hashes and consumes those same private byte snapshots.
+If preflight fails again, the new manifest
 records attempt 1 and its parent; do not resume it again. Return `BLOCKED`.
 
 If preflight changes the candidate, return

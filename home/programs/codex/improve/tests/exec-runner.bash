@@ -272,6 +272,14 @@ case "${FAKE_PROBE_MODE:-pass}" in
   timeout) while true; do sleep 1; done ;;
   delay) sleep 0.6; exit 0 ;;
   mutate) printf '%s\n' mutated >>"$FAKE_MUTATE_WORKTREE/tracked.txt"; exit 0 ;;
+  grant_root_symlink)
+    if [ ! -e "$FAKE_MUTATE_WORKTREE/.agents" ] &&
+      [ ! -L "$FAKE_MUTATE_WORKTREE/.agents" ]; then
+      ln -s "$FAKE_MUTATE_TARGET" "$FAKE_MUTATE_WORKTREE/.agents"
+    fi
+    [ -L "$FAKE_MUTATE_WORKTREE/.agents" ] || exit 24
+    exit 0
+    ;;
 esac
 FAKE_PROBE
 chmod +x "$fake_bin/env-probe"
@@ -610,10 +618,15 @@ grep -F -- "--spark --next CHECKPOINT PLAN" "$output" >/dev/null ||
   fail "help omits Spark next mode"
 grep -F -- "--deep --next CHECKPOINT PLAN" "$output" >/dev/null ||
   fail "help omits deep next mode"
-grep -F -- "--environment-json '<json>' [--spark|--deep] --next CHECKPOINT PLAN" \
-  "$output" >/dev/null || fail "help omits environment-backed lane-aware next mode"
-grep -F -- "[--allow-protected-path .agents] [--allow-protected-path .codex]" \
-  "$output" >/dev/null || fail "help omits protected-path options"
+protected_help='[--allow-protected-path .agents] [--allow-protected-path .codex] [--spark|--deep]'
+grep -F -- "--environment-json '<json>' $protected_help PLAN" \
+  "$output" >/dev/null || fail "help omits protected-path-capable initial mode"
+grep -F -- "--environment-json '<json>' $protected_help --next CHECKPOINT PLAN" \
+  "$output" >/dev/null || fail "help omits protected-path-capable next mode"
+grep -F -- "--environment-json '<json>' $protected_help --revise WORKTREE EXPECTED_TREE DOSSIER" \
+  "$output" >/dev/null || fail "help omits protected-path-capable revision mode"
+grep -F -- "--environment-json '<json>' $protected_help --recover WORKTREE EXPECTED_TREE DOSSIER" \
+  "$output" >/dev/null || fail "help omits protected-path-capable recovery mode"
 assert_not_invoked help
 
 assert_schema_input_failure missing_schema missing
@@ -873,6 +886,19 @@ assert_preflight_not_invoked environment_future_contract
 legacy_environment_plan="$repo/plans/011-environment.md"
 write_environment_artifact "$legacy_environment_plan" "$valid_environment_json"
 sed -i 's/1\.0\.0-codex\.14/1.0.0-codex.11/' "$legacy_environment_plan"
+
+undeclared_environment_plan="$repo/plans/undeclared-environment.md"
+write_environment_artifact "$undeclared_environment_plan" "$valid_environment_json"
+sed -i '/Improve contract/d' "$undeclared_environment_plan"
+
+start_case protected_legacy_without_environment
+run_runner --allow-protected-path .agents "$legacy_environment_plan"
+assert_rejected_before_mutation protected_legacy_without_environment
+
+start_case protected_undeclared_without_environment
+run_runner --allow-protected-path .codex "$undeclared_environment_plan"
+assert_rejected_before_mutation protected_undeclared_without_environment
+
 start_case environment_legacy_opt_in complete
 run_runner --environment-json "$valid_environment_json" "$legacy_environment_plan"
 assert_transport_case 0 COMPLETE completed
@@ -927,6 +953,51 @@ run_runner --resume "$contract_13_worktree" "$contract_13_tree" \
   "$contract_13_artifact"
 assert_transport_case 0 COMPLETE completed
 assert_contract_13_invocation
+
+assert_legacy_compatibility_resume() {
+  local seed_name="$1"
+  local source_artifact="$2"
+  local effective_contract="$3"
+  local seed_worktree
+  local seed_tree
+  local seed_artifact
+  local seed_manifest
+  local seed_state_home
+  local seed_home
+
+  start_case "$seed_name" complete
+  export FAKE_PROBE_MODE=fail
+  run_runner --environment-json "$valid_environment_json" "$source_artifact"
+  assert_transport_case 0 STOPPED environment_preflight_failed
+  assert_eq "$(field "$output" IMPROVE_CONTRACT)" "$effective_contract" \
+    "$seed_name effective execution contract"
+  jq -e -s --arg contract "$effective_contract" '
+    last
+    | .improve_contract == $contract
+      and .protected_paths == []
+  ' "$metric" >/dev/null || fail "$seed_name effective contract metric"
+  seed_worktree="$(field "$output" IMPROVE_WORKTREE)"
+  seed_tree="$(field "$output" IMPROVE_CANDIDATE_TREE)"
+  seed_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+  seed_manifest="$(field "$output" IMPROVE_EXEC_RESUME_MANIFEST)"
+  seed_state_home="$XDG_STATE_HOME"
+  seed_home="$HOME"
+  jq -e '
+    .improveContract == "1.0.0-codex.13"
+      and (has("protectedPaths") | not)
+  ' "$seed_manifest" >/dev/null || fail "$seed_name compatibility manifest shape"
+
+  start_resume_case "${seed_name}_resume" "$seed_state_home" "$seed_home" complete
+  export FAKE_PROBE_MODE=pass
+  run_runner --resume "$seed_worktree" "$seed_tree" "$seed_artifact"
+  assert_transport_case 0 COMPLETE completed
+  assert_contract_13_invocation
+}
+
+assert_legacy_compatibility_resume legacy_11_manifest \
+  "$legacy_environment_plan" 1.0.0-codex.11
+assert_legacy_compatibility_resume undeclared_manifest \
+  "$undeclared_environment_plan" undeclared
 
 for invalid_path in '' .git .Agents .agents/ other ../.agents /tmp/.agents '.agent*'; do
   start_case "protected_invalid_${invalid_path//[^A-Za-z0-9]/_}"
@@ -1269,17 +1340,121 @@ assert_eq "$status" 2 "stale resume candidate status"
 assert_preflight_not_invoked resume_stale_candidate
 cp "$failure_tracked_backup" "$failure_worktree/tracked.txt"
 
+clone_resume_artifact() {
+  local destination="$1"
+  cp -a -- "$failure_artifact" "$destination"
+  jq --arg artifact "$(realpath -- "$destination")" \
+    '.artifactDirectory = $artifact' "$destination/resume-manifest.json" \
+    >"$destination/resume-manifest.json.tmp"
+  mv -- "$destination/resume-manifest.json.tmp" \
+    "$destination/resume-manifest.json"
+  sha256sum "$destination/resume-manifest.json" | \
+    sed 's/[[:space:]].*$//' >"$destination/resume-manifest.sha256"
+  chmod 600 "$destination/resume-manifest.json" \
+    "$destination/resume-manifest.sha256"
+}
+
+content_race_bin="$test_root/resume-content-race-bin"
+mkdir -p "$content_race_bin"
+real_cp="$(command -v cp)"
+real_sha256sum="$(command -v sha256sum)"
+printf '#!%s\n' "$(command -v bash)" >"$content_race_bin/cp"
+cat >>"$content_race_bin/cp" <<'RACE_CP'
+set -euo pipefail
+source_path="${1:-}"
+if [ "$source_path" = "--" ]; then
+  source_path="${2:-}"
+fi
+"$REAL_CP" "$@"
+if [ "$source_path" = "$RACE_SOURCE" ] && [ ! -e "$RACE_MARKER" ]; then
+  "$REAL_CP" -- "$RACE_REPLACEMENT" "$RACE_SOURCE"
+  chmod 600 "$RACE_SOURCE"
+  : >"$RACE_MARKER"
+fi
+RACE_CP
+chmod +x "$content_race_bin/cp"
+printf '#!%s\n' "$(command -v bash)" >"$content_race_bin/sha256sum"
+cat >>"$content_race_bin/sha256sum" <<'RACE_SHA256'
+set -euo pipefail
+if [ "${1:-}" = "$RACE_SOURCE" ] && [ ! -e "$RACE_MARKER" ]; then
+  "$REAL_SHA256SUM" "$@"
+  status="$?"
+  "$REAL_CP" -- "$RACE_REPLACEMENT" "$RACE_SOURCE"
+  chmod 600 "$RACE_SOURCE"
+  : >"$RACE_MARKER"
+  exit "$status"
+fi
+exec "$REAL_SHA256SUM" "$@"
+RACE_SHA256
+chmod +x "$content_race_bin/sha256sum"
+
+environment_race_artifact="$failure_state_home/codex-improve/executions/resume-environment-race"
+clone_resume_artifact "$environment_race_artifact"
+replacement_launcher="$test_root/replacement-launcher"
+replacement_launcher_marker="$test_root/replacement-launcher-invoked"
+printf '#!%s\n' "$(command -v bash)" >"$replacement_launcher"
+cat >>"$replacement_launcher" <<'REPLACEMENT_LAUNCHER'
+set -euo pipefail
+: >"$REPLACEMENT_LAUNCHER_MARKER"
+exec "$@"
+REPLACEMENT_LAUNCHER
+chmod +x "$replacement_launcher"
+replacement_environment="$test_root/replacement-environment.json"
+jq -cS -n --arg launcher "$replacement_launcher" '
+  {
+    version: 1,
+    launcher: [$launcher],
+    probes: [],
+    probeOmissionReason: "Deterministic resume race replacement."
+  }
+' >"$replacement_environment"
+environment_race_marker="$test_root/environment-race-mutated"
+
+start_resume_case resume_environment_snapshot \
+  "$failure_state_home" "$failure_home" complete
+export RACE_SOURCE="$environment_race_artifact/environment.json"
+export RACE_REPLACEMENT="$replacement_environment"
+export RACE_MARKER="$environment_race_marker"
+export REAL_CP="$real_cp"
+export REAL_SHA256SUM="$real_sha256sum"
+export REPLACEMENT_LAUNCHER_MARKER="$replacement_launcher_marker"
+PATH="$content_race_bin:$PATH" run_runner --resume \
+  "$failure_worktree" "$failure_tree" "$environment_race_artifact"
+assert_transport_case 0 COMPLETE completed
+[ -e "$environment_race_marker" ] || fail "resume environment race did not execute"
+[ ! -e "$replacement_launcher_marker" ] ||
+  fail "resume used replacement environment bytes"
+fresh_environment_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+cmp -- "$environment_backup" "$fresh_environment_artifact/environment.json" ||
+  fail "resume did not preserve authenticated environment bytes"
+cmp -- "$replacement_environment" "$RACE_SOURCE" ||
+  fail "resume environment race did not replace source authority"
+
+prompt_race_artifact="$failure_state_home/codex-improve/executions/resume-prompt-race"
+clone_resume_artifact "$prompt_race_artifact"
+replacement_prompt="$test_root/replacement-prompt-body.txt"
+printf '%s\n' PROMPT_RACE_REPLACEMENT >"$replacement_prompt"
+prompt_race_marker="$test_root/prompt-race-mutated"
+
+start_resume_case resume_prompt_snapshot \
+  "$failure_state_home" "$failure_home" complete
+export RACE_SOURCE="$prompt_race_artifact/prompt-body.txt"
+export RACE_REPLACEMENT="$replacement_prompt"
+export RACE_MARKER="$prompt_race_marker"
+PATH="$content_race_bin:$PATH" run_runner --resume \
+  "$failure_worktree" "$failure_tree" "$prompt_race_artifact"
+assert_transport_case 0 COMPLETE completed
+[ -e "$prompt_race_marker" ] || fail "resume prompt race did not execute"
+! grep -F PROMPT_RACE_REPLACEMENT "$FAKE_PROMPT_LOG" >/dev/null ||
+  fail "resume prompt included replacement bytes"
+fresh_prompt_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+cmp -- "$prompt_body_backup" "$fresh_prompt_artifact/prompt-body.txt" ||
+  fail "resume did not preserve authenticated prompt bytes"
+cmp -- "$replacement_prompt" "$RACE_SOURCE" ||
+  fail "resume prompt race did not replace source authority"
+
 race_artifact="$failure_state_home/codex-improve/executions/resume-race-fixture"
-cp -a -- "$failure_artifact" "$race_artifact"
-jq --arg artifact "$(realpath -- "$race_artifact")" \
-  '.artifactDirectory = $artifact' "$race_artifact/resume-manifest.json" \
-  >"$race_artifact/resume-manifest.json.tmp"
-mv -- "$race_artifact/resume-manifest.json.tmp" \
-  "$race_artifact/resume-manifest.json"
-sha256sum "$race_artifact/resume-manifest.json" | \
-  sed 's/[[:space:]].*$//' >"$race_artifact/resume-manifest.sha256"
-chmod 600 "$race_artifact/resume-manifest.json" \
-  "$race_artifact/resume-manifest.sha256"
+clone_resume_artifact "$race_artifact"
 race_bin="$test_root/resume-race-bin"
 race_marker="$test_root/resume-race-mutated"
 mkdir -p "$race_bin"
@@ -1832,6 +2007,95 @@ start_contract_case() {
   export XDG_STATE_HOME="$contract_state_home"
   export HOME="$contract_home"
 }
+
+ln -s .git "$contract_worktree/.agents"
+unsafe_agents_tree="$(candidate_tree "$contract_worktree")"
+git_pointer_hash="$(sha256sum "$contract_worktree/.git" | sed 's/[[:space:]].*$//')"
+start_contract_case protected_root_symlink complete
+run_runner --environment-json "$valid_environment_json" \
+  --allow-protected-path .agents --revise \
+  "$contract_worktree" "$unsafe_agents_tree" "$environment_dossier"
+assert_eq "$status" 2 "granted-root symlink status"
+assert_preflight_not_invoked protected_root_symlink
+grep -Fx 'codex-improve-exec: granted protected path must be absent or a physical directory: .agents' \
+  "$errors" >/dev/null || fail "granted-root symlink rejection reason"
+assert_eq "$(sha256sum "$contract_worktree/.git" | sed 's/[[:space:]].*$//')" \
+  "$git_pointer_hash" "granted-root symlink preserved .git"
+[ ! -e "$contract_worktree/.git/improve-symlink-test" ] ||
+  fail "granted-root symlink changed .git"
+[ ! -e "$contract_state_home/codex-improve/executions" ] ||
+  fail "granted-root symlink initialized execution artifacts"
+rm -- "$contract_worktree/.agents"
+
+printf '%s\n' unsafe-root >"$contract_worktree/.codex"
+unsafe_codex_tree="$(candidate_tree "$contract_worktree")"
+start_contract_case protected_root_file complete
+run_runner --environment-json "$valid_environment_json" \
+  --allow-protected-path .codex --revise \
+  "$contract_worktree" "$unsafe_codex_tree" "$environment_dossier"
+assert_eq "$status" 2 "granted-root file status"
+assert_preflight_not_invoked protected_root_file
+grep -Fx 'codex-improve-exec: granted protected path must be absent or a physical directory: .codex' \
+  "$errors" >/dev/null || fail "granted-root file rejection reason"
+rm -- "$contract_worktree/.codex"
+
+start_contract_case protected_root_missing complete
+run_runner --environment-json "$valid_environment_json" \
+  --allow-protected-path .agents --revise \
+  "$contract_worktree" "$contract_tree" "$environment_dossier"
+assert_transport_case 0 COMPLETE completed
+assert_contract_14_invocation '[".agents"]' true
+
+mkdir "$contract_worktree/.agents"
+start_contract_case protected_root_directory complete
+run_runner --environment-json "$valid_environment_json" \
+  --allow-protected-path .agents --revise \
+  "$contract_worktree" "$contract_tree" "$environment_dossier"
+assert_transport_case 0 COMPLETE completed
+assert_contract_14_invocation '[".agents"]' true
+rmdir "$contract_worktree/.agents"
+
+contract_exclude="$(git -C "$contract_worktree" rev-parse --git-path info/exclude)"
+contract_exclude_backup="$test_root/contract-exclude.backup"
+cp -- "$contract_exclude" "$contract_exclude_backup"
+printf '%s\n' '/.agents' >>"$contract_exclude"
+contract_git_directory="$(
+  git -C "$contract_worktree" rev-parse --path-format=absolute --git-common-dir
+)"
+contract_git_directory="$(realpath -- "$contract_git_directory")"
+start_contract_case protected_root_probe_race complete
+export FAKE_PROBE_MODE=grant_root_symlink
+export FAKE_MUTATE_WORKTREE="$contract_worktree"
+export FAKE_MUTATE_TARGET="$contract_git_directory"
+run_runner --environment-json "$valid_environment_json" \
+  --allow-protected-path .agents --revise \
+  "$contract_worktree" "$contract_tree" "$environment_dossier"
+assert_transport_case 0 STOPPED environment_preflight_mutated_candidate
+assert_eq "$(field "$output" IMPROVE_EXEC_INVOKED)" 0 \
+  "granted-root probe race invoked marker"
+assert_eq "$(field "$output" IMPROVE_EXEC_PREFLIGHT_STATUS)" mutated \
+  "granted-root probe race preflight status"
+assert_eq "$(candidate_tree "$contract_worktree")" "$contract_tree" \
+  "ignored granted-root symlink candidate identity"
+git -C "$contract_worktree" check-ignore -q .agents ||
+  fail "probe-created granted-root symlink was not ignored"
+[ -L "$contract_worktree/.agents" ] ||
+  fail "environment probe did not create granted-root symlink"
+assert_eq "$(sha256sum "$contract_worktree/.git" | sed 's/[[:space:]].*$//')" \
+  "$git_pointer_hash" "granted-root probe race preserved .git"
+[ ! -e "$contract_git_directory/improve-symlink-test" ] ||
+  fail "granted-root probe race changed .git"
+[ -z "$(field "$output" IMPROVE_EXEC_RESUME_MANIFEST)" ] ||
+  fail "granted-root probe race produced a resume manifest"
+assert_not_invoked protected_root_probe_race
+assert_eq "$(wc -l <"$FAKE_LAUNCHER_COUNT")" 1 \
+  "granted-root probe race launcher count"
+protected_root_race_artifact="$(field "$output" IMPROVE_EXEC_ARTIFACT_DIR)"
+grep -Fx 'codex-improve-exec: granted protected path must be absent or a physical directory: .agents' \
+  "$protected_root_race_artifact/preflight.log" >/dev/null ||
+  fail "granted-root probe race rejection reason"
+rm -- "$contract_worktree/.agents"
+cp -- "$contract_exclude_backup" "$contract_exclude"
 
 start_case environment_revision_outside_xdg complete
 run_runner --environment-json "$valid_environment_json" --revise \
