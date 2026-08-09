@@ -6,13 +6,14 @@ verdict. The worktree is preserved until the user decides what to do with it.
 
 ## Environment preflight and resume
 
-For `.13`, pass the artifact's environment JSON as the first option:
+For `.14`, pass the artifact's environment JSON as the first option. Add an
+explicit protected-path grant only after user approval:
 
 ```console
-codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] <artifact>
-codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] --revise WORKTREE EXPECTED_TREE DOSSIER
-codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] --recover WORKTREE EXPECTED_TREE DOSSIER
-codex-improve-exec --environment-json '<exact-json>' [--spark|--deep] --next CHECKPOINT PLAN
+codex-improve-exec --environment-json '<exact-json>' [--allow-protected-path .agents] [--allow-protected-path .codex] [--spark|--deep] <artifact>
+codex-improve-exec --environment-json '<exact-json>' [--allow-protected-path .agents] [--allow-protected-path .codex] [--spark|--deep] --revise WORKTREE EXPECTED_TREE DOSSIER
+codex-improve-exec --environment-json '<exact-json>' [--allow-protected-path .agents] [--allow-protected-path .codex] [--spark|--deep] --recover WORKTREE EXPECTED_TREE DOSSIER
+codex-improve-exec --environment-json '<exact-json>' [--allow-protected-path .agents] [--allow-protected-path .codex] [--spark|--deep] --next CHECKPOINT PLAN
 ```
 
 The runner validates the JSON against the artifact before creating or reusing a
@@ -21,6 +22,8 @@ fields with every model-capable execution:
 
 ```text
 IMPROVE_EXEC_INVOKED=0|1
+IMPROVE_CONTRACT=...
+IMPROVE_PROTECTED_PATHS=[]|[".agents"]|[".codex"]|[".agents",".codex"]
 IMPROVE_EXEC_ENVIRONMENT_HASH=...
 IMPROVE_EXEC_PREFLIGHT_COUNT=...
 IMPROVE_EXEC_PREFLIGHT_STATUS=legacy_unchecked|passed|failed|mutated
@@ -28,9 +31,23 @@ IMPROVE_EXEC_PREFLIGHT_LOG=...
 IMPROVE_EXEC_RESUME_MANIFEST=...
 ```
 
+The grant is never inferred from artifact prose. Only `.agents` and `.codex`
+are accepted, `.git` is always forbidden, and no flag retains the existing
+denial. A granted root must be absent or a physical directory when the runner
+checks the exact worktree. Root symlinks (including dangling symlinks) and
+non-directory nodes fail closed before preflight or Codex. The runner checks
+before the launcher and probes and repeats the check after probes and candidate
+verification, immediately before Codex. A failure at the second boundary uses
+the nonresumable mutated-preflight classification. Symlinks nested below a
+physical granted directory remain governed by the sandbox. `.13`
+artifacts retain legacy execution and resume semantics and reject
+the new option. Revisions and recoveries must restate the approved set; resume
+reconstructs it from the authenticated manifest and accepts no override.
+
 The preflight log, wrapper, and optional resume manifest are private execution
 artifacts. Content-free metrics contain only the invoked Boolean, environment
-hash, probe count, and status; they never contain argv, output, paths, names,
+hash, probe count, status, effective contract, and normalized protected-path
+enum; they never contain argv, output, host paths, names,
 candidate identities, or manifest contents.
 
 Before a contracted execution launches preflight, the runner verifies
@@ -55,7 +72,9 @@ Resume accepts no lane or environment override. It validates current-user
 private state, exact file modes and ownership, artifact hashes, generated role
 data, repository and registered-worktree identity, candidate identity, original
 mode, profile, environment, limits, base, and predecessor. It creates a fresh
-execution ID and artifact directory. If preflight fails again, the new manifest
+execution ID and artifact directory. Environment and prompt inputs are each
+captured once; the runner hashes and consumes those same private byte snapshots.
+If preflight fails again, the new manifest
 records attempt 1 and its parent; do not resume it again. Return `BLOCKED`.
 
 If preflight changes the candidate, return

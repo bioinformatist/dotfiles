@@ -1,6 +1,6 @@
 # Improve Planning Contract
 
-Contract version: `1.0.0-codex.13`
+Contract version: `1.0.0-codex.14`
 
 ## Execution environment contract
 
@@ -45,8 +45,22 @@ beneath that configured XDG root. Revision and recovery reject a worktree
 outside it before invoking the launcher. This safely upgrades state created by
 the legacy runner before its private umask took effect.
 
-Artifacts declaring `.13` require this contract and fail closed. Artifacts
-declaring `.12` are unsupported and must be re-reviewed and restamped before
+Artifacts declaring `.14` require this contract and fail closed. `.13`
+artifacts remain executable and resumable with their legacy permissions.
+Only `.14` may use repeatable `--allow-protected-path .agents` and
+`--allow-protected-path .codex` options, placed after `--environment-json` and
+before the lane or operation. The caller must obtain user approval and restate
+the exact set for every initial, next, revision, or recovery invocation; the
+runner never infers it from prose. No option preserves the default metadata
+denial, `.agents` and `.codex` are the complete enum, and `.git` is always
+forbidden. Every granted root must be absent or an existing physical directory;
+a root symlink (including a dangling one) or non-directory node fails closed
+before preflight or Codex. Environment-backed execution checks this once before
+the launcher and probes, then again after probes and candidate verification
+immediately before Codex. Failure at that second boundary is a nonresumable
+mutated-preflight stop. Resume accepts no override, uses its authenticated
+manifest, and applies both checks.
+Artifacts declaring `.12` are unsupported and must be re-reviewed and restamped before
 execution. Artifacts declaring `.11`, or carrying no Improve contract
 declaration, keep their legacy-unchecked behavior unless they opt in with a
 matching environment block and CLI value. Any other declared contract version
