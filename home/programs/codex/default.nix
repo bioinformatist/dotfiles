@@ -17,6 +17,9 @@ let
   codexAsset = "codex-x86_64-unknown-linux-musl.tar.gz";
   codexBinary = "codex-x86_64-unknown-linux-musl";
   codexHash = "sha256-Akbi53ODTgfw+1JJ7W660S5FkeYI+Me7l91qlpBUTDY=";
+  codexCodeModeHostAsset = "codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz";
+  codexCodeModeHostBinary = "codex-code-mode-host-x86_64-unknown-linux-musl";
+  codexCodeModeHostHash = "sha256-AUat+qyDY+yfzbWJX3Yk21suhheig4h5OLf7l6HdQ1Y=";
   codexNode = pkgs.nodejs_24;
   playwrightCliVersion = "0.1.17";
   playwrightCliSource = pkgs.fetchFromGitHub {
@@ -580,6 +583,10 @@ let
           exit 1
         fi
   '';
+  codexCodeModeHostSource = pkgs.fetchurl {
+    url = "https://github.com/openai/codex/releases/download/rust-v${codexVersion}/${codexCodeModeHostAsset}";
+    hash = codexCodeModeHostHash;
+  };
   codexPkg = pkgs.stdenvNoCC.mkDerivation {
     pname = "codex";
     version = codexVersion;
@@ -594,12 +601,14 @@ let
 
     unpackPhase = ''
       tar -xzf "$src"
+      tar -xzf "${codexCodeModeHostSource}"
     '';
 
     installPhase = ''
       runHook preInstall
       mkdir -p "$out/bin" "$out/libexec"
       install -m755 ${codexBinary} "$out/libexec/codex"
+      install -m755 ${codexCodeModeHostBinary} "$out/libexec/codex-code-mode-host"
       makeBinaryWrapper "$out/libexec/codex" "$out/bin/codex" \
         --prefix PATH : ${
           pkgs.lib.makeBinPath [
@@ -618,6 +627,11 @@ let
       actualVersion="$("$out/libexec/codex" --version 2>&1 | sed -n 's/^codex-cli //p' | tail -n 1)"
       if [ "$actualVersion" != "${codexVersion}" ]; then
         echo "expected codex ${codexVersion}, got $actualVersion" >&2
+        exit 1
+      fi
+
+      if [ ! -x "$out/libexec/codex-code-mode-host" ]; then
+        echo "codex package is missing the code mode host" >&2
         exit 1
       fi
 
