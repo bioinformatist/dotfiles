@@ -79,6 +79,7 @@
     "-orca-ide-"
   ],
   "allowedDirectFetchMarkers": [
+    "-codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz",
     "-codex-x86_64-unknown-linux-musl.tar.gz",
     "-codex-0.",
     "-orca-linux.AppImage",
@@ -88,6 +89,7 @@
   ],
   "leafDirectFetchMarkers": {
     "codex": [
+      "-codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz",
       "-codex-x86_64-unknown-linux-musl.tar.gz",
       "-codex-0."
     ],

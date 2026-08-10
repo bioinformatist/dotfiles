@@ -30,8 +30,10 @@ update_release_pin() {
   local file="$4"
   local version_name="$5"
   local hash_name="$6"
+  local extra_asset="${7:-}"
+  local extra_hash_name="${8:-}"
 
-  local tag version digest hash digest_hex
+  local tag version digest hash digest_hex extra_digest extra_hash extra_digest_hex
   tag="$(gh api "repos/${repo_slug}/releases/latest" --jq '.tag_name')"
   version="${tag#"$tag_prefix"}"
   digest="$(gh api "repos/${repo_slug}/releases/latest" --jq ".assets[] | select(.name == \"${asset}\") | .digest // empty")"
@@ -44,8 +46,23 @@ update_release_pin() {
   digest_hex="${digest#sha256:}"
   hash="$(nix hash convert --hash-algo sha256 --from base16 --to sri "$digest_hex")"
 
+  if [[ -n "$extra_asset" && -n "$extra_hash_name" ]]; then
+    extra_digest="$(gh api "repos/${repo_slug}/releases/latest" --jq ".assets[] | select(.name == \"${extra_asset}\") | .digest // empty")"
+    if [[ -z "$extra_digest" || "$extra_digest" != sha256:* ]]; then
+      echo "Could not find sha256 digest for ${extra_asset} in ${repo_slug} ${tag}" >&2
+      exit 1
+    fi
+
+    extra_digest_hex="${extra_digest#sha256:}"
+    extra_hash="$(nix hash convert --hash-algo sha256 --from base16 --to sri "$extra_digest_hex")"
+  fi
+
   replace_nix_string "$file" "$version_name" "$version"
   replace_nix_string "$file" "$hash_name" "$hash"
+  if [[ -n "$extra_asset" && -n "$extra_hash_name" ]]; then
+    replace_nix_string "$file" "$extra_hash_name" "$extra_hash"
+  fi
+
   echo "Updated ${leaf} to ${version}"
 }
 
@@ -57,7 +74,9 @@ case "$leaf" in
       "codex-x86_64-unknown-linux-musl.tar.gz" \
       "home/programs/codex/default.nix" \
       "codexVersion" \
-      "codexHash"
+      "codexHash" \
+      "codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz" \
+      "codexCodeModeHostHash"
     ;;
   orca)
     update_release_pin \
