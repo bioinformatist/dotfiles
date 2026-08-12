@@ -36,6 +36,7 @@ dotfiles.nixNetwork.proxy = {
 | Leaf | Policy | 更新内容 |
 |---|---|---|
 | `anyrun` | `tools` | `anyrun` flake input |
+| `codex-base` | `tools` | Codex Base 环境，包括 Codex、Improve 和全局 skills |
 | `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
 | `wechat` | `tools` | `nixpkgs-wechat` flake input |
 | `hyprland` | `desktop` | `hyprland` flake input |
@@ -61,11 +62,12 @@ leaf 混进同一个 PR，削弱 cache miss 归因。
 
 | Leaf | Policy | 更新内容 |
 |---|---|---|
-| `codex` | `tools-fast` | Codex release pin |
 | `orca` | `tools-fast` | Orca ADE AppImage release pin |
 | `zeroclaw` | `tools` | ZeroClaw release pin |
 
-Codex 和 Orca 每 4 小时检查一次，因为它们是交互式工具，新 release 应该更快进入机器。ZeroClaw 仍然每天一次。release-pin workflow 会先检查上游 release；只有这一步实际改动文件时，才继续跑 dry-run 和 China gate。
+Orca 每 4 小时检查一次，ZeroClaw 仍然每天一次。release-pin workflow 会先检查上游 release；只有这一步实际改动文件时，才继续跑 dry-run 和 China gate。
+
+本仓库不再单独维护 Codex release pin。`bioinformatist/codex-base` 会把 Codex、Code Mode Host、Improve 及其 packaging 作为一个整体更新和测试；改动进入 codex-base 默认分支后，Renovate 再在本仓库提出 `codex-base` lock update，使整套环境一起前进。
 
 每个 release-pin leaf 最多一个 open PR；下一次尝试会更新同一个 `maint/<leaf>` 分支，不会开新 PR。Renovate 和 release-pin 维护 PR 暂时都不设置全局 open PR 上限。
 

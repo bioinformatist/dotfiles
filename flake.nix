@@ -30,9 +30,10 @@
       url = "github:mattpocock/skills/2ab958093e83e0ec752e6c1c5932da465bf23e0c";
       flake = false;
     };
-    shadcn-improve = {
-      url = "github:shadcn/improve/03369ee6d7cafbfcecc4346539b05b3dc0a603bb";
-      flake = false;
+    codex-base = {
+      url = "github:bioinformatist/codex-base";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-tools.follows = "nixpkgs-tools";
     };
   };
 
@@ -486,8 +487,37 @@
                 }
               ];
             }).config.home-manager.users.ysun.xdg.configFile."hypr/hyprland.conf".source;
-          globalMattPocockSkillsEnabled =
-            self.nixosConfigurations.homePC.config.home-manager.users.ysun.dotfiles.codex.mattPocockSkills.enable;
+          homePCCodexConfig = self.nixosConfigurations.homePC.config.home-manager.users.ysun;
+          linglongCodexConfig = self.nixosConfigurations.linglong.config.home-manager.users.ysun;
+          headlessCodexConfig = self.homeConfigurations."ci@headless".config;
+          codexConsumerConfigs = [
+            homePCCodexConfig
+            linglongCodexConfig
+            headlessCodexConfig
+          ];
+          baselineRulesPath = ".codex/rules/baseline.rules";
+          personalRulesPath = ".codex/rules/personal.rules";
+          improveSkillPath = ".agents/skills/improve";
+          globalMattPocockSkillsEnabled = homePCCodexConfig.dotfiles.codex.mattPocockSkills.enable;
+          allCodexBaseConsumersEnabled = lib.all (
+            consumer: consumer.programs.codexBase.enable
+          ) codexConsumerConfigs;
+          personalRulesPresentOnWorkstations =
+            builtins.hasAttr personalRulesPath homePCCodexConfig.home.file
+            && builtins.hasAttr personalRulesPath linglongCodexConfig.home.file;
+          personalRulesAbsentFromHeadless =
+            !(builtins.hasAttr personalRulesPath headlessCodexConfig.home.file);
+          improvePresentForAllConsumers = lib.all (
+            consumer: builtins.hasAttr improveSkillPath consumer.home.file
+          ) codexConsumerConfigs;
+          baselineRuleSources = map (
+            consumer: consumer.home.file.${baselineRulesPath}.source
+          ) codexConsumerConfigs;
+          homePCPersonalRules = homePCCodexConfig.home.file.${personalRulesPath}.source;
+          linglongPersonalRules = linglongCodexConfig.home.file.${personalRulesPath}.source;
+          improveSkillSources = map (
+            consumer: consumer.home.file.${improveSkillPath}.source
+          ) codexConsumerConfigs;
         in
         {
           wechat-control =
@@ -700,6 +730,77 @@
             mkdir -p "$out"
             touch "$out/ok"
           '';
+
+          codex-base-adapter =
+            pkgs.runCommand "codex-base-adapter-check"
+              {
+                inherit
+                  baselineRuleSources
+                  homePCPersonalRules
+                  improveSkillSources
+                  linglongPersonalRules
+                  ;
+                nativeBuildInputs = [
+                  pkgs.coreutils
+                  pkgs.diffutils
+                  pkgs.gnugrep
+                ];
+              }
+              ''
+                ${lib.optionalString (!allCodexBaseConsumersEnabled) ''
+                  echo "codex-base is not enabled for every maintained Codex consumer" >&2
+                  exit 1
+                ''}
+                ${lib.optionalString (!globalMattPocockSkillsEnabled) ''
+                  echo "the legacy dotfiles.codex option surface no longer evaluates" >&2
+                  exit 1
+                ''}
+                ${lib.optionalString (!personalRulesPresentOnWorkstations) ''
+                  echo "personal Codex rules are missing from a ysun workstation" >&2
+                  exit 1
+                ''}
+                ${lib.optionalString (!personalRulesAbsentFromHeadless) ''
+                  echo "personal Codex rules leaked into ci@headless" >&2
+                  exit 1
+                ''}
+                ${lib.optionalString (!improvePresentForAllConsumers) ''
+                  echo "the inherited Improve skill is missing from a maintained Codex consumer" >&2
+                  exit 1
+                ''}
+
+                for rules in $baselineRuleSources; do
+                  if [ "$(grep -c '^prefix_rule' "$rules")" -ne 16 ]; then
+                    echo "codex-base baseline does not contain exactly 16 rules: $rules" >&2
+                    exit 1
+                  fi
+                done
+
+                if [ "$(grep -c '^prefix_rule' "$homePCPersonalRules")" -ne 22 ]; then
+                  echo "personal Codex policy does not contain exactly 22 rules" >&2
+                  exit 1
+                fi
+                cmp "$homePCPersonalRules" "$linglongPersonalRules"
+
+                first_baseline="''${baselineRuleSources%% *}"
+                cat "$first_baseline" "$homePCPersonalRules" > "$TMPDIR/combined.rules"
+                if [ "$(grep -c '^prefix_rule' "$TMPDIR/combined.rules")" -ne 38 ]; then
+                  echo "the composed personal Codex policy does not contain 38 rules" >&2
+                  exit 1
+                fi
+                if sort "$TMPDIR/combined.rules" | uniq -d | grep -q .; then
+                  echo "the public and personal Codex rule sets overlap" >&2
+                  exit 1
+                fi
+
+                for skill in $improveSkillSources; do
+                  test -f "$skill/SKILL.md"
+                  grep -Fq '[the planning contract](references/planning-contract.md)' "$skill/SKILL.md"
+                  grep -Fq 'Contract version: `1.0.0-codex.14`' "$skill/references/planning-contract.md"
+                done
+
+                mkdir -p "$out"
+                touch "$out/ok"
+              '';
         }
       );
 

@@ -10,7 +10,6 @@ on:
         type: choice
         options:
           - all
-          - codex
           - orca
           - zeroclaw
   schedule:
@@ -29,8 +28,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - leaf: codex
-            policy: tools-fast
           - leaf: orca
             policy: tools-fast
           - leaf: zeroclaw
@@ -73,7 +70,7 @@ jobs:
             case "${{ github.event.schedule }}" in
               "17 */4 * * *")
                 case "${{ matrix.leaf }}" in
-                  codex|orca)
+                  orca)
                     ;;
                   *)
                     run_leaf=false

@@ -67,17 +67,6 @@ update_release_pin() {
 }
 
 case "$leaf" in
-  codex)
-    update_release_pin \
-      "openai/codex" \
-      "rust-v" \
-      "codex-x86_64-unknown-linux-musl.tar.gz" \
-      "home/programs/codex/default.nix" \
-      "codexVersion" \
-      "codexHash" \
-      "codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz" \
-      "codexCodeModeHostHash"
-    ;;
   orca)
     update_release_pin \
       "stablyai/orca" \
