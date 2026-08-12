@@ -29,7 +29,7 @@
     {
       "description": "Fast-moving tool inputs may be proposed daily.",
       "matchManagers": ["nix"],
-      "matchDepNames": ["anyrun", "nixpkgs-tools", "nixpkgs-wechat"],
+      "matchDepNames": ["anyrun", "codex-base", "nixpkgs-tools", "nixpkgs-wechat"],
       "schedule": ["* 20-23 * * *"],
       "addLabels": ["policy-tools"]
     },

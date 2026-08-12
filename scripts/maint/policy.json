@@ -64,16 +64,20 @@
     "-SKILL.md.drv",
     "-skill.drv",
     "-codex-config.toml.drv",
+    "-codex-base-generated-skills.drv",
+    "-codex-doctor.drv",
     "-context7-auth-mcp-server.drv",
     "-github-mcp-server.drv",
     "-playwright-cli.drv",
     "-codex-improve-exec.drv",
+    "-codex-improve-scout.drv",
     "-codex-improve-review.drv",
     "-codex-improve-executor.config.toml.drv",
     "-codex-improve-executor-deep.config.toml.drv",
     "-codex-improve-executor-spark.config.toml.drv",
     "-codex-improve-reviewer.config.toml.drv",
     "-codex-improve-elegance-reviewer.config.toml.drv",
+    "-merge-codex-base-config.drv",
     "-zeroclaw-daemon.service.drv",
     "-appimage-exec.sh.drv",
     "-orca-ide-"
@@ -88,11 +92,6 @@
     "-zeroclaw-0."
   ],
   "leafDirectFetchMarkers": {
-    "codex": [
-      "-codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz",
-      "-codex-x86_64-unknown-linux-musl.tar.gz",
-      "-codex-0."
-    ],
     "orca": [
       "-orca-linux.AppImage"
     ],

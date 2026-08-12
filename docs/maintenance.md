@@ -36,6 +36,7 @@ This proxy is intentionally scoped to Nix maintenance paths. It is injected into
 | Leaf | Policy | What it updates |
 |---|---|---|
 | `anyrun` | `tools` | `anyrun` flake input |
+| `codex-base` | `tools` | Codex Base environment, including Codex, Improve, and global skills |
 | `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
 | `wechat` | `tools` | `nixpkgs-wechat` flake input |
 | `hyprland` | `desktop` | `hyprland` flake input |
@@ -61,14 +62,18 @@ mix multiple leaves into one PR and weaken cache-miss attribution.
 
 | Leaf | Policy | What it updates |
 |---|---|---|
-| `codex` | `tools-fast` | Codex release pin |
 | `orca` | `tools-fast` | Orca ADE AppImage release pin |
 | `zeroclaw` | `tools` | ZeroClaw release pin |
 
-Codex and Orca are checked every four hours because they are interactive tools
-where a new release should reach machines quickly. ZeroClaw remains daily. The
-release-pin workflow checks the upstream release first and only runs the dry-run
-and China gate when that check actually changes files.
+Orca is checked every four hours, while ZeroClaw remains daily. The release-pin
+workflow checks the upstream release first and only runs the dry-run and China
+gate when that check actually changes files.
+
+Codex no longer has an independent release-pin leaf in this repository.
+`bioinformatist/codex-base` updates Codex, Code Mode Host, Improve, and their
+packaging as one tested unit. After that change reaches the codex-base default
+branch, Renovate proposes a `codex-base` lock update here so the complete
+environment moves together.
 
 Each release-pin leaf has at most one open PR. The next attempt updates the same `maint/<leaf>` branch instead of opening another PR. There is intentionally no global open PR limit for Renovate or release-pin maintenance PRs.
 

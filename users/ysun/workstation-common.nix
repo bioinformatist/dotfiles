@@ -43,6 +43,7 @@
   dotfiles.codex.trustedProjects = [
     "/home/ysun/github.com/bioinformatist/dotfiles"
   ];
+  dotfiles.codex.personalRules.enable = true;
 
   xdg.dataFile = {
     "fcitx5/rime/default.custom.yaml".text = ''
