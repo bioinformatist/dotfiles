@@ -37,6 +37,23 @@
   };
   services.colord.enable = true;
 
+  # The ALC892 front-panel jack works, but its presence detection reports the
+  # connected headphones as unplugged. Without an explicit profile,
+  # WirePlumber disables every analog output profile and routes audio to HDMI.
+  services.pipewire.wireplumber.extraConfig."90-homepc-audio" = {
+    "monitor.alsa.rules" = [
+      {
+        matches = [
+          { "device.name" = "alsa_card.pci-0000_2b_00.3"; }
+        ];
+        actions.update-props = {
+          "device.profile" = "output:analog-stereo+input:analog-stereo";
+          "device.disabled" = false;
+        };
+      }
+    ];
+  };
+
   # --- Sops secrets (host-specific paths) ---
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
   sops.defaultSopsFormat = "yaml";
