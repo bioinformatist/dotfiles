@@ -795,7 +795,7 @@
                 for skill in $improveSkillSources; do
                   test -f "$skill/SKILL.md"
                   grep -Fq '[the planning contract](references/planning-contract.md)' "$skill/SKILL.md"
-                  grep -Fq 'Contract version: `1.0.0-codex.14`' "$skill/references/planning-contract.md"
+                  grep -Fq 'Contract version: `1.0.0-codex.15`' "$skill/references/planning-contract.md"
                 done
 
                 mkdir -p "$out"
