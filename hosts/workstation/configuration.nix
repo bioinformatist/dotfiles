@@ -29,6 +29,10 @@
   networking.hostName = "homePC";
   networking.networkmanager.enable = true;
 
+  users.users.ysun.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOuEoLENuL9X/OYuPg75zOaheSINb18vsVFh4zz9Algy arreat-index-homepc"
+  ];
+
   # --- Physical machine: Bluetooth ---
   hardware.bluetooth = {
     enable = true;
