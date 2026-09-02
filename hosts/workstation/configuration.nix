@@ -42,8 +42,8 @@
   services.colord.enable = true;
 
   # The ALC892 front-panel jack works, but its presence detection reports the
-  # connected headphones as unplugged. Without an explicit profile,
-  # WirePlumber disables every analog output profile and routes audio to HDMI.
+  # connected headphones as unplugged. Prefer analog stereo in WirePlumber's
+  # profile-selection policy so later availability events cannot select off.
   services.pipewire.wireplumber.extraConfig."90-homepc-audio" = {
     "monitor.alsa.rules" = [
       {
@@ -51,12 +51,77 @@
           { "device.name" = "alsa_card.pci-0000_2b_00.3"; }
         ];
         actions.update-props = {
-          "device.profile" = "output:analog-stereo+input:analog-stereo";
           "device.disabled" = false;
         };
       }
     ];
+
+    "device.profile.priority.rules" = [
+      {
+        matches = [
+          { "device.name" = "alsa_card.pci-0000_2b_00.3"; }
+        ];
+        actions.update-props.priorities = [
+          "output:analog-stereo+input:analog-stereo"
+        ];
+      }
+    ];
+
+    "wireplumber.components" = [
+      {
+        name = "default-nodes/force-homepc-analog-default.lua";
+        type = "script/lua";
+        provides = "custom.homepc-analog-default";
+      }
+    ];
+
+    "wireplumber.profiles".main."custom.homepc-analog-default" = "required";
   };
+
+  services.pipewire.wireplumber.extraScripts."default-nodes/force-homepc-analog-default.lua" = ''
+    local analog_sink = "alsa_output.pci-0000_2b_00.3.analog-stereo"
+
+    SimpleEventHook {
+      name = "default-nodes/force-homepc-analog-default",
+      after = {
+        "default-nodes/find-selected-default-node",
+        "default-nodes/find-stored-default-node",
+      },
+      before = "default-nodes/find-best-default-node",
+      interests = {
+        EventInterest {
+          Constraint { "event.type", "=", "select-default-node" },
+        },
+      },
+      execute = function (event)
+        local source = event:get_source ()
+        local props = event:get_properties ()
+        if props["default-node.type"] ~= "audio.sink" then
+          return
+        end
+
+        local metadata_om = source:call ("get-object-manager", "metadata")
+        local metadata = metadata_om:lookup {
+          Constraint { "metadata.name", "=", "default" },
+        }
+        local configured = metadata and
+            metadata:find (0, "default.configured.audio.sink")
+        if not configured or Json.Raw (configured):parse ().name ~= analog_sink then
+          return
+        end
+
+        local nodes_om = source:call ("get-object-manager", "node")
+        local analog_node = nodes_om:lookup {
+          Constraint { "node.name", "=", analog_sink, type = "pw" },
+        }
+        if analog_node then
+          event:set_data ("selected-node", analog_sink)
+          event:set_data ("selected-node-priority", 40000)
+          event:set_data ("selected-route-priority", 40000)
+        end
+      end
+    }:register ()
+  '';
 
   # --- Sops secrets (host-specific paths) ---
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
