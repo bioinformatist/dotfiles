@@ -92,11 +92,11 @@
         "stop-slop": "stop-slop"
       },
       "locked": {
-        "lastModified": 1788688289,
-        "narHash": "sha256-ge+i9eYfp5gLBlRij7w7t4vBWPDrE8pFZzw6NUoVfD0=",
+        "lastModified": 1788747492,
+        "narHash": "sha256-UYfG6LQwlPz99NU6LjI1yRBiT3m7KaWKTTs0HNywAhY=",
         "owner": "bioinformatist",
         "repo": "codex-base",
-        "rev": "52b9e4cc614749791b5d2e46d8c6bf8fd41592b0",
+        "rev": "456e34717d3b3e9b3b1d05646e43e032986c9246",
         "type": "github"
       },
       "original": {
