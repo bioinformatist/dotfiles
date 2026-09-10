@@ -27,7 +27,7 @@ appimageTools.wrapType2 {
     install -Dm444 ${appimageContents}/orca-ide.desktop -t $out/share/applications/
     cp -r ${appimageContents}/usr/share/icons $out/share/
     substituteInPlace $out/share/applications/orca-ide.desktop \
-      --replace-fail 'Exec=AppRun --no-sandbox %U' 'Exec=orca-ide %U'
+      --replace-fail 'Exec=AppRun %U' 'Exec=orca-ide %U'
   '';
 
   extraPkgs = pkgs: [

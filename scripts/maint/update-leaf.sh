@@ -75,6 +75,7 @@ case "$leaf" in
       "pkgs/orca-ide.nix" \
       "orcaVersion" \
       "orcaHash"
+    nix build --no-link -L .#orca-ide
     ;;
   zeroclaw)
     update_release_pin \
