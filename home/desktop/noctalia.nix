@@ -45,7 +45,7 @@ in
     enable = true;
     systemd.enable = true;
     package = noctaliaPackage;
-    validateConfig = true;
+    checkConfig = true;
 
     settings =
       let
@@ -148,8 +148,8 @@ in
             cpu = {
               type = "sysmon";
               stat = "cpu_usage";
-              display = "text";
-              show_label = true;
+              visualization = "none";
+              show_value = true;
               scale = 0.85;
               capsule = true;
               capsule_fill = "surface_variant";
@@ -161,8 +161,8 @@ in
             mem = {
               type = "sysmon";
               stat = "ram_pct";
-              display = "text";
-              show_label = true;
+              visualization = "none";
+              show_value = true;
               scale = 0.85;
               capsule = true;
               capsule_fill = "surface_variant";
@@ -174,8 +174,8 @@ in
             gpu = {
               type = "sysmon";
               stat = "gpu_usage";
-              display = "text";
-              show_label = true;
+              visualization = "none";
+              show_value = true;
               scale = 0.85;
               capsule = true;
               capsule_fill = "surface_variant";
