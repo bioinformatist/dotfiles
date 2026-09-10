@@ -93,7 +93,7 @@ in
           };
 
           theme = {
-            mode = "dark";
+            mode = "auto";
             source = "custom";
             custom_palette = "dotfiles";
             pure_black_dark = false;
