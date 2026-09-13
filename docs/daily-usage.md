@@ -390,9 +390,9 @@ Adding only `DOMAIN-SUFFIX,...,Proxy` does not cover every case. When a UDP requ
 
 ---
 
-## 🎮 Gaming (`homePC` Only)
+## 🎮 Gaming (`homePC` and `linglong`)
 
-The gaming workflow is configured only on `homePC`. `linglong` intentionally excludes Steam, GameMode, and D2R.
+The gaming workflow is configured on both `homePC` and `linglong`. Both hosts use Steam, Proton-GE, and GameMode for D2R; `homePC` uses the NVIDIA driver while `linglong` uses the AMD 780M Mesa/Vulkan stack.
 
 ### Battle.net Installation (Steam + Proton)
 

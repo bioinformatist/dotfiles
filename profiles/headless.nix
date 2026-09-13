@@ -27,6 +27,7 @@ in
   environment.systemPackages = [
     pkgs.gh
   ];
+  environment.shells = [ pkgs.nushell ];
 
   users.users.${username} = {
     isNormalUser = true;

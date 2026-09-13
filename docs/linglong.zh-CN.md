@@ -11,7 +11,7 @@
 - 使用 `nixosModules.amdMobile` 提供 AMD 图形、固件、电池、电源 profile、fwupd 和硬件诊断工具。
 - 启用 `bolt` 管理 USB4/Thunderbolt 扩展坞授权，并持久化 `/var/lib/boltd`；不预设 AR 眼镜或具体外接显示器布局。
 - 使用导出的共享 Noctalia v5 桌面壳，通过原生面板使用 NetworkManager、BlueZ、PipeWire、UPower 和 power-profiles-daemon 后端。
-- 不继承 NVIDIA、Steam/Gamemode、Mudfish、ZeroClaw、D2R。
+- 不继承 NVIDIA、Mudfish 和 ZeroClaw；单独启用适配 AMD 780M 的 Steam、Proton-GE、GameMode 和 D2R 工作流。
 
 ## 安装前检查
 

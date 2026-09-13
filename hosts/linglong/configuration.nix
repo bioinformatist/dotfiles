@@ -48,6 +48,15 @@
     ];
   });
 
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+    # Make the GameMode client libraries visible inside Steam's runtime.
+    extraPackages = with pkgs; [ gamemode ];
+    extraCompatPackages = with pkgs; [ proton-ge-bin ];
+  };
+  programs.gamemode.enable = true;
+
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
   sops.defaultSopsFormat = "yaml";
   sops.age.keyFile = "/persist/var/lib/sops-nix/key.txt";
@@ -128,6 +137,7 @@
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5"
         ".local/share/TelegramDesktop"
+        ".local/share/Steam"
         ".xwechat"
         "xwechat_files"
         "Downloads"
