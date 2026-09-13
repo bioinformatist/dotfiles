@@ -374,9 +374,9 @@ Clash Verge 的配置文件数据持久化在 `~/.local/share/io.github.clash-ve
 
 ---
 
-## 🎮 游戏（仅 `homePC`）
+## 🎮 游戏（`homePC` 和 `linglong`）
 
-游戏工作流只在 `homePC` 上配置。`linglong` 有意不包含 Steam、GameMode 和 D2R。
+游戏工作流在 `homePC` 和 `linglong` 上配置。两台主机都使用 Steam、Proton-GE 和 GameMode 运行 D2R；`homePC` 使用 NVIDIA 驱动，`linglong` 使用 AMD 780M 的 Mesa/Vulkan 驱动。
 
 ### Battle.net 安装（Steam + Proton）
 
