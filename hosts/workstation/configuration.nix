@@ -78,7 +78,53 @@
     "wireplumber.profiles".main."custom.homepc-analog-default" = "required";
   };
 
+  # Profile/default-sink selection does not open a physical output route.
+  # Both stored-route and best-route selection reject the misdetected jack.
+  # Fill only the missing headphone route, then let WirePlumber restore its
+  # normal volume/mute properties and apply it through the hardware mixer.
   services.pipewire.wireplumber.extraScripts."default-nodes/force-homepc-analog-default.lua" = ''
+    local cutils = require ("common-utils")
+    local devinfo = require ("device-info-cache")
+
+    SimpleEventHook {
+      name = "device/homepc-headphone-fallback",
+      after = "device/find-best-routes",
+      before = { "device/apply-route-props", "device/apply-routes" },
+      interests = {
+        EventInterest {
+          Constraint { "event.type", "=", "select-routes" },
+          Constraint { "profile.active-device-ids", "is-present" },
+        },
+      },
+      execute = function (event)
+        local device = event:get_subject ()
+        if device.properties["device.name"] ~= "alsa_card.pci-0000_2b_00.3" then
+          return
+        end
+
+        local info = devinfo:get_device_info (device)
+        local active_ids = Json.Raw (
+            event:get_properties ()["profile.active-device-ids"]):parse ()
+        local selected = event:get_data ("selected-routes") or Properties ()
+
+        for _, route in pairs (info.route_infos) do
+          if route.name == "analog-output-headphones" and
+              route.direction == "Output" and
+              (route.profiles == nil or
+               cutils.arrayContains (route.profiles, info.active_profile)) then
+            for _, id in ipairs (active_ids) do
+              local key = tostring (id)
+              if not selected[key] and cutils.arrayContains (route.devices, id) then
+                selected[key] = Json.Object { index = route.index }:to_string ()
+              end
+            end
+          end
+        end
+
+        event:set_data ("selected-routes", selected)
+      end
+    }:register ()
+
     local analog_sink = "alsa_output.pci-0000_2b_00.3.analog-stereo"
 
     SimpleEventHook {
