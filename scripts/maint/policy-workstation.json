@@ -14,6 +14,18 @@
     "-power-profiles-daemon-linglong-0.30.drv",
     "-power-profiles-daemon-linglong-0.30-build-python.drv",
     "-anyrun-application-exec-preprocessor.drv",
-    "-wechat-uos-fcitx.drv"
+    "-wechat-uos-fcitx.drv",
+    "-steam-",
+    "-security-wrapper-gamemoded-",
+    "-gamemode.ini.drv",
+    "-graphics-driver.conf.drv",
+    "-graphics-drivers-32bit.drv",
+    "-nixos.conf.drv",
+    "-pkexec.drv",
+    "-firewall-start.drv",
+    "-firewall-reload.drv"
+  ],
+  "allowedDirectFetchMarkers": [
+    "-steam_"
   ]
 }
