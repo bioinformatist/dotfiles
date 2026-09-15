@@ -12,6 +12,7 @@
   dotfiles.hyprland.noHardwareCursors = true;
 
   home.packages = [
+    pkgs.llm-agents.chatgpt
     pkgs.orca-ide
   ];
 }

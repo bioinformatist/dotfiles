@@ -344,6 +344,7 @@
         ".config/gh" # GitHub CLI auth state; initialize with gh auth login after install
         ".config/google-chrome" # Chrome profile (bookmarks, passwords, extensions)
         ".config/orca" # Orca IDE config, projects, sessions, and managed agent state
+        ".config/Codex" # Codex Desktop settings, window state, and logs
         ".codex" # Codex config, auth, history, and MCP server state
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5" # Fcitx5/Rime user dictionary and learned words
@@ -359,6 +360,7 @@
         ".local/state/noctalia" # Settings UI overrides and Noctalia runtime state
         ".cache/noctalia/calendar" # Synchronized calendar event snapshot
         ".cache/fontconfig" # Font cache for GTK/Pango app cold starts
+        ".cache/codex-runtimes" # Codex Desktop managed runtimes patched for NixOS
       ];
       # known_hosts is a symlink → /persist (cross-filesystem), so SSH cannot
       # atomically update it (link() fails). We suppress the harmless warning

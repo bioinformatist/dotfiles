@@ -5,6 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-tools.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-wechat.url = "github:NixOS/nixpkgs/nixos-unstable";
+    llm-agents.url = "github:numtide/llm-agents.nix";
     anyrun.url = "github:anyrun-org/anyrun";
     disko = {
       url = "github:nix-community/disko";
@@ -88,6 +89,7 @@
               nixpkgs.overlays = [
                 overlays.additions
                 overlays.modifications
+                inputs.llm-agents.overlays.shared-nixpkgs
               ];
 
               home-manager.useGlobalPkgs = true;
