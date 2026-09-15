@@ -355,6 +355,7 @@
         ".local/share/TelegramDesktop" # Telegram login session + chat cache
         ".cargo/registry" # Cargo registry cache (speeds up rebuilds)
         ".local/share/Steam" # Steam games, Proton prefixes, saves
+        ".local/state/wireplumber" # Default audio device, routes, volumes, and mute state
         ".local/state/noctalia" # Settings UI overrides and Noctalia runtime state
         ".cache/noctalia/calendar" # Synchronized calendar event snapshot
         ".cache/fontconfig" # Font cache for GTK/Pango app cold starts
