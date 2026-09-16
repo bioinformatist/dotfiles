@@ -133,6 +133,7 @@
         ".config/gh"
         ".config/google-chrome"
         ".config/orca"
+        ".config/Codex" # Codex Desktop settings, window state, and logs
         ".codex"
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"
         ".local/share/fcitx5"
@@ -145,6 +146,7 @@
         ".local/state/noctalia"
         ".cache/noctalia/calendar"
         ".cache/fontconfig"
+        ".cache/codex-runtimes" # Codex Desktop managed runtimes patched for NixOS
       ];
       files = [
         ".ssh/known_hosts"
