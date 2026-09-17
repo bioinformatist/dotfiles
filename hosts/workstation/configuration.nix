@@ -25,6 +25,12 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Experimental workaround for missing ALC892 playback devices at boot:
+  # preload its codec driver before the HDA controller to test probe ordering.
+  boot.extraModprobeConfig = ''
+    softdep snd_hda_intel pre: snd_hda_codec_alc662
+  '';
+
   # --- Physical machine: Networking ---
   networking.hostName = "homePC";
   networking.networkmanager.enable = true;
