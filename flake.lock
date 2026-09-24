@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "adhx": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789484643,
+        "narHash": "sha256-5Pv7LpWA5QPe221c9ZnRvBRzcZ1zUYyBUGIlq9s1JAA=",
+        "owner": "itsmemeworks",
+        "repo": "adhx",
+        "rev": "2dafb9c221398372d08f8dc75e857e801089f6b1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "itsmemeworks",
+        "repo": "adhx",
+        "rev": "2dafb9c221398372d08f8dc75e857e801089f6b1",
+        "type": "github"
+      }
+    },
     "anyrun": {
       "inputs": {
         "anyrun-provider": "anyrun-provider",
@@ -111,6 +128,7 @@
     },
     "codex-base": {
       "inputs": {
+        "adhx": "adhx",
         "codex-src": "codex-src",
         "home-manager": "home-manager",
         "mattpocock-skills": "mattpocock-skills",
@@ -126,11 +144,11 @@
         "stop-slop": "stop-slop"
       },
       "locked": {
-        "lastModified": 1789989330,
-        "narHash": "sha256-9e2Aw0tT0ICjVrOc0Bi8GqJZrT5OjFPe5EXpyRL3CYw=",
+        "lastModified": 1790210079,
+        "narHash": "sha256-Zau05gnu10S8lopl4lYizOT8RXexcVIOKZa9JVBrpuM=",
         "owner": "bioinformatist",
         "repo": "codex-base",
-        "rev": "5efc0f85ba56cc417f3c5aeadbce7d710ea1f1e0",
+        "rev": "3086b4aa537d0175c08aa98853779a77a5103ddc",
         "type": "github"
       },
       "original": {
@@ -142,16 +160,16 @@
     "codex-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1789758289,
-        "narHash": "sha256-iFW66odceRNBsVG5bD9SdcQGxhpm/QIZwYjGCrfMXiI=",
+        "lastModified": 1790124344,
+        "narHash": "sha256-H53f57hmnyCtn5yPxtBe/A92qyQyzQBeU/vK2qSBrvI=",
         "owner": "openai",
         "repo": "codex",
-        "rev": "be2951ea34f0d295ed0becf97079f92fa5f6950e",
+        "rev": "b412ff32c417f855c2b2d1581b77058eed87c84b",
         "type": "github"
       },
       "original": {
         "owner": "openai",
-        "ref": "rust-v0.155.1",
+        "ref": "rust-v0.156.1",
         "repo": "codex",
         "type": "github"
       }
