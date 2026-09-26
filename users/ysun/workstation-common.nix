@@ -116,6 +116,14 @@
       HostName 192.168.0.116
       IdentityFile ~/.ssh/id_ed25519_sctmes_ops
       UpdateHostKeys no
+
+    Host 116-public 8.sctmes.com
+      IdentitiesOnly yes
+      User ysun
+      HostName 8.sctmes.com
+      Port 20222
+      IdentityFile ~/.ssh/id_ed25519_sctmes_ops
+      UpdateHostKeys no
     EOF
   '';
 

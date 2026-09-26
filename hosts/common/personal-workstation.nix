@@ -9,6 +9,7 @@
       "116"
       "bigdick"
       "192.168.0.116"
+      "[8.sctmes.com]:20222"
     ];
     publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA0Mjbn/qCE7fB5tkAJO6+L5arETZ1QFw0JH3orqqB9g";
   };
