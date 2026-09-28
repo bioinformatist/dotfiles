@@ -1,5 +1,6 @@
 {
   "allowedLocalBuildMarkers": [
+    "-mimeapps.list.drv",
     "-initrd-linux-",
     "-noctalia.service.drv",
     "-dotfiles-palette.json.drv",

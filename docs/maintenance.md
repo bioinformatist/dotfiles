@@ -72,8 +72,9 @@ gate when that check actually changes files.
 
 Codex no longer has an independent release-pin leaf in this repository.
 Codex runtime packages come from `llm-agents`: the standalone CLI includes its
-matching Code Mode Host, and desktop consumers select the desktop's embedded
-CLI and adjacent resources. `codex-base` supplies configuration, Improve, and
+matching Code Mode Host and is used by terminals, Improve, and doctor on both
+headless and desktop hosts. The desktop application keeps its own embedded
+runtime. `codex-base` supplies configuration, Improve, and
 skills. Renovate updates these two root inputs separately; after either update,
 check the selected runtime against the inherited configuration and workflows.
 Selecting another package does not override the backend of a running desktop

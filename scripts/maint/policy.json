@@ -72,6 +72,7 @@
     "-SKILL.md.drv",
     "-skill.drv",
     "-codex-config.toml.drv",
+    "-codex-package.json.drv",
     "-codex-base-generated-skills.drv",
     "-codex-doctor.drv",
     "-context7-auth-mcp-server.drv",

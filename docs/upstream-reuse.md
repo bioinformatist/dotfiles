@@ -30,14 +30,25 @@ layer.
 `packages.<system>.codex`. Improve and doctor use that same package through
 `programs.codexBase.package`. Headless consumers do not inherit a desktop app.
 
-For Linux desktop consumers, `packages.<system>.chatgpt` exposes the community
-desktop package and `packages.<system>.codex-desktop` provides its embedded CLI
-with bubblewrap on PATH. Select the latter through
-`programs.codexBase.package` and install the former separately. Both personal
-workstations do this in their shared Home Manager configuration. These outputs
-use the community flake's locked package set, not its shared-nixpkgs overlay,
-to retain upstream binary-cache identities. The adapter does not replace any
-runtime downloaded by the desktop application.
+Linux desktop consumers can install `packages.<system>.chatgpt` separately.
+Both personal workstations keep the standalone CLI for terminal use, Improve,
+and doctor; the desktop application uses its own embedded runtime. That runtime
+is not a complete standalone CLI package and cannot replace the CLI's packaged
+background-server installation. The underlying packages use the community
+flake's locked package set, not its shared-nixpkgs overlay, to retain upstream
+binary-cache identities. Selecting the CLI does not replace the desktop application's runtime.
+
+The current CLI output temporarily stages those cached binaries in the complete
+daemon package layout from [llm-agents.nix #9889](https://github.com/numtide/llm-agents.nix/pull/9889).
+It adds the package manifest and bundled ripgrep and copies bubblewrap into the
+package; it does not rebuild Rust or disable the background server. Remove this
+adaptation after the maintained community package passes the same startup and
+sandbox checks. Validation and installation status are tracked in
+[issue #193](https://github.com/bioinformatist/dotfiles/issues/193).
+
+The personal workstation configuration declares Google Chrome as the default
+HTTP/HTTPS browser and keeps `codex:` links assigned to the desktop application.
+This browser preference is not part of the exported Home Manager modules.
 
 ## Profile boundaries
 
