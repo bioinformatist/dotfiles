@@ -68,8 +68,9 @@ leaf 混进同一个 PR，削弱 cache miss 归因。
 
 Orca 每 4 小时检查一次，ZeroClaw 仍然每天一次。release-pin workflow 会先检查上游 release；只有这一步实际改动文件时，才继续跑 dry-run 和 China gate。
 
-Codex 运行包来自 `llm-agents`：独立 CLI 包含配套的 Code Mode Host，桌面消费者
-选择桌面包内嵌的 CLI 和相邻资源。`codex-base` 提供配置、Improve 和 skills。
+Codex 运行包来自 `llm-agents`：独立 CLI 包含配套的 Code Mode Host，供 headless
+和桌面主机的终端、Improve、doctor 使用。桌面应用保留自己的内嵌 runtime。
+`codex-base` 提供配置、Improve 和 skills。
 Renovate 分别更新这两个根输入；任一更新后，都需要检查所选运行包与继承配置、
 工作流的兼容性。选择另一个包不会替换已经运行的桌面应用或 SSH App Server 后台。
 

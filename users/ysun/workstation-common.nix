@@ -45,8 +45,20 @@
   ];
   dotfiles.codex.personalRules.enable = true;
 
-  programs.codexBase.package = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.codex-desktop;
   home.packages = [ inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.chatgpt ];
+
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "text/html" = [ "google-chrome.desktop" ];
+      "application/xhtml+xml" = [ "google-chrome.desktop" ];
+      "x-scheme-handler/http" = [ "google-chrome.desktop" ];
+      "x-scheme-handler/https" = [ "google-chrome.desktop" ];
+      "x-scheme-handler/clash" = [ "clash-verge.desktop" ];
+      "x-scheme-handler/clash-verge" = [ "clash-verge.desktop" ];
+      "x-scheme-handler/codex" = [ "chatgpt.desktop" ];
+    };
+  };
 
   xdg.dataFile = {
     "fcitx5/rime/default.custom.yaml".text = ''
