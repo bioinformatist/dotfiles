@@ -89,7 +89,6 @@
               nixpkgs.overlays = [
                 overlays.additions
                 overlays.modifications
-                inputs.llm-agents.overlays.shared-nixpkgs
               ];
 
               home-manager.useGlobalPkgs = true;
@@ -327,6 +326,15 @@
         // {
           "sync-vendored-skills" = syncVendoredSkills;
           "sync-fieldcraft-skill" = syncFieldcraftSkill;
+          codex = inputs.llm-agents.packages.${system}.codex;
+          chatgpt = inputs.llm-agents.packages.${system}.chatgpt;
+          codex-desktop = pkgs.writeShellApplication {
+            name = "codex";
+            runtimeInputs = [ inputs.llm-agents.inputs.nixpkgs.legacyPackages.${system}.bubblewrap ];
+            text = ''
+              exec ${inputs.llm-agents.packages.${system}.chatgpt.unwrapped}/lib/chatgpt/resources/codex "$@"
+            '';
+          };
         }
       );
 
@@ -734,6 +742,12 @@
           '';
 
           codex-base-adapter =
+            assert homePCCodexConfig.programs.codexBase.package == self.packages.${system}.codex-desktop;
+            assert linglongCodexConfig.programs.codexBase.package == self.packages.${system}.codex-desktop;
+            assert headlessCodexConfig.programs.codexBase.package == self.packages.${system}.codex;
+            assert builtins.elem self.packages.${system}.chatgpt homePCCodexConfig.home.packages;
+            assert builtins.elem self.packages.${system}.chatgpt linglongCodexConfig.home.packages;
+            assert !(builtins.elem self.packages.${system}.chatgpt headlessCodexConfig.home.packages);
             pkgs.runCommand "codex-base-adapter-check"
               {
                 inherit

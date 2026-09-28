@@ -26,6 +26,19 @@ terminal multiplexer. Consumers that want generic Zellij can also compose
 `homeManagerModules.tui`; consumers can instead provide their own workspace
 layer.
 
+`homeManagerModules.codex` selects the community standalone CLI exported as
+`packages.<system>.codex`. Improve and doctor use that same package through
+`programs.codexBase.package`. Headless consumers do not inherit a desktop app.
+
+For Linux desktop consumers, `packages.<system>.chatgpt` exposes the community
+desktop package and `packages.<system>.codex-desktop` provides its embedded CLI
+with bubblewrap on PATH. Select the latter through
+`programs.codexBase.package` and install the former separately. Both personal
+workstations do this in their shared Home Manager configuration. These outputs
+use the community flake's locked package set, not its shared-nixpkgs overlay,
+to retain upstream binary-cache identities. The adapter does not replace any
+runtime downloaded by the desktop application.
+
 ## Profile boundaries
 
 `profiles.headless` provides the reusable base layer:

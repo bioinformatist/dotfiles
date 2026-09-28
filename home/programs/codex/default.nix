@@ -3,6 +3,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 
@@ -75,6 +76,7 @@ in
   config = {
     programs.codexBase = {
       enable = true;
+      package = lib.mkDefault inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.codex;
       trustedProjects = cfg.trustedProjects;
       writableRoots = cfg.writableRoots;
       githubTokenFile = if cfg.githubTokenFile == "" then null else cfg.githubTokenFile;
@@ -84,6 +86,8 @@ in
       mattPocockSkills.enable = cfg.mattPocockSkills.enable;
       improve.enable = cfg.improve.enable;
     };
+
+    home.packages = [ pkgs.nixfmt ];
 
     home.file.".codex/rules/personal.rules" = lib.mkIf cfg.personalRules.enable {
       text = ''
