@@ -24,6 +24,17 @@
 开发基线，并且有意不安装或配置终端多路复用器。需要通用 Zellij 的消费者可以额外组合
 `homeManagerModules.tui`；消费者也可以改为提供自己的工作区层。
 
+`homeManagerModules.codex` 默认选择 `packages.<system>.codex` 导出的社区独立
+CLI。Improve 和 doctor 通过 `programs.codexBase.package` 使用同一个包，
+headless 消费者不会因此安装桌面应用。
+
+Linux 桌面消费者可以安装 `packages.<system>.chatgpt` 导出的社区桌面包，
+并将 `programs.codexBase.package` 设为 `packages.<system>.codex-desktop`。
+后者只为桌面内嵌 CLI 补入 bubblewrap 并执行原位置的程序。两个个人工作站
+在共享 Home Manager 配置中使用这个组合。这些 outputs 使用社区 flake 锁定的
+包集合，不通过 shared-nixpkgs overlay 重建，以保留上游二进制缓存的包身份。
+适配器不会替换桌面应用自行下载的 runtime。
+
 ## Profile 边界
 
 `profiles.headless` 提供可复用的基础层：

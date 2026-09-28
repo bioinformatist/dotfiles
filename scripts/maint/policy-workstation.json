@@ -15,6 +15,7 @@
     "-power-profiles-daemon-linglong-0.30.drv",
     "-power-profiles-daemon-linglong-0.30-build-python.drv",
     "-anyrun-application-exec-preprocessor.drv",
+    "-codex.drv",
     "-auto-formatelf-hook.drv",
     "-chatgpt-",
     "-chatgpt_",

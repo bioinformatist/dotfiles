@@ -45,6 +45,9 @@
   ];
   dotfiles.codex.personalRules.enable = true;
 
+  programs.codexBase.package = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.codex-desktop;
+  home.packages = [ inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.chatgpt ];
+
   xdg.dataFile = {
     "fcitx5/rime/default.custom.yaml".text = ''
       patch:

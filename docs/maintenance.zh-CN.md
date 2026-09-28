@@ -18,7 +18,7 @@ maint-switch
 dotfiles.nixNetwork.profile = "china";
 ```
 
-这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。workstation 模块也窄幅声明了 Anyrun、Hyprland 和 Noctalia 的额外 Cachix substituter，因为这些快速变动的桌面输入确实有可用的上游缓存。本地代理 URL 也在 NixOS 配置中声明：
+这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。共享 headless profile 为 `llm-agents.nix` 包加入 Numtide 官方缓存（`https://cache.numtide.com`）及其公开签名公钥；workstation 模块另外声明 Anyrun、Hyprland 和 Noctalia Cachix 缓存。本地代理 URL 也在 NixOS 配置中声明：
 
 ```nix
 dotfiles.nixNetwork.proxy = {
@@ -36,7 +36,8 @@ dotfiles.nixNetwork.proxy = {
 | Leaf | Policy | 更新内容 |
 |---|---|---|
 | `anyrun` | `tools` | `anyrun` flake input |
-| `codex-base` | `tools` | Codex Base 环境，包括 Codex、Improve 和全局 skills |
+| `codex-base` | `tools` | Codex Base 配置、Improve 和全局 skills |
+| `llm-agents` | `tools` | 社区独立 CLI 和桌面包 |
 | `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
 | `wechat` | `tools` | `nixpkgs-wechat` flake input |
 | `hyprland` | `desktop` | `hyprland` flake input |
@@ -67,7 +68,10 @@ leaf 混进同一个 PR，削弱 cache miss 归因。
 
 Orca 每 4 小时检查一次，ZeroClaw 仍然每天一次。release-pin workflow 会先检查上游 release；只有这一步实际改动文件时，才继续跑 dry-run 和 China gate。
 
-本仓库不再单独维护 Codex release pin。`bioinformatist/codex-base` 会把 Codex、Code Mode Host、Improve 及其 packaging 作为一个整体更新和测试；改动进入 codex-base 默认分支后，Renovate 再在本仓库提出 `codex-base` lock update，使整套环境一起前进。
+Codex 运行包来自 `llm-agents`：独立 CLI 包含配套的 Code Mode Host，桌面消费者
+选择桌面包内嵌的 CLI 和相邻资源。`codex-base` 提供配置、Improve 和 skills。
+Renovate 分别更新这两个根输入；任一更新后，都需要检查所选运行包与继承配置、
+工作流的兼容性。选择另一个包不会替换已经运行的桌面应用或 SSH App Server 后台。
 
 每个 release-pin leaf 最多一个 open PR；下一次尝试会更新同一个 `maint/<leaf>` 分支，不会开新 PR。Renovate 和 release-pin 维护 PR 暂时都不设置全局 open PR 上限。
 
@@ -82,8 +86,8 @@ auto-merge。默认分支应通过 ruleset 保护：要求 PR，并要求 `maint
 
 PR 会跑两类 dry-run：
 
-- `global-*`：GitHub runner 默认网络下的基本 dry-run，同时显式加入 Anyrun、Hyprland 和 Noctalia Cachix。
-- `china-gate-*`：使用声明式中国维护 cache 集合：USTC 加 Anyrun/Hyprland/Noctalia Cachix，并清空未声明的 `extra-substituters`。
+- `global-*`：GitHub runner 默认网络下的基本 dry-run，同时显式加入 Numtide、Anyrun、Hyprland 和 Noctalia 缓存及其公开签名公钥。
+- `china-gate-*`：使用声明式中国维护 cache 集合：USTC 加 Numtide 和 Anyrun/Hyprland/Noctalia Cachix，并清空未声明的 `extra-substituters`。加入可信缓存不会放宽本地构建限制。
 
 required gate 还会 dry-run 一个合成的 `ci@headless` Home Manager 配置。这个配置
 消费 downstream 仓库使用的导出 headless 开发模块，因此共享工具输入不仅要对
