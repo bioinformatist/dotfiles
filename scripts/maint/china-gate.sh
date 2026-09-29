@@ -106,7 +106,6 @@ if [[ -n "$direct_output" ]]; then
   : > "$direct_output"
 fi
 
-mapfile -t risk_markers < <(jq -r '.riskMarkers[]' "$policy_file")
 mapfile -t allowed_markers < <(jq -r '.allowedLocalBuildMarkers[]' "$policy_file")
 mapfile -t allowed_direct_markers < <(jq -r '.allowedDirectFetchMarkers[]' "$policy_file")
 
@@ -178,9 +177,6 @@ gate_attr() {
       continue
     elif contains_marker "$drv" "${allowed_direct_markers[@]}"; then
       record_direct "$label" "$drv"
-    elif contains_marker "$drv" "${risk_markers[@]}"; then
-      record_blocked "$label" "$drv"
-      blocked_count=$((blocked_count + 1))
     else
       record_blocked "$label" "$drv"
       blocked_count=$((blocked_count + 1))
