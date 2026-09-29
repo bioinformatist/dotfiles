@@ -61,14 +61,17 @@ jobs:
           set -euo pipefail
 
           read -r -a hosts <<< "$HOSTS"
+          targets=()
           for host in "${hosts[@]}"; do
-            nix build \
-              --dry-run \
-              -L \
-              --option extra-substituters "$DECLARED_EXTRA_SUBSTITUTERS" \
-              --option extra-trusted-public-keys "$CHINA_EXTRA_TRUSTED_PUBLIC_KEYS" \
-              ".#nixosConfigurations.${host}.config.system.build.toplevel"
+            targets+=(".#nixosConfigurations.${host}.config.system.build.toplevel")
           done
+
+          nix build \
+            --dry-run \
+            -L \
+            --option extra-substituters "$DECLARED_EXTRA_SUBSTITUTERS" \
+            --option extra-trusted-public-keys "$CHINA_EXTRA_TRUSTED_PUBLIC_KEYS" \
+            "${targets[@]}"
 
       - name: China gate
         shell: bash
