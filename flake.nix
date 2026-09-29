@@ -283,6 +283,7 @@
           };
           communityPkgs = inputs.llm-agents.inputs.nixpkgs.legacyPackages.${system};
           communityCodex = inputs.llm-agents.packages.${system}.codex;
+          communityChatgpt = inputs.llm-agents.packages.${system}.chatgpt;
           # Temporary adaptation of cached binaries from numtide/llm-agents.nix#9889.
           # Remove after the maintained package passes startup and sandbox acceptance.
           codexManifest = communityPkgs.writeText "codex-package.json" (
@@ -360,7 +361,17 @@
           "sync-vendored-skills" = syncVendoredSkills;
           "sync-fieldcraft-skill" = syncFieldcraftSkill;
           codex = completeCodex;
-          chatgpt = inputs.llm-agents.packages.${system}.chatgpt;
+          # Source-only override until the community package includes the Linux
+          # child-exit fix (openai/codex#48618). Keep its packaging unchanged.
+          chatgpt = communityChatgpt.override {
+            chatgpt-unwrapped = communityChatgpt.unwrapped.overrideAttrs (_: {
+              version = "26.924.50649";
+              src = communityPkgs.fetchurl {
+                url = "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.924.50649_amd64.deb";
+                hash = "sha256-oPy4RcWhx6Gu5RNyh8c6Qxw6UcROzeabf6gzbcgiiGs=";
+              };
+            });
+          };
         }
       );
 
