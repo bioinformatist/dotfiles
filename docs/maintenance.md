@@ -133,16 +133,13 @@ prevents the workflow checkout directory or a policy change in the PR from
 silently reclassifying the base closure. The same classifier covers host
 configurations and `ci@headless`.
 
-The workflow also runs a non-required `china delta shadow` job. It computes
-base and head derivation graphs locally and compares the required
-`(derivation, output)` pairs. Outputs from derivations already permitted as
-local glue are not queried. Remaining outputs are checked against the Cachix
-stores first and USTC last, with earlier hits removed from later queries. The
-shadow result is inconclusive when marker policy changes, the graph uses an
-unsupported or dynamic output form, or cache metadata cannot be queried and
-verified. In those cases the full gate remains authoritative. The shadow does
-not change Nix HTTP connection settings and does not replace the required gate;
-its results are collected to establish equivalence before any cutover.
+The experimental China delta shadow was retired after 169 readable runs from
+2026-07-13 to 2026-09-29 yielded 52 passes, 4 misses, and 113 inconclusive
+results. Two misses disagreed with a passing formal gate and came from the same
+PR at two revisions; their historical causes were not established. The
+experiment also did not preserve Nix's cache-aware dependency pruning. A
+[representative run](https://github.com/bioinformatist/dotfiles/actions/runs/29306294755)
+shows its diagnostic output. The required China gate remains unchanged.
 
 The marker policy is intentionally empirical. It should be refined from real
 misses: broad generated-glue markers such as `unit-`, `-etc-`, and
