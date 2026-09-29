@@ -67,8 +67,9 @@ mix multiple leaves into one PR and weaken cache-miss attribution.
 | `zeroclaw` | `tools` | ZeroClaw release pin |
 
 Orca is checked every four hours, while ZeroClaw remains daily. The release-pin
-workflow checks the upstream release first and only runs the dry-run and China
-gate when that check actually changes files.
+workflow checks upstream releases, updates pins and hashes, and builds the Orca
+package before publishing a changed leaf. The required maintenance gate checks
+the resulting PR.
 
 Codex no longer has an independent release-pin leaf in this repository.
 Codex runtime packages come from `llm-agents`: the standalone CLI includes its
@@ -93,10 +94,10 @@ approval. Enable repository auto-merge as well. The default branch should be
 protected by a ruleset that requires pull requests and requires the
 `maintenance gate` status check with strict up-to-date checks enabled.
 
-PRs run two dry-runs:
+The required `maintenance gate` check runs two steps for PRs:
 
-- `global-*`: basic dry-run under the GitHub runner's default network, plus the declared Numtide, Anyrun, Hyprland, and Noctalia caches and their public signing keys.
-- `china-gate-*`: China-network gate using the declared maintenance cache set: USTC plus Numtide and the Anyrun/Hyprland/Noctalia Cachix caches, with undeclared `extra-substituters` cleared. Adding a trusted cache does not relax the local-build policy.
+- `Global dry-run`: dry-run under the GitHub runner's default network, plus the declared Numtide, Anyrun, Hyprland, and Noctalia caches and their public signing keys.
+- `China gate`: China-network dry-run using the declared maintenance cache set: USTC plus Numtide and the Anyrun/Hyprland/Noctalia Cachix caches, with undeclared `extra-substituters` cleared. Adding a trusted cache does not relax the local-build policy.
 
 The required gate also dry-runs the synthetic `ci@headless` Home Manager
 configuration. That configuration consumes the exported headless development
@@ -107,9 +108,9 @@ profile exists on `main`, new headless-only cache misses block the PR while
 existing baseline debt remains diagnostic.
 
 The China gate records both the full updated head closure and the delta against
-`main`. Auto-merge eligibility is based on the delta: unrelated full-head misses
-from a cold GitHub runner are diagnostic baseline debt and must not freeze every
-leaf PR. Fixed-output release fetches are allowed only when their marker is
+`main`. Its decision is based on the delta: unrelated full-head misses from a
+cold GitHub runner are diagnostic baseline debt and must not freeze every leaf
+PR. Fixed-output release fetches are allowed only when their marker is
 declared in the maintenance policy, currently Codex, Orca, Playwright CLI, and ZeroClaw.
 
 The reusable marker base lives in `scripts/maint/policy.json`, while
@@ -119,11 +120,10 @@ the GitHub China gate evaluate that target-flake value. Downstream repositories
 extend `lib.maintenancePolicyBase` with narrow local overlays instead of
 forwarding the complete file. The generated `maint.nuon` stores machine-local
 settings such as repo path, host, concurrency, and optional extra markers; it
-does not snapshot the effective policy. GitHub's leaf workflow and required
-gate workflow share the head-vs-base China gate evaluation in
-`scripts/maint/evaluate-china-gate.sh`, so PR metadata and the required
-`maintenance gate` status do not drift apart. Flake-input policy groups and
-schedules live in `renovate.json`; release-pin leaves stay in
+does not snapshot the effective policy. The required gate uses
+`scripts/maint/evaluate-china-gate.sh` for the head-vs-base China decision.
+Flake-input policy groups and schedules live in `renovate.json`; release-pin
+leaves stay in
 `.github/workflows/maintenance-leaf.yml`. These are workflow orchestration, not
 gate policy.
 
@@ -133,16 +133,13 @@ prevents the workflow checkout directory or a policy change in the PR from
 silently reclassifying the base closure. The same classifier covers host
 configurations and `ci@headless`.
 
-The workflow also runs a non-required `china delta shadow` job. It computes
-base and head derivation graphs locally and compares the required
-`(derivation, output)` pairs. Outputs from derivations already permitted as
-local glue are not queried. Remaining outputs are checked against the Cachix
-stores first and USTC last, with earlier hits removed from later queries. The
-shadow result is inconclusive when marker policy changes, the graph uses an
-unsupported or dynamic output form, or cache metadata cannot be queried and
-verified. In those cases the full gate remains authoritative. The shadow does
-not change Nix HTTP connection settings and does not replace the required gate;
-its results are collected to establish equivalence before any cutover.
+The experimental China delta shadow was retired after 169 readable runs from
+2026-07-13 to 2026-09-29 yielded 52 passes, 4 misses, and 113 inconclusive
+results. Two misses disagreed with a passing formal gate and came from the same
+PR at two revisions; their historical causes were not established. The
+experiment also did not preserve Nix's cache-aware dependency pruning. A
+[representative run](https://github.com/bioinformatist/dotfiles/actions/runs/29306294755)
+shows its diagnostic output. The required China gate remains unchanged.
 
 The marker policy is intentionally empirical. It should be refined from real
 misses: broad generated-glue markers such as `unit-`, `-etc-`, and
@@ -161,20 +158,18 @@ GitHub release/direct fetches, npm registry or node-gyp downloads, Cargo
 registries, and runtime proxies are different paths; a fix for one should not be
 silently generalized to the others.
 
-Only PRs with a passing required `maintenance gate` check are eligible for
-auto-merge. Release-pin PRs also mirror their preflight result into
-`global-*` and `china-gate-*` labels and record full-head misses in the PR body
-for diagnosis. Renovate PRs rely on the required check and Renovate's
-auto-merge state instead of those release-pin labels. The leaf workflow does
-not publish its own required status; the only required `maintenance gate` check
-comes from `.github/workflows/maintenance-gate.yml`, so generated PR metadata
-and the required check use the same delta gate.
+The required `maintenance gate` check in
+`.github/workflows/maintenance-gate.yml` is the whole-host merge decision.
+Ordinary release-pin PRs request GitHub auto-merge, which waits for that check
+and branch protection requirements. The leaf workflow puts the leaf, policy,
+and manual-review state in the PR body and points readers to Checks for the
+Global dry-run and China gate results. Renovate PRs use the same required
+check and Renovate's auto-merge state.
 
-Generated release-pin updates that touch maintenance policy, gate scripts,
-maintenance workflows, or Renovate config are never handed to auto-merge. They
-remain draft/manual-review PRs even if the technical gate passes, because
-policy changes should not prove themselves solely with the policy they just
-modified.
+Generated release-pin updates that touch maintenance policy (including the
+workstation overlay), maintenance scripts, maintenance workflows, or Renovate
+config are never handed to auto-merge. They remain draft/manual-review PRs even
+if the required gate passes. These changes require independent review.
 
 If the gate or marker policy itself is broken, the repair can be impossible to
 merge through the same gate it is repairing. In that narrow case, use an admin

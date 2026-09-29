@@ -66,7 +66,7 @@ leaf 混进同一个 PR，削弱 cache miss 归因。
 | `orca` | `tools-fast` | Orca ADE AppImage release pin |
 | `zeroclaw` | `tools` | ZeroClaw release pin |
 
-Orca 每 4 小时检查一次，ZeroClaw 仍然每天一次。release-pin workflow 会先检查上游 release；只有这一步实际改动文件时，才继续跑 dry-run 和 China gate。
+Orca 每 4 小时检查一次，ZeroClaw 仍然每天一次。release-pin workflow 检查上游 release、更新版本和哈希，并在发布改动前构建 Orca 包。生成的 PR 由 required maintenance gate 检查。
 
 Codex 运行包来自 `llm-agents`：独立 CLI 包含配套的 Code Mode Host，供 headless
 和桌面主机的终端、Improve、doctor 使用。桌面应用保留自己的内嵌 runtime。
@@ -85,10 +85,10 @@ repository secret。release-pin workflow 会用这个 token push `maint/<leaf>` 
 auto-merge。默认分支应通过 ruleset 保护：要求 PR，并要求 `maintenance gate`
 状态检查，且启用 strict up-to-date checks。
 
-PR 会跑两类 dry-run：
+required `maintenance gate` check 对 PR 执行两项检查：
 
-- `global-*`：GitHub runner 默认网络下的基本 dry-run，同时显式加入 Numtide、Anyrun、Hyprland 和 Noctalia 缓存及其公开签名公钥。
-- `china-gate-*`：使用声明式中国维护 cache 集合：USTC 加 Numtide 和 Anyrun/Hyprland/Noctalia Cachix，并清空未声明的 `extra-substituters`。加入可信缓存不会放宽本地构建限制。
+- `Global dry-run`：在 GitHub runner 默认网络下运行，同时显式加入 Numtide、Anyrun、Hyprland 和 Noctalia 缓存及其公开签名公钥。
+- `China gate`：使用声明式中国维护 cache 集合：USTC 加 Numtide 和 Anyrun/Hyprland/Noctalia Cachix，并清空未声明的 `extra-substituters`。加入可信缓存不会放宽本地构建限制。
 
 required gate 还会 dry-run 一个合成的 `ci@headless` Home Manager 配置。这个配置
 消费 downstream 仓库使用的导出 headless 开发模块，因此共享工具输入不仅要对
@@ -98,7 +98,7 @@ required gate 还会 dry-run 一个合成的 `ci@headless` Home Manager 配置�
 诊断信息保留。
 
 China gate 会同时记录更新后 head closure 的完整结果，以及相对 `main`
-的差分。auto-merge 准入以 delta 为准：GitHub 冷 runner 暴露出来的无关
+的差分。该检查以 delta 为准：GitHub 冷 runner 暴露出来的无关
 full-head miss 是诊断用 baseline debt，不应冻结每个 leaf PR。固定输出 release
 直连 fetch 只有在维护 policy 中声明过 marker 时才允许，目前是 Codex、Orca、
 Playwright CLI 和 ZeroClaw。
@@ -108,11 +108,9 @@ Playwright CLI 和 ZeroClaw。
 `lib.maintenancePolicy`，本机 `maint-switch` 和 GitHub China gate 都求值目标
 flake 的这个值。下游仓库只用窄 overlay 扩展 `lib.maintenancePolicyBase`，不再
 转发整份文件。生成的 `maint.nuon` 只保存 repo 路径、host、并发和可选 extra
-marker 这类机器本地设置，不 snapshot 有效 policy。GitHub leaf workflow 和
-required gate workflow 共享
-`scripts/maint/evaluate-china-gate.sh` 里的 head-vs-base China gate 评估，
-避免 PR 元数据和 required `maintenance gate` 状态漂移。flake-input 的 policy
-分组和调度放在 `renovate.json`；release-pin leaves 保留在
+marker 这类机器本地设置，不 snapshot 有效 policy。required gate 使用
+`scripts/maint/evaluate-china-gate.sh` 评估 head-vs-base China gate。
+flake-input 的 policy 分组和调度放在 `renovate.json`；release-pin leaves 保留在
 `.github/workflows/maintenance-leaf.yml`。这些属于 workflow 编排，不属于 gate
 policy。
 
@@ -121,14 +119,12 @@ base 和 head dry-run 也共用 `scripts/maint/china-gate.sh`。每次运行都�
 当前工作目录或 PR 内的 policy 变更就不会悄悄重新分类 base closure；host 配置与
 `ci@headless` 使用同一分类实现。
 
-workflow 还会运行一个非 required 的 `china delta shadow` job。它先在本地生成
-base 和 head derivation 图，再比较实际需要的 `(derivation, output)` 对。policy
-已经允许本地构建的 glue derivation 不会发起 cache 查询；其余 output 先查询
-Cachix，再查询 USTC，并从后续请求中移除已经命中的路径。marker policy 发生变化、
-图格式不受支持或包含动态 output、cache metadata 无法查询或通过信任验证时，
-shadow 结果为 inconclusive，完整 gate 继续作为权威结果。shadow 不修改 Nix HTTP
-连接设置，也不替换 required gate；在考虑切换前，只用它积累两种分类器的一致性
-样本。
+实验性的 China delta shadow 已退役：2026-07-13 至 2026-09-29 共有 169 次可读
+分类，其中 52 次通过、4 次 miss、113 次 inconclusive。两次 miss 与通过的正式 gate
+结论不同，且来自同一 PR 的两个 revision；历史原因尚未查明。该实验也没有保留
+Nix 对依赖的 cache-aware 剪枝。
+[代表性运行记录](https://github.com/bioinformatist/dotfiles/actions/runs/29306294755)
+展示了诊断输出。required China gate 保持不变。
 
 marker policy 是经验性边界，应该在真实 miss 中持续收紧：`unit-`、
 `-etc-`、`nixos-system-` 这类较宽的生成式 glue marker 如果误分类
@@ -144,18 +140,15 @@ gate，也不要把重组件加入 allowlist。
 npm registry 或 node-gyp 下载、Cargo registry、运行时代理是不同路径；一个路径
 的修复不应被默默推广到其他路径。
 
-只有 required `maintenance gate` check 通过的 PR 才有资格进入 auto-merge。
-release-pin PR 还会把 preflight 结果同步到 `global-*` 和 `china-gate-*` label，
-并在 PR 正文记录 full-head miss 供诊断。Renovate PR 则依赖 required check 和
-Renovate 自己的 auto-merge 状态，而不是这些 release-pin label。leaf workflow
-不再发布自己的 required status；唯一 required 的 `maintenance gate` check 来自
-`.github/workflows/maintenance-gate.yml`，因此生成 PR 元数据和 required check
-使用同一个 delta gate。
+`.github/workflows/maintenance-gate.yml` 中 required 的 `maintenance gate`
+check 是 whole-host 合入决策。普通 release-pin PR 请求 GitHub auto-merge，
+由该检查和分支保护决定何时合入。leaf workflow 在 PR 正文列出 leaf、policy
+和是否需要人工审查，并指向 Checks 中的 Global dry-run 和 China gate 结果。
+Renovate PR 也依赖同一 required check 和 Renovate 自己的 auto-merge 状态。
 
-如果生成的 release-pin 更新触碰 maintenance policy、gate 脚本、maintenance
-workflow 或 Renovate config，即使技术 gate 通过，也不会交给 auto-merge；这类
-PR 会保留为 draft/manual-review。原因是 policy 变更不应该只用它自己刚修改过的
-policy 来证明自己合理。
+如果生成的 release-pin 更新触碰 maintenance policy（含 workstation 增量）、
+maintenance 脚本、maintenance workflow 或 Renovate config，即使 required gate
+通过，也不会交给 auto-merge；这类 PR 会保留为 draft/manual-review，并需独立审查。
 
 如果 gate 或 marker policy 自身坏掉，修复可能无法通过正在被它修复的同一个
 gate 合入。这种窄场景可以使用 admin bootstrap：临时关闭 main ruleset，只合入
