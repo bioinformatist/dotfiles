@@ -48,6 +48,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ github.sha }}
 
       - uses: cachix/install-nix-action@v31
 
@@ -78,8 +79,20 @@ jobs:
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
 
-          git fetch origin main:refs/remotes/origin/main
-          git worktree add --detach "$tmp/base" origin/main
+          case "$GITHUB_EVENT_NAME" in
+            pull_request)
+              base_sha="$(git rev-parse HEAD^1)"
+              ;;
+            merge_group)
+              base_sha="$(jq -er '.merge_group.base_sha' "$GITHUB_EVENT_PATH")"
+              ;;
+            workflow_dispatch)
+              base_sha="$(git rev-parse origin/main)"
+              ;;
+          esac
+          head_sha="$(git rev-parse HEAD)"
+          echo "China gate comparison: base=$base_sha head=$head_sha" >> "$GITHUB_STEP_SUMMARY"
+          git worktree add --detach "$tmp/base" "$base_sha"
 
           bash scripts/maint/china-gate.sh \
             --report-only \

@@ -87,16 +87,9 @@ done
 
 flake_root="$(cd -- "$flake_root" && pwd)"
 if [[ -z "$policy_file" ]]; then
-  if [[ -f "${flake_root}/scripts/maint/policy.json" \
-    && ! -f "${flake_root}/scripts/maint/policy-workstation.json" \
-    && ! -f "${flake_root}/scripts/maint/policy-overrides.json" ]]; then
-    # Revisions from before the flake policy interface stored one complete policy.
-    policy_file="${flake_root}/scripts/maint/policy.json"
-  else
-    policy_tmp="$(mktemp)"
-    nix eval --json "${flake_root}#lib.maintenancePolicy" > "$policy_tmp"
-    policy_file="$policy_tmp"
-  fi
+  policy_tmp="$(mktemp)"
+  nix eval --json "${flake_root}#lib.maintenancePolicy" > "$policy_tmp"
+  policy_file="$policy_tmp"
 else
   policy_file="$(realpath "$policy_file")"
 fi
@@ -113,16 +106,9 @@ if [[ -n "$direct_output" ]]; then
   : > "$direct_output"
 fi
 
-read_policy_list() {
-  local attr="$1"
-  local -n target="$2"
-
-  mapfile -t target < <(jq -r ".${attr}[]" "$policy_file")
-}
-
-read_policy_list riskMarkers risk_markers
-read_policy_list allowedLocalBuildMarkers allowed_markers
-read_policy_list allowedDirectFetchMarkers allowed_direct_markers
+mapfile -t risk_markers < <(jq -r '.riskMarkers[]' "$policy_file")
+mapfile -t allowed_markers < <(jq -r '.allowedLocalBuildMarkers[]' "$policy_file")
+mapfile -t allowed_direct_markers < <(jq -r '.allowedDirectFetchMarkers[]' "$policy_file")
 
 contains_marker() {
   local text="$1"
