@@ -37,24 +37,6 @@ jobs:
       cancel-in-progress: false
     env:
       REQUESTED_LEAF: ${{ github.event.inputs.leaf || 'all' }}
-      HOSTS: homePC linglong
-      CHINA_SUBSTITUTERS: >-
-        https://mirrors.ustc.edu.cn/nix-channels/store
-        https://cache.numtide.com
-        https://anyrun.cachix.org
-        https://hyprland.cachix.org
-        https://noctalia.cachix.org
-      DECLARED_EXTRA_SUBSTITUTERS: >-
-        https://cache.numtide.com
-        https://anyrun.cachix.org
-        https://hyprland.cachix.org
-        https://noctalia.cachix.org
-      CHINA_EXTRA_TRUSTED_PUBLIC_KEYS: >-
-        niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=
-        anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s=
-        hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
-        noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4=
-      NIXPKGS_ALLOW_UNFREE: "1"
       GH_TOKEN: ${{ secrets.MAINTENANCE_PAT || github.token }}
 
     steps:
@@ -96,6 +78,7 @@ jobs:
         if: steps.plan.outputs.run == 'true'
         with:
           fetch-depth: 0
+          ref: ${{ github.sha }}
           token: ${{ secrets.MAINTENANCE_PAT || github.token }}
 
       - uses: cachix/install-nix-action@v31
@@ -133,14 +116,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          : > "$RUNNER_TEMP/maintenance-sensitive.files"
           {
-            git diff --name-only
+            git diff --no-renames --name-only origin/main
             git ls-files --others --exclude-standard
           } | sort -u > "$RUNNER_TEMP/changed.files"
-          grep -E '^(\.github/workflows/maintenance-.*\.yml|scripts/maint/(policy\.json|.*\.sh)|renovate\.json)$' \
-            "$RUNNER_TEMP/changed.files" \
-            > "$RUNNER_TEMP/maintenance-sensitive.files" || true
+          grep -E '^(\.github/workflows/maintenance-[^/]*\.yml|scripts/maint/(policy[^/]*\.json|[^/]*\.sh)|renovate\.json)$' \
+            "$RUNNER_TEMP/changed.files" > "$RUNNER_TEMP/maintenance-sensitive.files" || [[ $? -eq 1 ]]
 
           manual_review=false
           if [[ -s "$RUNNER_TEMP/maintenance-sensitive.files" ]]; then
@@ -148,92 +129,6 @@ jobs:
           fi
 
           echo "manual_review=${manual_review}" >> "$GITHUB_OUTPUT"
-
-      - name: Base China gate
-        if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          base_worktree="$RUNNER_TEMP/base"
-          git worktree add --detach "$base_worktree" HEAD
-
-          read -r -a hosts <<< "$HOSTS"
-          bash scripts/maint/china-gate.sh \
-            --report-only \
-            --flake-root "$base_worktree" \
-            --output "$RUNNER_TEMP/china-base.blocked" \
-            --direct-output "$RUNNER_TEMP/china-base.direct" \
-            "${hosts[@]}"
-
-      - name: Global dry-run
-        if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
-        id: global_gate
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          status=pass
-          read -r -a hosts <<< "$HOSTS"
-          for host in "${hosts[@]}"; do
-            if ! nix build \
-              --dry-run \
-              -L \
-              --option extra-substituters "$DECLARED_EXTRA_SUBSTITUTERS" \
-              --option extra-trusted-public-keys "$CHINA_EXTRA_TRUSTED_PUBLIC_KEYS" \
-              ".#nixosConfigurations.${host}.config.system.build.toplevel"; then
-              status=fail
-            fi
-          done
-
-          echo "status=${status}" >> "$GITHUB_OUTPUT"
-
-      - name: China gate
-        if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
-        id: china_gate
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          read -r -a hosts <<< "$HOSTS"
-          : > "$RUNNER_TEMP/china-head.blocked"
-          : > "$RUNNER_TEMP/china-head.direct"
-          : > "$RUNNER_TEMP/china-gate.failure.log"
-          china_gate_log="$RUNNER_TEMP/china-gate.log"
-          if ! bash scripts/maint/china-gate.sh \
-            --report-only \
-            --output "$RUNNER_TEMP/china-head.blocked" \
-            --direct-output "$RUNNER_TEMP/china-head.direct" \
-            "${hosts[@]}" \
-            2>&1 | tee "$china_gate_log"; then
-            cp "$china_gate_log" "$RUNNER_TEMP/china-gate.failure.log"
-            : > "$RUNNER_TEMP/china-new.blocked"
-            : > "$RUNNER_TEMP/china-new.direct"
-            : > "$RUNNER_TEMP/china-direct.allowed"
-            : > "$RUNNER_TEMP/china-unapproved.blocked"
-            : > "$RUNNER_TEMP/china-new-unapproved.blocked"
-            {
-              echo "status=miss"
-              echo "hard_failure=true"
-              echo "direct_fetch=false"
-              echo "head_blocked_count=0"
-              echo "new_blocked_count=0"
-              echo "direct_fetch_count=0"
-              echo "head_unapproved_count=0"
-              echo "new_unapproved_count=0"
-            } >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "hard_failure=false" >> "$GITHUB_OUTPUT"
-          bash scripts/maint/evaluate-china-gate.sh \
-            --base-blocked "$RUNNER_TEMP/china-base.blocked" \
-            --base-direct "$RUNNER_TEMP/china-base.direct" \
-            --head-blocked "$RUNNER_TEMP/china-head.blocked" \
-            --head-direct "$RUNNER_TEMP/china-head.direct" \
-            --output-dir "$RUNNER_TEMP" \
-            --leaf "${{ matrix.leaf }}" \
-            --github-output "$GITHUB_OUTPUT"
 
       - name: Close unchanged leaf PR
         if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'false'
@@ -252,15 +147,6 @@ jobs:
       - name: Publish leaf PR
         if: steps.plan.outputs.run == 'true' && steps.changes.outputs.changed == 'true'
         env:
-          GLOBAL_STATUS: ${{ steps.global_gate.outputs.status }}
-          CHINA_STATUS: ${{ steps.china_gate.outputs.status }}
-          CHINA_HARD_FAILURE: ${{ steps.china_gate.outputs.hard_failure }}
-          CHINA_DIRECT_FETCH: ${{ steps.china_gate.outputs.direct_fetch }}
-          CHINA_HEAD_BLOCKED_COUNT: ${{ steps.china_gate.outputs.head_blocked_count }}
-          CHINA_NEW_BLOCKED_COUNT: ${{ steps.china_gate.outputs.new_blocked_count }}
-          CHINA_DIRECT_FETCH_COUNT: ${{ steps.china_gate.outputs.direct_fetch_count }}
-          CHINA_HEAD_UNAPPROVED_COUNT: ${{ steps.china_gate.outputs.head_unapproved_count }}
-          CHINA_NEW_UNAPPROVED_COUNT: ${{ steps.china_gate.outputs.new_unapproved_count }}
           MANUAL_REVIEW: ${{ steps.sensitive.outputs.manual_review }}
         shell: bash
         run: |
@@ -272,64 +158,39 @@ jobs:
           title="chore(maint): update ${leaf}"
           body="$(mktemp)"
 
-          eligible=false
-          if [[ "$MANUAL_REVIEW" != "true" && "$GLOBAL_STATUS" == "pass" && "$CHINA_STATUS" == "pass" && "$CHINA_NEW_UNAPPROVED_COUNT" == "0" ]]; then
-            eligible=true
-          fi
-
           cat > "$body" <<BODY
           ## Maintenance leaf
 
           - Leaf: \`${leaf}\`
           - Policy: \`${policy}\`
-          - Global dry-run: \`${GLOBAL_STATUS}\`
-          - China gate: \`${CHINA_STATUS}\`
-          - China gate hard failure: \`${CHINA_HARD_FAILURE}\`
-          - Head blocked derivations: \`${CHINA_HEAD_BLOCKED_COUNT}\`
-          - New blocked derivations: \`${CHINA_NEW_BLOCKED_COUNT}\`
-          - Declared direct fetches: \`${CHINA_DIRECT_FETCH_COUNT}\`
-          - Head unapproved derivations: \`${CHINA_HEAD_UNAPPROVED_COUNT}\`
-          - New unapproved derivations: \`${CHINA_NEW_UNAPPROVED_COUNT}\`
           - Manual review required: \`${MANUAL_REVIEW}\`
-          - Auto-merge eligible: \`${eligible}\`
 
           This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
 
-          Eligible PRs are handed to GitHub auto-merge only after the global dry-run passes, this leaf introduces no unapproved China-gate misses, and the update does not modify maintenance policy, gate scripts, maintenance workflows, or Renovate config. Full-head misses are shown as baseline debt from a cold runner, but they do not block unrelated leaf PRs by themselves.
+          See Checks for the required maintenance gate's Global dry-run and China gate results. Changes to maintenance policy, maintenance scripts, maintenance workflows, or Renovate config require manual review.
           BODY
 
-          append_records() {
-            local title="$1"
-            local file="$2"
-
-            [[ -s "$file" ]] || return 0
+          if [[ "$MANUAL_REVIEW" == "true" ]]; then
             {
               echo ""
-              echo "### ${title}"
-              echo '```text'
-              sed -n '1,20p' "$file"
-              if [[ "$(wc -l < "$file")" -gt 20 ]]; then
-                echo "... truncated ..."
-              fi
-              echo '```'
+              echo "### Maintenance-sensitive files"
+              sed -e 's/^/- `/' -e 's/$/`/' "$RUNNER_TEMP/maintenance-sensitive.files"
             } >> "$body"
-          }
+          fi
 
-          append_records "Head blocked derivations" "$RUNNER_TEMP/china-head.blocked"
-          append_records "New blocked derivations" "$RUNNER_TEMP/china-new.blocked"
-          append_records "Declared direct fetches" "$RUNNER_TEMP/china-direct.allowed"
-          append_records "Head unapproved derivations" "$RUNNER_TEMP/china-unapproved.blocked"
-          append_records "New unapproved derivations" "$RUNNER_TEMP/china-new-unapproved.blocked"
-          append_records "China gate failure log" "$RUNNER_TEMP/china-gate.failure.log"
-          append_records "Maintenance-sensitive files" "$RUNNER_TEMP/maintenance-sensitive.files"
+          pr_json="$(gh pr list --head "$branch" --state open --json number,isDraft,autoMergeRequest,labels --jq '.[0] // {}')"
+          pr="$(jq -r '.number // empty' <<< "$pr_json")"
+          if [[ "$MANUAL_REVIEW" == "true" && -n "$pr" ]]; then
+            if jq -e '.autoMergeRequest != null' <<< "$pr_json" > /dev/null; then
+              gh pr merge "$pr" --disable-auto
+            fi
+            if jq -e '.isDraft == false' <<< "$pr_json" > /dev/null; then
+              gh pr ready "$pr" --undo
+            fi
+          fi
 
           gh label create maintenance --color "0E8A16" --description "Automated maintenance PR" --force
           gh label create "policy-${policy}" --color "5319E7" --description "Maintenance policy ${policy}" --force
-          gh label create "global-pass" --color "0E8A16" --description "Global dry-run passed" --force
-          gh label create "global-fail" --color "D93F0B" --description "Global dry-run failed" --force
-          gh label create "china-gate-pass" --color "0E8A16" --description "China-network maintenance gate passed" --force
-          gh label create "china-gate-miss" --color "D93F0B" --description "China-network maintenance gate missed" --force
-          gh label create "direct-fetch" --color "FBCA04" --description "Update includes declared direct release fetches" --force
           gh label create "manual-review" --color "D93F0B" --description "Maintenance update requires manual review" --force
 
           git switch -c "$branch"
@@ -337,10 +198,10 @@ jobs:
           git commit -m "$title"
           git fetch origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" || true
           git push --force-with-lease origin "$branch"
+          head_commit="$(git rev-parse HEAD)"
 
-          pr="$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')"
           create_args=(--head "$branch" --base main --title "$title" --body-file "$body")
-          if [[ "$eligible" != "true" ]]; then
+          if [[ "$MANUAL_REVIEW" == "true" ]]; then
             create_args+=(--draft)
           fi
 
@@ -351,21 +212,17 @@ jobs:
             gh pr edit "$pr" --title "$title" --body-file "$body"
           fi
 
-          gh pr edit "$pr" \
-            --remove-label "global-pass,global-fail,china-cache-pass,china-cache-miss,china-gate-pass,china-gate-miss,direct-fetch,manual-review" || true
-
-          labels="maintenance,policy-${policy},global-${GLOBAL_STATUS},china-gate-${CHINA_STATUS}"
-          if [[ "$CHINA_DIRECT_FETCH" == "true" ]]; then
-            labels="${labels},direct-fetch"
-          fi
+          labels="maintenance,policy-${policy}"
           if [[ "$MANUAL_REVIEW" == "true" ]]; then
             labels="${labels},manual-review"
+          elif jq -e '.labels[]? | select(.name == "manual-review")' <<< "$pr_json" > /dev/null; then
+            gh pr edit "$pr" --remove-label manual-review
           fi
           gh pr edit "$pr" --add-label "$labels"
 
-          if [[ "$eligible" == "true" ]]; then
-            gh pr ready "$pr" || true
-            gh pr merge "$pr" --auto --squash
-          else
-            gh pr ready "$pr" --undo || true
+          if [[ "$MANUAL_REVIEW" != "true" ]]; then
+            if [[ -n "$pr" ]] && jq -e '.isDraft == true' <<< "$pr_json" > /dev/null; then
+              gh pr ready "$pr"
+            fi
+            gh pr merge "$pr" --auto --squash --match-head-commit "$head_commit"
           fi
