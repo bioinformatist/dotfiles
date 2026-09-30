@@ -349,7 +349,6 @@
         ".config/nushell"
         ".config/gh" # GitHub CLI auth state; initialize with gh auth login after install
         ".config/google-chrome" # Chrome profile (bookmarks, passwords, extensions)
-        ".config/orca" # Orca IDE config, projects, sessions, and managed agent state
         ".config/Codex" # Codex Desktop settings, window state, and logs
         ".codex" # Codex config, auth, history, and MCP server state
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"

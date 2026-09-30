@@ -57,7 +57,6 @@ This repository currently manages the `homePC` workstation and `linglong` keyboa
 | `~/.config/nushell` | Nushell user config (env.nu, config.nu) |
 | `~/.config/gh` | GitHub CLI auth state |
 | `~/.config/google-chrome` | Chrome profile (bookmarks, passwords, extensions) |
-| `~/.config/orca` | Orca IDE config, projects, sessions, and managed agent state |
 | `~/.codex` | Codex config, auth, history, and MCP server state |
 | `~/.local/share/io.github.clash-verge-rev.clash-verge-rev` | Clash Verge proxy profiles and settings |
 | `~/.local/share/fcitx5` | Rime user dictionary and learned words |
@@ -78,6 +77,8 @@ This repository currently manages the `homePC` workstation and `linglong` keyboa
 | `~/.zeroclaw/memory.sqlite` | ZeroClaw conversation memory database (`homePC` only) |
 
 Everything else is wiped on reboot.
+Removing a path from this list does not delete its existing copy under `/persist`;
+retired application data must be removed from that partition separately.
 
 ---
 
@@ -90,7 +91,6 @@ Everything else is wiped on reboot.
 | **Hyprland** | `inputs.hyprland` (flake) | Dynamic tiling Wayland compositor, launched via UWSM |
 | **Ghostty** | `pkgs.ghostty` | Modern GPU-accelerated terminal emulator (Zig), native GTK on Linux |
 | **Google Chrome** | `pkgs.google-chrome` | Web browser |
-| **Orca** | `pkgs.orca-ide` | AI development environment |
 | **Clash Verge** | `programs.clash-verge` (NixOS module) | GUI proxy client (network flexibility) |
 | **Noctalia** | `inputs.noctalia` + Home Manager | Bar, native hardware controls, notifications, and control/session panels |
 | **swww** | `inputs.swww` (flake) | Wayland wallpaper daemon with custom multi-monitor rotation script |

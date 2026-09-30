@@ -132,7 +132,6 @@
         ".config/nushell"
         ".config/gh"
         ".config/google-chrome"
-        ".config/orca"
         ".config/Codex" # Codex Desktop settings, window state, and logs
         ".codex"
         ".local/share/io.github.clash-verge-rev.clash-verge-rev"

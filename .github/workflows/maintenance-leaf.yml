@@ -10,10 +10,8 @@ on:
         type: choice
         options:
           - all
-          - orca
           - zeroclaw
   schedule:
-    - cron: "17 */4 * * *"
     - cron: "23 20 * * *"
 
 permissions:
@@ -28,8 +26,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - leaf: orca
-            policy: tools-fast
           - leaf: zeroclaw
             policy: tools
     concurrency:
@@ -53,15 +49,6 @@ jobs:
             fi
           else
             case "${{ github.event.schedule }}" in
-              "17 */4 * * *")
-                case "${{ matrix.leaf }}" in
-                  orca)
-                    ;;
-                  *)
-                    run_leaf=false
-                    ;;
-                esac
-                ;;
               "23 20 * * *")
                 [[ "${{ matrix.leaf }}" == "zeroclaw" ]] || run_leaf=false
                 ;;
