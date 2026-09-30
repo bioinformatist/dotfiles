@@ -44,6 +44,7 @@
     "/home/ysun/github.com/bioinformatist/dotfiles"
   ];
   dotfiles.codex.personalRules.enable = true;
+  dotfiles.codex.proxyRecovery.enable = lib.mkDefault true;
 
   home.packages = [ inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.chatgpt ];
 

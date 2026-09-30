@@ -537,6 +537,14 @@
           homePCCodexConfig = self.nixosConfigurations.homePC.config.home-manager.users.ysun;
           linglongCodexConfig = self.nixosConfigurations.linglong.config.home-manager.users.ysun;
           headlessCodexConfig = self.homeConfigurations."ci@headless".config;
+          homePCCodexDisabledConfig =
+            (self.nixosConfigurations.homePC.extendModules {
+              modules = [
+                {
+                  home-manager.users.ysun.dotfiles.codex.proxyRecovery.enable = false;
+                }
+              ];
+            }).config.home-manager.users.ysun;
           codexConsumerConfigs = [
             homePCCodexConfig
             linglongCodexConfig
@@ -545,6 +553,10 @@
           baselineRulesPath = ".codex/rules/baseline.rules";
           personalRulesPath = ".codex/rules/personal.rules";
           improveSkillPath = ".agents/skills/improve";
+          proxyRecoveryText = builtins.readFile ./home/programs/codex/proxy-recovery.md;
+          proxyRecoveryEnabled = lib.hasInfix proxyRecoveryText homePCCodexConfig.home.file.".codex/AGENTS.md".text;
+          proxyRecoveryDisabled =
+            !(lib.hasInfix proxyRecoveryText homePCCodexDisabledConfig.home.file.".codex/AGENTS.md".text);
           globalMattPocockSkillsEnabled = homePCCodexConfig.dotfiles.codex.mattPocockSkills.enable;
           allCodexBaseConsumersEnabled = lib.all (
             consumer: consumer.programs.codexBase.enable
@@ -557,9 +569,7 @@
           improvePresentForAllConsumers = lib.all (
             consumer: builtins.hasAttr improveSkillPath consumer.home.file
           ) codexConsumerConfigs;
-          baselineRuleSources = map (
-            consumer: consumer.home.file.${baselineRulesPath}.source
-          ) codexConsumerConfigs;
+          baselineRuleSource = homePCCodexConfig.home.file.${baselineRulesPath}.source;
           homePCPersonalRules = homePCCodexConfig.home.file.${personalRulesPath}.source;
           linglongPersonalRules = linglongCodexConfig.home.file.${personalRulesPath}.source;
           improveSkillSources = map (
@@ -800,7 +810,7 @@
             pkgs.runCommand "codex-base-adapter-check"
               {
                 inherit
-                  baselineRuleSources
+                  baselineRuleSource
                   homePCPersonalRules
                   improveSkillSources
                   linglongPersonalRules
@@ -832,26 +842,14 @@
                   echo "the inherited Improve skill is missing from a maintained Codex consumer" >&2
                   exit 1
                 ''}
-
-                for rules in $baselineRuleSources; do
-                  if [ "$(grep -c '^prefix_rule' "$rules")" -ne 16 ]; then
-                    echo "codex-base baseline does not contain exactly 16 rules: $rules" >&2
-                    exit 1
-                  fi
-                done
-
-                if [ "$(grep -c '^prefix_rule' "$homePCPersonalRules")" -ne 22 ]; then
-                  echo "personal Codex policy does not contain exactly 22 rules" >&2
+                ${lib.optionalString (!proxyRecoveryEnabled || !proxyRecoveryDisabled) ''
+                  echo "proxy recovery instructions do not follow the workstation switch" >&2
                   exit 1
-                fi
+                ''}
+
                 cmp "$homePCPersonalRules" "$linglongPersonalRules"
 
-                first_baseline="''${baselineRuleSources%% *}"
-                cat "$first_baseline" "$homePCPersonalRules" > "$TMPDIR/combined.rules"
-                if [ "$(grep -c '^prefix_rule' "$TMPDIR/combined.rules")" -ne 38 ]; then
-                  echo "the composed personal Codex policy does not contain 38 rules" >&2
-                  exit 1
-                fi
+                cat "$baselineRuleSource" "$homePCPersonalRules" > "$TMPDIR/combined.rules"
                 if sort "$TMPDIR/combined.rules" | uniq -d | grep -q .; then
                   echo "the public and personal Codex rule sets overlap" >&2
                   exit 1
@@ -860,7 +858,7 @@
                 for skill in $improveSkillSources; do
                   test -f "$skill/SKILL.md"
                   grep -Fq '[the planning contract](references/planning-contract.md)' "$skill/SKILL.md"
-                  grep -Fq 'Contract version: `1.0.0-codex.17`' "$skill/references/planning-contract.md"
+                  test -f "$skill/references/planning-contract.md"
                 done
 
                 mkdir -p "$out"

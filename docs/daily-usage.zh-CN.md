@@ -265,6 +265,27 @@ Nix 二进制替代会使用 USTC，而不是继续保留官方 cache 作为后�
 `nix-daemon` 会直接获得它，`maint-*` 命令会从 `/etc/dotfiles/nix-network.json`
 读取同一组值。它不会导出为桌面/session 级代理环境变量。
 
+### Codex 代理恢复指引
+
+个人 `homePC` 和 `linglong` 配置默认启用
+`dotfiles.codex.proxyRecovery.enable`，把恢复指引追加到用户的全局 Codex
+`~/.codex/AGENTS.md`。预期经过代理的连接在常规重试耗尽后仍失败时，Codex 会报告
+错误和尝试次数，请用户切换代理节点后继续受阻操作。切换节点只是恢复建议，
+不代表已查明根因。复用 Codex 模块及 headless 消费者默认关闭此选项。
+在 Home Manager 模块中设置普通的 `false` 即可覆盖个人默认值：
+
+```nix
+dotfiles.codex.proxyRecovery.enable = false;
+```
+
+其他个人指令可通过上游可合并选项追加；开关启用时，它会与代理指引同时保留：
+
+```nix
+programs.codexBase.extraInstructions = ''
+  在此填写其他个人指令。
+'';
+```
+
 ### 手动更新 Flake 输入（`flake.lock`）
 
 此命令会从 GitHub 拉取所有依赖的最新版本（nixpkgs、home-manager、hyprland 等）。

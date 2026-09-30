@@ -71,6 +71,12 @@ in
       default = false;
       description = "Whether to add the broader command rules used by a personal workstation operator.";
     };
+
+    proxyRecovery.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Whether to append proxy recovery guidance to global Codex instructions.";
+    };
   };
 
   config = {
@@ -85,6 +91,7 @@ in
       ponytail.enable = cfg.ponytail.enable;
       mattPocockSkills.enable = cfg.mattPocockSkills.enable;
       improve.enable = cfg.improve.enable;
+      extraInstructions = lib.mkIf cfg.proxyRecovery.enable (builtins.readFile ./proxy-recovery.md);
     };
 
     home.packages = [ pkgs.nixfmt ];

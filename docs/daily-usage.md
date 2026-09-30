@@ -281,6 +281,30 @@ The local proxy URL is declared in NixOS config for Nix maintenance paths only:
 `nix-daemon` receives it directly, and `maint-*` commands read the same values
 from `/etc/dotfiles/nix-network.json`. It is not exported as a desktop/session-wide proxy environment.
 
+### Codex Proxy Recovery Guidance
+
+The personal `homePC` and `linglong` configurations enable
+`dotfiles.codex.proxyRecovery.enable` by default. It appends guidance to the
+user's global Codex `~/.codex/AGENTS.md`: after normal retries fail on a
+connection expected to use a proxy, Codex reports the error and attempt count
+and asks you to switch proxy nodes before continuing. A node switch is a
+recovery suggestion, not a diagnosis. The reusable Codex module and headless
+consumer leave this option disabled by default. Set it to `false` in a Home
+Manager module to override the personal default:
+
+```nix
+dotfiles.codex.proxyRecovery.enable = false;
+```
+
+Add other personal guidance through the mergeable upstream option; it is
+appended alongside the proxy guidance when that switch is enabled:
+
+```nix
+programs.codexBase.extraInstructions = ''
+  Your additional instructions here.
+'';
+```
+
 ### Manually Update Flake Inputs (`flake.lock`)
 
 This fetches the latest versions of all dependencies from GitHub (nixpkgs, home-manager, hyprland, etc.).
