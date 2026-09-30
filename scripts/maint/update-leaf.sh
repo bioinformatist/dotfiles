@@ -67,16 +67,6 @@ update_release_pin() {
 }
 
 case "$leaf" in
-  orca)
-    update_release_pin \
-      "stablyai/orca" \
-      "v" \
-      "orca-linux.AppImage" \
-      "pkgs/orca-ide.nix" \
-      "orcaVersion" \
-      "orcaHash"
-    nix build --no-link -L .#orca-ide
-    ;;
   zeroclaw)
     update_release_pin \
       "zeroclaw-labs/zeroclaw" \

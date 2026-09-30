@@ -1,7 +1,7 @@
 # GitHub Maintenance
 
-- `workflows/maintenance-leaf.yml` only owns the Orca and ZeroClaw release-pin
-  leaves. Codex release and Improve updates land atomically in `codex-base` and
+- `workflows/maintenance-leaf.yml` only owns the ZeroClaw release-pin
+  leaf. Codex release and Improve updates land atomically in `codex-base` and
   reach this repository through the Renovate-managed root flake input.
 - Maintenance leaf gates are delta-based. Existing full-head China-cache misses
   are diagnostic baseline debt and must not block unrelated leaf PRs. Do not
