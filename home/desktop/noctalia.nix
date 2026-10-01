@@ -81,12 +81,10 @@ in
               }
               {
                 action = "reboot";
-                command = "systemctl --user start dotfiles-power-action@reboot.service";
                 variant = "primary";
               }
               {
                 action = "shutdown";
-                command = "systemctl --user start dotfiles-power-action@poweroff.service";
                 variant = "destructive";
               }
             ];
