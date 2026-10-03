@@ -96,9 +96,13 @@ Noctalia 负责状态栏、原生网络/蓝牙/音频和通知面板、控制中
 
 模块唯一的地点接口是可为空字符串 `dotfiles.noctalia.weatherLocation`，默认值为
 `null`；下游可以不设置或选择自己的地点，而不会继承 Yu Sun 个人层的
-`Guangzhou, China`。Settings 运行时修改持久化于 `~/.local/state/noctalia`，并覆盖
-声明式默认值。D2R/Terror Zone 内容不属于导出；未来如需实现，应放入独立的
-Noctalia v5 插件仓库。
+`Guangzhou, China`。现有工作站导出还提供默认关闭的 `dotfiles.noctalia.d2r.enable`。
+下游可自行启用固定版本的
+[`bioinformatist/d2r-tz`](https://github.com/bioinformatist/noctalia-d2r) 插件，
+显示 D2R《术士君临》（RotW）在线恐怖地带、经验与掉落评级及数据来源；区域分组
+和评级由插件维护。
+个人主机另行选择简体中文地名。Settings 的运行时修改持久化于
+`~/.local/state/noctalia`，并覆盖声明式默认值，包括插件和状态栏设置。
 
 ## 当前本仓库主机组合
 

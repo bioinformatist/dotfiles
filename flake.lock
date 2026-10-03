@@ -924,6 +924,22 @@
         "type": "github"
       }
     },
+    "noctalia-d2r": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791001585,
+        "narHash": "sha256-2K3iHVuPWpwsWkfy6trw/OYkatY0l5Prsb2W12h5bNw=",
+        "owner": "bioinformatist",
+        "repo": "noctalia-d2r",
+        "rev": "d8defe78f7b1c6c483538cddc62d14167b1ce56e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "bioinformatist",
+        "repo": "noctalia-d2r",
+        "type": "github"
+      }
+    },
     "playwright-cli": {
       "flake": false,
       "locked": {
@@ -996,6 +1012,7 @@
         "nixpkgs-tools": "nixpkgs-tools",
         "nixpkgs-wechat": "nixpkgs-wechat",
         "noctalia": "noctalia",
+        "noctalia-d2r": "noctalia-d2r",
         "sops-nix": "sops-nix",
         "swww": "swww"
       }
