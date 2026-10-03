@@ -106,10 +106,15 @@ when their device or backend is absent.
 The module's only location interface is
 `dotfiles.noctalia.weatherLocation`, a nullable string whose default is `null`;
 downstream consumers can omit it or set their own place without inheriting Yu
-Sun's personal `Guangzhou, China` value. Runtime Settings changes persist under
-`~/.local/state/noctalia` and override declarative defaults. D2R/Terror Zone
-content is not part of the export; any future version belongs in a separate
-Noctalia v5 plugin repository.
+Sun's personal `Guangzhou, China` value. The existing workstation export also
+provides `dotfiles.noctalia.d2r.enable`, default `false`. Consumers can opt in
+to the pinned [`bioinformatist/d2r-tz`](https://github.com/bioinformatist/noctalia-d2r)
+plugin for Reign of the Warlock online D2R Terror Zones, XP and loot grades,
+and source details;
+the plugin owns its zone groups and ratings. Personal hosts set Simplified
+Chinese zone names separately. Runtime Settings changes persist under
+`~/.local/state/noctalia` and override declarative defaults, including plugin
+and bar settings.
 
 ## Current host composition
 

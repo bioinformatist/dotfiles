@@ -1,5 +1,6 @@
 {
   inputs,
+  config,
   pkgs,
   lib,
   ...
@@ -19,6 +20,10 @@
 
   dotfiles.noctalia.weatherLocation = "Guangzhou, China";
   dotfiles.noctalia.weatherRefreshMinutes = 10;
+  dotfiles.noctalia.d2r.enable = true;
+  programs.noctalia.settings = lib.mkIf config.dotfiles.noctalia.d2r.enable {
+    plugin_settings."bioinformatist/d2r-tz".zone_language = "zh-Hans";
+  };
   dotfiles.hyprland.rightAltCompose = true;
 
   systemd.user.services.clash-verge-gui = {

@@ -149,11 +149,19 @@ child when used on a WeChat child window.
 Battle.net appears only if the Wine application exports SNI; absence is an
 observation, not evidence that a compatibility bridge should be added.
 
-D2R and Terror Zone content is not part of the workstation bar. If it is
-revisited, it belongs in a separate open-source Noctalia v5 plugin repository.
-The reusable workstation export still keeps Clash disabled by default; the
-personal Home Manager layer starts Clash Verge for the maintained personal GUI
-hosts after `noctalia.service`.
+The workstation module exposes `dotfiles.noctalia.d2r.enable`, which defaults
+to `false`. Both personal hosts enable it and place the pinned
+[`bioinformatist/d2r-tz`](https://github.com/bioinformatist/noctalia-d2r)
+plugin after weather in the bar. It shows the current and next Reign of the
+Warlock online D2R Terror Zones from D2Runewizard, with XP and loot grades and
+a source tooltip.
+The plugin supplies its own zone groups and ratings; the personal layer selects
+Simplified Chinese zone names. No account or token is needed. Noctalia Settings
+can persist plugin and bar overrides under `~/.local/state/noctalia`, so check
+those if the live bar differs from the declared layout. The reusable workstation
+export still keeps Clash disabled by default; the personal Home Manager layer
+starts Clash Verge for the maintained personal GUI hosts after
+`noctalia.service`.
 
 ### Evaluated But Not Installed
 

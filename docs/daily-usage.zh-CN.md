@@ -135,9 +135,15 @@ Settings 中分别连接 Google。ICS 订阅归 Google 管理；`~/.local/state/
 Battle.net 只有在 Wine 应用实际导出 SNI 时才会出现；缺失只是一项观察，不代表需要
 添加兼容桥。
 
-D2R 和 Terror Zone 内容已从工作站状态栏移除。若未来仍需实现，应放在独立的开源
-Noctalia v5 插件仓库中。可复用工作站导出仍默认关闭 Clash；个人 Home Manager 层在
-维护中的个人 GUI 主机上于 `noctalia.service` 之后启动 Clash Verge。
+工作站模块提供默认关闭的 `dotfiles.noctalia.d2r.enable`。两台个人主机启用该选项，
+并在天气项后放置固定版本的
+[`bioinformatist/d2r-tz`](https://github.com/bioinformatist/noctalia-d2r) 插件。
+它从 D2Runewizard 显示 D2R《术士君临》（RotW）当前和下一轮在线恐怖地带、经验与
+掉落评级，并在提示中标明数据来源。区域分组和评级由插件提供；个人层选择简体中文
+地名，无需账号或令牌。
+Noctalia Settings 可将插件和状态栏的运行时覆盖保存到 `~/.local/state/noctalia`；
+如果实际状态栏与声明式布局不同，应检查相关覆盖。可复用工作站导出仍默认关闭 Clash；
+个人 Home Manager 层在维护中的个人 GUI 主机上于 `noctalia.service` 之后启动 Clash Verge。
 
 ### 已评估但未安装
 

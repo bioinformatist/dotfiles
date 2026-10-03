@@ -17,6 +17,10 @@
     };
     hyprland.url = "github:hyprwm/Hyprland";
     noctalia.url = "github:noctalia-dev/noctalia/cachix";
+    noctalia-d2r = {
+      url = "github:bioinformatist/noctalia-d2r";
+      flake = false;
+    };
     swww.url = "github:LGFae/swww";
     impermanence.url = "github:nix-community/impermanence";
     sops-nix = {
@@ -520,6 +524,16 @@
             linglong =
               self.nixosConfigurations.linglong.config.home-manager.users.ysun.xdg.configFile."noctalia/config.toml".source;
           };
+          noctaliaDisabledConfigSources = lib.mapAttrs (
+            name: _:
+            (self.nixosConfigurations.${name}.extendModules {
+              modules = [
+                {
+                  home-manager.users.ysun.dotfiles.noctalia.d2r.enable = lib.mkForce false;
+                }
+              ];
+            }).config.home-manager.users.ysun.xdg.configFile."noctalia/config.toml".source
+          ) noctaliaConfigSources;
           noctaliaPaletteSources = {
             homePC =
               self.nixosConfigurations.homePC.config.home-manager.users.ysun.xdg.configFile."noctalia/palettes/dotfiles.json".source;
@@ -554,7 +568,9 @@
           personalRulesPath = ".codex/rules/personal.rules";
           improveSkillPath = ".agents/skills/improve";
           proxyRecoveryText = builtins.readFile ./home/programs/codex/proxy-recovery.md;
-          proxyRecoveryEnabled = lib.hasInfix proxyRecoveryText homePCCodexConfig.home.file.".codex/AGENTS.md".text;
+          proxyRecoveryEnabled =
+            lib.hasInfix proxyRecoveryText
+              homePCCodexConfig.home.file.".codex/AGENTS.md".text;
           proxyRecoveryDisabled =
             !(lib.hasInfix proxyRecoveryText homePCCodexDisabledConfig.home.file.".codex/AGENTS.md".text);
           globalMattPocockSkillsEnabled = homePCCodexConfig.dotfiles.codex.mattPocockSkills.enable;
@@ -623,6 +639,7 @@
                   noctaliaPackage
                   pkgs.gnugrep
                   pkgs.jq
+                  pkgs.python3
                 ];
               }
               ''
@@ -714,9 +731,66 @@
                   fi
                 }
 
+                ${lib.getExe noctaliaPackage} plugins lint ${inputs.noctalia-d2r}/d2r-tz
+
+                validate_d2r() {
+                  python3 - "$1" "$2" "$3" ${lib.escapeShellArg (toString inputs.noctalia-d2r)} <<'PY'
+                import copy
+                import sys
+                import tomllib
+
+                name, on_path, off_path, plugin_path = sys.argv[1:]
+                with open(on_path, "rb") as f:
+                    on = tomllib.load(f)
+                with open(off_path, "rb") as f:
+                    off = tomllib.load(f)
+
+                sources = on["plugins"]["source"]
+                defaults = [
+                    {"name": "official", "kind": "git", "location": "https://github.com/noctalia-dev/official-plugins", "enabled": True},
+                    {"name": "community", "kind": "git", "location": "https://github.com/noctalia-dev/community-plugins", "enabled": True},
+                ]
+                d2r = {"name": "noctalia-d2r", "kind": "path", "location": plugin_path, "enabled": True}
+                assert sources == defaults + [d2r], f"{name}: plugin sources changed"
+                assert on["plugins"]["enabled"].count("bioinformatist/d2r-tz") == 1, name
+                assert on["widget"]["d2r-tz"] == {"type": "bioinformatist/d2r-tz:tz"}, name
+                center = on["bar"]["main"]["center"]
+                assert center.count("d2r-tz") == 1 and center.index("d2r-tz") > center.index("weather"), name
+                assert on["plugin_settings"]["bioinformatist/d2r-tz"] == {"zone_language": "zh-Hans"}, name
+
+                assert "plugins" not in off, f"{name}: disabled source remains"
+                assert "d2r-tz" not in off.get("widget", {}), name
+                assert "d2r-tz" not in off["bar"]["main"]["center"], name
+                assert "bioinformatist/d2r-tz" not in off.get("plugin_settings", {}), name
+
+                without_d2r = copy.deepcopy(on)
+                del without_d2r["plugins"]
+                del without_d2r["widget"]["d2r-tz"]
+                without_d2r["bar"]["main"]["center"].remove("d2r-tz")
+                del without_d2r["plugin_settings"]["bioinformatist/d2r-tz"]
+                if not without_d2r["plugin_settings"]:
+                    del without_d2r["plugin_settings"]
+                assert without_d2r == off, f"{name}: unrelated settings changed"
+                PY
+                }
+
                 ${lib.concatStringsSep "\n" (
                   lib.mapAttrsToList (
                     name: source: "validate_config ${lib.escapeShellArg name} ${lib.escapeShellArg (toString source)}"
+                  ) noctaliaConfigSources
+                )}
+                ${lib.concatStringsSep "\n" (
+                  lib.mapAttrsToList (
+                    name: source:
+                    "validate_config ${lib.escapeShellArg "${name}-disabled"} ${lib.escapeShellArg (toString source)}"
+                  ) noctaliaDisabledConfigSources
+                )}
+                ${lib.concatStringsSep "\n" (
+                  lib.mapAttrsToList (
+                    name: source:
+                    "validate_d2r ${lib.escapeShellArg name} ${lib.escapeShellArg (toString source)} ${
+                      lib.escapeShellArg (toString noctaliaDisabledConfigSources.${name})
+                    }"
                   ) noctaliaConfigSources
                 )}
                 ${lib.concatStringsSep "\n" (

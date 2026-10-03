@@ -8,13 +8,14 @@
 }:
 let
   cfg = config.dotfiles.noctalia;
-  noctaliaPackage =
-    inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  noctaliaPackage = inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 {
   imports = [ inputs.noctalia.homeModules.default ];
 
   options.dotfiles.noctalia = {
+    d2r.enable = lib.mkEnableOption "D2R Terror Zones";
+
     weatherLocation = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
@@ -47,175 +48,200 @@ in
     package = noctaliaPackage;
     checkConfig = true;
 
-    settings =
-      let
-        noctaliaSettings = {
-          shell = {
-            font_family = "JetBrainsMono Nerd Font";
-            telemetry_enabled = false;
-            setup_wizard_enabled = false;
-            external_ip_enabled = false;
-            polkit_agent = true;
-            clipboard_enabled = false;
-            screen_time_enabled = false;
-            launch_apps_as_systemd_services = true;
+    settings = lib.mkMerge [
+      {
+        shell = {
+          font_family = "JetBrainsMono Nerd Font";
+          telemetry_enabled = false;
+          setup_wizard_enabled = false;
+          external_ip_enabled = false;
+          polkit_agent = true;
+          clipboard_enabled = false;
+          screen_time_enabled = false;
+          launch_apps_as_systemd_services = true;
 
-            shadow = {
-              direction = "center";
-              alpha = 0.8;
-            };
-
-            panel = {
-              transparency_mode = "solid";
-              borders = true;
-              shadow = true;
-              control_center_placement = "attached";
-              session_placement = "attached";
-            };
-
-            session.actions = [
-              {
-                action = "logout";
-                command = "uwsm stop";
-                variant = "default";
-              }
-              {
-                action = "reboot";
-                variant = "primary";
-              }
-              {
-                action = "shutdown";
-                variant = "destructive";
-              }
-            ];
+          shadow = {
+            direction = "center";
+            alpha = 0.8;
           };
 
-          theme = {
-            mode = "auto";
-            source = "custom";
-            custom_palette = "dotfiles";
-            pure_black_dark = false;
-            templates = {
-              enable_builtin_templates = false;
-              enable_community_templates = false;
-            };
-          };
-
-          bar.main = {
-            position = "top";
-            thickness = 42;
-            background_opacity = 1.0;
-            radius = 8;
-            margin_ends = 8;
-            margin_edge = 6;
-            padding = 10;
-            widget_spacing = 5;
+          panel = {
+            transparency_mode = "solid";
+            borders = true;
             shadow = true;
-            border = "primary";
-            border_width = 1.0;
-            font_weight = 700;
-            start = [ "workspaces" ];
-            center = [
-              "clock"
-              "weather"
-            ];
-            end = [
-              "cpu"
-              "mem"
-              "gpu"
-              "tray"
-              "notifications"
-              "network"
-              "bluetooth"
-              "volume"
-              "battery"
-              "control-center"
-              "session"
-            ];
+            control_center_placement = "attached";
+            session_placement = "attached";
           };
 
-          widget = {
-            workspaces = {
-              hide_when_empty = false;
-              labels_only_when_occupied = false;
-              focused_color = "primary";
-              occupied_color = "secondary";
-              empty_color = "secondary";
-            };
-
-            cpu = {
-              type = "sysmon";
-              stat = "cpu_usage";
-              visualization = "none";
-              show_value = true;
-              scale = 0.85;
-              capsule = true;
-              capsule_fill = "surface_variant";
-              capsule_foreground = "on_surface";
-              capsule_padding = 5;
-              capsule_radius = 6.0;
-            };
-
-            mem = {
-              type = "sysmon";
-              stat = "ram_pct";
-              visualization = "none";
-              show_value = true;
-              scale = 0.85;
-              capsule = true;
-              capsule_fill = "surface_variant";
-              capsule_foreground = "on_surface";
-              capsule_padding = 5;
-              capsule_radius = 6.0;
-            };
-
-            gpu = {
-              type = "sysmon";
-              stat = "gpu_usage";
-              visualization = "none";
-              show_value = true;
-              scale = 0.85;
-              capsule = true;
-              capsule_fill = "surface_variant";
-              capsule_foreground = "on_surface";
-              capsule_padding = 5;
-              capsule_radius = 6.0;
-            };
-
-            network.show_label = false;
-            bluetooth.show_label = false;
-            volume.show_label = false;
-            weather.show_condition = false;
-          };
-
-          system.monitor = {
-            enabled = true;
-            gpu_poll_seconds = 2.0;
-          };
-
-          weather = {
-            enabled = cfg.weatherLocation != null;
-            refresh_minutes = cfg.weatherRefreshMinutes;
-            unit = "celsius";
-          };
-
-          location = {
-            auto_locate = false;
-          }
-          // lib.optionalAttrs (cfg.weatherLocation != null) {
-            address = cfg.weatherLocation;
-          };
-
-          audio.enable_overdrive = false;
-          notification.enable_daemon = true;
-          wallpaper.enabled = false;
-          dock.enabled = false;
-          desktop_widgets.enabled = false;
-          lockscreen.enabled = false;
-          lockscreen_widgets.enabled = false;
+          session.actions = [
+            {
+              action = "logout";
+              command = "uwsm stop";
+              variant = "default";
+            }
+            {
+              action = "reboot";
+              variant = "primary";
+            }
+            {
+              action = "shutdown";
+              variant = "destructive";
+            }
+          ];
         };
-      in
-      (pkgs.formats.toml { }).generate "dotfiles-noctalia-settings.toml" noctaliaSettings;
+
+        theme = {
+          mode = "auto";
+          source = "custom";
+          custom_palette = "dotfiles";
+          pure_black_dark = false;
+          templates = {
+            enable_builtin_templates = false;
+            enable_community_templates = false;
+          };
+        };
+
+        bar.main = {
+          position = "top";
+          thickness = 42;
+          background_opacity = 1.0;
+          radius = 8;
+          margin_ends = 8;
+          margin_edge = 6;
+          padding = 10;
+          widget_spacing = 5;
+          shadow = true;
+          border = "primary";
+          border_width = 1.0;
+          font_weight = 700;
+          start = [ "workspaces" ];
+          center = [
+            "clock"
+            "weather"
+          ];
+          end = [
+            "cpu"
+            "mem"
+            "gpu"
+            "tray"
+            "notifications"
+            "network"
+            "bluetooth"
+            "volume"
+            "battery"
+            "control-center"
+            "session"
+          ];
+        };
+
+        widget = {
+          workspaces = {
+            hide_when_empty = false;
+            labels_only_when_occupied = false;
+            focused_color = "primary";
+            occupied_color = "secondary";
+            empty_color = "secondary";
+          };
+
+          cpu = {
+            type = "sysmon";
+            stat = "cpu_usage";
+            visualization = "none";
+            show_value = true;
+            scale = 0.85;
+            capsule = true;
+            capsule_fill = "surface_variant";
+            capsule_foreground = "on_surface";
+            capsule_padding = 5;
+            capsule_radius = 6.0;
+          };
+
+          mem = {
+            type = "sysmon";
+            stat = "ram_pct";
+            visualization = "none";
+            show_value = true;
+            scale = 0.85;
+            capsule = true;
+            capsule_fill = "surface_variant";
+            capsule_foreground = "on_surface";
+            capsule_padding = 5;
+            capsule_radius = 6.0;
+          };
+
+          gpu = {
+            type = "sysmon";
+            stat = "gpu_usage";
+            visualization = "none";
+            show_value = true;
+            scale = 0.85;
+            capsule = true;
+            capsule_fill = "surface_variant";
+            capsule_foreground = "on_surface";
+            capsule_padding = 5;
+            capsule_radius = 6.0;
+          };
+
+          network.show_label = false;
+          bluetooth.show_label = false;
+          volume.show_label = false;
+          weather.show_condition = false;
+        };
+
+        system.monitor = {
+          enabled = true;
+          gpu_poll_seconds = 2.0;
+        };
+
+        weather = {
+          enabled = cfg.weatherLocation != null;
+          refresh_minutes = cfg.weatherRefreshMinutes;
+          unit = "celsius";
+        };
+
+        location = {
+          auto_locate = false;
+        }
+        // lib.optionalAttrs (cfg.weatherLocation != null) {
+          address = cfg.weatherLocation;
+        };
+
+        audio.enable_overdrive = false;
+        notification.enable_daemon = true;
+        wallpaper.enabled = false;
+        dock.enabled = false;
+        desktop_widgets.enabled = false;
+        lockscreen.enabled = false;
+        lockscreen_widgets.enabled = false;
+      }
+      (lib.mkIf cfg.d2r.enable {
+        plugins = {
+          source = [
+            {
+              name = "official";
+              kind = "git";
+              location = "https://github.com/noctalia-dev/official-plugins";
+              enabled = true;
+            }
+            {
+              name = "community";
+              kind = "git";
+              location = "https://github.com/noctalia-dev/community-plugins";
+              enabled = true;
+            }
+            {
+              name = "noctalia-d2r";
+              kind = "path";
+              location = toString inputs.noctalia-d2r;
+              enabled = true;
+            }
+          ];
+          enabled = [ "bioinformatist/d2r-tz" ];
+        };
+        widget.d2r-tz.type = "bioinformatist/d2r-tz:tz";
+        bar.main.center = lib.mkAfter [ "d2r-tz" ];
+      })
+    ];
 
     customPalettes.dotfiles.dark = {
       mPrimary = "#FFA31A";
