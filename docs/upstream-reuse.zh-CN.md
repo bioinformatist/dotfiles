@@ -29,16 +29,11 @@ CLI。Improve 和 doctor 通过 `programs.codexBase.package` 使用同一个包�
 headless 消费者不会因此安装桌面应用。
 
 Linux 桌面消费者可以单独安装 `packages.<system>.chatgpt` 导出的社区桌面包。
-两个个人工作站的终端、Improve 和 doctor 都使用独立 CLI；桌面应用使用自己的
-内嵌 runtime。内嵌 runtime 不是完整的独立 CLI 包，不能代替 CLI 后台服务所需的
-打包安装。底层包使用社区 flake 锁定的包集合，不通过 shared-nixpkgs
-overlay 重建，以保留上游二进制缓存的包身份。CLI 的包选择不会替换桌面应用的 runtime。
-
-当前 CLI output 临时采用 [llm-agents.nix #9889](https://github.com/numtide/llm-agents.nix/pull/9889)
-的完整 daemon 包布局，将缓存中的二进制重新组织，补入包清单和 ripgrep，并将
-bubblewrap 复制到包内；不重编 Rust，也不关闭后台服务。社区维护的包通过同样的
-启动和沙箱验收后，应移除此适配。验证及安装状态记录在
-[issue #193](https://github.com/bioinformatist/dotfiles/issues/193)。
+导出的桌面启动器通过 `CODEX_CLI_PATH` 指向社区 CLI；两个个人工作站的终端、
+Improve 和 doctor 也使用这同一个包。桌面归档仍附带内嵌二进制，但本地 Codex
+会话由启动器选择完整的社区包。headless 消费者只安装 CLI。底层包使用社区
+flake 锁定的包集合，不通过 shared-nixpkgs overlay 重建。桌面与 CLI 分别发布，
+任一输入更新后都需要验证两者的配合。
 
 个人工作站配置将 Google Chrome 声明为 HTTP/HTTPS 默认浏览器，并保留桌面应用
 对 `codex:` 链接的处理。这项浏览器偏好不属于导出的 Home Manager 模块。

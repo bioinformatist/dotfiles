@@ -285,40 +285,8 @@
               overlays.modifications
             ];
           };
-          communityPkgs = inputs.llm-agents.inputs.nixpkgs.legacyPackages.${system};
           communityCodex = inputs.llm-agents.packages.${system}.codex;
           communityChatgpt = inputs.llm-agents.packages.${system}.chatgpt;
-          # Temporary adaptation of cached binaries from numtide/llm-agents.nix#9889.
-          # Remove after the maintained package passes startup and sandbox acceptance.
-          codexManifest = communityPkgs.writeText "codex-package.json" (
-            builtins.toJSON {
-              layoutVersion = 1;
-              version = communityCodex.version;
-              target = communityPkgs.stdenv.hostPlatform.rust.rustcTarget;
-              variant = "codex";
-              entrypoint = "bin/codex";
-              resourcesDir = "codex-resources";
-              pathDir = "codex-path";
-            }
-          );
-          completeCodex =
-            communityPkgs.runCommand "codex-${communityCodex.version}-complete-layout"
-              {
-                inherit (communityCodex) version meta;
-              }
-              ''
-                mkdir -p $out/libexec/codex/{bin,codex-path,codex-resources} $out/bin
-                cp ${communityCodex}/libexec/codex/bin/{codex,codex-code-mode-host,logs_client} \
-                  $out/libexec/codex/bin/
-                install -Dm755 ${communityCodex}/libexec/codex/codex-resources/bwrap \
-                  $out/libexec/codex/codex-resources/bwrap
-                install -Dm755 ${lib.getExe communityPkgs.ripgrep} $out/libexec/codex/codex-path/rg
-                cp ${codexManifest} $out/libexec/codex/codex-package.json
-                cp -R ${communityCodex}/share $out/share
-                for name in codex codex-code-mode-host logs_client; do
-                  ln -s ../libexec/codex/bin/$name $out/bin/$name
-                done
-              '';
           syncVendoredSkills = pkgs.writeShellApplication {
             name = "sync-vendored-skills";
             runtimeInputs = with pkgs; [
@@ -364,18 +332,13 @@
         // {
           "sync-vendored-skills" = syncVendoredSkills;
           "sync-fieldcraft-skill" = syncFieldcraftSkill;
-          codex = completeCodex;
-          # Source-only override until the community package includes the Linux
-          # child-exit fix (openai/codex#48618). Keep its packaging unchanged.
-          chatgpt = communityChatgpt.override {
-            chatgpt-unwrapped = communityChatgpt.unwrapped.overrideAttrs (_: {
-              version = "26.924.50649";
-              src = communityPkgs.fetchurl {
-                url = "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.924.50649_amd64.deb";
-                hash = "sha256-oPy4RcWhx6Gu5RNyh8c6Qxw6UcROzeabf6gzbcgiiGs=";
-              };
-            });
-          };
+          codex = communityCodex;
+          chatgpt = communityChatgpt.overrideAttrs (old: {
+            postFixup = (old.postFixup or "") + ''
+              wrapProgram "$out/bin/chatgpt" \
+                --set CODEX_CLI_PATH ${lib.getExe communityCodex}
+            '';
+          });
         }
       );
 
