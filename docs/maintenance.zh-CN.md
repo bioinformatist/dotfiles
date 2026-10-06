@@ -68,10 +68,10 @@ leaf 混进同一个 PR，削弱 cache miss 归因。
 ZeroClaw 每天检查一次。release-pin workflow 检查上游 release、更新版本和哈希；生成的 PR 由 required maintenance gate 检查。
 
 Codex 运行包来自 `llm-agents`：独立 CLI 包含配套的 Code Mode Host，供 headless
-和桌面主机的终端、Improve、doctor 使用。桌面应用保留自己的内嵌 runtime。
-`codex-base` 提供配置、Improve 和 skills。
+和桌面主机的终端、Improve、doctor 使用。桌面启动器通过 `CODEX_CLI_PATH` 选择
+同一个 CLI。`codex-base` 提供配置、Improve 和 skills。
 Renovate 分别更新这两个根输入；任一更新后，都需要检查所选运行包与继承配置、
-工作流的兼容性。选择另一个包不会替换已经运行的桌面应用或 SSH App Server 后台。
+工作流的兼容性。运行中的桌面应用或 SSH App Server 后台需要重启才会切换版本。
 
 每个 release-pin leaf 最多一个 open PR；下一次尝试会更新同一个 `maint/<leaf>` 分支，不会开新 PR。Renovate 和 release-pin 维护 PR 暂时都不设置全局 open PR 上限。
 

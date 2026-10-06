@@ -31,20 +31,13 @@ layer.
 `programs.codexBase.package`. Headless consumers do not inherit a desktop app.
 
 Linux desktop consumers can install `packages.<system>.chatgpt` separately.
-Both personal workstations keep the standalone CLI for terminal use, Improve,
-and doctor; the desktop application uses its own embedded runtime. That runtime
-is not a complete standalone CLI package and cannot replace the CLI's packaged
-background-server installation. The underlying packages use the community
-flake's locked package set, not its shared-nixpkgs overlay, to retain upstream
-binary-cache identities. Selecting the CLI does not replace the desktop application's runtime.
-
-The current CLI output temporarily stages those cached binaries in the complete
-daemon package layout from [llm-agents.nix #9889](https://github.com/numtide/llm-agents.nix/pull/9889).
-It adds the package manifest and bundled ripgrep and copies bubblewrap into the
-package; it does not rebuild Rust or disable the background server. Remove this
-adaptation after the maintained community package passes the same startup and
-sandbox checks. Validation and installation status are tracked in
-[issue #193](https://github.com/bioinformatist/dotfiles/issues/193).
+The exported desktop launcher sets `CODEX_CLI_PATH` to the same community CLI
+used by terminals, Improve, and doctor on both personal workstations. The
+desktop archive still contains its bundled binary, but the launcher selects the
+complete community package for local Codex sessions. Headless consumers install
+only the CLI. The packages use the community flake's locked package set rather
+than its shared-nixpkgs overlay. Desktop releases and CLI releases may differ;
+verify their integration after either input changes.
 
 The personal workstation configuration declares Google Chrome as the default
 HTTP/HTTPS browser and keeps `codex:` links assigned to the desktop application.

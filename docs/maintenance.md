@@ -71,12 +71,12 @@ updates pins and hashes, and the required maintenance gate checks the resulting 
 Codex no longer has an independent release-pin leaf in this repository.
 Codex runtime packages come from `llm-agents`: the standalone CLI includes its
 matching Code Mode Host and is used by terminals, Improve, and doctor on both
-headless and desktop hosts. The desktop application keeps its own embedded
-runtime. `codex-base` supplies configuration, Improve, and
-skills. Renovate updates these two root inputs separately; after either update,
-check the selected runtime against the inherited configuration and workflows.
-Selecting another package does not override the backend of a running desktop
-application or SSH App Server.
+headless and desktop hosts. The desktop launcher selects that CLI through
+`CODEX_CLI_PATH`. `codex-base` supplies configuration, Improve, and skills.
+Renovate updates these two root inputs separately; after either update, check
+the selected runtime against the inherited configuration and workflows. A
+running desktop application or SSH App Server keeps its current backend until
+restarted.
 
 Each release-pin leaf has at most one open PR. The next attempt updates the same `maint/<leaf>` branch instead of opening another PR. There is intentionally no global open PR limit for Renovate or release-pin maintenance PRs.
 
