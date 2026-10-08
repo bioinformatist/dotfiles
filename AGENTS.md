@@ -44,6 +44,23 @@ abstraction when changing shared modules, profiles, or flake outputs.
 
 ## Key Constraints
 
+### Lightweight CI
+
+- Keep routine CI lightweight: use native evaluation, dry runs, and bounded
+  lightweight checks. Cache misses must be reported; they must not trigger
+  compilation of large dependencies or complete systems.
+- Minimize both computation and remote requests. For cache regression gates,
+  compute the base/head difference before probing availability, query only
+  newly required artifacts, and deduplicate across targets. An unchanged
+  artifact set must cause zero additional mirror probes.
+- Bound mirror concurrency and request frequency, honor native retry/backoff,
+  and stop on access denial. Query failures remain inconclusive.
+- Before adding CI work, identify the decision it supports and check its
+  evaluation/build/request cost. Keep full dependency or mirror inventories
+  out of routine PR checks; broader diagnostics need a concrete task requirement.
+
+### Repository Workflow
+
 - The repo's shell workflow is Nushell-first. Prefer Nushell syntax when writing or updating repo commands and examples.
 - When executing Nushell snippets through Codex tools, do not rely on the tool's shell selection alone. Invoke Nushell explicitly as `nu -c '...'`, otherwise the command may still be interpreted by `/bin/sh`.
 - This repo contains unfree packages. For full flake checks, run `env NIXPKGS_ALLOW_UNFREE=1 nix flake check --impure --allow-import-from-derivation`; do not treat plain `nix flake check` failing on `mudfish` as a code regression.

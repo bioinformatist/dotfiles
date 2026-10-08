@@ -2,132 +2,92 @@ name: Maintenance Gate
 
 on:
   pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - synchronize
-      - reopened
+    branches: [main]
+    types: [opened, synchronize, reopened]
   merge_group:
-    types:
-      - checks_requested
+    types: [checks_requested]
   workflow_dispatch:
 
 concurrency:
   group: maintenance-gate-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
 permissions:
   contents: read
 
 jobs:
-  gate:
-    name: maintenance gate
+  configuration:
     runs-on: ubuntu-latest
     env:
-      HOSTS: homePC linglong
-      CHINA_SUBSTITUTERS: >-
-        https://mirrors.ustc.edu.cn/nix-channels/store
-        https://cache.numtide.com
-        https://anyrun.cachix.org
-        https://hyprland.cachix.org
-        https://noctalia.cachix.org
-      DECLARED_EXTRA_SUBSTITUTERS: >-
-        https://cache.numtide.com
-        https://anyrun.cachix.org
-        https://hyprland.cachix.org
-        https://noctalia.cachix.org
-      CHINA_EXTRA_TRUSTED_PUBLIC_KEYS: >-
-        niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=
-        anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s=
-        hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
-        noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4=
       NIXPKGS_ALLOW_UNFREE: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+      - uses: cachix/install-nix-action@v31
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.34.7/install
+      - run: nix flake check --no-build --impure --no-write-lock-file --option allow-import-from-derivation false
+      - run: nix eval --raw --impure '.#homeConfigurations."ci@headless".activationPackage.drvPath'
+      - run: nix build --impure --no-link -L .#checks.x86_64-linux.wechat-control .#checks.x86_64-linux.codex-base-adapter .#checks.x86_64-linux.repo-local-skills
+      - run: bash scripts/maint/test-cache-preflight.sh
 
+  cache-preflight:
+    runs-on: ubuntu-latest
+    env:
+      NIXPKGS_ALLOW_UNFREE: "1"
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
-
       - uses: cachix/install-nix-action@v31
-
-      - name: WeChat controller regression
-        run: nix build -L .#checks.x86_64-linux.wechat-control
-
-      - name: Global dry-run
+        with:
+          install_url: https://releases.nixos.org/nix/nix-2.34.7/install
+      - name: Compare upstream and USTC
         shell: bash
         run: |
           set -euo pipefail
-
-          read -r -a hosts <<< "$HOSTS"
-          targets=()
-          for host in "${hosts[@]}"; do
-            targets+=(".#nixosConfigurations.${host}.config.system.build.toplevel")
-          done
-
-          nix build \
-            --dry-run \
-            -L \
-            --option extra-substituters "$DECLARED_EXTRA_SUBSTITUTERS" \
-            --option extra-trusted-public-keys "$CHINA_EXTRA_TRUSTED_PUBLIC_KEYS" \
-            "${targets[@]}"
-
-      - name: China gate
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          read -r -a hosts <<< "$HOSTS"
           tmp="$(mktemp -d)"
-          trap 'rm -rf "$tmp"' EXIT
-
+          trap 'git worktree remove --force "$tmp/base" 2>/dev/null || true; rm -rf "$tmp"' EXIT
           case "$GITHUB_EVENT_NAME" in
-            pull_request)
-              base_sha="$(git rev-parse HEAD^1)"
-              ;;
-            merge_group)
-              base_sha="$(jq -er '.merge_group.base_sha' "$GITHUB_EVENT_PATH")"
-              ;;
-            workflow_dispatch)
-              base_sha="$(git rev-parse origin/main)"
-              ;;
+            pull_request) base_sha="$(git rev-parse HEAD^1)" ;;
+            merge_group) base_sha="$(jq -er '.merge_group.base_sha' "$GITHUB_EVENT_PATH")" ;;
+            workflow_dispatch) base_sha="$(git rev-parse origin/main)" ;;
+            *) echo "unsupported event: $GITHUB_EVENT_NAME" >&2; exit 1 ;;
           esac
           head_sha="$(git rev-parse HEAD)"
-          echo "China gate comparison: base=$base_sha head=$head_sha" >> "$GITHUB_STEP_SUMMARY"
+          printf 'base=%s head=%s nix=%s\n' "$base_sha" "$head_sha" "$(nix --version)"
+          printf "Cache preflight: base \`%s\`, head \`%s\`, Nix \`%s\`\n\n" \
+            "$base_sha" "$head_sha" "$(nix --version)" >> "$GITHUB_STEP_SUMMARY"
           git worktree add --detach "$tmp/base" "$base_sha"
-
-          bash scripts/maint/china-gate.sh \
-            --report-only \
-            --flake-root "$tmp/base" \
-            --output "$tmp/china-base.blocked" \
-            --direct-output "$tmp/china-base.direct" \
-            --home 'ci@headless' \
-            "${hosts[@]}"
-
-          bash scripts/maint/china-gate.sh \
-            --report-only \
-            --flake-root . \
-            --output "$tmp/china-head.blocked" \
-            --direct-output "$tmp/china-head.direct" \
-            --home 'ci@headless' \
-            "${hosts[@]}"
-
-          eval_args=(
-            --base-blocked "$tmp/china-base.blocked"
-            --base-direct "$tmp/china-base.direct"
-            --head-blocked "$tmp/china-head.blocked"
-            --head-direct "$tmp/china-head.direct"
-            --output-dir "$tmp"
-            --summary "$GITHUB_STEP_SUMMARY"
-            --fail-on-miss
-          )
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
-            eval_args+=(--leaf "${GITHUB_HEAD_REF#maint/}")
+          mkdir "$tmp/probe"
+          args=(--base-root "$tmp/base" --head-root . --work-dir "$tmp/probe" --summary "$GITHUB_STEP_SUMMARY")
+          if [[ "$GITHUB_EVENT_NAME" == pull_request && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
+            args+=(--leaf "${GITHUB_HEAD_REF#maint/}")
           fi
+          status=0
+          bash scripts/maint/cache-preflight.sh "${args[@]}" || status=$?
+          for file in "$tmp/probe"/*.nix.log "$tmp/probe"/*.outputs.json \
+            "$tmp/probe"/*-policy.{json,err} "$tmp/probe"/{official,ustc}.{json,err} \
+            "$tmp/probe"/curl.err "$tmp/probe"/*.plan.json \
+            "$tmp/probe"/*.tsv "$tmp/probe"/*.txt; do
+            if [[ -f "$file" ]]; then
+              echo "=== ${file##*/} ==="
+              cat "$file"
+            fi
+          done
+          exit "$status"
 
-          if ! bash scripts/maint/evaluate-china-gate.sh "${eval_args[@]}"; then
-            echo "China gate found new unapproved derivations:" >&2
-            sed -n '1,20p' "$tmp/china-new-unapproved.blocked" >&2
-            exit 1
-          fi
+  gate:
+    name: maintenance gate
+    needs: [configuration, cache-preflight]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize required result
+        env:
+          CONFIGURATION: ${{ needs.configuration.result }}
+          CACHE_PREFLIGHT: ${{ needs.cache-preflight.result }}
+        run: |
+          printf 'configuration=%s cache-preflight=%s\n' "$CONFIGURATION" "$CACHE_PREFLIGHT"
+          [[ "$CONFIGURATION" == success && "$CACHE_PREFLIGHT" == success ]]

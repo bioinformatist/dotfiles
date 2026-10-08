@@ -107,7 +107,7 @@ jobs:
             git diff --no-renames --name-only origin/main
             git ls-files --others --exclude-standard
           } | sort -u > "$RUNNER_TEMP/changed.files"
-          grep -E '^(\.github/workflows/maintenance-[^/]*\.yml|scripts/maint/(policy[^/]*\.json|[^/]*\.sh)|renovate\.json)$' \
+          grep -E '^(\.github/workflows/maintenance-[^/]*\.yml|scripts/maint/(policy[^/]*\.json|[^/]*\.(sh|jq))|renovate\.json)$' \
             "$RUNNER_TEMP/changed.files" > "$RUNNER_TEMP/maintenance-sensitive.files" || [[ $? -eq 1 ]]
 
           manual_review=false
@@ -154,7 +154,7 @@ jobs:
 
           This PR is generated from a fixed leaf branch. New attempts update this same PR instead of opening another one.
 
-          See Checks for the required maintenance gate's Global dry-run and China gate results. Changes to maintenance policy, maintenance scripts, maintenance workflows, or Renovate config require manual review.
+          See Checks for the required maintenance gate's configuration and cache preflight results. Changes to maintenance policy, maintenance scripts, maintenance workflows, or Renovate config require manual review.
           BODY
 
           if [[ "$MANUAL_REVIEW" == "true" ]]; then

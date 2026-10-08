@@ -84,46 +84,35 @@ repository secret。release-pin workflow 会用这个 token push `maint/<leaf>` 
 auto-merge。默认分支应通过 ruleset 保护：要求 PR，并要求 `maintenance gate`
 状态检查，且启用 strict up-to-date checks。
 
-required `maintenance gate` check 对 PR 执行两项检查：
+required `maintenance gate` check 汇总两个 job。`configuration` 运行原生 flake
+求值、合成的 `ci@headless` Home Manager activation 求值，以及已有的 WeChat
+控制、Codex adapter 和 repo-local skills 轻量检查；还运行缓存预检封装测试。
+`cache-preflight` 对 `homePC`、`linglong` 和 `ci@headless` 比较 base/head。
+两个 job 均使用 Nix 2.34.7；失败或无法判断都会阻止 required check 通过。
 
-- `Global dry-run`：在 GitHub runner 默认网络下运行，同时显式加入 Numtide、Anyrun、Hyprland 和 Noctalia 缓存及其公开签名公钥。
-- `China gate`：使用声明式中国维护 cache 集合：USTC 加 Numtide 和 Anyrun/Hyprland/Noctalia Cachix，并清空未声明的 `extra-substituters`。加入可信缓存不会放宽本地构建限制。
+预检在隔离的冷 store 中用 Nix dry-run 生成计划，显式使用官方缓存、Numtide 和
+Anyrun/Hyprland/Noctalia Cachix。未经批准的本地构建是上游缺口。USTC 检查
+先比较 base/head 去重后的待替代路径，只查询新增且由官方缓存提供的产物；未变路径
+不新增缓存或压缩包探测。Nix 元数据查询限制为一个 HTTP 连接；NAR HEAD 请求
+串行执行，curl 原生限速为每秒最多一次，并使用原生重试/退避；遇到无法判断的响应
+即停止后续请求。元数据缺失或压缩包返回 404/410 是确定的新增缺口；请求失败、
+输出格式错误和异常响应为无法判断。报告不代表完整 head 的 USTC 就绪状态。
+比较以完整 store path 为身份，保留现有直连下载 marker 和 leaf 限制。日志保留
+原始 Nix 与 HTTP 结果；环境故障后由人工重跑 workflow。
 
-required gate 还会 dry-run 一个合成的 `ci@headless` Home Manager 配置。这个配置
-消费 downstream 仓库使用的导出 headless 开发模块，因此共享工具输入不仅要对
-`homePC` 和 `linglong` 安全，也要对可复用 headless consumer 保持 cache-safe。
-这项检查并入同一套 base-vs-head China gate；当 synthetic profile 已经进入
-`main` 后，新的 headless-only cache miss 会阻塞 PR，既有 baseline debt 只作为
-诊断信息保留。
-
-China gate 会同时记录更新后 head closure 的完整结果，以及相对 `main`
-的差分。该检查以 delta 为准：GitHub 冷 runner 暴露出来的无关
-full-head miss 是诊断用 baseline debt，不应冻结每个 leaf PR。固定输出 release
-直连 fetch 只有在维护 policy 中声明过 marker 时才允许，目前是 Codex、
-Playwright CLI 和 ZeroClaw。
-
-可复用的 marker 基线放在 `scripts/maint/policy.json`，GUI 专属增量放在
+可复用 marker 基线位于 `scripts/maint/policy.json`，GUI 增量位于
 `scripts/maint/policy-workstation.json`。flake 将两者合成为
-`lib.maintenancePolicy`，本机 `maint-switch` 和 GitHub China gate 都求值目标
-flake 的这个值。下游仓库只用窄 overlay 扩展 `lib.maintenancePolicyBase`，不再
-转发整份文件。生成的 `maint.nuon` 只保存 repo 路径、host、并发和可选 extra
-marker 这类机器本地设置，不 snapshot 有效 policy。required gate 使用
-`scripts/maint/evaluate-china-gate.sh` 评估 head-vs-base China gate。
-flake-input 的 policy 分组和调度放在 `renovate.json`；release-pin leaves 保留在
-`.github/workflows/maintenance-leaf.yml`。这些属于 workflow 编排，不属于 gate
-policy。
-
-base 和 head dry-run 也共用 `scripts/maint/china-gate.sh`。每次运行都会显式传入
-对应的 flake root，并求值该 root 的 `lib.maintenancePolicy`。这样 workflow 的
-当前工作目录或 PR 内的 policy 变更就不会悄悄重新分类 base closure；host 配置与
-`ci@headless` 使用同一分类实现。
+`lib.maintenancePolicy`；预检分别读取 base/head 的值，本机 `maint-switch` 也
+使用有效 policy。下游用窄 overlay 扩展 `lib.maintenancePolicyBase`。
+flake-input 的 policy 分组和调度位于 `renovate.json`；release-pin leaves
+保留在 `.github/workflows/maintenance-leaf.yml`。
 
 实验性的 China delta shadow 已退役：2026-07-13 至 2026-09-29 共有 169 次可读
 分类，其中 52 次通过、4 次 miss、113 次 inconclusive。两次 miss 与通过的正式 gate
 结论不同，且来自同一 PR 的两个 revision；历史原因尚未查明。该实验也没有保留
 Nix 对依赖的 cache-aware 剪枝。
 [代表性运行记录](https://github.com/bioinformatist/dotfiles/actions/runs/29306294755)
-展示了诊断输出。required China gate 保持不变。
+展示了诊断输出。新的 required 预检取代了该 gate。
 
 marker policy 是经验性边界，应该在真实 miss 中持续收紧：`unit-`、
 `-etc-`、`nixos-system-` 这类较宽的生成式 glue marker 如果误分类
@@ -142,7 +131,7 @@ npm registry 或 node-gyp 下载、Cargo registry、运行时代理是不同路�
 `.github/workflows/maintenance-gate.yml` 中 required 的 `maintenance gate`
 check 是 whole-host 合入决策。普通 release-pin PR 请求 GitHub auto-merge，
 由该检查和分支保护决定何时合入。leaf workflow 在 PR 正文列出 leaf、policy
-和是否需要人工审查，并指向 Checks 中的 Global dry-run 和 China gate 结果。
+和是否需要人工审查，并指向 Checks 中的 configuration 和 cache preflight 结果。
 Renovate PR 也依赖同一 required check 和 Renovate 自己的 auto-merge 状态。
 
 如果生成的 release-pin 更新触碰 maintenance policy（含 workstation 增量）、

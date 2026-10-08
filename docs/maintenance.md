@@ -91,44 +91,34 @@ approval. Enable repository auto-merge as well. The default branch should be
 protected by a ruleset that requires pull requests and requires the
 `maintenance gate` status check with strict up-to-date checks enabled.
 
-The required `maintenance gate` check runs two steps for PRs:
+The required `maintenance gate` check summarizes two jobs. `configuration` runs native
+flake evaluation, evaluates the synthetic `ci@headless` Home Manager activation,
+and builds the existing WeChat controller, Codex adapter, and repo-local skill
+checks. It also runs the focused cache-preflight tests. `cache-preflight` compares
+the two maintained NixOS hosts and `ci@headless` against the base revision.
+Both jobs use Nix 2.34.7. A failed or inconclusive job blocks the required check.
 
-- `Global dry-run`: dry-run under the GitHub runner's default network, plus the declared Numtide, Anyrun, Hyprland, and Noctalia caches and their public signing keys.
-- `China gate`: China-network dry-run using the declared maintenance cache set: USTC plus Numtide and the Anyrun/Hyprland/Noctalia Cachix caches, with undeclared `extra-substituters` cleared. Adding a trusted cache does not relax the local-build policy.
-
-The required gate also dry-runs the synthetic `ci@headless` Home Manager
-configuration. That configuration consumes the exported headless development
-modules used by downstream repositories, so shared tool inputs must stay
-cache-safe for reusable headless consumers as well as `homePC` and `linglong`.
-This check is folded into the same base-vs-head China gate; once the synthetic
-profile exists on `main`, new headless-only cache misses block the PR while
-existing baseline debt remains diagnostic.
-
-The China gate records both the full updated head closure and the delta against
-`main`. Its decision is based on the delta: unrelated full-head misses from a
-cold GitHub runner are diagnostic baseline debt and must not freeze every leaf
-PR. Fixed-output release fetches are allowed only when their marker is
-declared in the maintenance policy, currently Codex, Playwright CLI, and ZeroClaw.
+The preflight uses Nix's cold-store dry-run plan with the official cache,
+Numtide, and the declared Anyrun/Hyprland/Noctalia Cachix caches. It reports
+unapproved local builds as upstream gaps. For USTC, it first compares unique
+base/head fetch paths, then checks only new paths available from the official
+cache. Unchanged paths cause no added cache or archive probes. Nix metadata
+queries use one HTTP connection; NAR HEAD requests run serially with curl's
+one-per-second rate cap and native retry/backoff, stopping on an uncertain response.
+Missing metadata or a 404/410 NAR is a definite new gap; request failures,
+malformed output, and unexpected responses are inconclusive. The report does
+not claim full-head USTC readiness. Full store paths are the comparison
+identity. Declared direct fetch markers and leaf restrictions still apply.
+Raw Nix and HTTP results are logged for diagnosis. After an environmental
+failure, rerun the workflow manually.
 
 The reusable marker base lives in `scripts/maint/policy.json`, while
 `scripts/maint/policy-workstation.json` contains GUI-only additions. The flake
-exports their composition as `lib.maintenancePolicy`; local `maint-switch` and
-the GitHub China gate evaluate that target-flake value. Downstream repositories
-extend `lib.maintenancePolicyBase` with narrow local overlays instead of
-forwarding the complete file. The generated `maint.nuon` stores machine-local
-settings such as repo path, host, concurrency, and optional extra markers; it
-does not snapshot the effective policy. The required gate uses
-`scripts/maint/evaluate-china-gate.sh` for the head-vs-base China decision.
-Flake-input policy groups and schedules live in `renovate.json`; release-pin
-leaves stay in
-`.github/workflows/maintenance-leaf.yml`. These are workflow orchestration, not
-gate policy.
-
-Base and head dry-runs also share `scripts/maint/china-gate.sh`. Each run receives
-an explicit flake root and evaluates that root's `lib.maintenancePolicy`. This
-prevents the workflow checkout directory or a policy change in the PR from
-silently reclassifying the base closure. The same classifier covers host
-configurations and `ci@headless`.
+exports their composition as `lib.maintenancePolicy`; the preflight evaluates
+it separately for base and head. Local `maint-switch` also uses that effective
+policy. Downstream repositories extend `lib.maintenancePolicyBase` with narrow
+local overlays. Flake-input policy groups and schedules live in `renovate.json`;
+release-pin leaves stay in `.github/workflows/maintenance-leaf.yml`.
 
 The experimental China delta shadow was retired after 169 readable runs from
 2026-07-13 to 2026-09-29 yielded 52 passes, 4 misses, and 113 inconclusive
@@ -136,7 +126,7 @@ results. Two misses disagreed with a passing formal gate and came from the same
 PR at two revisions; their historical causes were not established. The
 experiment also did not preserve Nix's cache-aware dependency pruning. A
 [representative run](https://github.com/bioinformatist/dotfiles/actions/runs/29306294755)
-shows its diagnostic output. The required China gate remains unchanged.
+shows its diagnostic output. The new required preflight replaces that gate.
 
 The marker policy is intentionally empirical. It should be refined from real
 misses: broad generated-glue markers such as `unit-`, `-etc-`, and
@@ -160,7 +150,7 @@ The required `maintenance gate` check in
 Ordinary release-pin PRs request GitHub auto-merge, which waits for that check
 and branch protection requirements. The leaf workflow puts the leaf, policy,
 and manual-review state in the PR body and points readers to Checks for the
-Global dry-run and China gate results. Renovate PRs use the same required
+configuration and cache preflight results. Renovate PRs use the same required
 check and Renovate's auto-merge state.
 
 Generated release-pin updates that touch maintenance policy (including the
