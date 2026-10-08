@@ -927,11 +927,11 @@
     "noctalia-d2r": {
       "flake": false,
       "locked": {
-        "lastModified": 1791001585,
-        "narHash": "sha256-2K3iHVuPWpwsWkfy6trw/OYkatY0l5Prsb2W12h5bNw=",
+        "lastModified": 1791450901,
+        "narHash": "sha256-jR9yk6swe3u1KEG+ie7vtngx5kjnW2oTPS/w3LnhOLY=",
         "owner": "bioinformatist",
         "repo": "noctalia-d2r",
-        "rev": "d8defe78f7b1c6c483538cddc62d14167b1ce56e",
+        "rev": "4e0d8703cd41ce245eec4bef16a083699caa90da",
         "type": "github"
       },
       "original": {
