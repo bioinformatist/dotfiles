@@ -196,6 +196,22 @@ if printf '@nix {bad json}\n' | jq -R -s -f "$script_dir/nix-plan.jq" > /dev/nul
 fi
 printf 'unrecognized Nix diagnostic\n' | jq -R -s -f "$script_dir/nix-plan.jq" \
   | jq -e '.complete == false and .unknown == ["unrecognized Nix diagnostic"]' > /dev/null
+{
+  printf '@nix {"action":"msg","level":0,"msg":"this derivation will be built:"}\n'
+  printf '@nix {"action":"msg","level":0,"msg":"  /nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-build.drv"}\n'
+  printf 'remote: Counting objects:  50%% (1/2)\rremote: Counting objects: 100%% (2/2), done.\n'
+  printf 'Receiving objects: 100%% (2/2), 1.00 MiB | 2.00 MiB/s, done.\n'
+  printf 'From https://github.com/anyrun-org/anyrun-interface\n'
+  printf ' * [new branch]      main -> main\n'
+  printf '@nix {"action":"msg","level":0,"msg":"this path will be fetched (1 MiB):"}\n'
+  printf '@nix {"action":"msg","level":0,"msg":"  /nix/store/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-fetch"}\n'
+} | jq -R -s -f "$script_dir/nix-plan.jq" \
+  | jq -e '.complete and (.builds | length) == 1 and (.fetches | length) == 1' > /dev/null
+for diagnostic in 'unexpected raw line' 'fatal: Git fetch failed' 'remote: error: fetch denied' \
+  $'remote: Counting objects: 100% (2/2), done.\rremote: error: fetch denied'; do
+  printf '%s\n' "$diagnostic" | jq -R -s -f "$script_dir/nix-plan.jq" \
+    | jq -e '.complete == false and (.unknown | length) == 1' > /dev/null
+done
 
 # One native handoff: Nix's internal JSON log from a cold local store enters
 # the same parser used by the wrapper. No derivation is built.

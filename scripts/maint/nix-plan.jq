@@ -6,13 +6,20 @@ def count($message; $singular; $plural):
   elif ($message | test($plural)) then
     ($message | capture($plural).n | tonumber)
   else null end;
+def git_line:
+  test("^remote: (Enumerating objects: [0-9]+, done\\.|(Counting|Compressing) objects: *[0-9]+% \\([0-9]+/[0-9]+\\)(, done\\.)?|Total [0-9]+ \\(delta [0-9]+\\), reused [0-9]+ \\(delta [0-9]+\\), pack-reused [0-9]+ \\(from [0-9]+\\)) *$") or
+  test("^(Receiving objects|Resolving deltas): *[0-9]+% \\([0-9]+/[0-9]+\\)(, [0-9.]+ [A-Za-z]+ \\| [0-9.]+ [A-Za-z]+/s)?(, done\\.)? *$") or
+  test("^From https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/?$") or
+  test("^ \\* \\[new (branch|ref|tag)\\] +[^[:space:]]+ +-> +[^[:space:]]+$");
+def git_progress: split("\r") | all(.[]; git_line);
 
 [split("\n")[] | select(length > 0) |
   if startswith("@nix ") then .[5:] | fromjson
   else {action: "raw", msg: .} end] |
 reduce .[] as $event (
   {section: null, remaining: 0, builds: [], fetches: [], unknown: []};
-  if $event.action == "raw" then .unknown += [$event.msg]
+  if $event.action == "raw" then
+    if ($event.msg | git_progress) then . else .unknown += [$event.msg] end
   elif $event.action != "msg" or $event.level != 0 then .
   else
     ($event.msg | if type == "string" then . else error("non-string Nix message") end) as $message |

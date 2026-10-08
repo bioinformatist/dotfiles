@@ -26,6 +26,8 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           install_url: https://releases.nixos.org/nix/nix-2.34.7/install
+      # Nix 2.34.7's read-only flake check cannot read Hyprland's filtered VERSION in a cold store.
+      - run: nix eval --raw --impure --no-write-lock-file --option allow-import-from-derivation false '.#nixosConfigurations.homePC.config.programs.hyprland.package.src'
       - run: nix flake check --no-build --impure --no-write-lock-file --option allow-import-from-derivation false
       - run: nix eval --raw --impure '.#homeConfigurations."ci@headless".activationPackage.drvPath'
       - run: nix build --impure --no-link -L .#checks.x86_64-linux.wechat-control .#checks.x86_64-linux.codex-base-adapter .#checks.x86_64-linux.repo-local-skills
@@ -48,7 +50,14 @@ jobs:
         run: |
           set -euo pipefail
           tmp="$(mktemp -d)"
-          trap 'git worktree remove --force "$tmp/base" 2>/dev/null || true; rm -rf "$tmp"' EXIT
+          trap '
+            status=$?
+            git worktree remove --force "$tmp/base" 2>/dev/null || true
+            if ! find -P "$tmp" -type d -exec chmod u+w {} + || ! rm -rf "$tmp"; then
+              if (( status == 0 )); then status=1; fi
+            fi
+            exit "$status"
+          ' EXIT
           case "$GITHUB_EVENT_NAME" in
             pull_request) base_sha="$(git rev-parse HEAD^1)" ;;
             merge_group) base_sha="$(jq -er '.merge_group.base_sha' "$GITHUB_EVENT_PATH")" ;;
