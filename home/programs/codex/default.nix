@@ -91,7 +91,10 @@ in
       ponytail.enable = cfg.ponytail.enable;
       mattPocockSkills.enable = cfg.mattPocockSkills.enable;
       improve.enable = cfg.improve.enable;
-      extraInstructions = lib.mkIf cfg.proxyRecovery.enable (builtins.readFile ./proxy-recovery.md);
+      extraInstructions = lib.concatStringsSep "\n\n" (
+        [ (builtins.readFile ./engineering-preferences.md) ]
+        ++ lib.optional cfg.proxyRecovery.enable (builtins.readFile ./proxy-recovery.md)
+      );
     };
 
     home.packages = [ pkgs.nixfmt ];

@@ -527,6 +527,13 @@
             linglongCodexConfig
             headlessCodexConfig
           ];
+          engineeringPreferencesText = builtins.readFile ./home/programs/codex/engineering-preferences.md;
+          engineeringPreferencesIncludedOnce = lib.all (
+            consumer:
+            builtins.length (
+              lib.splitString engineeringPreferencesText consumer.home.file.".codex/AGENTS.md".text
+            ) == 2
+          ) (codexConsumerConfigs ++ [ homePCCodexDisabledConfig ]);
           baselineRulesPath = ".codex/rules/baseline.rules";
           personalRulesPath = ".codex/rules/personal.rules";
           improveSkillPath = ".agents/skills/improve";
@@ -881,6 +888,10 @@
                 ''}
                 ${lib.optionalString (!proxyRecoveryEnabled || !proxyRecoveryDisabled) ''
                   echo "proxy recovery instructions do not follow the workstation switch" >&2
+                  exit 1
+                ''}
+                ${lib.optionalString (!engineeringPreferencesIncludedOnce) ''
+                  echo "engineering preferences are missing or duplicated for a Codex consumer" >&2
                   exit 1
                 ''}
 
