@@ -15,8 +15,9 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    hyprland.url = "github:hyprwm/Hyprland";
-    noctalia.url = "github:noctalia-dev/noctalia/cachix";
+    # Stable desktop packages, including the nixpkgs glaze compatibility fix.
+    nixpkgs-desktop.url = "github:NixOS/nixpkgs/e94cb152ed51bd6e24eb4a41f1460252beb52cd2";
+    noctalia.url = "github:noctalia-dev/noctalia/v5.2.1";
     noctalia-d2r = {
       url = "github:bioinformatist/noctalia-d2r";
       flake = false;

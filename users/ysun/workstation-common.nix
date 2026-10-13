@@ -31,7 +31,6 @@
       Description = "Clash Verge graphical client";
       After = [
         "graphical-session.target"
-        "noctalia.service"
       ];
       ConditionPathExists = "/run/current-system/sw/bin/clash-verge";
     };

@@ -40,7 +40,8 @@ This proxy is intentionally scoped to Nix maintenance paths. It is injected into
 | `llm-agents` | `tools` | Community standalone CLI and desktop packages |
 | `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
 | `wechat` | `tools` | `nixpkgs-wechat` flake input |
-| `hyprland` | `desktop` | `hyprland` flake input |
+| `nixpkgs-desktop` | `desktop` | Hyprland and its portal from the pinned `nixpkgs-desktop` input |
+| `noctalia` | `desktop` | Noctalia stable release input |
 | `sops-nix` | `infra` | `sops-nix` flake input |
 | `impermanence` | `infra` | `impermanence` flake input |
 | `disko` | `infra` | `disko` flake input |

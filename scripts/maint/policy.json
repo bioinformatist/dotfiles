@@ -90,7 +90,9 @@
     "-codex-improve-elegance-reviewer.config.toml.drv",
     "-merge-codex-base-config.drv",
     "-worktrunk-0.79.0.drv",
-    "-zeroclaw-daemon.service.drv"
+    "-zeroclaw-daemon.service.drv",
+    "-clash-verge-gui.service.drv",
+    "-security-wrapper-Hyprland-x86_64-unknown-linux-musl.drv"
   ],
   "allowedDirectFetchMarkers": [
     "-codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz",

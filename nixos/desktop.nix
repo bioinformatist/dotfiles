@@ -10,6 +10,7 @@
 }:
 
 let
+  desktopPkgs = inputs.nixpkgs-desktop.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   wechatDebReferer = "https://pro-store-packages.uniontech.com/";
   wechatPkgs = import inputs.nixpkgs-wechat {
     inherit (pkgs.stdenv.hostPlatform) system;
@@ -131,9 +132,8 @@ in
       programs.hyprland = {
         enable = true;
         withUWSM = true;
-        package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-        portalPackage =
-          inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+        package = desktopPkgs.hyprland;
+        portalPackage = desktopPkgs.xdg-desktop-portal-hyprland;
       };
 
       # Portal configuration: add GTK portal as fallback for Screenshot interface.
