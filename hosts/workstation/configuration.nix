@@ -25,6 +25,13 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Compressed swap to cushion memory pressure on homePC.
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 50;
+  };
+
   # Experimental workaround for missing ALC892 playback devices at boot:
   # preload its codec driver before the HDA controller to test probe ordering.
   boot.extraModprobeConfig = ''
