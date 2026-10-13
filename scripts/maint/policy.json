@@ -50,6 +50,7 @@
     "-perl-5.42.0-env.drv",
     "-stage-2-init.sh.drv",
     "-system-generators.drv",
+    "-zram-generator.conf.drv",
     "-system-path.drv",
     "-system-shutdown.drv",
     "-system-units.drv",
