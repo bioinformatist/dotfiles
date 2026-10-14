@@ -44,7 +44,7 @@ in
 
   config.programs.noctalia = {
     enable = true;
-    systemd.enable = true;
+    systemd.enable = false;
     package = noctaliaPackage;
     checkConfig = true;
 
@@ -58,7 +58,8 @@ in
           polkit_agent = true;
           clipboard_enabled = false;
           screen_time_enabled = false;
-          launch_apps_as_systemd_services = true;
+          launch_apps_as_systemd_services = false;
+          launch_apps_custom_command = "uwsm-app -- $CMD";
 
           shadow = {
             direction = "center";
@@ -71,6 +72,11 @@ in
             shadow = true;
             control_center_placement = "attached";
             session_placement = "attached";
+          };
+
+          session.power = {
+            shutdown = "${lib.getExe pkgs.hyprshutdown} -p 'systemctl poweroff'";
+            reboot = "${lib.getExe pkgs.hyprshutdown} -p 'systemctl reboot'";
           };
 
           session.actions = [
@@ -291,8 +297,4 @@ in
     };
   };
 
-  # Noctalia loads NVML at runtime; NixOS exposes the active driver libraries here.
-  config.systemd.user.services.noctalia.Service.Environment = [
-    "LD_LIBRARY_PATH=/run/opengl-driver/lib"
-  ];
 }

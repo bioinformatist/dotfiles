@@ -40,7 +40,8 @@ dotfiles.nixNetwork.proxy = {
 | `llm-agents` | `tools` | 社区独立 CLI 和桌面包 |
 | `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
 | `wechat` | `tools` | `nixpkgs-wechat` flake input |
-| `hyprland` | `desktop` | `hyprland` flake input |
+| `nixpkgs-desktop` | `desktop` | 固定的 `nixpkgs-desktop` 输入中的 Hyprland 及配套 portal |
+| `noctalia` | `desktop` | Noctalia 稳定版输入 |
 | `sops-nix` | `infra` | `sops-nix` flake input |
 | `impermanence` | `infra` | `impermanence` flake input |
 | `disko` | `infra` | `disko` flake input |

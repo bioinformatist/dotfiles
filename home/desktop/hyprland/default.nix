@@ -38,6 +38,7 @@ in
       configType = "hyprlang";
       extraConfig =
         builtins.readFile ./hyprland.conf
+        + "\nexec-once = ${lib.getExe config.programs.noctalia.package}\n"
         + lib.optionalString cfg.rightAltCompose ''
 
           # Keep the US layout while enabling Compose sequences for accents.
