@@ -69,23 +69,59 @@ jobs:
           printf "Cache preflight: base \`%s\`, head \`%s\`, Nix \`%s\`\n\n" \
             "$base_sha" "$head_sha" "$(nix --version)" >> "$GITHUB_STEP_SUMMARY"
           git worktree add --detach "$tmp/base" "$base_sha"
-          mkdir "$tmp/probe"
-          args=(--base-root "$tmp/base" --head-root . --work-dir "$tmp/probe" --summary "$GITHUB_STEP_SUMMARY")
+          probe="$RUNNER_TEMP/cache-preflight-diagnostics"
+          mkdir -p "$probe"
+          args=(--base-root "$tmp/base" --head-root . --work-dir "$probe" --summary "$probe/summary.md")
           if [[ "$GITHUB_EVENT_NAME" == pull_request && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
             args+=(--leaf "${GITHUB_HEAD_REF#maint/}")
           fi
           status=0
           bash scripts/maint/cache-preflight.sh "${args[@]}" || status=$?
-          for file in "$tmp/probe"/*.nix.log "$tmp/probe"/*.outputs.json \
-            "$tmp/probe"/*-policy.{json,err} "$tmp/probe"/{official,ustc}.{json,err} \
-            "$tmp/probe"/curl.err "$tmp/probe"/*.plan.json \
-            "$tmp/probe"/*.tsv "$tmp/probe"/*.txt; do
-            if [[ -f "$file" ]]; then
-              echo "=== ${file##*/} ==="
-              cat "$file"
+          exit "$status"
+      - name: Summarize cache diagnostics
+        if: ${{ always() }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe="$RUNNER_TEMP/cache-preflight-diagnostics"
+          errors="$RUNNER_TEMP/cache-preflight-key-errors.txt"
+          if [[ -f "$probe/summary.md" ]]; then
+            cat "$probe/summary.md" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          for file in "$probe"/*.err "$probe"/*.nix.log; do
+            [[ -s "$file" ]] || continue
+            if [[ "$file" == *.nix.log ]]; then
+              jq -Rr '
+                if startswith("@nix ") then
+                  .[5:] | fromjson? |
+                  select(.action == "msg" and (.level // 9) <= 1) |
+                  .msg // .text // empty |
+                  select(test("error:|warning:|fatal:"; "i"))
+                else . end
+              ' "$file" | tail -n 40 > "$errors"
+            else
+              tail -n 40 "$file" > "$errors"
+            fi
+            if [[ -s "$errors" ]]; then
+              echo "=== ${file##*/}: last 40 diagnostic lines ==="
+              cat "$errors"
             fi
           done
-          exit "$status"
+      - name: Upload raw cache diagnostics
+        if: ${{ always() }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: cache-preflight-diagnostics-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/cache-preflight-diagnostics/*.log
+            ${{ runner.temp }}/cache-preflight-diagnostics/*.json
+            ${{ runner.temp }}/cache-preflight-diagnostics/*.err
+            ${{ runner.temp }}/cache-preflight-diagnostics/*.tsv
+            ${{ runner.temp }}/cache-preflight-diagnostics/*.txt
+            ${{ runner.temp }}/cache-preflight-diagnostics/*.md
+          if-no-files-found: warn
 
   gate:
     name: maintenance gate
