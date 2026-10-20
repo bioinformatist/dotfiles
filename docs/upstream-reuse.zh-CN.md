@@ -21,8 +21,9 @@
 ## Home Manager 边界
 
 `homeManagerModules.devHeadless` 提供 shell、Codex、Helix 与 Yazi
-开发基线，并且有意不安装或配置终端多路复用器。需要通用 Zellij 的消费者可以额外组合
-`homeManagerModules.tui`；消费者也可以改为提供自己的工作区层。
+开发基线，并且有意不安装或配置终端多路复用器。`homeManagerModules.tui` 继续提供
+Helix 与 Yazi，但不包含终端多路复用器；消费者可以自行提供工作区层。Zellij 已从本仓库
+维护中的配置退役。
 
 `homeManagerModules.codex` 默认选择 `packages.<system>.codex` 导出的社区独立
 CLI。Improve 和 doctor 通过 `programs.codexBase.package` 使用同一个包，

@@ -8,12 +8,10 @@ in
 {
   imports = [
     ../../home/tui
-    ../../home/tui/zellij
   ];
 
   programs = {
     yazi.package = tuiToolPkgs.yazi;
-    zellij.package = tuiToolPkgs.zellij;
     helix.package = tuiToolPkgs.helix;
   };
 }
