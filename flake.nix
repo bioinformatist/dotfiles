@@ -16,7 +16,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # Stable desktop packages, including the nixpkgs glaze compatibility fix.
-    nixpkgs-desktop.url = "github:NixOS/nixpkgs/e94cb152ed51bd6e24eb4a41f1460252beb52cd2";
+    nixpkgs-desktop.url = "github:NixOS/nixpkgs/c748c722674bfd3ef3afd2163c2fb809556fff8b";
     noctalia.url = "github:noctalia-dev/noctalia/v5.2.1";
     noctalia-d2r = {
       url = "github:bioinformatist/noctalia-d2r";
