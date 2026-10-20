@@ -159,8 +159,9 @@ Noctalia Settings 可将插件和状态栏的运行时覆盖保存到 `~/.local/
 | **[Starship](https://starship.rs/)** | Home Manager | 极简、极速的跨 Shell 提示符 |
 | **[Helix](https://helix-editor.com/)**（`hx`） | Home Manager | 后现代模态文本编辑器（`$EDITOR` / `$VISUAL`） |
 | **[Yazi](https://yazi-rs.github.io/)** (`y`) | `pkgs.yazi` | 极速终端文件管理器（Rust）。使用 `y`（而非 `yazi`）——shell 封装器在退出时会自动切换工作目录 |
-| **[Zellij](https://zellij.dev/)** | Home Manager | 终端复用器（窗格 + 标签页） |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)**（`rg`） | Home Manager | 递归正则表达式搜索工具 |
+
+Zellij 已从维护中的工作站配置退役。
 
 ### 系统工具
 

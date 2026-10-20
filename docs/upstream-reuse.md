@@ -22,9 +22,9 @@ Do not import internal paths like `./nixos/*.nix`, `./home/*.nix`, or `./hosts/*
 
 `homeManagerModules.devHeadless` provides the shell, Codex, Helix, and Yazi
 development baseline. It intentionally does not install or configure a
-terminal multiplexer. Consumers that want generic Zellij can also compose
-`homeManagerModules.tui`; consumers can instead provide their own workspace
-layer.
+terminal multiplexer. `homeManagerModules.tui` continues to provide Helix and
+Yazi, without a terminal multiplexer; consumers can provide their own workspace
+layer. Zellij has been retired from this repository's maintained configurations.
 
 `homeManagerModules.codex` selects the community standalone CLI exported as
 `packages.<system>.codex`. Improve and doctor use that same package through

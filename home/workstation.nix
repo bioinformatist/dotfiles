@@ -13,7 +13,6 @@ in
     ./core.nix
     ./shell
     ./tui
-    ./tui/zellij
     (import ./desktop { inherit inputs; })
     (import ./programs/workstation.nix { inherit inputs; })
   ];
@@ -22,7 +21,6 @@ in
 
   programs = {
     yazi.package = toolPkgs.yazi;
-    zellij.package = toolPkgs.zellij;
     helix.package = toolPkgs.helix;
   };
 }

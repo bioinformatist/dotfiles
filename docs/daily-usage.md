@@ -177,8 +177,9 @@ starts Clash Verge for the maintained personal GUI hosts after
 | **[Starship](https://starship.rs/)** | Home Manager | Minimal, blazing-fast cross-shell prompt |
 | **[Helix](https://helix-editor.com/)** (`hx`) | Home Manager | Post-modern modal text editor (`$EDITOR` / `$VISUAL`) |
 | **[Yazi](https://yazi-rs.github.io/)** (`y`) | `pkgs.yazi` | Blazing fast terminal file manager (Rust). Use `y` (not `yazi`) — the shell wrapper changes your cwd on exit |
-| **[Zellij](https://zellij.dev/)** | Home Manager | Terminal multiplexer with panes and tabs |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)** (`rg`) | Home Manager | Recursive regex search tool |
+
+Zellij has been retired from the maintained workstation configurations.
 
 ### System Utilities
 
