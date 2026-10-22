@@ -6,6 +6,7 @@
     nixpkgs-tools.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-wechat.url = "github:NixOS/nixpkgs/nixos-unstable";
     llm-agents.url = "github:numtide/llm-agents.nix";
+    llm-agents-chatgpt.url = "github:numtide/llm-agents.nix/b2416ed42777164ac85d2bcbd15efbe60338b342";
     anyrun.url = "github:anyrun-org/anyrun";
     disko = {
       url = "github:nix-community/disko";
@@ -287,7 +288,7 @@
             ];
           };
           communityCodex = inputs.llm-agents.packages.${system}.codex;
-          communityChatgpt = inputs.llm-agents.packages.${system}.chatgpt;
+          communityChatgpt = inputs.llm-agents-chatgpt.packages.${system}.chatgpt;
           syncVendoredSkills = pkgs.writeShellApplication {
             name = "sync-vendored-skills";
             runtimeInputs = with pkgs; [
