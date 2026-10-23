@@ -72,9 +72,6 @@ This repository currently manages the `homePC` workstation and `linglong` keyboa
 | `~/.cache/fontconfig` | Font cache for GTK/Pango application startup |
 | `~/.ssh/known_hosts` | SSH known hosts (persisted as file, not directory — see note in config) |
 | `~/.config/hypr/monitors.conf` | Monitor layout written by nwg-displays |
-| `~/.zeroclaw/active_workspace.toml` | ZeroClaw workspace marker (`homePC` only) |
-| `~/.zeroclaw/estop-state.json` | ZeroClaw emergency stop state (`homePC` only) |
-| `~/.zeroclaw/memory.sqlite` | ZeroClaw conversation memory database (`homePC` only) |
 
 Everything else is wiped on reboot.
 Removing a path from this list does not delete its existing copy under `/persist`;

@@ -381,6 +381,10 @@ assert_log_prefix_count 0 "uwsm "
 assert_json 'all(.[]; .workspace.name == "7")' "$STATE_DIR/clients.json"
 assert_json '.address == "0xmain"' "$STATE_DIR/active-window.json"
 
+run_controller launch -- "$launch_uri_one"
+assert_log_count 1 "$activation_command <$launch_uri_one>"
+assert_log_prefix_count 1 "uwsm "
+
 # 2 and 7. A child mapped after the first move dispatch is included by a
 # subsequent pass; the exact three-window set hides and wechat-dev is untouched.
 reset_state

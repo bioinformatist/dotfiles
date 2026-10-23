@@ -38,7 +38,7 @@ let foo = (open file.txt)
 
 ## 🔴 TUI 输出捕获规则
 
-许多命令（如 `zeroclaw models list`）使用彩色 TUI 渲染输出。
+许多命令（如 `yazi`）使用彩色 TUI 渲染输出。
 
 ### 强制行为
 

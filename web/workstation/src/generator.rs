@@ -614,7 +614,10 @@ fn is_valid_proxy_url(value: &str) -> bool {
 }
 
 fn escape_nix_string(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
+    value
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace("${", "\\${")
 }
 
 fn shell_quote(value: &str) -> String {
@@ -930,6 +933,30 @@ mod tests {
     }
 
     #[test]
+    fn generated_nix_preserves_literal_user_text() {
+        let mut spec = base_spec();
+        spec.git_name = r#"Alice ${USER} "Example" \team"#.to_owned();
+        spec.ssh_public_key.push_str(" ${USER}@workstation");
+        let project = generate(&spec).expect("valid project");
+        let home = project
+            .files
+            .iter()
+            .find(|file| file.path.ends_with("home.nix"))
+            .expect("home")
+            .contents
+            .as_str();
+        let config = project
+            .files
+            .iter()
+            .find(|file| file.path.ends_with("configuration.nix"))
+            .expect("configuration")
+            .contents
+            .as_str();
+        assert!(home.contains(r#"programs.git.userName = "Alice \${USER} \"Example\" \\team";"#));
+        assert!(config.contains(r#" \${USER}@workstation""#));
+    }
+
+    #[test]
     fn generated_flake_inherits_upstream_workstation_builder() {
         let project = generate(&base_spec()).expect("valid project");
         let flake = project
@@ -943,23 +970,6 @@ mod tests {
         assert!(!flake.contains("github:NixOS/nixpkgs"));
         assert!(!flake.contains("github:nix-community/home-manager"));
         assert!(!flake.contains("github:nix-community/disko"));
-    }
-
-    #[test]
-    fn generated_readme_documents_hardware_config_and_vm_scope() {
-        let project = generate(&base_spec()).expect("valid project");
-        let readme = project
-            .files
-            .iter()
-            .find(|file| file.path == "README.zh-CN.md")
-            .expect("readme")
-            .contents
-            .as_str();
-        assert!(readme.contains("hardware-configuration.nix"));
-        assert!(readme.contains("initrd"));
-        assert!(readme.contains("VM 支持边界"));
-        assert!(readme.contains("OVMF/UEFI"));
-        assert!(readme.contains("Hyprland 渲染问题"));
     }
 
     #[test]

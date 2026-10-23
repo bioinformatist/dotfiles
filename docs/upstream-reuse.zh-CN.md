@@ -80,7 +80,7 @@ flake 锁定的包集合，不通过 shared-nixpkgs overlay 重建。桌面与 C
 - sops secrets
 - 具体用户名之外的个人账号内容
 - NVIDIA 桌面补丁
-- ZeroClaw、D2R、公司 SSH、业务服务
+- D2R、公司 SSH、业务服务
 
 NVIDIA 桌面机器应额外叠加 `nixosModules.nvidiaDesktop`。
 AMD 便携桌面机器可额外叠加 `nixosModules.amdMobile`。

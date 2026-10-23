@@ -8,7 +8,7 @@
 maint-switch
 ```
 
-但更新提议不再由本机脚本生成。根目录 `flake.lock` 输入更新由 Renovate 提出；GitHub Actions 只维护固定的 release-pin leaves。本机只消费已经进入 `main` 的状态，并做最后的中国大陆网络门控和系统切换。
+根目录 `flake.lock` 输入更新由 Renovate 提出。变更进入 `main` 后，`maint-switch` 执行最后的中国大陆网络门控和系统切换。
 
 ## 声明式网络配置
 
@@ -60,30 +60,14 @@ dotfiles.nixNetwork.proxy = {
 Renovate 的 `lockFileMaintenance` 被关闭，因为 whole-lock refresh 会把多个
 leaf 混进同一个 PR，削弱 cache miss 归因。
 
-`.github/workflows/maintenance-leaf.yml` 只保留 Renovate 暂时不管理的非标准 release-pin leaves：
-
-| Leaf | Policy | 更新内容 |
-|---|---|---|
-| `zeroclaw` | `tools` | ZeroClaw release pin |
-
-ZeroClaw 每天检查一次。release-pin workflow 检查上游 release、更新版本和哈希；生成的 PR 由 required maintenance gate 检查。
-
 Codex 运行包来自 `llm-agents`：独立 CLI 包含配套的 Code Mode Host，供 headless
 和桌面主机的终端、Improve、doctor 使用。桌面启动器通过 `CODEX_CLI_PATH` 选择
 同一个 CLI。`codex-base` 提供配置、Improve 和 skills。
 Renovate 分别更新这两个根输入；任一更新后，都需要检查所选运行包与继承配置、
 工作流的兼容性。运行中的桌面应用或 SSH App Server 后台需要重启才会切换版本。
 
-每个 release-pin leaf 最多一个 open PR；下一次尝试会更新同一个 `maint/<leaf>` 分支，不会开新 PR。Renovate 和 release-pin 维护 PR 暂时都不设置全局 open PR 上限。
-
-仓库设置：为本仓库安装/启用 Renovate GitHub App。默认 workflow token 权限保持
-`read`，并添加一个只授权本仓库的 fine-grained PAT，作为 `MAINTENANCE_PAT`
-repository secret。release-pin workflow 会用这个 token push `maint/<leaf>` 分支
-并创建/更新 PR，这样 required `pull_request` maintenance gate 会自动运行，不会
-卡在手动批准 workflow 的状态。如果缺少这个 secret，workflow 会回退到
-`GITHUB_TOKEN`，但生成的 PR checks 可能需要人工批准。还需要启用仓库
-auto-merge。默认分支应通过 ruleset 保护：要求 PR，并要求 `maintenance gate`
-状态检查，且启用 strict up-to-date checks。
+默认分支应通过 ruleset 保护：要求 PR，并要求 `maintenance gate` 状态检查，且启用
+strict up-to-date checks。
 
 required `maintenance gate` check 汇总两个 job。`configuration` 运行原生 flake
 求值、合成的 `ci@headless` Home Manager activation 求值，以及已有的 WeChat
@@ -104,9 +88,8 @@ Anyrun/Hyprland/Noctalia Cachix。未经批准的本地构建是上游缺口。U
 可复用 marker 基线位于 `scripts/maint/policy.json`，GUI 增量位于
 `scripts/maint/policy-workstation.json`。flake 将两者合成为
 `lib.maintenancePolicy`；预检分别读取 base/head 的值，本机 `maint-switch` 也
-使用有效 policy。下游用窄 overlay 扩展 `lib.maintenancePolicyBase`。
-flake-input 的 policy 分组和调度位于 `renovate.json`；release-pin leaves
-保留在 `.github/workflows/maintenance-leaf.yml`。
+使用有效 policy。下游用窄 overlay 扩展 `lib.maintenancePolicyBase`。Renovate 负责 root flake
+input 更新；policy 分组和调度位于 `renovate.json`。
 
 实验性的 China delta shadow 已退役：2026-07-13 至 2026-09-29 共有 169 次可读
 分类，其中 52 次通过、4 次 miss、113 次 inconclusive。两次 miss 与通过的正式 gate
@@ -130,14 +113,11 @@ npm registry 或 node-gyp 下载、Cargo registry、运行时代理是不同路�
 的修复不应被默默推广到其他路径。
 
 `.github/workflows/maintenance-gate.yml` 中 required 的 `maintenance gate`
-check 是 whole-host 合入决策。普通 release-pin PR 请求 GitHub auto-merge，
-由该检查和分支保护决定何时合入。leaf workflow 在 PR 正文列出 leaf、policy
-和是否需要人工审查，并指向 Checks 中的 configuration 和 cache preflight 结果。
-Renovate PR 也依赖同一 required check 和 Renovate 自己的 auto-merge 状态。
+check 是 whole-host 合入决策。Renovate PR 也依赖同一 required check 和 Renovate
+配置的合并策略。
 
-如果生成的 release-pin 更新触碰 maintenance policy（含 workstation 增量）、
-maintenance 脚本、maintenance workflow 或 Renovate config，即使 required gate
-通过，也不会交给 auto-merge；这类 PR 会保留为 draft/manual-review，并需独立审查。
+maintenance policy（含 workstation 增量）、maintenance 脚本、maintenance
+workflow 或 Renovate config 的变更，即使 required gate 通过，也需独立审查。
 
 如果 gate 或 marker policy 自身坏掉，修复可能无法通过正在被它修复的同一个
 gate 合入。这种窄场景可以使用 admin bootstrap：临时关闭 main ruleset，只合入
@@ -190,7 +170,7 @@ maint-switch --boot
 - `chromium`、`electron`
 - `serenityos-emoji-font`、`nanoemoji`
 
-允许列表只覆盖生成式 glue 和轻量包装：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex、Playwright CLI 和 ZeroClaw 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
+允许列表只覆盖生成式 glue 和轻量包装：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex、Playwright CLI 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
 
 ## 并发策略
 

@@ -4,7 +4,6 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use leptos_i18n_build::{Config, TranslationsInfos};
-use serde_json::Value;
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR is set")).join("../..")
@@ -26,15 +25,6 @@ fn command_output(program: &str, args: &[&str]) -> Option<String> {
         .map(|s| s.trim().to_owned())
 }
 
-fn flake_metadata(target: &str) -> Option<Value> {
-    command_output("nix", &["flake", "metadata", "--json", target])
-        .and_then(|output| serde_json::from_str(&output).ok())
-}
-
-fn metadata_string(metadata: Option<&Value>, pointer: &str) -> Option<String> {
-    metadata?.pointer(pointer)?.as_str().map(ToOwned::to_owned)
-}
-
 fn generate_i18n() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=locales");
     let i18n_mod_directory =
@@ -51,19 +41,9 @@ fn main() {
     println!("cargo:rerun-if-changed=../../.git/HEAD");
     generate_i18n().expect("i18n code generation succeeds");
 
-    let git_rev = command_output("git", &["rev-parse", "HEAD"]);
-    let clean_metadata = git_rev.as_deref().and_then(|rev| {
-        let target = format!("git+file://{}?rev={rev}", repo_root().display());
-        flake_metadata(&target)
-    });
-    let current_metadata = flake_metadata(".");
-
     let rev = env::var("DOTFILES_GENERATOR_UPSTREAM_REV")
         .ok()
-        .or_else(|| metadata_string(clean_metadata.as_ref(), "/locked/rev"))
-        .or(git_rev)
-        .or_else(|| metadata_string(current_metadata.as_ref(), "/locked/rev"))
-        .or_else(|| metadata_string(current_metadata.as_ref(), "/locked/dirtyRev"))
+        .or_else(|| command_output("git", &["rev-parse", "HEAD"]))
         .unwrap_or_else(|| "UNKNOWN_REV".to_owned());
 
     println!("cargo:rustc-env=DOTFILES_GENERATOR_UPSTREAM_REV={rev}");

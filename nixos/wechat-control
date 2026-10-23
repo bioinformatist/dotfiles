@@ -217,6 +217,9 @@ ensure_main_window() {
   local attempt
 
   if [[ -n $MAIN_ADDRESS ]]; then
+    if (($# > 0)); then
+      activate_wechat "$@"
+    fi
     return
   fi
 

@@ -72,9 +72,6 @@
 | `~/.cache/fontconfig` | GTK/Pango 应用启动用字体缓存 |
 | `~/.ssh/known_hosts` | SSH 已知主机（以文件而非目录形式持久化，详见配置注释） |
 | `~/.config/hypr/monitors.conf` | nwg-displays 写入的显示器布局 |
-| `~/.zeroclaw/active_workspace.toml` | ZeroClaw 工作区标记（仅 `homePC`） |
-| `~/.zeroclaw/estop-state.json` | ZeroClaw 紧急停止状态（仅 `homePC`） |
-| `~/.zeroclaw/memory.sqlite` | ZeroClaw 对话记忆数据库（仅 `homePC`） |
 
 其他所有内容在重启时清除。
 从持久化列表移除路径不会删除 `/persist` 中已有的副本；停用应用后的旧数据需另行清理。

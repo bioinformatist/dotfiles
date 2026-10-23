@@ -1,5 +1,4 @@
 # Workstation (physical machine) host configuration.
-# Shared settings are in ../../nixos/common.nix and ../../nixos/desktop.nix.
 
 {
   inputs,
@@ -205,103 +204,9 @@
     owner = "ysun";
     mode = "0400";
   };
-  # ZeroClaw secrets — fill via: sudo SOPS_AGE_KEY_FILE=... sops set secrets/secrets.yaml
-  sops.secrets."zeroclaw-telegram-token" = {
-    owner = "ysun";
-  };
-
-  sops.secrets."zeroclaw-user-context" = {
-    owner = "ysun";
-  };
-  # ZeroClaw door access secrets
-  sops.secrets."zeroclaw-door-card-no" = {
-    owner = "ysun";
-  };
-  sops.secrets."zeroclaw-door-user-id" = {
-    owner = "ysun";
-  };
-  # systemd-tmpfiles-setup runs before sops-install-secrets, so this
-  # guarantees ~/.zeroclaw/workspace/ is ysun-owned when sops writes USER.md.
-  # Without this, sops (running as root) creates the parent dir as root,
-  # blocking home-manager's symlink creation → HM fails → Hyprland unconfigured.
-  # Ref: https://github.com/Mic92/sops-nix/issues/235 (known sops-nix limitation)
   systemd.tmpfiles.rules = [
-    "d /home/ysun/.zeroclaw/workspace 0755 ysun users -"
     "d /home/ysun/.local/bin          0755 ysun users -"
   ];
-
-  # ZeroClaw USER.md — private personal context rendered from sops secret.
-  # Edit via: sops secrets/secrets.yaml → zeroclaw-user-context key.
-  sops.templates."zeroclaw-user" = {
-    owner = "ysun";
-    path = "/home/ysun/.zeroclaw/workspace/USER.md";
-    content = ''
-      ${config.sops.placeholder."zeroclaw-user-context"}
-    '';
-  };
-  # ZeroClaw config.toml — rendered from template with secret injection.
-  # The template is placed at a sops-managed path, then symlinked to
-  # ~/.zeroclaw/config.toml by the home-manager activation below.
-  sops.templates."zeroclaw-config" = {
-    owner = "ysun";
-    path = "/home/ysun/.zeroclaw/config.toml";
-    content = ''
-      # --- Self-hosted vLLM only (Qwen3-30B-A3B on 2x3090 GPU server) ---
-      # No cloud APIs. Zero cost, zero rate limits, full data privacy.
-      default_provider = "custom:http://192.168.0.116:8080/v1"
-      default_model = "qwen3-30b-a3b"
-      api_key = "no-key-needed"
-
-      # --- Agent behavior ---
-      [agent]
-      max_tool_iterations = 10
-      tool_dispatcher = "auto"
-      compact_context = true
-
-      [agent.thinking]
-      default_level = "off"
-
-      # --- Reliability ---
-      [reliability]
-      provider_retries = 1
-
-      [autonomy]
-      level = "supervised"
-      workspace_only = false
-      allowed_roots = ["~/github.com"]
-      allowed_commands = ["/home/ysun/.local/bin/open-door"]
-      auto_approve = ["shell"]
-
-      [memory]
-      backend = "sqlite"
-      auto_save = true
-
-      # --- Web search: self-hosted SearXNG (replaces DuckDuckGo IA API) ---
-      [web_search]
-      enabled = true
-      provider = "searxng"
-      searxng_instance_url = "http://192.168.0.116:8888"
-      max_results = 5
-
-      # --- Transcription: speaches (faster-whisper) on GPU1 ---
-      [transcription]
-      enabled = true
-      provider = "openai"
-      api_url = "http://192.168.0.116:8090/v1/audio/transcriptions"
-      api_key = "no-key-needed"
-      model = "deepdml/faster-whisper-large-v3-turbo-ct2"
-
-      # --- Channel ---
-      [channels_config.telegram]
-      bot_token = "${config.sops.placeholder."zeroclaw-telegram-token"}"
-      allowed_users = ["6531282851"]
-      stream_mode = "off"
-      interrupt_on_new_message = true
-
-      [channels_config.telegram.commands]
-      native = true
-    '';
-  };
 
   # --- Home Manager ---
   home-manager.backupFileExtension = "backup";
@@ -382,10 +287,6 @@
       files = [
         ".ssh/known_hosts"
         ".config/hypr/monitors.conf" # nwg-displays monitor layout (persists across reboots)
-        # ZeroClaw mutable state only — config.toml is declarative (via sops.templates)
-        ".zeroclaw/active_workspace.toml" # workspace marker
-        ".zeroclaw/estop-state.json" # emergency stop state
-        ".zeroclaw/memory.sqlite" # conversation memory database
       ];
     };
   };

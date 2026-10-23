@@ -22,7 +22,7 @@ glue=/nix/store/ffffffffffffffffffffffffffffffff-glue.drv
 download=/nix/store/gggggggggggggggggggggggggggggggg-download.drv
 case "$1" in
   eval)
-    echo '{"allowedLocalBuildMarkers":["-glue.drv"],"allowedDirectFetchMarkers":["-download.drv"],"leafDirectFetchMarkers":{"zeroclaw":[]}}'
+    echo '{"allowedLocalBuildMarkers":["-glue.drv"],"allowedDirectFetchMarkers":["-download.drv"],"leafDirectFetchMarkers":{"example-leaf":[]}}'
     ;;
   build)
     rev=base
@@ -139,7 +139,7 @@ run_case() {
   mkdir -p "$tmp/$name"
   PATH="$tmp/bin:$PATH" bash "$script_dir/cache-preflight.sh" \
     --base-root "$tmp/base" --head-root "$tmp/head" \
-    --work-dir "$tmp/$name" --leaf zeroclaw \
+    --work-dir "$tmp/$name" --leaf example-leaf \
     > "$tmp/$name.out" 2> "$tmp/$name.err" || rc=$?
   [[ "$rc" -eq "$expected_rc" ]] || {
     echo "$name: expected rc $expected_rc, got $rc" >&2
