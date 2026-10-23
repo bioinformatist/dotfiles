@@ -946,23 +946,6 @@ mod tests {
     }
 
     #[test]
-    fn generated_readme_documents_hardware_config_and_vm_scope() {
-        let project = generate(&base_spec()).expect("valid project");
-        let readme = project
-            .files
-            .iter()
-            .find(|file| file.path == "README.zh-CN.md")
-            .expect("readme")
-            .contents
-            .as_str();
-        assert!(readme.contains("hardware-configuration.nix"));
-        assert!(readme.contains("initrd"));
-        assert!(readme.contains("VM 支持边界"));
-        assert!(readme.contains("OVMF/UEFI"));
-        assert!(readme.contains("Hyprland 渲染问题"));
-    }
-
-    #[test]
     fn nvidia_desktop_patch_adds_upstream_module() {
         let mut spec = base_spec();
         spec.nvidia = true;

@@ -1,5 +1,4 @@
 # Workstation (physical machine) host configuration.
-# Shared settings are in ../../nixos/common.nix and ../../nixos/desktop.nix.
 
 {
   inputs,

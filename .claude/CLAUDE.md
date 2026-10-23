@@ -4,11 +4,7 @@
 
 ### Rime Input Method Data (`rime-sync/nixos-ysun/`)
 
-Auto-generated files updated constantly by the input method. Include with regular commits — no need to mention in commit message. Conflicts are expected and trivial: always keep the newer timestamp.
-
-### Nushell Proxy Wrapper
-
-`claude-proxy` wraps Claude Code to inject proxy environment variables from `~/.config/claude/proxy.nuon`. Check `home/shell/nushell/config.nu` if Claude Code network issues occur.
+Auto-generated files may change while the user is typing. Treat them as local user data and follow the Rime boundary in root `AGENTS.md`.
 
 ## Key Constraints
 
@@ -17,7 +13,7 @@ Auto-generated files updated constantly by the input method. Include with regula
 - Changes are verified manually by the user after rebuild
 - System rebuild command:
   ```nushell
-  with-env { HTTP_PROXY: "http://192.168.0.116:7890", HTTPS_PROXY: "http://192.168.0.116:7890" } { sudo --preserve-env=HTTP_PROXY,HTTPS_PROXY nixos-rebuild switch --flake .#homePC --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org" }
+  maint-switch
   ```
 
 ## Documentation

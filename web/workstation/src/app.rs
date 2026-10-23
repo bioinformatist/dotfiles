@@ -653,10 +653,8 @@ struct TreeNode {
 
 fn render_file_tree(i18n: leptos_i18n::I18nContext<Locale>, files: &[GeneratedFile]) -> String {
     let mut root = TreeNode::default();
-    let mut sorted_files = files.iter().collect::<Vec<_>>();
-    sorted_files.sort_by(|left, right| left.path.cmp(&right.path));
 
-    for file in sorted_files {
+    for file in files {
         let note = file_tree_note(i18n, file);
         let mut node = &mut root;
 

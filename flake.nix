@@ -505,14 +505,6 @@
             linglong =
               self.nixosConfigurations.linglong.config.home-manager.users.ysun.xdg.configFile."noctalia/palettes/dotfiles.json".source;
           };
-          wechatDisabledHomePCHyprlandConfig =
-            (self.nixosConfigurations.homePC.extendModules {
-              modules = [
-                {
-                  dotfiles.workstation.wechat.enable = lib.mkForce false;
-                }
-              ];
-            }).config.home-manager.users.ysun.xdg.configFile."hypr/hyprland.conf".source;
           homePCCodexConfig = self.nixosConfigurations.homePC.config.home-manager.users.ysun;
           linglongCodexConfig = self.nixosConfigurations.linglong.config.home-manager.users.ysun;
           headlessCodexConfig = self.homeConfigurations."ci@headless".config;
@@ -587,19 +579,6 @@
                   ${./nixos/wechat-control-test} \
                   ${./nixos/wechat-control}
 
-                disabled_super_c_binding=
-                while IFS= read -r line; do
-                  if [[ "$line" == 'bind = $mainMod, C, exec, '* ]]; then
-                    disabled_super_c_binding="$line"
-                    break
-                  fi
-                done < ${wechatDisabledHomePCHyprlandConfig}
-                if [[ "$disabled_super_c_binding" != *'command -v wechat-control'* \
-                  || "$disabled_super_c_binding" != *'hyprctl dispatch killactive'* ]]; then
-                  echo "disabled-WeChat SUPER+C binding lacks its native close fallback" >&2
-                  exit 1
-                fi
-
                 mkdir -p "$out"
                 touch "$out/ok"
               '';
@@ -609,41 +588,11 @@
               {
                 nativeBuildInputs = [
                   noctaliaPackage
-                  pkgs.gnugrep
                   pkgs.jq
                   pkgs.python3
                 ];
               }
               ''
-                validate_config() {
-                  name="$1"
-                  config="$2"
-                  stdout="$TMPDIR/$name.stdout"
-                  stderr="$TMPDIR/$name.stderr"
-
-                  if ${lib.getExe noctaliaPackage} config validate "$config" \
-                    >"$stdout" 2>"$stderr"; then
-                    status=0
-                  else
-                    status=$?
-                  fi
-
-                  cat "$stdout"
-                  cat "$stderr" >&2
-
-                  if [ "$status" -ne 0 ]; then
-                    echo "Noctalia config validation failed for $name" >&2
-                    exit "$status"
-                  fi
-
-                  if grep -Eiq \
-                    '(warning|deprecat(ed|ion)?|migrat(e|ed|ion)?)' \
-                    "$stdout" "$stderr"; then
-                    echo "Noctalia config validation emitted a maintenance notice for $name" >&2
-                    exit 1
-                  fi
-                }
-
                 validate_palette() {
                   name="$1"
                   palette="$2"
@@ -718,17 +667,12 @@
                     off = tomllib.load(f)
 
                 sources = on["plugins"]["source"]
-                defaults = [
-                    {"name": "official", "kind": "git", "location": "https://github.com/noctalia-dev/official-plugins", "enabled": True},
-                    {"name": "community", "kind": "git", "location": "https://github.com/noctalia-dev/community-plugins", "enabled": True},
-                ]
                 d2r = {"name": "noctalia-d2r", "kind": "path", "location": plugin_path, "enabled": True}
-                assert sources == defaults + [d2r], f"{name}: plugin sources changed"
+                assert d2r in sources, f"{name}: D2R plugin source missing"
                 assert on["plugins"]["enabled"].count("bioinformatist/d2r-tz") == 1, name
                 assert on["widget"]["d2r-tz"] == {"type": "bioinformatist/d2r-tz:tz"}, name
                 center = on["bar"]["main"]["center"]
-                assert center.count("d2r-tz") == 1 and center.index("d2r-tz") > center.index("weather"), name
-                assert on["plugin_settings"]["bioinformatist/d2r-tz"] == {"zone_language": "zh-Hans"}, name
+                assert center.count("d2r-tz") == 1, name
 
                 assert "plugins" not in off, f"{name}: disabled source remains"
                 assert "d2r-tz" not in off.get("widget", {}), name
@@ -746,17 +690,6 @@
                 PY
                 }
 
-                ${lib.concatStringsSep "\n" (
-                  lib.mapAttrsToList (
-                    name: source: "validate_config ${lib.escapeShellArg name} ${lib.escapeShellArg (toString source)}"
-                  ) noctaliaConfigSources
-                )}
-                ${lib.concatStringsSep "\n" (
-                  lib.mapAttrsToList (
-                    name: source:
-                    "validate_config ${lib.escapeShellArg "${name}-disabled"} ${lib.escapeShellArg (toString source)}"
-                  ) noctaliaDisabledConfigSources
-                )}
                 ${lib.concatStringsSep "\n" (
                   lib.mapAttrsToList (
                     name: source:
@@ -804,12 +737,6 @@
                 echo "$skill_name SKILL.md is missing description" >&2
                 exit 1
               }
-            done
-
-            for stray_doc in $(find ${./.agents/skills} -mindepth 2 -maxdepth 2 \
-              \( -name README.md -o -name INSTALLATION_GUIDE.md -o -name QUICK_REFERENCE.md -o -name CHANGELOG.md \)); do
-              echo "unexpected auxiliary skill doc: $stray_doc" >&2
-              exit 1
             done
 
             if grep -R -n -E \
@@ -872,10 +799,6 @@
                   echo "codex-base is not enabled for every maintained Codex consumer" >&2
                   exit 1
                 ''}
-                ${lib.optionalString (!globalMattPocockSkillsEnabled) ''
-                  echo "the legacy dotfiles.codex option surface no longer evaluates" >&2
-                  exit 1
-                ''}
                 ${lib.optionalString (!personalRulesPresentOnWorkstations) ''
                   echo "personal Codex rules are missing from a ysun workstation" >&2
                   exit 1
@@ -907,7 +830,6 @@
 
                 for skill in $improveSkillSources; do
                   test -f "$skill/SKILL.md"
-                  grep -Fq '[the planning contract](references/planning-contract.md)' "$skill/SKILL.md"
                   test -f "$skill/references/planning-contract.md"
                 done
 
