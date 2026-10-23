@@ -4,7 +4,6 @@
 {
   imports = [
     (import ./codex { inherit inputs; })
-    ./zeroclaw
     ./gaming.nix
   ];
 

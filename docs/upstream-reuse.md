@@ -84,7 +84,7 @@ It does not include:
 - sops secrets
 - personal account content beyond the configured username
 - NVIDIA desktop patches
-- ZeroClaw, D2R, company SSH, or business services
+- D2R, company SSH, or business services
 
 NVIDIA desktop hosts should explicitly add `nixosModules.nvidiaDesktop`.
 AMD mobile desktop hosts can explicitly add `nixosModules.amdMobile`.
