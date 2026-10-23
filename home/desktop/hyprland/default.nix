@@ -13,13 +13,6 @@ in
   };
 
   config = {
-    xdg.configFile = {
-      "hypr/scripts" = {
-        source = ./scripts;
-        recursive = true;
-      };
-    };
-
     # Ensure monitors.conf exists before Hyprland parses `source = monitors.conf`.
     # This must be a real writable file (not xdg.configFile symlink) because
     # nwg-displays writes to it. Impermanence persists it across reboots.
