@@ -84,26 +84,36 @@
 
 | 应用 | 包 / 来源 | 说明 |
 | :--- | :--- | :--- |
-| **Hyprland** | `inputs.hyprland`（flake） | 动态平铺 Wayland 合成器，通过 UWSM 启动 |
+| **Hyprland** | `pkgs.hyprland` | 动态平铺 Wayland 合成器，通过 UWSM 启动 |
 | **Ghostty** | `pkgs.ghostty` | 现代 GPU 加速终端模拟器（Zig），Linux 上原生 GTK |
 | **Google Chrome** | `pkgs.google-chrome` | Web 浏览器 |
 | **Clash Verge** | `programs.clash-verge`（NixOS 模块） | GUI 代理客户端（灵活网络管理） |
-| **Noctalia** | `inputs.noctalia` + Home Manager | 状态栏、原生硬件控制、通知以及控制/会话面板 |
-| **swww** | `inputs.swww`（flake） | Wayland 壁纸守护进程，附带多显示器随机轮换脚本 |
+| **Noctalia** | `pkgs.noctalia` + Home Manager | 状态栏、原生硬件控制、通知以及控制/会话面板 |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland 原生锁屏 |
-| **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland 原生门户（屏幕共享、文件对话框等） |
-| **微信** | `nixpkgs-wechat.wechat-uos` | 微信桌面客户端（通过 XWayland 运行） |
+| **XDG Desktop Portal** | `pkgs.xdg-desktop-portal-hyprland` | Hyprland 原生门户（屏幕共享、文件对话框等） |
+| **微信** | `pkgs.wechat-uos` | 微信桌面客户端（通过 XWayland 运行） |
 | **grim** + **slurp** | `pkgs.grim`、`pkgs.slurp` | Wayland 屏幕截图 + 区域选择器 |
 | **satty** | `pkgs.satty` | 截图标注编辑器（箭头、文字、模糊、画笔） |
 
 ### 共享 Noctalia 工作站桌面壳
 
-导出的工作站 Home Manager 模块通过 `noctalia.service` 运行 Noctalia。
+导出的工作站 Home Manager 模块使用原生 Noctalia 模块，由 Hyprland 的
+`exec-once` 启动，保持 systemd 启动关闭以避免重复运行。
 Noctalia 负责带轮廓的多显示器状态栏、通知守护进程、附着式控制中心和会话面板，
 并原生提供网络、蓝牙、音频、电池、亮度和电源 profile 客户端。NetworkManager、
-BlueZ、PipeWire、UPower 和 power-profiles-daemon 仍是系统后端。AnyRun、swww、
-Hyprlock、KDE Polkit agent 和现有 Hyprland 快捷键继续分别负责启动、壁纸、锁屏、
-授权和硬件按键。
+BlueZ、PipeWire、UPower 和 power-profiles-daemon 仍是系统后端。Anyrun 通过
+Home Manager 原生模块使用 `pkgs.anyrun`；Hyprlock 和现有 Hyprland 快捷键继续
+负责锁屏和硬件按键。
+
+普通桌面应用、Helix 和 Yazi 都来自主 nixpkgs；应用版本例外仅有
+`llm-agents` CLI 和 `llm-agents-chatgpt` 桌面包。
+
+公共工作站、homePC 和 linglong 默认使用主题 `surface` 纯色背景，不自动轮换。
+在 Noctalia Settings 的壁纸界面选择图片、文件夹、显示器或轮换设置；图片目录
+沿用 Noctalia 原生默认值。这些选择保存在 `~/.local/state/noctalia/settings.toml`，
+优先于声明式默认值并在重新登录后保留。swww 服务、轮换脚本和仓库中的五张
+个人 PNG 已移除；用户自行保存的图片和 Noctalia 状态不受影响。若保存的配置
+引用旧仓库图片，请在界面中重新选择背景。
 
 共享的 `dotfiles.noctalia.weatherLocation` 选项可为空，默认 `null` 会关闭声明式天气。
 Yu Sun 的个人 Home Manager 层将其设为 `Guangzhou, China`、摄氏度和 10 分钟刷新。
@@ -140,7 +150,7 @@ Battle.net 只有在 Wine 应用实际导出 SNI 时才会出现；缺失只是�
 地名，无需账号或令牌。
 Noctalia Settings 可将插件和状态栏的运行时覆盖保存到 `~/.local/state/noctalia`；
 如果实际状态栏与声明式布局不同，应检查相关覆盖。可复用工作站导出仍默认关闭 Clash；
-个人 Home Manager 层在维护中的个人 GUI 主机上于 `noctalia.service` 之后启动 Clash Verge。
+个人 Home Manager 层在维护中的个人 GUI 主机的图形会话中启动 Clash Verge。
 
 ### 已评估但未安装
 

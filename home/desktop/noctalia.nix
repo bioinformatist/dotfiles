@@ -8,11 +8,8 @@
 }:
 let
   cfg = config.dotfiles.noctalia;
-  noctaliaPackage = inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 {
-  imports = [ inputs.noctalia.homeModules.default ];
-
   options.dotfiles.noctalia = {
     d2r.enable = lib.mkEnableOption "D2R Terror Zones";
 
@@ -45,7 +42,7 @@ in
   config.programs.noctalia = {
     enable = true;
     systemd.enable = false;
-    package = noctaliaPackage;
+    package = pkgs.noctalia;
     checkConfig = true;
 
     settings = lib.mkMerge [
@@ -214,7 +211,11 @@ in
 
         audio.enable_overdrive = false;
         notification.enable_daemon = true;
-        wallpaper.enabled = false;
+        wallpaper = {
+          enabled = lib.mkDefault true;
+          automation.enabled = lib.mkDefault false;
+          fill_color = lib.mkDefault "surface";
+        };
         dock.enabled = false;
         desktop_widgets.enabled = false;
         lockscreen.enabled = false;

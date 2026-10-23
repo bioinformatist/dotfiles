@@ -3,24 +3,18 @@
 
 {
   config,
-  inputs,
   lib,
   pkgs,
   ...
 }:
 
 let
-  desktopPkgs = inputs.nixpkgs-desktop.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   wechatDebReferer = "https://pro-store-packages.uniontech.com/";
-  wechatPkgs = import inputs.nixpkgs-wechat {
-    inherit (pkgs.stdenv.hostPlatform) system;
-    config.allowUnfree = true;
-  };
-  wechat-uos-with-referer = wechatPkgs.wechat-uos.override {
+  wechat-uos-with-referer = pkgs.wechat-uos.override {
     # UOS package storage rejects the WeChat deb intermittently without Referer.
     fetchurl =
       args:
-      wechatPkgs.fetchurl (
+      pkgs.fetchurl (
         args
         // {
           curlOptsList = (args.curlOptsList or [ ]) ++ [
@@ -50,11 +44,7 @@ let
     '';
   };
   clash-verge-rev = pkgs.symlinkJoin {
-    name = "clash-verge-rev-2.4.7-webkit-wrapper";
-    # Temporary rollback for the blank Proxies page seen after nixpkgs-tools
-    # updated Clash Verge Rev to 2.5.1. Keep using the main nixpkgs 2.4.7
-    # package until a stable nixpkgs-tools package includes
-    # tauri-plugin-mihomo 0.5.4 or newer.
+    name = "clash-verge-rev-webkit-wrapper";
     paths = [ pkgs.clash-verge-rev ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     meta = pkgs.clash-verge-rev.meta or { } // {
@@ -132,8 +122,8 @@ in
       programs.hyprland = {
         enable = true;
         withUWSM = true;
-        package = desktopPkgs.hyprland;
-        portalPackage = desktopPkgs.xdg-desktop-portal-hyprland;
+        package = pkgs.hyprland;
+        portalPackage = pkgs.xdg-desktop-portal-hyprland;
       };
 
       # Portal configuration: add GTK portal as fallback for Screenshot interface.
@@ -251,9 +241,6 @@ in
         ])
         ++ lib.optionals config.dotfiles.workstation.wechat.enable [
           wechat-uos-fcitx
-        ]
-        ++ [
-          inputs.swww.packages.${pkgs.stdenv.hostPlatform.system}.swww
         ];
     }
     (lib.mkIf config.dotfiles.workstation.clash.enable {

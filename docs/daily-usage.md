@@ -85,28 +85,41 @@ retired application data must be removed from that partition separately.
 
 | Application | Package / Source | Description |
 | :--- | :--- | :--- |
-| **Hyprland** | `inputs.hyprland` (flake) | Dynamic tiling Wayland compositor, launched via UWSM |
+| **Hyprland** | `pkgs.hyprland` | Dynamic tiling Wayland compositor, launched via UWSM |
 | **Ghostty** | `pkgs.ghostty` | Modern GPU-accelerated terminal emulator (Zig), native GTK on Linux |
 | **Google Chrome** | `pkgs.google-chrome` | Web browser |
 | **Clash Verge** | `programs.clash-verge` (NixOS module) | GUI proxy client (network flexibility) |
-| **Noctalia** | `inputs.noctalia` + Home Manager | Bar, native hardware controls, notifications, and control/session panels |
-| **swww** | `inputs.swww` (flake) | Wayland wallpaper daemon with custom multi-monitor rotation script |
+| **Noctalia** | `pkgs.noctalia` + Home Manager | Bar, native hardware controls, notifications, and control/session panels |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland-native lock screen |
-| **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland-native portal for screen sharing, file dialogs, etc. |
-| **WeChat** | `nixpkgs-wechat.wechat-uos` | WeChat desktop client (runs via XWayland) |
+| **XDG Desktop Portal** | `pkgs.xdg-desktop-portal-hyprland` | Hyprland-native portal for screen sharing, file dialogs, etc. |
+| **WeChat** | `pkgs.wechat-uos` | WeChat desktop client (runs via XWayland) |
 | **grim** + **slurp** | `pkgs.grim`, `pkgs.slurp` | Wayland screen capture + region selector |
 | **satty** | `pkgs.satty` | Screenshot annotation editor (arrows, text, blur, brush) |
 
 ### Shared Noctalia Workstation Shell
 
-The exported workstation Home Manager module runs Noctalia through
-`noctalia.service`. Noctalia owns the outlined multi-monitor bar, notification
+The exported workstation Home Manager module uses the native Noctalia module,
+started by Hyprland through `exec-once`; systemd startup stays disabled to avoid
+a second instance. Noctalia owns the outlined multi-monitor bar, notification
 daemon, attached control center and session panel, and the native network,
 Bluetooth, audio, battery, brightness, and power-profile clients. NetworkManager,
 BlueZ, PipeWire, UPower, and power-profiles-daemon remain the system backends.
-AnyRun, swww, Hyprlock, the KDE Polkit agent, and the existing Hyprland
-keybindings continue to own launching, wallpaper, locking, authorization, and
-hardware keys.
+Anyrun uses `pkgs.anyrun` through the native Home Manager module. Hyprlock and
+the existing Hyprland keybindings continue to provide locking and hardware keys.
+
+Desktop applications, Helix, and Yazi all come from the main nixpkgs. The only
+application version exceptions are the `llm-agents` CLI and
+`llm-agents-chatgpt` desktop package.
+
+The public workstation, homePC, and linglong default to a solid theme `surface`
+background with automatic rotation disabled. Use Noctalia Settings to choose
+images, folders, monitors, or rotation settings; the image directory uses
+Noctalia's native default. These choices persist in
+`~/.local/state/noctalia/settings.toml`, override declarative defaults, and
+survive logging out and back in. The swww services, rotation script, and five
+personal PNGs in this repository are removed. User-owned images and Noctalia
+state are retained. If saved settings refer to an old repository image, select
+another background in the GUI.
 
 The shared `dotfiles.noctalia.weatherLocation` option is nullable and defaults
 to `null`, which disables configured weather. Yu Sun's personal Home Manager
@@ -157,8 +170,8 @@ Simplified Chinese zone names. No account or token is needed. Noctalia Settings
 can persist plugin and bar overrides under `~/.local/state/noctalia`, so check
 those if the live bar differs from the declared layout. The reusable workstation
 export still keeps Clash disabled by default; the personal Home Manager layer
-starts Clash Verge for the maintained personal GUI hosts after
-`noctalia.service`.
+starts Clash Verge in the graphical session on the maintained personal GUI
+hosts.
 
 ### Evaluated But Not Installed
 

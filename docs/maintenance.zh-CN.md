@@ -31,17 +31,23 @@ dotfiles.nixNetwork.proxy = {
 
 ## 自动更新 PR
 
+普通桌面和 TUI 应用统一使用主 `nixpkgs`（`nixos-unstable`），Home Manager
+跟踪 `master`，两者每周六 UTC 分别提出更新 PR。应用版本例外仅有
+`llm-agents` 和 `llm-agents-chatgpt`，沿用每日工具更新时间窗口。
+
+swww、轮换脚本及仓库托管的五张个人壁纸已退役。Noctalia 默认启用主题
+`surface` 纯色背景、关闭自动轮换；后续选择在 Noctalia Settings 中保存。
+现有 `~/.local/state/noctalia` 和用户自行保存的图片保留；若旧设置引用已删除
+的仓库图片，在界面中重新选择背景。桌面升级部署前记录上一代系统 generation；
+若登录后无法使用桌面，从启动菜单进入上一代恢复。
+
 `renovate.json` 让 Renovate 按每个根 flake input 单独提出 PR：
 
 | Leaf | Policy | 更新内容 |
 |---|---|---|
-| `anyrun` | `tools` | `anyrun` flake input |
 | `codex-base` | `tools` | Codex Base 配置、Improve 和全局 skills |
-| `llm-agents` | `tools` | 社区独立 CLI 和桌面包 |
-| `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
-| `wechat` | `tools` | `nixpkgs-wechat` flake input |
-| `nixpkgs-desktop` | `desktop` | 固定的 `nixpkgs-desktop` 输入中的 Hyprland 及配套 portal |
-| `noctalia` | `desktop` | Noctalia 稳定版输入 |
+| `llm-agents` | `tools` | 社区独立 CLI 包 |
+| `llm-agents-chatgpt` | `tools` | ChatGPT 桌面包 |
 | `sops-nix` | `infra` | `sops-nix` flake input |
 | `impermanence` | `infra` | `impermanence` flake input |
 | `disko` | `infra` | `disko` flake input |
@@ -52,18 +58,17 @@ dotfiles.nixNetwork.proxy = {
 | Policy | 调度 |
 |---|---|
 | `tools` | 每天 |
-| `desktop` | 每周六 UTC |
 | `infra` | 每月 1 日 UTC |
-| `core` | 每月 1 日 UTC |
+| `core` | 每周六 UTC |
 
-不在表中的根 input，目前是 `fieldcraft`、`mattpocock-skills` 和 `swww`，暂时不由 Renovate 自动更新；只有当它们被提升到显式 policy 后再纳入。
+不在表中的根 input，目前是 `fieldcraft` 和 `mattpocock-skills`，暂时不由 Renovate 自动更新；只有当它们被提升到显式 policy 后再纳入。
 Renovate 的 `lockFileMaintenance` 被关闭，因为 whole-lock refresh 会把多个
 leaf 混进同一个 PR，削弱 cache miss 归因。
 
-Codex 运行包来自 `llm-agents`：独立 CLI 包含配套的 Code Mode Host，供 headless
+Codex CLI 运行包来自 `llm-agents`，ChatGPT 桌面包来自 `llm-agents-chatgpt`：独立 CLI 包含配套的 Code Mode Host，供 headless
 和桌面主机的终端、Improve、doctor 使用。桌面启动器通过 `CODEX_CLI_PATH` 选择
 同一个 CLI。`codex-base` 提供配置、Improve 和 skills。
-Renovate 分别更新这两个根输入；任一更新后，都需要检查所选运行包与继承配置、
+Renovate 分别更新 `llm-agents`、`llm-agents-chatgpt` 和 `codex-base`；任一更新后，都需要检查所选运行包与继承配置、
 工作流的兼容性。运行中的桌面应用或 SSH App Server 后台需要重启才会切换版本。
 
 默认分支应通过 ruleset 保护：要求 PR，并要求 `maintenance gate` 状态检查，且启用

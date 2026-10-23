@@ -29,16 +29,9 @@
     {
       "description": "Fast-moving tool inputs may be proposed daily.",
       "matchManagers": ["nix"],
-      "matchDepNames": ["anyrun", "codex-base", "llm-agents", "nixpkgs-tools", "nixpkgs-wechat"],
+      "matchDepNames": ["codex-base", "llm-agents", "llm-agents-chatgpt"],
       "schedule": ["* 20-23 * * *"],
       "addLabels": ["policy-tools"]
-    },
-    {
-      "description": "Fast-moving desktop inputs are checked weekly.",
-      "matchManagers": ["nix"],
-      "matchDepNames": ["nixpkgs-desktop", "noctalia"],
-      "schedule": ["* * * * 6"],
-      "addLabels": ["policy-desktop"]
     },
     {
       "description": "Infrastructure inputs are checked monthly.",
@@ -48,16 +41,16 @@
       "addLabels": ["policy-infra"]
     },
     {
-      "description": "Core platform inputs are checked monthly.",
+      "description": "Core platform inputs are checked weekly.",
       "matchManagers": ["nix"],
       "matchDepNames": ["nixpkgs", "home-manager"],
-      "schedule": ["* * 1 * *"],
+      "schedule": ["* * * * 6"],
       "addLabels": ["policy-core"]
     },
     {
       "description": "Leave these root inputs out of automated maintenance until they are promoted to an explicit policy.",
       "matchManagers": ["nix"],
-      "matchDepNames": ["fieldcraft", "mattpocock-skills", "swww"],
+      "matchDepNames": ["fieldcraft", "mattpocock-skills"],
       "enabled": false
     }
   ]
