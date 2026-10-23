@@ -3,27 +3,20 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-tools.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-wechat.url = "github:NixOS/nixpkgs/nixos-unstable";
     llm-agents.url = "github:numtide/llm-agents.nix";
     llm-agents-chatgpt.url = "github:numtide/llm-agents.nix/4726c319ae0692a84f20819395411d9f8b88335a";
-    anyrun.url = "github:anyrun-org/anyrun";
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager = {
-      url = "github:nix-community/home-manager/release-26.05";
+      url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Stable desktop packages, including the nixpkgs glaze compatibility fix.
-    nixpkgs-desktop.url = "github:NixOS/nixpkgs/c748c722674bfd3ef3afd2163c2fb809556fff8b";
-    noctalia.url = "github:noctalia-dev/noctalia/v5.2.1";
     noctalia-d2r = {
       url = "github:bioinformatist/noctalia-d2r";
       flake = false;
     };
-    swww.url = "github:LGFae/swww";
     impermanence.url = "github:nix-community/impermanence";
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -40,7 +33,7 @@
     codex-base = {
       url = "github:bioinformatist/codex-base";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.nixpkgs-tools.follows = "nixpkgs-tools";
+      inputs.nixpkgs-tools.follows = "nixpkgs";
     };
   };
 
@@ -482,7 +475,7 @@
           pkgs = import nixpkgs {
             inherit system;
           };
-          noctaliaPackage = inputs.noctalia.packages.${system}.default;
+          noctaliaPackage = pkgs.noctalia;
           noctaliaConfigSources = {
             homePC =
               self.nixosConfigurations.homePC.config.home-manager.users.ysun.xdg.configFile."noctalia/config.toml".source;

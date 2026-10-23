@@ -31,17 +31,26 @@ This proxy is intentionally scoped to Nix maintenance paths. It is injected into
 
 ## Automated Update PRs
 
+Desktop and TUI applications use the main `nixpkgs` (`nixos-unstable`), with
+Home Manager tracking `master`. Each receives a separate update PR on Saturdays
+UTC. The only application version exceptions are `llm-agents` and
+`llm-agents-chatgpt`, which keep the daily tools update window.
+
+swww, its rotation script, and the five repository-managed personal wallpapers
+are retired. Noctalia defaults to a solid theme `surface` background with
+rotation disabled; subsequent choices are saved through Noctalia Settings.
+Existing `~/.local/state/noctalia` data and user-owned images are retained. If
+saved settings refer to a removed repository image, select another background
+in the GUI. Before deploying the desktop upgrade, record the previous system
+generation; if the desktop is unusable, boot that generation from the boot menu.
+
 `renovate.json` lets Renovate propose one root flake input per PR:
 
 | Leaf | Policy | What it updates |
 |---|---|---|
-| `anyrun` | `tools` | `anyrun` flake input |
 | `codex-base` | `tools` | Codex Base configuration, Improve, and global skills |
-| `llm-agents` | `tools` | Community standalone CLI and desktop packages |
-| `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
-| `wechat` | `tools` | `nixpkgs-wechat` flake input |
-| `nixpkgs-desktop` | `desktop` | Hyprland and its portal from the pinned `nixpkgs-desktop` input |
-| `noctalia` | `desktop` | Noctalia stable release input |
+| `llm-agents` | `tools` | Community standalone CLI packages |
+| `llm-agents-chatgpt` | `tools` | ChatGPT desktop package |
 | `sops-nix` | `infra` | `sops-nix` flake input |
 | `impermanence` | `infra` | `impermanence` flake input |
 | `disko` | `infra` | `disko` flake input |
@@ -52,19 +61,20 @@ Default cadence:
 | Policy | Schedule |
 |---|---|
 | `tools` | daily |
-| `desktop` | Saturdays UTC |
 | `infra` | first day of each month UTC |
-| `core` | first day of each month UTC |
+| `core` | Saturdays UTC |
 
-Root inputs outside this table, currently `fieldcraft`, `mattpocock-skills`, and `swww`, are intentionally not updated by Renovate until they are promoted to an explicit policy.
+Root inputs outside this table, currently `fieldcraft` and `mattpocock-skills`, are intentionally not updated by Renovate until they are promoted to an explicit policy.
 Renovate `lockFileMaintenance` is disabled because whole-lock refreshes would
 mix multiple leaves into one PR and weaken cache-miss attribution.
 
-Codex runtime packages come from `llm-agents`: the standalone CLI includes its
+The Codex CLI comes from `llm-agents`; the ChatGPT desktop package comes from
+`llm-agents-chatgpt`. The standalone CLI includes its
 matching Code Mode Host and is used by terminals, Improve, and doctor on both
 headless and desktop hosts. The desktop launcher selects that CLI through
 `CODEX_CLI_PATH`. `codex-base` supplies configuration, Improve, and skills.
-Renovate updates these two root inputs separately; after either update, check
+Renovate updates `llm-agents`, `llm-agents-chatgpt`, and `codex-base` separately;
+after any of these updates, check
 the selected runtime against the inherited configuration and workflows. A
 running desktop application or SSH App Server keeps its current backend until
 restarted.

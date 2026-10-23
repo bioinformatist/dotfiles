@@ -89,12 +89,29 @@ It does not include:
 NVIDIA desktop hosts should explicitly add `nixosModules.nvidiaDesktop`.
 AMD mobile desktop hosts can explicitly add `nixosModules.amdMobile`.
 
-`homeManagerModules.workstation` provides the shared Noctalia v5 shell and its
-systemd user service. Noctalia owns the bar, native network/Bluetooth/audio and
+`homeManagerModules.workstation` provides the shared Noctalia v5 shell through
+the native Home Manager module, using `pkgs.noctalia` from the main package set
+and started by Hyprland through `exec-once`. Noctalia owns the bar, native network/Bluetooth/audio and
 notification panels, control center, and session panel while consuming the
 host's NetworkManager, BlueZ, PipeWire, UPower, and power-profiles-daemon
 backends. Hardware-dependent widgets remain in the shared layout and degrade
 when their device or backend is absent.
+
+Desktop applications, Helix, and Yazi use the main nixpkgs; the only application
+version exceptions are `llm-agents` and `llm-agents-chatgpt`. Anyrun uses the
+native Home Manager module with the five existing plugins from `pkgs.anyrun`.
+Downstream consumers continue to use the stable flake outputs.
+
+The shared workstation and both personal hosts default to Noctalia's solid
+theme `surface` background with automatic rotation disabled. These three
+settings use `lib.mkDefault`; downstream modules can override them through
+`programs.noctalia.settings.wallpaper`. The image directory keeps Noctalia's
+native default. Users choose images, folders, monitors, and rotation in
+Noctalia Settings; choices persist in `~/.local/state/noctalia/settings.toml`
+and override the declarative layer. swww, its rotation script, and the five
+personal PNGs in this repository are removed. User-owned images and Noctalia
+state are retained. If saved settings refer to a removed repository image,
+select another background in the GUI. The generator has no wallpaper form.
 
 The module's only location interface is
 `dotfiles.noctalia.weatherLocation`, a nullable string whose default is `null`;

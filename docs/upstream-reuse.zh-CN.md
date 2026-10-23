@@ -85,10 +85,23 @@ flake 锁定的包集合，不通过 shared-nixpkgs overlay 重建。桌面与 C
 NVIDIA 桌面机器应额外叠加 `nixosModules.nvidiaDesktop`。
 AMD 便携桌面机器可额外叠加 `nixosModules.amdMobile`。
 
-`homeManagerModules.workstation` 提供共享 Noctalia v5 桌面壳及其 systemd 用户服务。
+`homeManagerModules.workstation` 通过 Home Manager 原生模块提供共享 Noctalia v5
+桌面壳，使用主包集的 `pkgs.noctalia`，由 Hyprland `exec-once` 启动。
 Noctalia 负责状态栏、原生网络/蓝牙/音频和通知面板、控制中心与会话面板，同时使用
 主机的 NetworkManager、BlueZ、PipeWire、UPower 和 power-profiles-daemon 后端。
 依赖硬件的控件保留在共享布局中，并在设备或后端缺失时安全降级。
+
+普通桌面应用、Helix 与 Yazi 统一使用主 nixpkgs，应用版本例外仅有
+`llm-agents` 与 `llm-agents-chatgpt`。Anyrun 使用 Home Manager 原生模块和
+`pkgs.anyrun` 的五个现有插件；下游继续通过稳定的 flake outputs 消费这些配置。
+
+共享工作站及两个个人主机默认使用 Noctalia 主题 `surface` 纯色背景，并关闭
+自动轮换；这三个声明使用 `lib.mkDefault`，下游可通过原生
+`programs.noctalia.settings.wallpaper` 覆盖。图片目录沿用 Noctalia 默认值。
+用户在 Noctalia Settings 中选择图片、文件夹、显示器和轮换设置，结果保存在
+`~/.local/state/noctalia/settings.toml` 并优先于声明层。swww、轮换脚本与仓库中的
+五张个人 PNG 已移除；不删除用户自行保存的图片或 Noctalia 状态。若旧设置
+引用已移除的仓库图片，请在界面中重新选择背景。生成器不提供壁纸表单。
 
 模块唯一的地点接口是可为空字符串 `dotfiles.noctalia.weatherLocation`，默认值为
 `null`；下游可以不设置或选择自己的地点，而不会继承 Yu Sun 个人层的
