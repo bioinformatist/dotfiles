@@ -46,6 +46,7 @@
     "-manifest-for-users.json.drv",
     "-manifest.json.drv",
     "-hm-session-vars.sh.drv",
+    "-persistence-persist-files.drv",
     "-persistence-run-create-directories.drv",
     "-perl-5.42.0-env.drv",
     "-stage-2-init.sh.drv",
