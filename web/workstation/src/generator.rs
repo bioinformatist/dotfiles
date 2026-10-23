@@ -614,7 +614,10 @@ fn is_valid_proxy_url(value: &str) -> bool {
 }
 
 fn escape_nix_string(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
+    value
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace("${", "\\${")
 }
 
 fn shell_quote(value: &str) -> String {
@@ -927,6 +930,30 @@ mod tests {
         assert!(home.contains("programs.git.userName"));
         assert!(home.contains("programs.git.userEmail"));
         assert!(!home.contains("programs.git.settings"));
+    }
+
+    #[test]
+    fn generated_nix_preserves_literal_user_text() {
+        let mut spec = base_spec();
+        spec.git_name = r#"Alice ${USER} "Example" \team"#.to_owned();
+        spec.ssh_public_key.push_str(" ${USER}@workstation");
+        let project = generate(&spec).expect("valid project");
+        let home = project
+            .files
+            .iter()
+            .find(|file| file.path.ends_with("home.nix"))
+            .expect("home")
+            .contents
+            .as_str();
+        let config = project
+            .files
+            .iter()
+            .find(|file| file.path.ends_with("configuration.nix"))
+            .expect("configuration")
+            .contents
+            .as_str();
+        assert!(home.contains(r#"programs.git.userName = "Alice \${USER} \"Example\" \\team";"#));
+        assert!(config.contains(r#" \${USER}@workstation""#));
     }
 
     #[test]
