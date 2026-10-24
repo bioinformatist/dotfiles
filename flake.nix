@@ -6,7 +6,7 @@
     nixpkgs-tools.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-wechat.url = "github:NixOS/nixpkgs/nixos-unstable";
     llm-agents.url = "github:numtide/llm-agents.nix";
-    llm-agents-chatgpt.url = "github:numtide/llm-agents.nix/125f2c1b3ddccf591fe8d4d9d86d1171913ba64a";
+    llm-agents-chatgpt.url = "github:numtide/llm-agents.nix/49361539ee8db14d3024d99c123168b1a8b3a85b";
     anyrun.url = "github:anyrun-org/anyrun";
     disko = {
       url = "github:nix-community/disko";
