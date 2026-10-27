@@ -63,7 +63,7 @@ report() {
       "$china" "$(wc -l < "$work_dir/ustc-results.tsv")" \
       "$(wc -l < "$work_dir/official-paths.txt")" \
       "$(wc -l < "$work_dir/china-new.txt")"
-    if [[ -n "$reason" ]]; then printf -- '- Inconclusive reason: %s\n' "$reason"; fi
+    if [[ -n "$reason" ]]; then printf -- '- Reason: %s\n' "$reason"; fi
     echo
     echo "Raw Nix, cache and curl responses: $work_dir"
   } >> "$destination"
@@ -209,7 +209,13 @@ if ! classify_builds base || ! classify_builds head; then stop_inconclusive "$re
 comm -13 "$work_dir/base-unapproved.txt" "$work_dir/head-unapproved.txt" \
   > "$work_dir/upstream-new.txt"
 upstream=pass
-if [[ -s "$work_dir/upstream-new.txt" ]]; then upstream=miss; fi
+if [[ -s "$work_dir/upstream-new.txt" ]]; then
+  upstream=miss
+  china=skipped
+  reason='New upstream gaps; USTC probes skipped'
+  report
+  exit 1
+fi
 
 for revision in base head; do
   awk -F '\t' '{print $2}' "$work_dir/$revision-fetches.tsv" | sort -u \
@@ -256,16 +262,24 @@ while IFS=$'\t' read -r path missing url; do
     curl_args+=(--output /dev/null --url "$ustc/$url")
   fi
 done < "$work_dir/ustc-projection.tsv"
+update_china_lists
+if [[ -s "$work_dir/china-new.txt" ]]; then
+  china=miss
+  reason='USTC metadata missing; NAR probes skipped'
+  report
+  exit 1
+fi
 
 if [[ ${#paths[@]} -gt 0 ]]; then
-  # Read each completed transfer while curl is still running, so an uncertain
-  # response can stop the remaining URLs before curl starts them.
+  # Read each completed transfer while curl is still running, so a missing or
+  # uncertain response can stop the remaining URLs before curl starts them.
   mkfifo "$work_dir/curl.pipe"
   # curl write-out uses stdout buffering independently of --no-buffer.
   stdbuf -oL curl "${curl_args[@]}" > "$work_dir/curl.pipe" 2> "$work_dir/curl.err" &
   curl_pid=$!
   completed=0
   transfer_uncertain=false
+  transfer_miss=false
   while IFS=$'\t' read -r index code exitcode redirect; do
     printf '%s\t%s\t%s\t%s\n' "$index" "$code" "$exitcode" "$redirect" \
       >> "$work_dir/curl-results.tsv"
@@ -288,18 +302,31 @@ if [[ ${#paths[@]} -gt 0 ]]; then
     fi
     printf '%s\t%s\tHTTP %s, curl %s\n' "${paths[$index]}" "$state" \
       "$code" "$exitcode" >> "$work_dir/ustc-results.tsv"
+    if [[ "$state" == miss ]]; then
+      reason='USTC NAR missing; remaining URLs skipped'
+      transfer_miss=true
+      break
+    fi
     if [[ "$state" == inconclusive ]]; then
       reason='USTC NAR response is uncertain; remaining URLs skipped'
       transfer_uncertain=true
       break
     fi
   done < "$work_dir/curl.pipe"
-  if [[ "$transfer_uncertain" == true ]]; then kill "$curl_pid" 2>/dev/null || true; fi
+  if [[ "$transfer_uncertain" == true || "$transfer_miss" == true ]]; then
+    kill "$curl_pid" 2>/dev/null || true
+  fi
   curl_rc=0
   wait "$curl_pid" || curl_rc=$?
   rm "$work_dir/curl.pipe"
   if [[ "$transfer_uncertain" == true ]]; then
     stop_inconclusive "$reason"
+  fi
+  if [[ "$transfer_miss" == true ]]; then
+    update_china_lists
+    china=miss
+    report
+    exit 1
   fi
   if [[ "$curl_rc" -ne 0 || "$completed" -ne "${#paths[@]}" ]]; then
     stop_inconclusive 'curl returned an incomplete transfer manifest'

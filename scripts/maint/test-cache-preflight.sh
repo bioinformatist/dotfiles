@@ -46,20 +46,20 @@ case "$1" in
       printf '@nix {"action":"msg","level":0,"msg":"these 3 paths will be fetched (1 MiB download):"}\n' >&2
     else
       count=2
-      if [[ "$rev" == head && "$MOCK_CASE" != baseline && "$MOCK_CASE" != newbuild && "$MOCK_CASE" != leafbad ]]; then count=3; fi
-      if [[ "$rev" == head && "$MOCK_CASE" == denied ]]; then count=4; fi
+      if [[ "$rev" == head && "$MOCK_CASE" != baseline && "$MOCK_CASE" != leafbad ]]; then count=3; fi
+      if [[ "$rev" == head && "$MOCK_CASE" =~ ^(denied|metadata404|nar404|nar410)$ ]]; then count=4; fi
       printf '@nix {"action":"msg","level":0,"msg":"these %s paths will be fetched (1 MiB download):"}\n' "$count" >&2
     fi
     printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$a" >&2
     printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$c" >&2
-    if [[ "$rev" == head && "$MOCK_CASE" != baseline && "$MOCK_CASE" != newbuild && "$MOCK_CASE" != leafbad && "$MOCK_CASE" != incomplete ]]; then
+    if [[ "$rev" == head && "$MOCK_CASE" != baseline && "$MOCK_CASE" != leafbad && "$MOCK_CASE" != incomplete ]]; then
       if [[ "$MOCK_CASE" == newcommunity ]]; then
         printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$community" >&2
       else
         printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$b" >&2
       fi
     fi
-    if [[ "$rev" == head && "$MOCK_CASE" == denied ]]; then
+    if [[ "$rev" == head && "$MOCK_CASE" =~ ^(denied|metadata404|nar404|nar410)$ ]]; then
       printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$other" >&2
     fi
     ;;
@@ -90,7 +90,8 @@ case "$1" in
         printf 'null'
         missing+=("$path")
       elif [[ "$url" == *ustc* ]]; then
-        if [[ "$path" == "$b" ]]; then printf '{"url":"nar/new.nar.zst"}'
+        if [[ "$path" == "$b" && "$MOCK_CASE" == metadata404 ]]; then printf 'null'
+        elif [[ "$path" == "$b" ]]; then printf '{"url":"nar/new.nar.zst"}'
         else printf '{"url":"nar/old.nar.zst"}'; fi
       elif [[ "$path" == "$b" && "$MOCK_CASE" == cachedglue ]]; then
         printf '{"url":"nar/official.nar.zst","deriver":"/nix/store/ffffffffffffffffffffffffffffffff-glue.drv"}'
@@ -125,9 +126,10 @@ for arg in "$@"; do
     printf 'curl %s\n' "$arg" >> "$MOCK_LOG"
     code=200
     if [[ "$arg" == *new.nar.zst* && "$MOCK_CASE" == nar404 ]]; then code=404; fi
+    if [[ "$arg" == *new.nar.zst* && "$MOCK_CASE" == nar410 ]]; then code=410; fi
     if [[ "$arg" == *new.nar.zst* && "$MOCK_CASE" == denied ]]; then code=403; fi
     printf '%s\t%s\t0\t\n' "$index" "$code"
-    if [[ "$MOCK_CASE" == denied ]]; then sleep 1; fi
+    if [[ "$MOCK_CASE" =~ ^(denied|nar404|nar410)$ ]]; then sleep 1; fi
     index=$((index + 1))
   fi
 done
@@ -175,12 +177,19 @@ run_case newcommunity 0 pass pass
 [[ "$(grep -c 'https://mirrors.ustc.edu.cn\|curl https:' "$MOCK_LOG" || true)" -eq 0 ]]
 run_case recovered 0 pass pass
 grep -q 'warning: retrying' "$tmp/recovered/official.err"
-run_case newbuild 1 miss pass
+run_case newbuild 1 miss skipped
+[[ ! -s "$MOCK_LOG" ]]
 grep -q -- '-bad.drv' "$tmp/newbuild/upstream-new.txt"
-run_case leafbad 1 miss pass
+run_case leafbad 1 miss skipped
 grep -q -- '-download.drv' "$tmp/leafbad/upstream-new.txt"
 if grep -q -- '-glue.drv' "$tmp/leafbad/upstream-new.txt"; then exit 1; fi
+run_case metadata404 1 pass miss
+[[ "$(grep -c 'curl https:' "$MOCK_LOG" || true)" -eq 0 ]]
+grep -q 'metadata missing' "$tmp/metadata404/ustc-results.tsv"
+run_case nar410 1 pass miss
+[[ "$(grep -c 'curl https:' "$MOCK_LOG")" -eq 1 ]]
 run_case nar404 1 pass miss
+[[ "$(grep -c 'curl https:' "$MOCK_LOG")" -eq 1 ]]
 grep -q -- '-new-official' "$tmp/nar404/china-new.txt"
 run_case denied 1 pass inconclusive
 [[ "$(grep -c 'curl https:' "$MOCK_LOG")" -eq 1 ]]

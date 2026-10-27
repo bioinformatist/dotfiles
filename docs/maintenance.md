@@ -94,7 +94,9 @@ unapproved local builds as upstream gaps. For USTC, it first compares unique
 base/head fetch paths, then checks only new paths available from the official
 cache. Unchanged paths cause no added cache or archive probes. Nix metadata
 queries use one HTTP connection; NAR HEAD requests run serially with curl's
-one-per-second rate cap and native retry/backoff, stopping on an uncertain response.
+one-per-second rate cap and native retry/backoff. New upstream gaps skip USTC
+probes; missing USTC metadata skips NAR probes. A missing or uncertain NAR
+response stops the remaining requests. Skipped checks are not passes.
 Missing metadata or a 404/410 NAR is a definite new gap; request failures,
 malformed output, and unexpected responses are inconclusive. The report does
 not claim full-head USTC readiness. Full store paths are the comparison

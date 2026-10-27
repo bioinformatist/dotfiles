@@ -84,8 +84,9 @@ required `maintenance gate` check 汇总两个 job。`configuration` 运行原�
 Anyrun/Hyprland/Noctalia Cachix。未经批准的本地构建是上游缺口。USTC 检查
 先比较 base/head 去重后的待替代路径，只查询新增且由官方缓存提供的产物；未变路径
 不新增缓存或压缩包探测。Nix 元数据查询限制为一个 HTTP 连接；NAR HEAD 请求
-串行执行，curl 原生限速为每秒最多一次，并使用原生重试/退避；遇到无法判断的响应
-即停止后续请求。元数据缺失或压缩包返回 404/410 是确定的新增缺口；请求失败、
+串行执行，curl 原生限速为每秒最多一次，并使用原生重试/退避。发现新增上游缺口
+就跳过 USTC 探测；USTC 元数据缺失时跳过 NAR 探测；NAR 缺失或响应无法判断时
+停止后续请求。跳过的检查不计为通过。元数据缺失或压缩包返回 404/410 是确定的新增缺口；请求失败、
 输出格式错误和异常响应为无法判断。报告不代表完整 head 的 USTC 就绪状态。
 比较以完整 store path 为身份，保留现有直连下载 marker 和 leaf 限制。日志保留
 原始 Nix 与 HTTP 结果；环境故障后由人工重跑 workflow。
