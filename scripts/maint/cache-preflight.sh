@@ -31,7 +31,8 @@ work_dir="$(realpath "$work_dir")"
 mkdir -p "$work_dir/base-store" "$work_dir/head-store"
 for file in base-builds.tsv head-builds.tsv base-fetches.tsv head-fetches.tsv \
   base-unapproved.txt head-unapproved.txt upstream-new.txt \
-  official-paths.txt ustc-results.tsv china-new.txt china-uncertain.txt; do
+  official-paths.txt official-candidates.tsv local-glue-fetches.tsv \
+  ustc-results.tsv china-new.txt china-uncertain.txt; do
   : > "$work_dir/$file"
 done
 
@@ -69,6 +70,7 @@ report() {
   } >> "$destination"
   append_list 'Head upstream gaps' "$work_dir/head-unapproved.txt" "$destination"
   append_list 'New upstream gaps' "$work_dir/upstream-new.txt" "$destination"
+  append_list 'Locally rebuildable glue' "$work_dir/local-glue-fetches.tsv" "$destination"
   append_list 'New USTC gaps' "$work_dir/china-new.txt" "$destination"
   append_list 'Uncertain USTC paths' "$work_dir/china-uncertain.txt" "$destination"
   printf 'upstream=%s china=%s reason=%s\n' "$upstream" "$china" "$reason"
@@ -220,8 +222,21 @@ comm -13 "$work_dir/base-fetch-paths.txt" "$work_dir/head-fetch-paths.txt" \
 if ! query_cache official https://cache.nixos.org "$work_dir/new-fetch-paths.txt"; then
   stop_inconclusive "$reason"
 fi
-jq -r 'to_entries[] | select(.value != null) | .key' "$work_dir/official.json" \
-  | sort > "$work_dir/official-paths.txt"
+if ! jq -r 'to_entries[] | select(.value != null) |
+  [.key, (.value.deriver // "")] | @tsv' "$work_dir/official.json" \
+  > "$work_dir/official-candidates.tsv"; then
+  stop_inconclusive 'official manifest projection failed'
+fi
+mapfile -t local_markers < <(jq -r '.allowedLocalBuildMarkers[]' "$work_dir/head-policy.json")
+while IFS=$'\t' read -r path deriver; do
+  # Apply the same local-build permission when Nix plans a cached glue output.
+  if contains_marker "$deriver" "${local_markers[@]}"; then
+    printf '%s\t%s\n' "$path" "$deriver" >> "$work_dir/local-glue-fetches.tsv"
+  else
+    printf '%s\n' "$path" >> "$work_dir/official-paths.txt"
+  fi
+done < "$work_dir/official-candidates.tsv"
+sort -u "$work_dir/official-paths.txt" -o "$work_dir/official-paths.txt"
 if ! query_cache ustc "$ustc" "$work_dir/official-paths.txt"; then
   stop_inconclusive "$reason"
 fi

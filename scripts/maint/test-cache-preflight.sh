@@ -89,9 +89,13 @@ case "$1" in
       if [[ "$url" == *cache.nixos.org* && ( "$path" == "$c" || "$path" == "$community" ) ]]; then
         printf 'null'
         missing+=("$path")
+      elif [[ "$url" == *ustc* && "$path" == "$b" && "$MOCK_CASE" == localglue ]]; then
+        printf 'null'
       elif [[ "$url" == *ustc* ]]; then
         if [[ "$path" == "$b" ]]; then printf '{"url":"nar/new.nar.zst"}'
         else printf '{"url":"nar/old.nar.zst"}'; fi
+      elif [[ "$path" == "$b" && "$MOCK_CASE" == localglue ]]; then
+        printf '{"url":"nar/official.nar.zst","deriver":"%s"}' "$glue"
       else
         printf '{"url":"nar/official.nar.zst"}'
       fi
@@ -167,6 +171,10 @@ run_case newcommunity 0 pass pass
 [[ "$(grep -c 'https://cache.nixos.org 1' "$MOCK_LOG")" -eq 1 ]]
 [[ "$(wc -l < "$tmp/newcommunity/official-paths.txt")" -eq 0 ]]
 [[ "$(grep -c 'https://mirrors.ustc.edu.cn\|curl https:' "$MOCK_LOG" || true)" -eq 0 ]]
+run_case localglue 0 pass pass
+[[ "$(grep -c 'https://cache.nixos.org 1' "$MOCK_LOG")" -eq 1 ]]
+[[ "$(grep -c 'https://mirrors.ustc.edu.cn\|curl https:' "$MOCK_LOG" || true)" -eq 0 ]]
+grep -q -- '-glue.drv' "$tmp/localglue/local-glue-fetches.tsv"
 run_case recovered 0 pass pass
 grep -q 'warning: retrying' "$tmp/recovered/official.err"
 run_case newbuild 1 miss pass
