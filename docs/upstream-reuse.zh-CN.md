@@ -91,9 +91,11 @@ Noctalia 负责状态栏、原生网络/蓝牙/音频和通知面板、控制中
 主机的 NetworkManager、BlueZ、PipeWire、UPower 和 power-profiles-daemon 后端。
 依赖硬件的控件保留在共享布局中，并在设备或后端缺失时安全降级。
 
-普通桌面应用、Helix 与 Yazi 统一使用主 nixpkgs，应用版本例外仅有
-`llm-agents` 与 `llm-agents-chatgpt`。Anyrun 使用 Home Manager 原生模块和
-`pkgs.anyrun` 的五个现有插件；下游继续通过稳定的 flake outputs 消费这些配置。
+普通桌面应用、Helix 与 Yazi 使用主 nixpkgs，`llm-agents`、
+`llm-agents-chatgpt` 和 Anyrun 保留独立输入。Anyrun 26.10.0 使用 Home Manager
+原生模块及固定上游 flake 的五个插件，保留上游 nixpkgs 锁以命中其 Cachix 产物。
+主包集的 Anyrun 与 provider 都在 USTC 可用后再移回主包集。
+下游继续通过稳定的 flake outputs 消费这些配置。
 
 共享工作站及两个个人主机默认使用 Noctalia 主题 `surface` 纯色背景，并关闭
 自动轮换；这三个声明使用 `lib.mkDefault`，下游可通过原生

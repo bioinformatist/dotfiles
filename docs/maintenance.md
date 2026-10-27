@@ -33,8 +33,9 @@ This proxy is intentionally scoped to Nix maintenance paths. It is injected into
 
 Desktop and TUI applications use the main `nixpkgs` (`nixos-unstable`), with
 Home Manager tracking `master`. Each receives a separate update PR on Saturdays
-UTC. The only application version exceptions are `llm-agents` and
-`llm-agents-chatgpt`, which keep the daily tools update window.
+UTC. `llm-agents` and `llm-agents-chatgpt` keep separate inputs and the daily
+tools update window. Anyrun also retains a pinned upstream input to use its
+Cachix builds; its removal condition is recorded beside the input.
 
 swww, its rotation script, and the five repository-managed personal wallpapers
 are retired. Noctalia defaults to a solid theme `surface` background with
@@ -111,6 +112,16 @@ it separately for base and head. Local `maint-switch` also uses that effective
 policy. Downstream repositories extend `lib.maintenancePolicyBase` with narrow
 local overlays. Renovate owns root flake input updates; policy groups and
 schedules live in `renovate.json`.
+
+The workstation policy also pins reviewed vendor downloads and packaging by
+complete derivation filename, including the hash: Chrome 155.0.8059.84,
+Discord 1.0.161, WeChat 4.1.1.7, Tencent Meeting 3.26.10.401, and Mudfish 6.5.2.
+These entries cover extraction, patching, launchers, and FHS environments;
+NVIDIA settings and the compiled Wemeet helpers remain blocked. Re-review changed
+hashes when updating inputs instead of replacing them with package-name wildcards.
+Remove each exception once its exact output has a verified, downloadable cache
+substitute. The Anyrun input comment records its separate cache pin and removal
+condition.
 
 The experimental China delta shadow was retired after 169 readable runs from
 2026-07-13 to 2026-09-29 yielded 52 passes, 4 misses, and 113 inconclusive
@@ -200,7 +211,7 @@ Default blocking markers include:
 - `chromium`, `electron`
 - `serenityos-emoji-font`, `nanoemoji`
 
-The allowlist is intentionally limited to generated glue and lightweight wrappers: Home Manager files/generations, NixOS unit/restart/activation files, generated manifests, repo-local Codex skill packaging, and declared MCP wrapper derivations may proceed. Declared fixed-output direct release fetches for Codex and Playwright CLI may also proceed through the configured maintenance proxy. Other local builds are treated as gate failures, and heavy components such as kernel, Mesa, systemd packages, Hyprland packages, GCC/Rust toolchains, Chromium/Electron, and large font pipelines remain blocked.
+The allowlist covers generated glue, lightweight wrappers, and the exact vendor packaging entries described above: Home Manager files/generations, NixOS unit/restart/activation files, generated manifests, repo-local Codex skill packaging, and declared MCP wrapper derivations may proceed. Declared fixed-output direct release fetches for Codex and Playwright CLI may also proceed through the configured maintenance proxy. Other local builds are treated as gate failures, and heavy components such as kernel, Mesa, systemd packages, Hyprland packages, GCC/Rust toolchains, Chromium/Electron, and large font pipelines remain blocked.
 
 ## Concurrency
 

@@ -102,11 +102,11 @@
 Noctalia 负责带轮廓的多显示器状态栏、通知守护进程、附着式控制中心和会话面板，
 并原生提供网络、蓝牙、音频、电池、亮度和电源 profile 客户端。NetworkManager、
 BlueZ、PipeWire、UPower 和 power-profiles-daemon 仍是系统后端。Anyrun 通过
-Home Manager 原生模块使用 `pkgs.anyrun`；Hyprlock 和现有 Hyprland 快捷键继续
+Home Manager 原生模块使用固定的上游包；Hyprlock 和现有 Hyprland 快捷键继续
 负责锁屏和硬件按键。
 
-普通桌面应用、Helix 和 Yazi 都来自主 nixpkgs；应用版本例外仅有
-`llm-agents` CLI 和 `llm-agents-chatgpt` 桌面包。
+普通桌面应用、Helix 和 Yazi 使用主 nixpkgs；例外为 `llm-agents` CLI、
+`llm-agents-chatgpt` 桌面包及为缓存固定版本的 Anyrun。
 
 公共工作站、homePC 和 linglong 默认使用主题 `surface` 纯色背景，不自动轮换。
 在 Noctalia Settings 的壁纸界面选择图片、文件夹、显示器或轮换设置；图片目录

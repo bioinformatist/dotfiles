@@ -32,8 +32,9 @@ dotfiles.nixNetwork.proxy = {
 ## 自动更新 PR
 
 普通桌面和 TUI 应用统一使用主 `nixpkgs`（`nixos-unstable`），Home Manager
-跟踪 `master`，两者每周六 UTC 分别提出更新 PR。应用版本例外仅有
-`llm-agents` 和 `llm-agents-chatgpt`，沿用每日工具更新时间窗口。
+跟踪 `master`，两者每周六 UTC 分别提出更新 PR。`llm-agents` 和
+`llm-agents-chatgpt` 保留独立输入，沿用每日工具更新时间窗口。Anyrun 也保留
+固定的上游输入以使用其 Cachix 产物，输入旁的注释记录了撤销条件。
 
 swww、轮换脚本及仓库托管的五张个人壁纸已退役。Noctalia 默认启用主题
 `surface` 纯色背景、关闭自动轮换；后续选择在 Noctalia Settings 中保存。
@@ -96,6 +97,13 @@ Anyrun/Hyprland/Noctalia Cachix。未经批准的本地构建是上游缺口。U
 `lib.maintenancePolicy`；预检分别读取 base/head 的值，本机 `maint-switch` 也
 使用有效 policy。下游用窄 overlay 扩展 `lib.maintenancePolicyBase`。Renovate 负责 root flake
 input 更新；policy 分组和调度位于 `renovate.json`。
+
+工作站策略按包含哈希的完整 derivation 文件名，固定已审核的厂商下载与包装：
+Chrome 155.0.8059.84、Discord 1.0.161、微信 4.1.1.7、腾讯会议 3.26.10.401
+和 Mudfish 6.5.2。例外仅覆盖解包、修补、启动器和 FHS 环境；NVIDIA settings
+及需要编译的 Wemeet 辅助组件仍阻塞。更新输入导致哈希变化时应重新审核，
+不要改成按包名通配。确认精确产物有签名可信、归档可下载的缓存后，删除对应例外。
+Anyrun 输入旁的注释另行说明了缓存 pin 及其撤销条件。
 
 实验性的 China delta shadow 已退役：2026-07-13 至 2026-09-29 共有 169 次可读
 分类，其中 52 次通过、4 次 miss、113 次 inconclusive。两次 miss 与通过的正式 gate
@@ -176,7 +184,7 @@ maint-switch --boot
 - `chromium`、`electron`
 - `serenityos-emoji-font`、`nanoemoji`
 
-允许列表只覆盖生成式 glue 和轻量包装：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex、Playwright CLI 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
+允许列表覆盖生成式 glue、轻量包装及上文列明的精确厂商包装例外：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex、Playwright CLI 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
 
 ## 并发策略
 

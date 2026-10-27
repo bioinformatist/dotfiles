@@ -97,10 +97,12 @@ host's NetworkManager, BlueZ, PipeWire, UPower, and power-profiles-daemon
 backends. Hardware-dependent widgets remain in the shared layout and degrade
 when their device or backend is absent.
 
-Desktop applications, Helix, and Yazi use the main nixpkgs; the only application
-version exceptions are `llm-agents` and `llm-agents-chatgpt`. Anyrun uses the
-native Home Manager module with the five existing plugins from `pkgs.anyrun`.
-Downstream consumers continue to use the stable flake outputs.
+Desktop applications, Helix, and Yazi use the main nixpkgs, with separate inputs
+for `llm-agents`, `llm-agents-chatgpt`, and Anyrun. Anyrun 26.10.0 uses the native
+Home Manager module and five plugins from its pinned upstream flake, retaining
+upstream's nixpkgs lock to match its Cachix outputs. Return it to the main package
+set when both Anyrun and its provider are available at USTC. Downstream consumers
+continue to use the stable flake outputs.
 
 The shared workstation and both personal hosts default to Noctalia's solid
 theme `surface` background with automatic rotation disabled. These three

@@ -17,6 +17,10 @@
       url = "github:bioinformatist/noctalia-d2r";
       flake = false;
     };
+    # Anyrun 26.10.0 and its plugins are cached by upstream. Keep its nixpkgs
+    # lock: follows would change the outputs and lose those substitutes.
+    # Drop this input when the main nixpkgs package and provider reach USTC.
+    anyrun.url = "github:anyrun-org/anyrun/089316560b1f115013fe3947fc14878947cfbc21";
     impermanence.url = "github:nix-community/impermanence";
     sops-nix = {
       url = "github:Mic92/sops-nix";

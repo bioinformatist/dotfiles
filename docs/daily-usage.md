@@ -104,12 +104,11 @@ a second instance. Noctalia owns the outlined multi-monitor bar, notification
 daemon, attached control center and session panel, and the native network,
 Bluetooth, audio, battery, brightness, and power-profile clients. NetworkManager,
 BlueZ, PipeWire, UPower, and power-profiles-daemon remain the system backends.
-Anyrun uses `pkgs.anyrun` through the native Home Manager module. Hyprlock and
-the existing Hyprland keybindings continue to provide locking and hardware keys.
+Anyrun uses its pinned upstream packages through the native Home Manager module.
+Hyprlock and the existing Hyprland keybindings continue to provide locking and hardware keys.
 
-Desktop applications, Helix, and Yazi all come from the main nixpkgs. The only
-application version exceptions are the `llm-agents` CLI and
-`llm-agents-chatgpt` desktop package.
+Desktop applications, Helix, and Yazi use the main nixpkgs, except for the
+`llm-agents` CLI, `llm-agents-chatgpt` desktop package, and Anyrun cache pin.
 
 The public workstation, homePC, and linglong default to a solid theme `surface`
 background with automatic rotation disabled. Use Noctalia Settings to choose

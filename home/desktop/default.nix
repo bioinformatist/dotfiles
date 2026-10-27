@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./anyrun
+    (import ./anyrun { inherit inputs; })
     ./ghostty
     ./hyprland
     (import ./noctalia.nix { inherit inputs; })

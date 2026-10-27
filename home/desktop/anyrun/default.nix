@@ -1,8 +1,11 @@
+{ inputs }:
+
 {
   pkgs,
   ...
 }:
 let
+  anyrunPackages = inputs.anyrun.packages.${pkgs.stdenv.hostPlatform.system};
   applicationExecPreprocessor = pkgs.writeShellScript "anyrun-application-exec-preprocessor" ''
     term_flag="$1"
     shift
@@ -18,7 +21,7 @@ in
   programs.anyrun = {
     enable = true;
     daemon.enable = true;
-    package = pkgs.anyrun;
+    package = anyrunPackages.anyrun;
 
     config = {
       x = {
@@ -41,11 +44,11 @@ in
       showResultsImmediately = false;
       maxEntries = null;
       plugins = [
-        "${pkgs.anyrun}/lib/libapplications.so"
-        "${pkgs.anyrun}/lib/librink.so"
-        "${pkgs.anyrun}/lib/libshell.so"
-        "${pkgs.anyrun}/lib/libsymbols.so"
-        "${pkgs.anyrun}/lib/libwebsearch.so"
+        "${anyrunPackages.applications}/lib/libapplications.so"
+        "${anyrunPackages.rink}/lib/librink.so"
+        "${anyrunPackages.shell}/lib/libshell.so"
+        "${anyrunPackages.symbols}/lib/libsymbols.so"
+        "${anyrunPackages.websearch}/lib/libwebsearch.so"
       ];
     };
 

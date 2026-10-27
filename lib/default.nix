@@ -8,6 +8,9 @@
 let
   lib = inputs.nixpkgs.lib;
   maintenancePolicyBase = builtins.fromJSON (builtins.readFile ../scripts/maint/policy.json);
+  # Vendor exceptions in policy-workstation.json pin exact reviewed derivations.
+  # They cover downloads/repacking only; compiled helpers remain gated. Remove
+  # each exception when its exact output is cached (see docs/maintenance.md).
   workstationPolicy = builtins.fromJSON (builtins.readFile ../scripts/maint/policy-workstation.json);
   extendMaintenancePolicy =
     base: overlay:
