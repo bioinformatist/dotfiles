@@ -92,6 +92,8 @@ case "$1" in
       elif [[ "$url" == *ustc* ]]; then
         if [[ "$path" == "$b" ]]; then printf '{"url":"nar/new.nar.zst"}'
         else printf '{"url":"nar/old.nar.zst"}'; fi
+      elif [[ "$path" == "$b" && "$MOCK_CASE" == cachedglue ]]; then
+        printf '{"url":"nar/official.nar.zst","deriver":"/nix/store/ffffffffffffffffffffffffffffffff-glue.drv"}'
       else
         printf '{"url":"nar/official.nar.zst"}'
       fi
@@ -163,6 +165,10 @@ run_case newartifact 0 pass pass
 [[ "$(grep -c 'https://mirrors.ustc.edu.cn/nix-channels/store 1' "$MOCK_LOG")" -eq 1 ]]
 [[ "$(grep -c 'curl https:' "$MOCK_LOG")" -eq 1 ]]
 [[ "$(wc -l < "$tmp/newartifact/new-fetch-paths.txt")" -eq 1 ]]
+run_case cachedglue 0 pass pass
+[[ "$(grep -c 'https://cache.nixos.org 1' "$MOCK_LOG")" -eq 1 ]]
+[[ "$(wc -l < "$tmp/cachedglue/official-paths.txt")" -eq 0 ]]
+[[ "$(grep -c 'https://mirrors.ustc.edu.cn\|curl https:' "$MOCK_LOG" || true)" -eq 0 ]]
 run_case newcommunity 0 pass pass
 [[ "$(grep -c 'https://cache.nixos.org 1' "$MOCK_LOG")" -eq 1 ]]
 [[ "$(wc -l < "$tmp/newcommunity/official-paths.txt")" -eq 0 ]]

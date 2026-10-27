@@ -220,7 +220,15 @@ comm -13 "$work_dir/base-fetch-paths.txt" "$work_dir/head-fetch-paths.txt" \
 if ! query_cache official https://cache.nixos.org "$work_dir/new-fetch-paths.txt"; then
   stop_inconclusive "$reason"
 fi
-jq -r 'to_entries[] | select(.value != null) | .key' "$work_dir/official.json" \
+# Cached glue is still allowed to build locally when the mirror lacks it.
+# Use the official manifest's deriver, not the output name, to apply the same
+# policy as classify_builds. Missing derivers remain subject to mirror checks.
+jq -r --slurpfile policy "$work_dir/head-policy.json" '
+  $policy[0].allowedLocalBuildMarkers as $markers |
+  to_entries[] | select(.value != null) |
+  (.value.deriver // "") as $drv |
+  select(all($markers[]; . as $marker | $drv | contains($marker) | not)) |
+  .key' "$work_dir/official.json" \
   | sort > "$work_dir/official-paths.txt"
 if ! query_cache ustc "$ustc" "$work_dir/official-paths.txt"; then
   stop_inconclusive "$reason"
