@@ -167,12 +167,8 @@ in
           waylandFrontend = true;
           addons = with pkgs; [
             fcitx5-gtk
-            (fcitx5-rime.override {
-              rimeDataPkgs = [
-                rime-data
-                (callPackage ../pkgs/rime-data-cantonese.nix { })
-              ];
-            })
+            # nixpkgs rime-data now includes Cantonese (jyut6ping3).
+            fcitx5-rime
             kdePackages.fcitx5-configtool
           ];
           settings = {
