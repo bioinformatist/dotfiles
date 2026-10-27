@@ -32,7 +32,20 @@
     "-nixos.conf.drv",
     "-pkexec.drv",
     "-firewall-start.drv",
-    "-firewall-reload.drv"
+    "-firewall-reload.drv",
+    "-anyrun.service.drv",
+    "-ghostty-config.drv",
+    "-starship-config.drv",
+    "-starship-nushell-config.nu.drv",
+    "-zoxide-nushell-config.nu.drv",
+    "-yazi-keymap.drv",
+    "-clash-verge-rev-webkit-wrapper.drv",
+    "-security-wrapper-clash-verge-x86_64-unknown-linux-musl.drv",
+    "-nvidia-egl-external-platforms.drv",
+    "-nvidia-egl-external-platforms-x32.drv",
+    "-graphics-drivers.drv",
+    "-fcitx5-with-addons-5.1.23.drv",
+    "-gtk3-immodule.cache.drv"
   ],
   "allowedDirectFetchMarkers": [
     "-steam_"
