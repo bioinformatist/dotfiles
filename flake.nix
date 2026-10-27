@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     llm-agents.url = "github:numtide/llm-agents.nix";
-    llm-agents-chatgpt.url = "github:numtide/llm-agents.nix/4726c319ae0692a84f20819395411d9f8b88335a";
+    llm-agents-chatgpt.url = "github:numtide/llm-agents.nix/c11e8bfec6a1b2d7038f7455049b002709cb1e65";
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
