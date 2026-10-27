@@ -18,7 +18,7 @@ maint-switch
 dotfiles.nixNetwork.profile = "china";
 ```
 
-这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。共享 headless profile 为 `llm-agents.nix` 包加入 Numtide 官方缓存（`https://cache.numtide.com`）及其公开签名公钥；workstation 模块另外声明 Anyrun、Hyprland 和 Noctalia Cachix 缓存。本地代理 URL 也在 NixOS 配置中声明：
+这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。共享 headless profile 为 `llm-agents.nix` 包加入 Numtide 官方缓存（`https://cache.numtide.com`）及其公开签名公钥；workstation 模块另外声明 Anyrun、Hyprland 和 Noctalia Cachix，以及经审核、提供微信二进制产物的 Lan Tian 缓存（`https://cache.lantian.pub/lantian`）。本地代理 URL 也在 NixOS 配置中声明：
 
 ```nix
 dotfiles.nixNetwork.proxy = {
@@ -82,7 +82,7 @@ required `maintenance gate` check 汇总两个 job。`configuration` 运行原�
 两个 job 均使用 Nix 2.34.7；失败或无法判断都会阻止 required check 通过。
 
 预检在隔离的冷 store 中用 Nix dry-run 生成计划，显式使用官方缓存、Numtide 和
-Anyrun/Hyprland/Noctalia Cachix。未经批准的本地构建是上游缺口。USTC 检查
+Anyrun/Hyprland/Noctalia Cachix 和 Lan Tian 缓存。未经批准的本地构建是上游缺口。USTC 检查
 先比较 base/head 去重后的待替代路径，只查询新增且由官方缓存提供的产物；未变路径
 不新增缓存或压缩包探测。Nix 元数据查询限制为一个 HTTP 连接；NAR HEAD 请求
 串行执行，curl 原生限速为每秒最多一次，并使用原生重试/退避。发现新增上游缺口
@@ -103,7 +103,9 @@ Chrome 155.0.8059.84、Discord 1.0.161、微信 4.1.1.7、腾讯会议 3.26.10.4
 和 Mudfish 6.5.2。例外仅覆盖解包、修补、启动器和 FHS 环境；NVIDIA settings
 及需要编译的 Wemeet 辅助组件仍阻塞。更新输入导致哈希变化时应重新审核，
 不要改成按包名通配。确认精确产物有签名可信、归档可下载的缓存后，删除对应例外。
-Anyrun 输入旁的注释另行说明了缓存 pin 及其撤销条件。
+Anyrun 输入旁的注释另行说明了缓存 pin 及其撤销条件。微信 4.1.1.7 的二进制
+产物在 Lan Tian 缓存中已核对精确路径、签名和归档访问；其厂商下载及二进制本体
+没有加入本地构建例外，继续要求缓存。
 
 实验性的 China delta shadow 已退役：2026-07-13 至 2026-09-29 共有 169 次可读
 分类，其中 52 次通过、4 次 miss、113 次 inconclusive。两次 miss 与通过的正式 gate

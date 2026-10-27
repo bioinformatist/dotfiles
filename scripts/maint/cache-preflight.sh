@@ -37,8 +37,9 @@ done
 
 # Keep the cache set explicit. The USTC check below only examines paths that
 # the official cache offers; community-only substitutes belong upstream.
-substituters="https://cache.nixos.org https://cache.numtide.com https://anyrun.cachix.org https://hyprland.cachix.org https://noctalia.cachix.org"
-keys="niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s= hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc= noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
+# Keep the reviewed Lan Tian cache aligned with nixos/desktop.nix (WeChat).
+substituters="https://cache.lantian.pub/lantian https://cache.nixos.org https://cache.numtide.com https://anyrun.cachix.org https://hyprland.cachix.org https://noctalia.cachix.org"
+keys="lantian:WVGO7vsRMSEN+h7Lp7kv6SAmrkEXgUGbbXm7jMDjBuQ= niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g= anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s= hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc= noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
 ustc="https://mirrors.ustc.edu.cn/nix-channels/store"
 
 append_list() {

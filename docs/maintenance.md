@@ -18,7 +18,7 @@ Renovate proposes root `flake.lock` input updates. After they reach `main`, `mai
 dotfiles.nixNetwork.profile = "china";
 ```
 
-That uses the USTC Nix cache mirror for binary substitution without keeping the official `cache.nixos.org` cache as a fallback. The shared headless profile adds Numtide's official cache (`https://cache.numtide.com`) and public signing key for `llm-agents.nix` packages. Workstation modules additionally declare the Anyrun, Hyprland, and Noctalia Cachix caches. The local proxy URL is declared in NixOS config:
+That uses the USTC Nix cache mirror for binary substitution without keeping the official `cache.nixos.org` cache as a fallback. The shared headless profile adds Numtide's official cache (`https://cache.numtide.com`) and public signing key for `llm-agents.nix` packages. Workstation modules additionally declare the Anyrun, Hyprland, and Noctalia Cachix caches and the reviewed Lan Tian cache (`https://cache.lantian.pub/lantian`) for the WeChat payload. The local proxy URL is declared in NixOS config:
 
 ```nix
 dotfiles.nixNetwork.proxy = {
@@ -90,7 +90,7 @@ the two maintained NixOS hosts and `ci@headless` against the base revision.
 Both jobs use Nix 2.34.7. A failed or inconclusive job blocks the required check.
 
 The preflight uses Nix's cold-store dry-run plan with the official cache,
-Numtide, and the declared Anyrun/Hyprland/Noctalia Cachix caches. It reports
+Numtide, the declared Anyrun/Hyprland/Noctalia Cachix caches, and Lan Tian. It reports
 unapproved local builds as upstream gaps. For USTC, it first compares unique
 base/head fetch paths, then checks only new paths available from the official
 cache. Unchanged paths cause no added cache or archive probes. Nix metadata
@@ -121,7 +121,9 @@ NVIDIA settings and the compiled Wemeet helpers remain blocked. Re-review change
 hashes when updating inputs instead of replacing them with package-name wildcards.
 Remove each exception once its exact output has a verified, downloadable cache
 substitute. The Anyrun input comment records its separate cache pin and removal
-condition.
+condition. WeChat 4.1.1.7's payload remains cache-required: its exact output was
+verified in Lan Tian's cache, including signature and archive access. Its vendor
+download and binary payload derivations have no local-build exception.
 
 The experimental China delta shadow was retired after 169 readable runs from
 2026-07-13 to 2026-09-29 yielded 52 passes, 4 misses, and 113 inconclusive
