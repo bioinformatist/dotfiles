@@ -40,44 +40,24 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0
           ref: ${{ github.sha }}
       - uses: cachix/install-nix-action@v31
         with:
           install_url: https://releases.nixos.org/nix/nix-2.34.7/install
-      - name: Compare upstream and USTC
+      - name: Plan candidate cache requirements
         shell: bash
         run: |
           set -euo pipefail
-          tmp="$(mktemp -d)"
-          trap '
-            status=$?
-            git worktree remove --force "$tmp/base" 2>/dev/null || true
-            if ! find -P "$tmp" -type d -exec chmod u+w {} + || ! rm -rf "$tmp"; then
-              if (( status == 0 )); then status=1; fi
-            fi
-            exit "$status"
-          ' EXIT
-          case "$GITHUB_EVENT_NAME" in
-            pull_request) base_sha="$(git rev-parse HEAD^1)" ;;
-            merge_group) base_sha="$(jq -er '.merge_group.base_sha' "$GITHUB_EVENT_PATH")" ;;
-            workflow_dispatch) base_sha="$(git rev-parse origin/main)" ;;
-            *) echo "unsupported event: $GITHUB_EVENT_NAME" >&2; exit 1 ;;
-          esac
-          head_sha="$(git rev-parse HEAD)"
-          printf 'base=%s head=%s nix=%s\n' "$base_sha" "$head_sha" "$(nix --version)"
-          printf "Cache preflight: base \`%s\`, head \`%s\`, Nix \`%s\`\n\n" \
-            "$base_sha" "$head_sha" "$(nix --version)" >> "$GITHUB_STEP_SUMMARY"
-          git worktree add --detach "$tmp/base" "$base_sha"
+          candidate_sha="$(git rev-parse HEAD)"
+          printf 'candidate=%s nix=%s\n' "$candidate_sha" "$(nix --version)"
+          printf 'Cache preflight: candidate `%s`, Nix `%s`\n\n' \
+            "$candidate_sha" "$(nix --version)" >> "$GITHUB_STEP_SUMMARY"
           probe="$RUNNER_TEMP/cache-preflight-diagnostics"
-          mkdir -p "$probe"
-          args=(--base-root "$tmp/base" --head-root . --work-dir "$probe" --summary "$probe/summary.md")
+          args=(--flake-root . --work-dir "$probe" --summary "$probe/summary.md")
           if [[ "$GITHUB_EVENT_NAME" == pull_request && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
             args+=(--leaf "${GITHUB_HEAD_REF#maint/}")
           fi
-          status=0
-          bash scripts/maint/cache-preflight.sh "${args[@]}" || status=$?
-          exit "$status"
+          bash scripts/maint/cache-preflight.sh "${args[@]}"
       - name: Summarize cache diagnostics
         if: ${{ always() }}
         continue-on-error: true

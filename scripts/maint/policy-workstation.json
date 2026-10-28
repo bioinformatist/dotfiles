@@ -13,14 +13,12 @@
     "-force-homepc-analog-default.lua.drv",
     "-clash-verge-gui.service.drv",
     "-ysun-authorized_keys.drv",
-    "-power-profiles-daemon-linglong-0.30.drv",
     "-power-profiles-daemon-linglong-0.30-build-python.drv",
     "-anyrun-application-exec-preprocessor.drv",
     "-codex.drv",
     "-auto-formatelf-hook.drv",
-    "-chatgpt-",
-    "-chatgpt_",
-    "-formatelf-",
+    "6y7q9myfvi9nm7phb609yxkq0xkm88ch-chatgpt-26.1023.51421.drv",
+    "sqd1rnabr4hf9zsa1q1dwx3zk54m8mmb-chatgpt-unwrapped-26.1023.51421.drv",
     "ipj1f8kc7i888xz55ifirls0mygk5hrc-source.drv",
     "-patch-runtime.sh.drv",
     "-wechat-uos-fcitx.drv",
@@ -35,6 +33,7 @@
     "-firewall-reload.drv"
   ],
   "allowedDirectFetchMarkers": [
+    "sgbk0kpc9in2c9bfbv43d7d4k8rp64xw-chatgpt_26.1023.51421_amd64.deb.drv",
     "-steam_"
   ]
 }

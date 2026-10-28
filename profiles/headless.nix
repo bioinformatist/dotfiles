@@ -9,19 +9,17 @@
 let
   passwordFile = lib.attrByPath [ "sops" "secrets" "${username}-password" "path" ] null config;
   versions = import ../lib/versions.nix;
+  caches = import ../lib/nix-caches.nix;
 in
 {
-  nix.settings = {
+  nix.settings = caches.global // caches.headless // {
+    substituters = lib.mkDefault caches.global.substituters;
     experimental-features = [
       "nix-command"
       "flakes"
     ];
     download-buffer-size = 1024 * 1024 * 1024;
     http-connections = lib.mkDefault 8;
-    extra-substituters = [ "https://cache.numtide.com" ];
-    extra-trusted-public-keys = [
-      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
-    ];
   };
 
   time.timeZone = "Asia/Shanghai";

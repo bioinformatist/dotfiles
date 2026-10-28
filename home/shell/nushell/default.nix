@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   osConfig ? null,
   ...
 }:
@@ -13,6 +14,10 @@ let
   repo = "${config.home.homeDirectory}/github.com/bioinformatist/dotfiles";
 in
 {
+  home.packages = [ pkgs.jq ];
+  xdg.configFile."dotfiles/nix-plan.jq".source = ../../../scripts/maint/nix-plan.jq;
+  xdg.configFile."dotfiles/classify-plan.jq".source = ../../../scripts/maint/classify-plan.jq;
+
   programs.nushell = {
     enable = true;
     configFile.text = lib.mkForce ''

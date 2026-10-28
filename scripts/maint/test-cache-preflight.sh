@@ -2,235 +2,288 @@
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(realpath "$script_dir/../..")"
+mode="${1:-ci}"
+if [[ $# -gt 1 || ( "$mode" != ci && "$mode" != --local-maint ) ]]; then
+  echo 'usage: test-cache-preflight.sh [--local-maint]' >&2
+  exit 2
+fi
 tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
-mkdir -p "$tmp/bin" "$tmp/base" "$tmp/head"
-export MOCK_LOG="$tmp/mock.log"
-: > "$MOCK_LOG"
+trap 'find -P "$tmp" -type d -exec chmod u+w {} +; rm -rf "$tmp"' EXIT
+export TEST_ROOT="$tmp" MOCK_LOG="$tmp/mock.log"
+mkdir -p "$tmp/bin" "$tmp/repo"
+root=/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-system.drv
+out=/nix/store/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-system
+glue=/nix/store/cccccccccccccccccccccccccccccccc-hm_test.drv
+compile=/nix/store/dddddddddddddddddddddddddddddddd-codex-0.163.0.drv
+fetch=/nix/store/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee-dependency
+jq -s '.[0] as $b | .[1] as $w | $b + $w |
+  .allowedLocalBuildMarkers = ($b.allowedLocalBuildMarkers + $w.allowedLocalBuildMarkers) |
+  .allowedDirectFetchMarkers = ($b.allowedDirectFetchMarkers + $w.allowedDirectFetchMarkers)' \
+  "$script_dir/policy.json" "$script_dir/policy-workstation.json" > "$tmp/policy.json"
+cp "$script_dir/policy.json" "$tmp/base-policy.json"
+jq -n --arg root "$root" --arg out "$out" \
+  '[{drvPath: $root, outputs: {out: $out}}]' > "$tmp/outputs.json"
+
+message() { jq -cn --arg msg "$1" '{action:"msg",level:0,msg:$msg}' | sed 's/^/@nix /'; }
+for name in success blocked incomplete trust; do
+  {
+    message 'this derivation will be built:'
+    if [[ "$name" == blocked || "$name" == trust ]]; then message "  $compile"
+    else message "  $glue"; fi
+    message 'this path will be fetched (1 MiB):'
+    if [[ "$name" != incomplete ]]; then message "  $fetch"; fi
+    if [[ "$name" == trust ]]; then
+      echo '@nix {"action":"msg","level":1,"msg":"warning: ignoring untrusted substituter; you are not a trusted user"}'
+    fi
+  } > "$tmp/$name.log"
+done
+: > "$tmp/empty.log"
 
 cat > "$tmp/bin/nix" <<'MOCK'
 #!/usr/bin/env bash
 set -euo pipefail
-a=/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-official
-b=/nix/store/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-new-official
-c=/nix/store/cccccccccccccccccccccccccccccccc-community
-other=/nix/store/hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh-other-official
-community=/nix/store/qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq-new-community
-legacy=/nix/store/dddddddddddddddddddddddddddddddd-legacy.drv
-bad=/nix/store/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee-bad.drv
-glue=/nix/store/ffffffffffffffffffffffffffffffff-glue.drv
-download=/nix/store/gggggggggggggggggggggggggggggggg-download.drv
+jq -cn --args '$ARGS.positional' -- nix "$@" >> "$MOCK_LOG"
+args=" $* "
 case "$1" in
   eval)
-    echo '{"allowedLocalBuildMarkers":["-glue.drv"],"allowedDirectFetchMarkers":["-download.drv"],"leafDirectFetchMarkers":{"example-leaf":[]}}'
+    if [[ "$args" == *'#lib.maintenancePolicyBase'* ]]; then cat "$TEST_ROOT/base-policy.json"
+    elif [[ "$args" == *'#lib.maintenancePolicy'* ]]; then cat "$TEST_ROOT/policy.json"
+    elif [[ "$args" == *' --raw '* ]]; then
+      echo /nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-system.drv
+    else
+      if [[ "$MOCK_CASE" == eval-error ]]; then echo 'evaluation failed' >&2; exit 6; fi
+      target=homePC
+      [[ "$args" != *linglong* ]] || target=linglong
+      [[ "$args" != *ci@headless* ]] || target='ci@headless'
+      extra='["file:///headless?priority=60", "file:///desktop?priority=60"]'
+      key=target-key
+      drv=/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-system.drv
+      if [[ "$target" == linglong ]]; then
+        drv=/nix/store/ffffffffffffffffffffffffffffffff-system.drv
+        [[ "$MOCK_CASE" != split ]] || key=other-key
+      elif [[ "$target" == 'ci@headless' ]]; then
+        drv=/nix/store/gggggggggggggggggggggggggggggggg-home.drv
+        if [[ "$MOCK_CASE" != same-caches ]]; then extra='["file:///headless?priority=60"]'; fi
+      fi
+      jq -n --arg drv "$drv" --arg key "$key" --argjson extra "$extra" \
+        '{drvPath:$drv,settings:{substituters:["file:///official?priority=40","file:///ustc?priority=10"],
+          "extra-substituters":$extra,"trusted-public-keys":[$key],"extra-trusted-public-keys":["extra-key"]}}'
+    fi
     ;;
   build)
-    rev=base
+    [[ "$args" == *' --option fallback false '* && "$args" == *' --no-write-lock-file '* ]] || exit 3
+    if [[ "$args" != *' --dry-run '* ]]; then
+      echo "$TEST_ROOT/system"
+      exit 0
+    fi
+    roots=()
     for arg in "$@"; do
-      if [[ "$arg" == *head-store* ]]; then rev=head; fi
+      case "$arg" in
+        *'#nixosConfigurations.homePC.config.system.build.toplevel') roots+=(/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-system.drv) ;;
+        *'#nixosConfigurations.linglong.config.system.build.toplevel') roots+=(/nix/store/ffffffffffffffffffffffffffffffff-system.drv) ;;
+        *'#homeConfigurations."ci@headless".config.activationPackage') roots+=(/nix/store/gggggggggggggggggggggggggggggggg-home.drv) ;;
+      esac
     done
-    echo '[{"drvPath":"/nix/store/dddddddddddddddddddddddddddddddd-legacy.drv","outputs":{"out":"/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-official"}}]'
-    if [[ "$MOCK_CASE" == emptyplan ]]; then exit 0; fi
-    printf '@nix {"action":"msg","level":0,"msg":"this derivation will be built:"}\n' >&2
-    printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$legacy" >&2
-    if [[ "$rev" == head && "$MOCK_CASE" == newbuild ]]; then
-      printf '@nix {"action":"msg","level":0,"msg":"this derivation will be built:"}\n' >&2
-      printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$bad" >&2
-    fi
-    if [[ "$rev" == head && "$MOCK_CASE" == leafbad ]]; then
-      printf '@nix {"action":"msg","level":0,"msg":"these 2 derivations will be built:"}\n' >&2
-      printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$glue" >&2
-      printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$download" >&2
-    fi
-    if [[ "$rev" == head && "$MOCK_CASE" == incomplete ]]; then
-      printf '@nix {"action":"msg","level":0,"msg":"these 3 paths will be fetched (1 MiB download):"}\n' >&2
-    else
-      count=2
-      if [[ "$rev" == head && "$MOCK_CASE" != baseline && "$MOCK_CASE" != newbuild && "$MOCK_CASE" != leafbad ]]; then count=3; fi
-      if [[ "$rev" == head && "$MOCK_CASE" == denied ]]; then count=4; fi
-      printf '@nix {"action":"msg","level":0,"msg":"these %s paths will be fetched (1 MiB download):"}\n' "$count" >&2
-    fi
-    printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$a" >&2
-    printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$c" >&2
-    if [[ "$rev" == head && "$MOCK_CASE" != baseline && "$MOCK_CASE" != newbuild && "$MOCK_CASE" != leafbad && "$MOCK_CASE" != incomplete ]]; then
-      if [[ "$MOCK_CASE" == newcommunity ]]; then
-        printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$community" >&2
-      else
-        printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$b" >&2
-      fi
-    fi
-    if [[ "$rev" == head && "$MOCK_CASE" == denied ]]; then
-      printf '@nix {"action":"msg","level":0,"msg":"  %s"}\n' "$other" >&2
-    fi
-    ;;
-  path-info)
-    [[ " $* " == *' --option http-connections 1 '* ]] || {
-      echo 'Nix metadata HTTP concurrency is not capped' >&2
-      exit 2
-    }
-    url=''
-    while [[ $# -gt 0 ]]; do
-      if [[ "$1" == --store ]]; then url="$2"; break; fi
-      shift
-    done
-    mapfile -t requested
-    printf '%s %s\n' "$url" "${#requested[@]}" >> "$MOCK_LOG"
-    if [[ "$MOCK_CASE" == requestfail && "$url" == *ustc* ]]; then
-      echo 'connection failed' >&2
-      exit 1
-    fi
-    printf '{'
-    first=true
-    missing=()
-    for path in "${requested[@]}"; do
-      if [[ "$first" == false ]]; then printf ','; fi
-      first=false
-      printf '"%s":' "$path"
-      if [[ "$url" == *cache.nixos.org* && ( "$path" == "$c" || "$path" == "$community" ) ]]; then
-        printf 'null'
-        missing+=("$path")
-      elif [[ "$url" == *ustc* && "$path" == "$b" && "$MOCK_CASE" == localglue ]]; then
-        printf 'null'
-      elif [[ "$url" == *ustc* ]]; then
-        if [[ "$path" == "$b" ]]; then printf '{"url":"nar/new.nar.zst"}'
-        else printf '{"url":"nar/old.nar.zst"}'; fi
-      elif [[ "$path" == "$b" && "$MOCK_CASE" == localglue ]]; then
-        printf '{"url":"nar/official.nar.zst","deriver":"%s"}' "$glue"
-      else
-        printf '{"url":"nar/official.nar.zst"}'
-      fi
-    done
-    printf '}\n'
-    if [[ ${#missing[@]} -gt 0 ]]; then
-      echo "don't know how to build these paths:" >&2
-      printf '  %s\n' "${missing[@]}" >&2
-    fi
-    if [[ "$MOCK_CASE" == recovered && "$url" == *cache.nixos.org* ]]; then
-      echo 'warning: retrying after a transient cache error' >&2
-    fi
+    jq -n --args '$ARGS.positional | map({drvPath:.,outputs:{out:"/nix/store/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-system"}})' "${roots[@]}" > "$TEST_ROOT/current-outputs.json"
+    if [[ "$MOCK_CASE" == missing-root && ${#roots[@]} -gt 1 ]]; then
+      jq '.[0:1]' "$TEST_ROOT/current-outputs.json"
+    else cat "$TEST_ROOT/current-outputs.json"; fi
+    case "$MOCK_CASE" in
+      dry-error) echo 'terminal query failure' >&2; exit 7 ;;
+      empty) cat "$TEST_ROOT/empty.log" >&2 ;;
+      blocked|incomplete|trust) cat "$TEST_ROOT/$MOCK_CASE.log" >&2 ;;
+      *) cat "$TEST_ROOT/success.log" >&2 ;;
+    esac
     ;;
   *) echo "unexpected nix command: $*" >&2; exit 2 ;;
 esac
 MOCK
+chmod +x "$tmp/bin/nix"
 
-cat > "$tmp/bin/curl" <<'MOCK'
+# C: local-only wiring through the real Nu entry point; no actual build or sudo.
+if [[ "$mode" == --local-maint ]]; then
+  mkdir -p "$tmp/config/dotfiles"
+  cp "$script_dir/nix-plan.jq" "$script_dir/classify-plan.jq" "$tmp/config/dotfiles/"
+  jq -n --arg repo "$tmp/repo" '{repo:$repo,host:"homePC",parallel:{maxJobs:4,cores:2},extraRiskMarkers:["codex"]}' \
+    > "$tmp/config/dotfiles/maint.nuon"
+  for cmd in sudo git readlink; do
+    cat > "$tmp/bin/$cmd" <<'MOCK'
 #!/usr/bin/env bash
 set -euo pipefail
-[[ " $* " == *' --rate 1/s '* && " $* " == *' --retry 4 '* &&
-  " $* " == *' --head '* && " $* " != *' --parallel'* ]] || {
-  echo 'curl pacing or HEAD/retry options are wrong' >&2
-  exit 2
-}
-index=0
-for arg in "$@"; do
-  if [[ "$arg" == https://mirrors.ustc.edu.cn/* ]]; then
-    printf 'curl %s\n' "$arg" >> "$MOCK_LOG"
-    code=200
-    if [[ "$arg" == *new.nar.zst* && "$MOCK_CASE" == nar404 ]]; then code=404; fi
-    if [[ "$arg" == *new.nar.zst* && "$MOCK_CASE" == denied ]]; then code=403; fi
-    printf '%s\t%s\t0\t\n' "$index" "$code"
-    if [[ "$MOCK_CASE" == denied ]]; then sleep 1; fi
-    index=$((index + 1))
+cmd="${0##*/}"
+jq -cn --args '$ARGS.positional' -- "$cmd" "$@" >> "$MOCK_LOG"
+case "$cmd" in
+  git) [[ "$*" != *rev-parse* ]] || echo baseline ;;
+  readlink) echo "$TEST_ROOT/kernel" ;;
+  sudo) ;;
+esac
+MOCK
+    chmod +x "$tmp/bin/$cmd"
+  done
+  printf 'source "%s"\nmaint-switch --no-pull --boot\n' "$repo_root/home/shell/nushell/maint.nu" > "$tmp/run.nu"
+  for name in success blocked incomplete empty dry-error trust missing-helper; do
+    export MOCK_CASE="$name"
+    : > "$MOCK_LOG"
+    if [[ "$name" == missing-helper ]]; then rm "$tmp/config/dotfiles/classify-plan.jq"; fi
+    rc=0
+    XDG_CONFIG_HOME="$tmp/config" PATH="$tmp/bin:$PATH" nu --no-config-file "$tmp/run.nu" \
+      > "$tmp/$name.out" 2> "$tmp/$name.err" || rc=$?
+    if [[ "$name" == success || "$name" == empty ]]; then
+      if [[ "$rc" -ne 0 ]]; then cat "$tmp/$name.err" >&2; exit 1; fi
+      jq -s -e --arg target "$tmp/system" '
+        [ .[] | if .[0] == "sudo" then "sudo"
+          elif .[0] == "nix" and .[1] == "build" and (index("--dry-run") | not) then "build" else empty end ] == ["build","sudo"] and
+        any(.[]; . == ["sudo","nixos-rebuild","--no-reexec","boot","--store-path",$target])' "$MOCK_LOG" > /dev/null
+    else
+      [[ "$rc" -ne 0 ]] || { echo "$name: Nu gate unexpectedly passed" >&2; exit 1; }
+      jq -s -e 'all(.[]; .[0] != "sudo" and
+        (.[0] != "nix" or .[1] != "build" or index("--dry-run") != null))' "$MOCK_LOG" > /dev/null
+    fi
+    jq -s -e 'all(.[] | select(.[0] == "nix" and .[1] == "build");
+      index("--no-write-lock-file") != null and
+      .[index("fallback") + 1] == "false")' "$MOCK_LOG" > /dev/null
+    case "$name" in
+      blocked) grep -q 'Current daemon plan needs unapproved local builds' "$tmp/$name.err" ;;
+      incomplete) grep -q 'Nix roots or plan are incomplete' "$tmp/$name.err" ;;
+      trust) grep -q 'Cache trust boundary (#205): CI uses the target' "$tmp/$name.out" ;;
+      missing-helper) grep -q 'Maintenance helpers not ready' "$tmp/$name.err" ;;
+    esac
+    echo "local-maint $name passed"
+  done
+  echo 'local-maint tests passed'
+  exit 0
+fi
+
+# A: the shared classifier and parser, then only wrapper grouping/coverage.
+jq -n --slurpfile policy "$tmp/policy.json" --arg glue "$glue" --arg compile "$compile" '
+  {leaf:"",policy:($policy[0] | .allowedLocalBuildMarkers += [""] |
+      .allowedDirectFetchMarkers += [""] |
+      .leafDirectFetchMarkers.chatgpt = ["-chatgpt_26.1023.51421_amd64.deb.drv","-leaf-only.drv"]),
+    plan:{complete:true,fetches:[],builds:[
+      $glue, $compile,
+      "/nix/store/6y7q9myfvi9nm7phb609yxkq0xkm88ch-chatgpt-26.1023.51421.drv",
+      "/nix/store/sqd1rnabr4hf9zsa1q1dwx3zk54m8mmb-chatgpt-unwrapped-26.1023.51421.drv",
+      "/nix/store/sgbk0kpc9in2c9bfbv43d7d4k8rp64xw-chatgpt_26.1023.51421_amd64.deb.drv",
+      "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-chatgpt-26.1023.51421.drv",
+      "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-chatgpt_26.1023.51421_amd64.deb.drv",
+      "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-formatelf-0.2.2.drv",
+      "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-power-profiles-daemon-linglong-0.30.drv",
+      "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-power-profiles-daemon-linglong-0.30-build-python.drv",
+      "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-helix-25.07.1.drv",
+      "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-leaf-only.drv",
+      "/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-codex-x86_64-unknown-linux-musl.tar.gz.drv"
+    ]}}' > "$tmp/mixed.json"
+jq -f "$script_dir/classify-plan.jq" "$tmp/mixed.json" | jq -e '
+  (.allowedLocal | length) == 5 and (.direct | length) == 2 and (.blocked | length) == 6 and
+  all(.allowedLocal[]; contains("-codex-0.") | not)' > /dev/null
+jq '.leaf = "chatgpt"' "$tmp/mixed.json" | jq -f "$script_dir/classify-plan.jq" | jq -e '
+  (.direct | length) == 1 and (.direct[0] | contains("sgbk0kpc")) and (.blocked | length) == 7' > /dev/null
+jq '.leaf = "unknown-leaf"' "$tmp/mixed.json" | jq -f "$script_dir/classify-plan.jq" | jq -e '.direct == []' > /dev/null
+for invalid in 'del(.policy.allowedLocalBuildMarkers)' '.policy.leafDirectFetchMarkers.bad = [1]'; do
+  if jq "$invalid" "$tmp/mixed.json" | jq -f "$script_dir/classify-plan.jq" > /dev/null 2>&1; then
+    echo 'invalid policy was accepted' >&2; exit 1
   fi
 done
-MOCK
-chmod +x "$tmp/bin/nix" "$tmp/bin/curl"
 
-run_case() {
-  local name="$1" expected_rc="$2" upstream="$3" china="$4" rc=0
-  export MOCK_CASE="$name"
-  : > "$MOCK_LOG"
-  mkdir -p "$tmp/$name"
-  PATH="$tmp/bin:$PATH" bash "$script_dir/cache-preflight.sh" \
-    --base-root "$tmp/base" --head-root "$tmp/head" \
-    --work-dir "$tmp/$name" --leaf example-leaf \
-    > "$tmp/$name.out" 2> "$tmp/$name.err" || rc=$?
-  [[ "$rc" -eq "$expected_rc" ]] || {
-    echo "$name: expected rc $expected_rc, got $rc" >&2
-    cat "$tmp/$name.err" >&2
-    exit 1
-  }
-  grep -q "upstream=$upstream china=$china" "$tmp/$name.out" || {
-    echo "$name: wrong statuses" >&2
-    cat "$tmp/$name.out" >&2
-    cat "$tmp/$name.err" >&2
-    exit 1
-  }
+parse() {
+  jq -R -s --argjson expected "[\"$root\"]" --argjson outputs "$(cat "$tmp/outputs.json")" \
+    -f "$script_dir/nix-plan.jq" "$1"
 }
-
-run_case baseline 0 pass pass
-[[ ! -s "$MOCK_LOG" ]]
-[[ "$(find "$tmp/baseline" -name '*.plan.json' | wc -l)" -eq 6 ]]
-grep -q 'unchanged paths not probed' "$tmp/baseline/summary.md"
-run_case newartifact 0 pass pass
-[[ "$(grep -c 'https://cache.nixos.org 1' "$MOCK_LOG")" -eq 1 ]]
-[[ "$(grep -c 'https://mirrors.ustc.edu.cn/nix-channels/store 1' "$MOCK_LOG")" -eq 1 ]]
-[[ "$(grep -c 'curl https:' "$MOCK_LOG")" -eq 1 ]]
-[[ "$(wc -l < "$tmp/newartifact/new-fetch-paths.txt")" -eq 1 ]]
-run_case newcommunity 0 pass pass
-[[ "$(grep -c 'https://cache.nixos.org 1' "$MOCK_LOG")" -eq 1 ]]
-[[ "$(wc -l < "$tmp/newcommunity/official-paths.txt")" -eq 0 ]]
-[[ "$(grep -c 'https://mirrors.ustc.edu.cn\|curl https:' "$MOCK_LOG" || true)" -eq 0 ]]
-run_case localglue 0 pass pass
-[[ "$(grep -c 'https://cache.nixos.org 1' "$MOCK_LOG")" -eq 1 ]]
-[[ "$(grep -c 'https://mirrors.ustc.edu.cn\|curl https:' "$MOCK_LOG" || true)" -eq 0 ]]
-grep -q -- '-glue.drv' "$tmp/localglue/local-glue-fetches.tsv"
-run_case recovered 0 pass pass
-grep -q 'warning: retrying' "$tmp/recovered/official.err"
-run_case newbuild 1 miss pass
-grep -q -- '-bad.drv' "$tmp/newbuild/upstream-new.txt"
-run_case leafbad 1 miss pass
-grep -q -- '-download.drv' "$tmp/leafbad/upstream-new.txt"
-if grep -q -- '-glue.drv' "$tmp/leafbad/upstream-new.txt"; then exit 1; fi
-run_case nar404 1 pass miss
-grep -q -- '-new-official' "$tmp/nar404/china-new.txt"
-run_case denied 1 pass inconclusive
-[[ "$(grep -c 'curl https:' "$MOCK_LOG")" -eq 1 ]]
-[[ "$(wc -l < "$tmp/denied/curl-results.tsv")" -eq 1 ]]
-[[ "$(wc -l < "$tmp/denied/ustc-results.tsv")" -eq 1 ]]
-grep -q 'remaining URLs skipped' "$tmp/denied/summary.md"
-run_case requestfail 1 pass inconclusive
-[[ ! -s "$tmp/requestfail/china-new.txt" ]]
-run_case incomplete 1 inconclusive inconclusive
-run_case emptyplan 1 inconclusive inconclusive
-[[ ! -s "$MOCK_LOG" ]]
-grep -q 'Nix plan is incomplete or unparseable' "$tmp/emptyplan.err"
-
-printf '@nix {"action":"msg","level":0,"msg":"these 2 paths will be fetched (1 MiB):"}\n@nix {"action":"msg","level":0,"msg":"  /nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-one"}\n' \
-  | jq -R -s -f "$script_dir/nix-plan.jq" | jq -e '.complete == false' > /dev/null
-if printf '@nix {bad json}\n' | jq -R -s -f "$script_dir/nix-plan.jq" > /dev/null 2>&1; then
-  echo 'malformed Nix JSON was accepted' >&2
-  exit 1
-fi
-printf 'unrecognized Nix diagnostic\n' | jq -R -s -f "$script_dir/nix-plan.jq" \
-  | jq -e '.complete == false and .unknown == ["unrecognized Nix diagnostic"]' > /dev/null
+parse "$tmp/incomplete.log" | jq -e '.complete == false' > /dev/null
+printf '@nix {bad json}\n' > "$tmp/invalid.log"
+if parse "$tmp/invalid.log" > /dev/null 2>&1; then echo 'invalid JSON was accepted' >&2; exit 1; fi
+for diagnostic in 'unrecognized Nix diagnostic' 'fatal: Git fetch failed' 'remote: error: fetch denied' \
+  $'remote: Counting objects: 100% (2/2), done.\rremote: error: fetch denied' \
+  '@nix {"action":"msg","level":0,"msg":"error: final cache query failed"}' \
+  '@nix {"action":"unsupported"}'; do
+  printf '%s\n' "$diagnostic" > "$tmp/diagnostic.log"
+  parse "$tmp/diagnostic.log" | jq -e '.complete == false and (.unknown | length) == 1' > /dev/null
+done
 {
-  printf '@nix {"action":"msg","level":0,"msg":"this derivation will be built:"}\n'
-  printf '@nix {"action":"msg","level":0,"msg":"  /nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-build.drv"}\n'
+  cat "$tmp/success.log"
+  echo '@nix {"action":"msg","level":1,"msg":"warning: retrying after a transient cache error"}'
   printf 'remote: Counting objects:  50%% (1/2)\rremote: Counting objects: 100%% (2/2), done.\n'
   printf 'Receiving objects: 100%% (2/2), 1.00 MiB | 2.00 MiB/s, done.\n'
-  printf 'From https://github.com/anyrun-org/anyrun-interface\n'
-  printf ' * [new branch]      main -> main\n'
-  printf '@nix {"action":"msg","level":0,"msg":"this path will be fetched (1 MiB):"}\n'
-  printf '@nix {"action":"msg","level":0,"msg":"  /nix/store/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-fetch"}\n'
-} | jq -R -s -f "$script_dir/nix-plan.jq" \
-  | jq -e '.complete and (.builds | length) == 1 and (.fetches | length) == 1' > /dev/null
-for diagnostic in 'unexpected raw line' 'fatal: Git fetch failed' 'remote: error: fetch denied' \
-  $'remote: Counting objects: 100% (2/2), done.\rremote: error: fetch denied'; do
-  printf '%s\n' "$diagnostic" | jq -R -s -f "$script_dir/nix-plan.jq" \
-    | jq -e '.complete == false and (.unknown | length) == 1' > /dev/null
-done
+  printf 'From https://github.com/anyrun-org/anyrun-interface\n * [new branch]      main -> main\n'
+} > "$tmp/recovered.log"
+parse "$tmp/recovered.log" | jq -e '.complete and (.builds | length) == 1 and (.fetches | length) == 1' > /dev/null
 
-# One native handoff: Nix's internal JSON log from a cold local store enters
-# the same parser used by the wrapper. No derivation is built.
-mkdir -p "$tmp/smoke-store"
-# $out is expanded by Nix's builder, not Bash.
-# shellcheck disable=SC2016
-nix build --dry-run --json --log-format internal-json --no-link \
-  --store "local?root=$tmp/smoke-store" --option substituters '' \
-  --expr 'derivation { name = "cache-preflight-smoke"; system = "x86_64-linux"; builder = "/bin/sh"; args = [ "-c" "echo smoke > $out" ]; }' \
-  > "$tmp/smoke.outputs.json" 2> "$tmp/smoke.nix.log"
-jq -e 'type == "array" and length == 1' "$tmp/smoke.outputs.json" > /dev/null
-jq -R -s -f "$script_dir/nix-plan.jq" "$tmp/smoke.nix.log" \
-  | jq -e '.complete and (.builds | length) == 1 and (.fetches | length) == 0' > /dev/null
+run_wrapper() {
+  local name="$1" expected="$2" rc=0
+  export MOCK_CASE="$name"
+  : > "$MOCK_LOG"
+  PATH="$tmp/bin:$PATH" bash "$script_dir/cache-preflight.sh" --flake-root "$tmp/repo" \
+    --work-dir "$tmp/wrapper-$name" --leaf example-leaf > "$tmp/wrapper-$name.out" 2> "$tmp/wrapper-$name.err" || rc=$?
+  if [[ "$expected" == pass ]]; then [[ "$rc" -eq 0 ]]; else [[ "$rc" -ne 0 ]]; fi
+  jq -e --arg expected "$expected" '.status == $expected' "$tmp/wrapper-$name/result.json" > /dev/null
+}
+run_wrapper success pass
+jq -e '[.[] | .targets[].target] | sort == ["ci@headless","homePC","linglong"]' "$tmp/wrapper-success/groups.json" > /dev/null
+jq -e 'length == 2 and any(.[]; (.targets | length) == 2) and
+  all(.[] | select(any(.targets[]; .target == "ci@headless"));
+    all(.caches.substituters[]; contains("desktop") | not))' "$tmp/wrapper-success/groups.json" > /dev/null
+jq -s -e '[.[] | select(.[1] == "build")] as $b | ($b | length) == 2 and
+  ([$b[] | .[index("--store") + 1]] | unique | length) == 1 and
+  all($b[]; index("--json") != null and .[index("extra-substituters") + 1] == "" and
+    .[index("extra-trusted-public-keys") + 1] == "" and .[index("trusted-public-keys") + 1] == "extra-key target-key")' "$MOCK_LOG" > /dev/null
+run_wrapper split pass
+jq -e 'length == 3' "$tmp/wrapper-split/groups.json" > /dev/null
+run_wrapper same-caches pass
+jq -e 'length == 2' "$tmp/wrapper-same-caches/groups.json" > /dev/null
+for name in empty missing-root dry-error eval-error; do run_wrapper "$name" inconclusive; done
+grep -q 'terminal query failure' "$tmp/wrapper-dry-error/"*.nix.log
+echo 'shared logic and wrapper tests passed'
+
+# B: native small text objects, independent stores/caches per case, default TTLs.
+nix-store --generate-binary-cache-key cache-preflight-test "$tmp/test.sec" "$tmp/test.pub"
+for scenario in first second third missing-reference; do
+  dir="$tmp/native-$scenario"
+  mkdir -p "$dir/source" "$dir/target"
+  source_store="local?root=$dir/source"
+  nix eval --json --store "$source_store" --argstr scenario "$scenario" \
+    --expr '{scenario}: let dep = builtins.toFile "cache-preflight-${scenario}-dep" scenario; in { inherit dep; root = builtins.toFile "cache-preflight-${scenario}-root" dep; }' > "$dir/objects.json"
+  object="$(jq -r '.root' "$dir/objects.json")"
+  dependency="$(jq -r '.dep' "$dir/objects.json")"
+  for priority in 10 40 60; do
+    cache="file://$dir/cache-$priority?priority=$priority"
+    nix store info --store "$cache" > /dev/null
+    if [[ "$scenario" == first || ( "$scenario" == second && "$priority" != 10 ) ||
+      ( "$scenario" == third && "$priority" == 60 ) ||
+      ( "$scenario" == missing-reference && "$priority" == 10 ) ]]; then
+      nix copy --from "$source_store" --to "$cache" --option secret-key-files "$tmp/test.sec" "$object"
+    fi
+  done
+  if [[ "$scenario" == missing-reference ]]; then
+    hash="${dependency##*/}"; hash="${hash:0:32}"
+    rm "$dir/cache-10/$hash.narinfo"
+  fi
+  rc=0
+  nix build --dry-run --json --log-format internal-json --debug --no-link \
+    --store "local?root=$dir/target" --option fallback false --option require-sigs true \
+    --option substituters "file://$dir/cache-60?priority=60 file://$dir/cache-40?priority=40 file://$dir/cache-10?priority=10" \
+    --option extra-substituters '' --option trusted-public-keys "$(cat "$tmp/test.pub")" \
+    --option extra-trusted-public-keys '' "$object" > "$dir/outputs.json" 2> "$dir/nix.log" || rc=$?
+  expected='[10]'
+  [[ "$scenario" != second ]] || expected='[10,40]'
+  [[ "$scenario" != third ]] || expected='[10,40,60]'
+  jq -e -R -s --arg object "$object" --argjson expected "$expected" '
+    [split("\n")[] | select(startswith("@nix ")) | .[5:] | fromjson |
+      select(.action == "msg" and (.msg | startswith("checking substituter ")) and
+        (.msg | endswith("for path '\''" + $object + "'\''"))) |
+      .msg | capture("cache-(?<priority>[0-9]+)").priority | tonumber] == $expected' "$dir/nix.log" > /dev/null
+  if [[ "$scenario" == missing-reference ]]; then
+    if [[ "$rc" -eq 0 ]]; then
+      jq -R -s --argjson expected "[\"$object\"]" --argjson outputs "$(cat "$dir/outputs.json")" \
+        -f "$script_dir/nix-plan.jq" "$dir/nix.log" | jq -e '.complete == false' > /dev/null
+    fi
+    grep -Fq "$dependency" "$dir/nix.log"
+  else
+    [[ "$rc" -eq 0 ]]
+    jq -R -s --argjson expected "[\"$object\"]" --argjson outputs "$(cat "$dir/outputs.json")" \
+      -f "$script_dir/nix-plan.jq" "$dir/nix.log" | jq -e --arg object "$object" --arg dep "$dependency" \
+        '.complete and .builds == [] and (.fetches | sort) == ([$object,$dep] | sort)' > /dev/null
+  fi
+  echo "native $scenario passed"
+done
 echo 'cache-preflight tests passed'

@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.dotfiles.maint;
 in
@@ -43,6 +43,13 @@ in
   };
 
   config = {
+    home.packages = lib.optionals cfg.enable [ pkgs.jq ];
+    xdg.configFile."dotfiles/nix-plan.jq" = lib.mkIf cfg.enable {
+      source = ../../../scripts/maint/nix-plan.jq;
+    };
+    xdg.configFile."dotfiles/classify-plan.jq" = lib.mkIf cfg.enable {
+      source = ../../../scripts/maint/classify-plan.jq;
+    };
     programs.nushell = {
       enable = true;
       configFile.text = ''

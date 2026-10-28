@@ -18,7 +18,14 @@ maint-switch
 dotfiles.nixNetwork.profile = "china";
 ```
 
-这会使用 USTC Nix cache 镜像进行二进制替代，不保留官方 `cache.nixos.org` 作为后备。共享 headless profile 为 `llm-agents.nix` 包加入 Numtide 官方缓存（`https://cache.numtide.com`）及其公开签名公钥；workstation 模块另外声明 Anyrun、Hyprland 和 Noctalia Cachix 缓存。本地代理 URL 也在 NixOS 配置中声明：
+Nix 依次尝试 USTC（`priority=10`）、官方 `cache.nixos.org`（`priority=40`），
+再尝试当前目标声明的第三方缓存（`priority=60`）。数字越小越优先；同级缓存之间
+不约定顺序。共享 headless profile 为 `llm-agents.nix` 包加入 Numtide 缓存；
+workstation 另加 Anyrun、Hyprland 和 Noctalia Cachix。URL 和公开签名密钥
+统一维护在 `lib/nix-caches.nix`；global profile 使用官方主缓存。
+
+保留 Nix 默认的元数据查询有效期。`fallback=false` 防止替代下载失败后自动转为
+源码构建，签名校验继续启用。本地代理 URL 在 NixOS 配置中声明：
 
 ```nix
 dotfiles.nixNetwork.proxy = {
@@ -69,34 +76,43 @@ Renovate 分别更新这两个根输入；任一更新后，都需要检查所�
 默认分支应通过 ruleset 保护：要求 PR，并要求 `maintenance gate` 状态检查，且启用
 strict up-to-date checks。
 
-required `maintenance gate` check 汇总两个 job。`configuration` 运行原生 flake
-求值、合成的 `ci@headless` Home Manager activation 求值，以及已有的 WeChat
-控制、Codex adapter 和 repo-local skills 轻量检查；还运行缓存预检封装测试。
-`cache-preflight` 对 `homePC`、`linglong` 和 `ci@headless` 比较 base/head。
-两个 job 均使用 Nix 2.34.7；失败或无法判断都会阻止 required check 通过。
+required `maintenance gate` check 汇总两个 job。`configuration` 运行原生
+flake 求值、合成的 `ci@headless` Home Manager activation 求值，以及已有的
+WeChat 控制、Codex adapter、repo-local skills 轻量检查和共享预检测试。
+`cache-preflight` 检查 `github.sha` 对应的完整候选，覆盖 `homePC`、`linglong`
+和 `ci@headless`。两个 job 均使用 Nix 2.34.7；失败或无法判断都会阻止 required
+check 通过。这些检查交给 CI；本地用
+`bash scripts/maint/test-cache-preflight.sh --local-maint` 验证 Nu 入口，模拟
+build/sudo，不实际构建或激活。
 
-预检在隔离的冷 store 中用 Nix dry-run 生成计划，显式使用官方缓存、Numtide 和
-Anyrun/Hyprland/Noctalia Cachix。未经批准的本地构建是上游缺口。USTC 检查
-先比较 base/head 去重后的待替代路径，只查询新增且由官方缓存提供的产物；未变路径
-不新增缓存或压缩包探测。Nix 元数据查询限制为一个 HTTP 连接；NAR HEAD 请求
-串行执行，curl 原生限速为每秒最多一次，并使用原生重试/退避；遇到无法判断的响应
-即停止后续请求。元数据缺失或压缩包返回 404/410 是确定的新增缺口；请求失败、
-输出格式错误和异常响应为无法判断。报告不代表完整 head 的 USTC 就绪状态。
-比较以完整 store path 为身份，保留现有直连下载 marker 和 leaf 限制。日志保留
-原始 Nix 与 HTTP 结果；环境故障后由人工重跑 workflow。
+预检读取每个目标求值后的缓存 URL 和信任公钥。缓存、密钥及策略相同的目标
+合并为一次原生多目标 dry-run，使用本次新建的隔离 store，避免 runner 已安装
+的包掩盖替代缺口。Nix 负责规划运行时引用和必要构建依赖，门禁对全部待本地
+构建产物分类。已有与新增的未批准编译都会阻塞；后续受信任来源能提供产物时，
+不强制 USTC 命中。不再比较 base，也不二次扫描镜像或逐个探测压缩包。
 
-可复用 marker 基线位于 `scripts/maint/policy.json`，GUI 增量位于
-`scripts/maint/policy-workstation.json`。flake 将两者合成为
-`lib.maintenancePolicy`；预检分别读取 base/head 的值，本机 `maint-switch` 也
-使用有效 policy。下游用窄 overlay 扩展 `lib.maintenancePolicyBase`。Renovate 负责 root flake
-input 更新；policy 分组和调度位于 `renovate.json`。
+预检要求 JSON 根目标有效且覆盖全部请求目标，并从 Nix `internal-json` 诊断中
+得到完整、非空的 build/fetch 计划。截断、未知输出、查询失败及未解决引用均不能
+通过；warning 后成功恢复并得到完整计划，不会仅因该 warning 失败。结果分为
+`pass`、`blocked`、`inconclusive`；无论成功失败，均上传摘要、完整路径列表、
+目标分组映射及原始日志。“无可用替代”只描述当前 Nix 计划，不证明每个远端
+缓存都没有该产物。
 
-实验性的 China delta shadow 已退役：2026-07-13 至 2026-09-29 共有 169 次可读
-分类，其中 52 次通过、4 次 miss、113 次 inconclusive。两次 miss 与通过的正式 gate
-结论不同，且来自同一 PR 的两个 revision；历史原因尚未查明。该实验也没有保留
-Nix 对依赖的 cache-aware 剪枝。
-[代表性运行记录](https://github.com/bioinformatist/dotfiles/actions/runs/29306294755)
-展示了诊断输出。新的 required 预检取代了该 gate。
+这是元数据预检，不会逐个下载压缩包，也不证明主机上的下载和签名校验必然成功。
+实际下载及主机激活分别验收。部分 unfree 软件没有可分发的二进制缓存，只有
+经过审查的厂商二进制下载／包装可以放行，否则保持阻塞。CI 通过
+`NIXPKGS_ALLOW_UNFREE=1` 允许求值，不因此豁免源码编译。
+
+共享策略在 `scripts/maint/policy.json`，workstation 增量在
+`scripts/maint/policy-workstation.json`。桌面 CI 和本机 `maint-switch` 使用
+`lib.maintenancePolicy`；合成 headless CI 使用 `lib.maintenancePolicyBase`，
+不带桌面缓存。两端共用 `nix-plan.jq` 和 `classify-plan.jq`。下游继续通过
+`lib.extendMaintenancePolicy` 扩展 `lib.maintenancePolicyBase`。leaf 直连下载
+权限仍与一般 direct-fetch 策略取交集。
+
+按照 [#259](https://github.com/bioinformatist/dotfiles/issues/259) 的决策，
+需要旧版缓存时，在输入更新阶段验证并固定版本；门禁不动态选版或改写锁文件。
+[#240](https://github.com/bioinformatist/dotfiles/issues/240) 的应用范围另行处理。
 
 marker policy 是经验性边界，应该在真实 miss 中持续收紧：`unit-`、
 `-etc-`、`nixos-system-` 这类较宽的生成式 glue marker 如果误分类
@@ -122,6 +138,7 @@ workflow 或 Renovate config 的变更，即使 required gate 通过，也需独
 如果 gate 或 marker policy 自身坏掉，修复可能无法通过正在被它修复的同一个
 gate 合入。这种窄场景可以使用 admin bootstrap：临时关闭 main ruleset，只合入
 gate 或 policy 修复，然后立刻恢复 ruleset。不要用这条路径合入包版本更新。
+该操作需要操作人明确授权；候选检查失败本身不授权修改分支保护。
 
 `.github/workflows/maintenance-gate.yml` 也支持 `merge_group` 事件。当前没有
 真正启用 GitHub Merge Queue，因为 GitHub 只把该功能提供给组织拥有的 public
@@ -140,9 +157,10 @@ organization owner，再在 main ruleset 中启用 Merge Queue，并继续使用
 5. 构建目标 system closure。
 6. 根据 kernel/NVIDIA 风险选择 `boot` 或 `switch` 激活。
 
-默认情况下，`maint-switch` 使用 `~/.config/dotfiles/maint.nuon` 里生成的
-repo 路径。需要从 clean worktree 维护时，可以显式传入 repo 路径并跳过内置
-pull：
+`maint-switch` 从 `XDG_CONFIG_HOME` 读取 `dotfiles/maint.nuon` 和两个 jq
+辅助文件；未设置该变量时使用 `~/.config`。Home Manager 安装辅助文件和 jq，
+缺失时停止维护。默认使用配置中的 repo 路径；需要从 clean worktree 维护时，
+可以显式传入 repo 路径并跳过内置 pull：
 
 ```nu
 maint-switch --repo /tmp/dotfiles-clean --no-pull
@@ -159,8 +177,18 @@ maint-switch --boot
 ```
 
 该标志仍会执行 clean-check、可选 pull、网络门控和完整 toplevel 构建，然后固定调用
-`nixos-rebuild boot --store-path ...`，并提示必须重启。它是有意延后激活的显式路径，
+`nixos-rebuild --no-reexec boot --store-path ...`，并提示必须重启。它是有意延后激活的显式路径，
 不是日常默认；不传该标志时，现有 kernel/NVIDIA 风险自动选择保持不变。
+
+本机门禁使用运行中 daemon 的缓存权限。daemon 已持有完整 closure 时，合法
+空计划允许通过；CI 的冷计划必须非空。dry-run 和实际 build 都禁用 fallback
+及锁文件写入。下载和构建在 `sudo` 前完成，激活只消费已生成的 store path，
+使用 `nixos-rebuild --no-reexec ... --store-path`。
+
+CI 可以使用候选声明的新密钥，而旧主机 daemon 可能尚未信任它们。出现不信任
+缓存的诊断时，按 [#205](https://github.com/bioinformatist/dotfiles/issues/205)
+先通过正常维护路径完成缓存信任迁移，再验收新缓存的本机行为；不通过
+`sudo build` 或扩大 `trusted-users` 绕过边界。
 
 默认阻断标记包括：
 
@@ -170,7 +198,12 @@ maint-switch --boot
 - `chromium`、`electron`
 - `serenityos-emoji-font`、`nanoemoji`
 
-允许列表只覆盖生成式 glue 和轻量包装：Home Manager 文件/ generation、NixOS unit/restart/activation 文件、生成的 manifest、repo-local Codex skill packaging，以及已声明的 MCP wrapper derivation 可以继续。Codex、Playwright CLI 这种已声明的固定输出 release 直连 fetch 也可以通过已配置的维护代理继续。其他本地构建会被当作门控失败处理；kernel、Mesa、systemd package、Hyprland package、GCC/Rust toolchain、Chromium/Electron 和大型字体流水线仍然会被拦截。
+允许列表覆盖已审查的生成、组装、链接和二进制包装，包括 Home Manager
+generation、NixOS activation 文件、已声明的 MCP wrapper 和现有 Helix 包装。
+声明过的厂商下载可通过维护代理执行。当前 ChatGPT 仅放行已核对的精确包装、
+解包和 deb 下载 derivation；pin 或 hash 改变后需要重新审查。Codex 源码编译、
+formatelf 和 linglong 补丁版 power-profiles-daemon 不获豁免。固定输出 derivation
+或熟悉的软件名称，本身都不能证明没有编译。
 
 ## 并发策略
 

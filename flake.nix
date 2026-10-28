@@ -885,6 +885,15 @@
               };
               modules = [
                 homeManagerModules.devHeadless
+                {
+                  # Expose cache metadata without generating a user nix.conf.
+                  nix.enable = false;
+                  nix.settings =
+                    let
+                      caches = import ./lib/nix-caches.nix;
+                    in
+                    caches.global // caches.china // caches.headless;
+                }
               ];
             };
         in

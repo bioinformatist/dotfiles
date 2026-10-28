@@ -12,6 +12,16 @@ def git_line:
   test("^From https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/?$") or
   test("^ \\* \\[new (branch|ref|tag)\\] +[^[:space:]]+ +-> +[^[:space:]]+$");
 def git_progress: split("\r") | all(.[]; git_line);
+def roots_valid:
+  ($expected | type == "array" and length > 0 and all(.[]; type == "string" and store_path)) and
+  ($outputs | type == "array" and length > 0 and
+    all(.[]; type == "object" and
+      (if has("drvPath") then
+        (.drvPath | type == "string" and store_path and endswith(".drv")) and
+        (.outputs | type == "object" and length > 0 and
+          all(.[]; type == "string" and store_path))
+      else (.path | type == "string" and store_path) end))) and
+  (($outputs | map(.drvPath // .path) | unique | sort) == ($expected | unique | sort));
 
 [split("\n")[] | select(length > 0) |
   if startswith("@nix ") then .[5:] | fromjson
@@ -20,7 +30,9 @@ reduce .[] as $event (
   {section: null, remaining: 0, builds: [], fetches: [], unknown: []};
   if $event.action == "raw" then
     if ($event.msg | git_progress) then . else .unknown += [$event.msg] end
-  elif $event.action != "msg" or $event.level != 0 then .
+  elif (["start", "stop", "result"] | index($event.action)) != null then .
+  elif $event.action != "msg" then .unknown += [$event]
+  elif $event.level != 0 then .
   else
     ($event.msg | if type == "string" then . else error("non-string Nix message") end) as $message |
     if .remaining > 0 then
@@ -42,5 +54,6 @@ reduce .[] as $event (
     end
   end
 ) |
-.complete = (.remaining == 0 and (.unknown | length) == 0) |
+.rootsValid = roots_valid |
+.complete = (.rootsValid and .remaining == 0 and (.unknown | length) == 0) |
 del(.section, .remaining)
