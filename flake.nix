@@ -6,7 +6,7 @@
     nixpkgs-tools.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-wechat.url = "github:NixOS/nixpkgs/nixos-unstable";
     llm-agents.url = "github:numtide/llm-agents.nix";
-    llm-agents-chatgpt.url = "github:numtide/llm-agents.nix/909d25a187b549dd45cdf160776bc039fbe5f8da";
+    llm-agents-chatgpt.url = "github:numtide/llm-agents.nix/91ff550fe42d4dd51dcf8b6bad87a0134fe7f314";
     anyrun.url = "github:anyrun-org/anyrun";
     disko = {
       url = "github:nix-community/disko";
@@ -17,7 +17,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # Stable desktop packages, including the nixpkgs glaze compatibility fix.
-    nixpkgs-desktop.url = "github:NixOS/nixpkgs/c748c722674bfd3ef3afd2163c2fb809556fff8b";
+    nixpkgs-desktop.url = "github:NixOS/nixpkgs/3b725d0fef7ff1726fbb60886fd1338ee8413575";
     noctalia.url = "github:noctalia-dev/noctalia/v5.2.1";
     noctalia-d2r = {
       url = "github:bioinformatist/noctalia-d2r";
