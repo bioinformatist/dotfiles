@@ -247,26 +247,39 @@ Compose（组合键）通过一段短按键序列输入单个字符，不改变�
 
 ## 🔄 日常系统更新
 
-本节适用于**已安装并正常运行的系统**上的日常包更新流程。无需 ISO 或重新安装。
+需要时更新指定 flake input，查看差异后构建和应用当前 checkout。
+以下命令在已安装系统的 Nushell 中执行；缓存、代理和首次采用说明见
+[维护指南](maintenance.zh-CN.md)。
 
-> **Shell 说明**：本节在已配置好的系统上操作，使用 **Nushell**。语法有所不同。
->
-> **维护说明**：现在推荐的日常维护流程已迁移到独立的 [维护指南](maintenance.zh-CN.md)。本节保留网络背景和手动全量刷新命令；日常只运行 `maint-switch`。
+### 更新指定输入
+
+input 是 flake 的依赖输入，可能提供多个应用；更新一个 input 不保证只改变
+一个软件。如果 URL 固定了 revision 或 tag，先修改 `flake.nix` 中的 pin。
+
+```nu
+cd /path/to/dotfiles
+with-env (dotfiles-maint-config) {
+  nix flake update nixpkgs-tools
+}
+git diff -- flake.nix flake.lock
+git add flake.nix flake.lock
+git commit -m "chore: update nixpkgs-tools input"
+maint-switch
+```
+
+将 `nixpkgs-tools` 换成需要更新的输入，只暂存预期差异。Renovate 已停用。
+建议激活前提交，但 `maint-switch` 不强制要求 checkout 干净。它直接构建当前
+checkout，不拉取 Git 更新、不更新 inputs，也不运行缓存门禁。缺少替代时可能
+需要编译。内核或 NVIDIA 变化会自动选择下次启动生效；`--boot` 可显式选择该模式。
 
 ### 中国大陆网络须知
 
-更新过程中有**两类**网络请求，加速方式不同：
+源码获取和二进制缓存下载使用不同路径。更新 inputs 时使用
+`dotfiles-maint-config` 提供的局部代理。Nix 优先直连 USTC，其次尝试官方缓存，
+再尝试目标已声明的第三方缓存；China profile 的优先级依次为 10、40、60。
 
-| 请求类型 | 用途 | 加速方式 |
-|---|---|---|
-| **GitHub 源码获取** | `nix flake update` 拉取 flake inputs（HTTPS tarball） | 必须走**代理**，USTC 镜像无法加速 |
-| **二进制缓存下载** | `nixos-rebuild` 从 cache 下载预编译包 | 使用 **USTC 镜像**（`--option substituters`） |
-
-当前维护的物理主机通过 `dotfiles.nixNetwork.profile = "china"` 声明该策略：
-Nix 二进制替代会使用 USTC，而不是继续保留官方 cache 作为后备。
-本地代理 URL 也通过 NixOS 配置声明，但只作用于 Nix 维护路径：
-`nix-daemon` 会直接获得它，`maint-*` 命令会从 `/etc/dotfiles/nix-network.json`
-读取同一组值。它不会导出为桌面/session 级代理环境变量。
+配置的代理只供 `nix-daemon` 和 `/etc/dotfiles/nix-network.json` 中的维护设置
+使用，不导出到桌面会话，也不通过 `sudo` 传给激活过程。
 
 ### Codex 代理恢复指引
 
@@ -289,42 +302,6 @@ programs.codexBase.extraInstructions = ''
 '';
 ```
 
-### 手动更新 Flake 输入（`flake.lock`）
-
-此命令会从 GitHub 拉取所有依赖的最新版本（nixpkgs、home-manager、hyprland 等）。
-它用于**手动全量刷新**，不再是推荐的日常维护入口。
-
-```nu
-cd /path/to/dotfiles   # 例如 ~/github.com/bioinformatist/dotfiles
-
-# 这会一次性更新所有输入
-with-env (dotfiles-maint-config) {
-  nix flake update
-}
-```
-
-此操作会修改 `flake.lock` 文件——之后应提交该文件。
-
-### 本地提交锁文件
-
-```nu
-git add flake.lock
-git commit -m "chore: update flake inputs"
-```
-
-### 重建并切换
-
-日常维护直接运行 `maint-switch`，它会先 `git pull --ff-only`，再做网络门控、构建和切换完整系统 closure。手动全量刷新已经在本地提交后，使用 `--no-pull` 针对该提交切换。
-
-```nu
-maint-switch --no-pull
-```
-
-切换成功后再推送已验证的提交：
-
-```nu
-git push
-```
 
 ---
 
@@ -340,7 +317,7 @@ git push
 | **WiFi** | `NetworkManager` |
 | **Nix 维护代理** | 指向 `http://127.0.0.1:7897`；仅作用于 `nix-daemon` 和 `maint-*` 命令 |
 | **Clash Verge** | 处理实际上游路由（局域网代理、机场、热点等） |
-| **Nix Substituters** | 当前维护的物理主机使用 USTC 镜像，不保留官方 cache fallback |
+| **Nix Substituters** | 优先 USTC，其次官方缓存，再尝试已声明的第三方缓存 |
 
 ### 设置上游局域网代理
 

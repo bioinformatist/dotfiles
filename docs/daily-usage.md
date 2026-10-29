@@ -266,26 +266,44 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 
 ## 🔄 Daily System Update
 
-This section covers the normal workflow for **updating all packages** on an already-installed, running system. No ISO or reinstallation is needed.
+Update selected flake inputs when needed, review the changes, then build and
+apply the current checkout. These commands use Nushell on an installed system;
+see the [Maintenance Guide](maintenance.md) for cache, proxy, and adoption details.
 
-> **Shell Note**: This section runs on the configured system using **Nushell**. The syntax differs from bash.
->
-> **Maintenance Note**: The preferred day-to-day workflow now lives in the dedicated [Maintenance Guide](maintenance.md). Use this section as background for networking and manual full-refresh commands; day-to-day maintenance only runs `maint-switch`.
+### Update a Selected Input
+
+An input is a flake dependency and may supply several applications. Updating
+one input does not necessarily update only one package. If its URL pins a
+revision or tag, edit the pin in `flake.nix` first.
+
+```nu
+cd /path/to/dotfiles
+with-env (dotfiles-maint-config) {
+  nix flake update nixpkgs-tools
+}
+git diff -- flake.nix flake.lock
+git add flake.nix flake.lock
+git commit -m "chore: update nixpkgs-tools input"
+maint-switch
+```
+
+Replace `nixpkgs-tools` with the input you need and stage only intended changes.
+Renovate is disabled. Committing before activation is recommended, but
+`maint-switch` does not require a clean checkout. It builds the current checkout
+without pulling from Git, updating inputs, or running a cache gate. Missing
+substitutes may require compilation. Kernel or NVIDIA changes automatically
+select activation for the next boot; `--boot` explicitly requests that mode.
 
 ### China Network Note
 
-The update process involves **two types** of network requests, each requiring a different acceleration method:
+Source fetching and binary cache downloads use different paths. Input updates
+use the scoped proxy from `dotfiles-maint-config`. Nix tries USTC directly
+first, then the official cache, then the target's declared third-party caches.
+The China profile declares priorities 10, 40, and 60 respectively.
 
-| Request Type | Purpose | Acceleration |
-|---|---|---|
-| **GitHub source fetching** | `nix flake update` pulls flake inputs (HTTPS tarballs) | Requires a **proxy**; USTC mirror cannot help |
-| **Binary cache download** | `nixos-rebuild` downloads pre-built packages from cache | Use **USTC mirror** (`--option substituters`) |
-
-The maintained physical hosts declare this through `dotfiles.nixNetwork.profile = "china"`:
-USTC is used for Nix binary substitutions instead of keeping the official cache as a fallback.
-The local proxy URL is declared in NixOS config for Nix maintenance paths only:
-`nix-daemon` receives it directly, and `maint-*` commands read the same values
-from `/etc/dotfiles/nix-network.json`. It is not exported as a desktop/session-wide proxy environment.
+The configured proxy feeds `nix-daemon` and `/etc/dotfiles/nix-network.json`
+for maintenance commands. It is not exported to desktop sessions or passed
+through `sudo` for activation.
 
 ### Codex Proxy Recovery Guidance
 
@@ -311,42 +329,6 @@ programs.codexBase.extraInstructions = ''
 '';
 ```
 
-### Manually Update Flake Inputs (`flake.lock`)
-
-This fetches the latest versions of all dependencies from GitHub (nixpkgs, home-manager, hyprland, etc.).
-It is a **manual full-refresh workflow**, not the preferred day-to-day maintenance path.
-
-```nu
-cd /path/to/dotfiles   # e.g., ~/github.com/bioinformatist/dotfiles
-
-# This updates everything at once.
-with-env (dotfiles-maint-config) {
-  nix flake update
-}
-```
-
-This modifies `flake.lock` — you should commit it afterward.
-
-### Commit the Lock File Locally
-
-```nu
-git add flake.lock
-git commit -m "chore: update flake inputs"
-```
-
-### Rebuild & Switch
-
-Day-to-day maintenance runs `maint-switch`, which pulls with `git pull --ff-only`, then gates, builds, and switches the complete system closure. After a manual full refresh has already been committed locally, use `--no-pull` to switch that commit.
-
-```nu
-maint-switch --no-pull
-```
-
-After the switch succeeds, push the reviewed commit:
-
-```nu
-git push
-```
 
 ---
 
@@ -362,7 +344,7 @@ The system follows a **Nix maintenance-scoped localhost proxy** strategy:
 | **WiFi** | `NetworkManager` |
 | **Nix Maintenance Proxy** | Points to `http://127.0.0.1:7897`; scoped to `nix-daemon` and `maint-*` commands |
 | **Clash Verge** | Handles actual upstream routing (LAN proxy, airport, hotspot, etc.) |
-| **Nix Substituters** | Maintained physical hosts use the USTC mirror without the official cache fallback |
+| **Nix Substituters** | USTC first, then the official cache, then declared third-party caches |
 
 ### Setting up an Upstream LAN Proxy
 

@@ -8,7 +8,6 @@
 let
   lib = inputs.nixpkgs.lib;
   maintenancePolicyBase = builtins.fromJSON (builtins.readFile ../scripts/maint/policy.json);
-  workstationPolicy = builtins.fromJSON (builtins.readFile ../scripts/maint/policy-workstation.json);
   extendMaintenancePolicy =
     base: overlay:
     (base // overlay)
@@ -31,8 +30,6 @@ in
     extendMaintenancePolicy
     maintenancePolicyBase
     ;
-
-  maintenancePolicy = extendMaintenancePolicy maintenancePolicyBase workstationPolicy;
 
   mkWorkstationSystem =
     {

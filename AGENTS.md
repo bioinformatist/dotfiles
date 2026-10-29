@@ -46,34 +46,28 @@ abstraction when changing shared modules, profiles, or flake outputs.
 
 ### Lightweight CI
 
-- Keep routine CI lightweight: use native evaluation, dry runs, and bounded
-  lightweight checks. Cache misses must be reported; they must not trigger
-  compilation of large dependencies or complete systems.
-- Minimize computation and remote requests by grouping targets with identical
-  cache settings and policy. Use Nix's native cache priority and dependency
-  planning with default metadata lifetimes; do not add mirror or archive scans.
-- Cache preflight covers the full candidate; existing uncached compilation
-  blocks too. Query failures and incomplete plans remain inconclusive. See
-  `docs/maintenance.md` for cache order, exceptions, and daemon trust migration.
+- Keep routine CI to configuration evaluation and the existing small checks.
+  Full system builds and activation belong to explicit host maintenance.
+- Use Nix's native cache priorities and allow normal compilation when no
+  substitute is available. See `docs/maintenance.md` for the on-demand workflow
+  and first-adoption daemon trust boundary.
 - Before adding CI work, identify the decision it supports and check its
-  evaluation/build/request cost. Keep full dependency or mirror inventories
-  out of routine PR checks; broader diagnostics need a concrete task requirement.
+  evaluation/build/request cost. Broader diagnostics need a concrete task requirement.
 
 ### Repository Workflow
 
 - The repo's shell workflow is Nushell-first. Prefer Nushell syntax when writing or updating repo commands and examples.
 - When executing Nushell snippets through Codex tools, do not rely on the tool's shell selection alone. Invoke Nushell explicitly as `nu -c '...'`, otherwise the command may still be interpreted by `/bin/sh`.
-- Leave Maintenance Gate evaluation and cache tests to CI. For an explicitly requested local full flake check, use `env NIXPKGS_ALLOW_UNFREE=1 nix flake check --impure --allow-import-from-derivation`; a plain check failing on `mudfish` is an unfree-policy failure, not a code regression.
+- Leave Maintenance Gate evaluation and its existing small builds to CI. For an explicitly requested local full flake check, use `env NIXPKGS_ALLOW_UNFREE=1 nix flake check --impure --allow-import-from-derivation`; a plain check failing on `mudfish` is an unfree-policy failure, not a code regression.
 - Proxy boundary is a hard contract: `dotfiles.nixNetwork.proxy` may only feed `nix-daemon` and `/etc/dotfiles/nix-network.json` for `maint-*`; build/fetch before `sudo`, activate with `nixos-rebuild --no-reexec ... --store-path`, and never reintroduce `networking.proxy.default`, desktop/session proxy exports, or `sudo --preserve-env` proxy tunneling.
-- Renovate owns root flake input update PRs.
-- Changes to `renovate.json` require manual review. Do not auto-merge them
-  through generated leaf maintenance.
+- Renovate is disabled. Update selected flake inputs on demand; see `docs/maintenance.md`.
+- Changes to `renovate.json` require manual review.
 - Diagnose network failures by fetch path: Nix substituters, GitHub release/direct fetches, npm registry or node-gyp, Cargo registries, and runtime proxies are separate paths and should not be collapsed into one generic proxy fix.
 - Secrets must go through sops-nix. See `docs/secret-management.md`.
 - Repo-local skills live at `.agents/skills`. Externally vendored skills are synced with `nix run .#sync-vendored-skills` and checked by `.#checks.x86_64-linux.repo-local-skills`.
 - When changing Codex skill integration, review all three surfaces: upstream source, generated repo-local files under `.agents/skills`, and Home Manager installed skill sources from `home.programs.codex`. `quick_validate.py` only checks skill shape; it does not prove Codex semantics are adapted. Grep for stale host-agent wording such as `/codebase-design`, `/grilling`, `/domain-modeling`, `/improve-codebase-architecture`, `Agent tool`, `subagent_type`, and automatic GUI-open instructions.
 - The repo currently exposes `homePC` and `linglong` as maintained host configurations.
-- CI metadata preflight, actual downloads, and user verification after rebuild are separate acceptance steps.
+- CI configuration checks, full system builds, and user verification after rebuild are separate acceptance steps.
 - System rebuild command:
   ```nushell
   maint-switch

@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
 let
   cfg = config.dotfiles.maint;
 in
@@ -16,24 +16,6 @@ in
       description = "NixOS flake host used by maint-* commands.";
     };
 
-    riskMarkers = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = "Extra strings maint-switch treats as heavy local build markers in dry-run output.";
-    };
-
-    allowedLocalBuildMarkers = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = "Extra strings maint-switch allows in locally built NixOS/Home Manager glue derivations.";
-    };
-
-    allowedDirectFetchMarkers = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = "Extra strings maint-switch allows as declared fixed-output direct release fetches.";
-    };
-
     parallel = lib.mkOption {
       type = lib.types.attrs;
       default = { };
@@ -43,13 +25,6 @@ in
   };
 
   config = {
-    home.packages = lib.optionals cfg.enable [ pkgs.jq ];
-    xdg.configFile."dotfiles/nix-plan.jq" = lib.mkIf cfg.enable {
-      source = ../../../scripts/maint/nix-plan.jq;
-    };
-    xdg.configFile."dotfiles/classify-plan.jq" = lib.mkIf cfg.enable {
-      source = ../../../scripts/maint/classify-plan.jq;
-    };
     programs.nushell = {
       enable = true;
       configFile.text = ''
@@ -70,9 +45,6 @@ in
           host
           parallel
           ;
-        extraRiskMarkers = cfg.riskMarkers;
-        extraAllowedLocalBuildMarkers = cfg.allowedLocalBuildMarkers;
-        extraAllowedDirectFetchMarkers = cfg.allowedDirectFetchMarkers;
       };
     };
   };

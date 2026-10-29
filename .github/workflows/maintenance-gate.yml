@@ -15,7 +15,8 @@ permissions:
   contents: read
 
 jobs:
-  configuration:
+  gate:
+    name: maintenance gate
     runs-on: ubuntu-latest
     env:
       NIXPKGS_ALLOW_UNFREE: "1"
@@ -31,88 +32,3 @@ jobs:
       - run: nix flake check --no-build --impure --no-write-lock-file --option allow-import-from-derivation false
       - run: nix eval --raw --impure '.#homeConfigurations."ci@headless".activationPackage.drvPath'
       - run: nix build --impure --no-link -L .#checks.x86_64-linux.wechat-control .#checks.x86_64-linux.codex-base-adapter .#checks.x86_64-linux.repo-local-skills
-      - run: bash scripts/maint/test-cache-preflight.sh
-
-  cache-preflight:
-    runs-on: ubuntu-latest
-    env:
-      NIXPKGS_ALLOW_UNFREE: "1"
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          ref: ${{ github.sha }}
-      - uses: cachix/install-nix-action@v31
-        with:
-          install_url: https://releases.nixos.org/nix/nix-2.34.7/install
-      - name: Plan candidate cache requirements
-        shell: bash
-        run: |
-          set -euo pipefail
-          candidate_sha="$(git rev-parse HEAD)"
-          printf 'candidate=%s nix=%s\n' "$candidate_sha" "$(nix --version)"
-          printf 'Cache preflight: candidate `%s`, Nix `%s`\n\n' \
-            "$candidate_sha" "$(nix --version)" >> "$GITHUB_STEP_SUMMARY"
-          probe="$RUNNER_TEMP/cache-preflight-diagnostics"
-          args=(--flake-root . --work-dir "$probe" --summary "$probe/summary.md")
-          if [[ "$GITHUB_EVENT_NAME" == pull_request && "${GITHUB_HEAD_REF:-}" == maint/* ]]; then
-            args+=(--leaf "${GITHUB_HEAD_REF#maint/}")
-          fi
-          bash scripts/maint/cache-preflight.sh "${args[@]}"
-      - name: Summarize cache diagnostics
-        if: ${{ always() }}
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -euo pipefail
-          probe="$RUNNER_TEMP/cache-preflight-diagnostics"
-          errors="$RUNNER_TEMP/cache-preflight-key-errors.txt"
-          if [[ -f "$probe/summary.md" ]]; then
-            cat "$probe/summary.md" | tee -a "$GITHUB_STEP_SUMMARY"
-          fi
-          for file in "$probe"/*.err "$probe"/*.nix.log; do
-            [[ -s "$file" ]] || continue
-            if [[ "$file" == *.nix.log ]]; then
-              jq -Rr '
-                if startswith("@nix ") then
-                  .[5:] | fromjson? |
-                  select(.action == "msg" and (.level // 9) <= 1) |
-                  .msg // .text // empty |
-                  select(test("error:|warning:|fatal:"; "i"))
-                else . end
-              ' "$file" | tail -n 40 > "$errors"
-            else
-              tail -n 40 "$file" > "$errors"
-            fi
-            if [[ -s "$errors" ]]; then
-              echo "=== ${file##*/}: last 40 diagnostic lines ==="
-              cat "$errors"
-            fi
-          done
-      - name: Upload raw cache diagnostics
-        if: ${{ always() }}
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: cache-preflight-diagnostics-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/cache-preflight-diagnostics/*.log
-            ${{ runner.temp }}/cache-preflight-diagnostics/*.json
-            ${{ runner.temp }}/cache-preflight-diagnostics/*.err
-            ${{ runner.temp }}/cache-preflight-diagnostics/*.tsv
-            ${{ runner.temp }}/cache-preflight-diagnostics/*.txt
-            ${{ runner.temp }}/cache-preflight-diagnostics/*.md
-          if-no-files-found: warn
-
-  gate:
-    name: maintenance gate
-    needs: [configuration, cache-preflight]
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Summarize required result
-        env:
-          CONFIGURATION: ${{ needs.configuration.result }}
-          CACHE_PREFLIGHT: ${{ needs.cache-preflight.result }}
-        run: |
-          printf 'configuration=%s cache-preflight=%s\n' "$CONFIGURATION" "$CACHE_PREFLIGHT"
-          [[ "$CONFIGURATION" == success && "$CACHE_PREFLIGHT" == success ]]

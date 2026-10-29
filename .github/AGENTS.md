@@ -1,9 +1,7 @@
 # GitHub Maintenance
 
-- Maintenance Gate checks the full candidate at `github.sha`. Existing and new
-  unapproved local builds both block; there is no base-revision exemption or
-  requirement that every path be available from USTC.
-- Preserve the `maintenance gate` required check, all three targets, and raw
-  diagnostics. Leave its configuration and default cache tests to CI.
-- Changes to maintenance workflows require manual review. Do not auto-merge
-  them through generated leaf maintenance.
+- Keep `maintenance gate` as the single actual check job at `github.sha`, with
+  the existing configuration evaluation and small builds. Leave them to CI.
+- Preserve pull-request, merge-group, and manual triggers. See
+  `docs/maintenance.md` for scope and host acceptance boundaries.
+- Changes to maintenance workflows require manual review.

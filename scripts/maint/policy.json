@@ -99,6 +99,7 @@
   "allowedDirectFetchMarkers": [
     "-codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz",
     "-codex-x86_64-unknown-linux-musl.tar.gz",
+    "-codex-0.",
     "-playwright-cli-0.",
     "-worktrunk-x86_64-unknown-linux-musl.tar.xz.drv"
   ],
