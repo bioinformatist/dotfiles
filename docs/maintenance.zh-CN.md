@@ -8,27 +8,37 @@
 
 ## 按需更新
 
-`renovate.json` 已停用 Renovate。配置进入默认分支后，Renovate 不再提出更新，
-后续运行会执行其自身对已有机器人工作的一次性清理。
+`renovate.json` 已停用 Renovate；输入更新由人工按需执行。
 
 先选定要更新的 input。如果 `flake.nix` 中的 URL 固定了 revision 或 tag，先修改
-该 pin。以下以 `nixpkgs-tools` 为例：
+该 pin。以下以共享的 `nixpkgs` 包集为例：
 
 ```nu
 cd /path/to/dotfiles
 with-env (dotfiles-maint-config) {
-  nix flake update nixpkgs-tools
+  nix flake update nixpkgs
 }
 
 git diff -- flake.nix flake.lock
 git add flake.nix flake.lock
-git commit -m "chore: update nixpkgs-tools input"
+git commit -m "chore: update nixpkgs input"
 maint-switch
 ```
 
 更新其他输入时，使用 `nix flake update INPUT`，将 `INPUT` 替换为输入名。
 只暂存预期改动。激活前提交有助于识别和撤销变更；`maint-switch` 不强制检查
 checkout 是否干净，也不会创建提交、拉取 Git 更新或更新 inputs。
+
+正式版优先，比较主 nixpkgs 与维护中的社区或上游来源。独立输入有明确的版本、
+维护或缓存收益时才采用；否则使用主包集。最新版无缓存时，默认选满足需求的较新
+缓存版；必要功能或修复可以接受编译。刷新包集时盘点显式应用、服务和关键桌面
+组件，间接依赖仍由各自包集管理。
+
+Anyrun 及五个插件、Noctalia、Hyprland 及配套 portal、微信、Helix 和 Yazi
+统一使用主 nixpkgs。Home Manager 跟随 `master`，提供内建 Anyrun 和 Noctalia
+模块。Ghostty 使用[官方 v1.4.0 flake](https://github.com/ghostty-org/ghostty/tree/v1.4.0)
+并保留上游锁图；系统层与 Home Manager 入口选择同一个包。
+ChatGPT 保留独立的 `llm-agents-chatgpt` pin。
 
 Codex 运行时来自 `llm-agents`：独立 CLI 包含配套的 Code Mode Host，供终端、
 Improve 和 doctor 使用。桌面启动器通过 `CODEX_CLI_PATH` 选择该 CLI。
@@ -45,13 +55,16 @@ dotfiles.nixNetwork.profile = "china";
 
 Nix 依次尝试 USTC（`priority=10`）、官方 `cache.nixos.org`（`priority=40`），
 以及目标已声明的第三方缓存（`priority=60`）。数字越小越优先，同级缓存不保证顺序。
-共享 headless 配置为 `llm-agents.nix` 加入 Numtide 缓存；桌面配置另外加入
-Anyrun、Hyprland 和 Noctalia Cachix 缓存。URL 与签名公钥集中在
+共享 headless 配置为 `llm-agents.nix` 加入 Numtide 缓存；桌面配置在既有的
+Anyrun、Hyprland 和 Noctalia Cachix 缓存之外，加入 Lan Tian 与官方 Ghostty
+缓存。URL 与签名公钥集中在
 `lib/nix-caches.nix`；global profile 使用官方主缓存。
 
 Nix 使用原生缓存选择和默认元数据有效期。没有可用替代时允许源码编译。
 `fallback=false` 仍阻止缓存下载失败后静默转为源码编译，签名校验保持启用。
 维护流程不再运行缓存预检或编译分类门禁。
+
+精确输出的缓存元数据不代表完整依赖闭包已有缓存、构建已通过或应用已在主机运行。
 
 本地代理在 NixOS 配置中声明：
 

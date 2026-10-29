@@ -9,22 +9,20 @@ necessarily change only one application.
 
 ## Update on Demand
 
-Renovate is disabled in `renovate.json`. Once that configuration reaches the
-default branch, Renovate stops proposing updates and performs its own one-time
-cleanup of existing bot work on a subsequent run.
+Renovate is disabled in `renovate.json`; input updates are manual.
 
 Choose the input to update. If its URL in `flake.nix` pins a revision or tag,
-change that pin first. For example, to update `nixpkgs-tools`:
+change that pin first. For example, to update the shared `nixpkgs` package set:
 
 ```nu
 cd /path/to/dotfiles
 with-env (dotfiles-maint-config) {
-  nix flake update nixpkgs-tools
+  nix flake update nixpkgs
 }
 
 git diff -- flake.nix flake.lock
 git add flake.nix flake.lock
-git commit -m "chore: update nixpkgs-tools input"
+git commit -m "chore: update nixpkgs input"
 maint-switch
 ```
 
@@ -32,6 +30,21 @@ Use `nix flake update INPUT` for another input, replacing `INPUT` with its name.
 Stage only the intended changes. Committing before activation makes the change
 easy to identify and revert; `maint-switch` does not enforce a clean checkout
 or create a commit. It does not pull from Git or update inputs.
+
+Prefer stable releases and compare maintained community or upstream sources
+with the main nixpkgs. Use a separate input when its version, maintenance, or
+cache benefit justifies it. If the newest release is uncached, prefer a newer
+cached release that meets the need; required features or fixes can justify
+compilation. Inventory explicit applications, services, and key desktop
+components when refreshing the package set. Transitive dependencies follow
+their package set.
+
+Anyrun and its five plugins, Noctalia, Hyprland and its portal, WeChat, Helix,
+and Yazi now use the main nixpkgs. Home Manager follows `master` for the native
+Anyrun and Noctalia modules. Ghostty uses the
+[official v1.4.0 flake](https://github.com/ghostty-org/ghostty/tree/v1.4.0)
+with its upstream lock graph; both the system and Home Manager entry points
+select that package. ChatGPT retains its independent `llm-agents-chatgpt` pin.
 
 Codex runtime packages come from `llm-agents`; the standalone CLI includes its
 matching Code Mode Host and is used by terminals, Improve, and doctor. The
@@ -52,15 +65,19 @@ Nix tries USTC first (`priority=10`), the official `cache.nixos.org` cache
 second (`priority=40`), then the target's declared third-party caches
 (`priority=60`). Lower numbers take priority; caches at the same priority have
 no ordering contract. The shared headless profile adds Numtide's cache for
-`llm-agents.nix`. Workstations also add Anyrun, Hyprland, and Noctalia Cachix
-caches. URLs and signing keys live in `lib/nix-caches.nix`; the global profile
-uses the official primary cache.
+`llm-agents.nix`. Workstations also add Lan Tian and the official Ghostty cache,
+alongside the existing Anyrun, Hyprland, and Noctalia Cachix caches. URLs and
+signing keys live in `lib/nix-caches.nix`; the global profile uses the official
+primary cache.
 
 Nix uses its normal cache selection and metadata lifetimes. If no usable
 substitute is available, it may compile from source. `fallback=false` still
 prevents a failed substitute download from silently turning into a source
 build. Signature checks remain enabled. There is no cache preflight or build
 classification gate.
+
+An exact output's cache metadata does not establish that its dependency closure
+is cached, that a build passed, or that the application works on a host.
 
 The local proxy is declared in NixOS configuration:
 

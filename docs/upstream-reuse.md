@@ -26,6 +26,11 @@ terminal multiplexer. `homeManagerModules.tui` continues to provide Helix and
 Yazi, without a terminal multiplexer; consumers can provide their own workspace
 layer. Zellij has been retired from this repository's maintained configurations.
 
+Both TUI exports use Helix and Yazi from the main nixpkgs; Yazi uses `_7zz`
+for archives. The retired tools, WeChat, desktop, Anyrun, Noctalia, and swww
+inputs are no longer part of the root lock graph. Home Manager follows `master`
+for its native desktop modules.
+
 `homeManagerModules.codex` selects the community standalone CLI exported as
 `packages.<system>.codex`. Improve and doctor use that same package through
 `programs.codexBase.package`. Headless consumers do not inherit a desktop app.
@@ -76,6 +81,11 @@ It does not include CUDA userspace or model-serving application stacks.
 - WeChat, screenshot tools, and baseline GUI tools
 - NetworkManager and BlueZ system backends for the shared shell
 
+The NixOS workstation layer installs the official Ghostty v1.4.0 package even
+without Home Manager. `homeManagerModules.workstation` selects the same package
+through `programs.ghostty.package` for Home Manager-only consumers. Both use
+the official flake's upstream lock graph.
+
 It does not include:
 
 - disk layout
@@ -89,12 +99,19 @@ It does not include:
 NVIDIA desktop hosts should explicitly add `nixosModules.nvidiaDesktop`.
 AMD mobile desktop hosts can explicitly add `nixosModules.amdMobile`.
 
-`homeManagerModules.workstation` provides the shared Noctalia v5 shell and its
-systemd user service. Noctalia owns the bar, native network/Bluetooth/audio and
+`homeManagerModules.workstation` uses the native Home Manager Noctalia module
+and the main nixpkgs package, started once by Hyprland in the UWSM session.
+Noctalia owns the bar, native network/Bluetooth/audio and
 notification panels, control center, and session panel while consuming the
 host's NetworkManager, BlueZ, PipeWire, UPower, and power-profiles-daemon
 backends. Hardware-dependent widgets remain in the shared layout and degrade
 when their device or backend is absent.
+
+Noctalia also owns the background. Its declarative wallpaper defaults are
+`enabled = true`, `automation.enabled = false`, and `fill_color = "surface"`;
+consumers can override them through `programs.noctalia.settings.wallpaper`.
+swww and its managed images are retired. Personal images and persisted
+Noctalia Settings overrides remain user-owned.
 
 The module's only location interface is
 `dotfiles.noctalia.weatherLocation`, a nullable string whose default is `null`;

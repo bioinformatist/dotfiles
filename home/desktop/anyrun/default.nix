@@ -1,10 +1,8 @@
 {
-  anyrun,
   pkgs,
   ...
 }:
 let
-  anyrunPkgs = anyrun.packages.${pkgs.stdenv.hostPlatform.system};
   applicationExecPreprocessor = pkgs.writeShellScript "anyrun-application-exec-preprocessor" ''
     first="$1"
     shift
@@ -27,20 +25,10 @@ let
   '';
 in
 {
-  imports = [
-    (
-      { modulesPath, ... }:
-      {
-        disabledModules = [ "${modulesPath}/programs/anyrun.nix" ];
-      }
-    )
-    anyrun.homeManagerModules.default
-  ];
-
   programs.anyrun = {
     enable = true;
     daemon.enable = true;
-    package = anyrunPkgs.default;
+    package = pkgs.anyrun;
 
     config = {
       x = {
@@ -62,12 +50,12 @@ in
       closeOnClick = true;
       showResultsImmediately = false;
       maxEntries = null;
-      plugins = with anyrunPkgs; [
-        applications
-        rink
-        shell
-        symbols
-        websearch
+      plugins = [
+        "${pkgs.anyrun}/lib/libapplications.so"
+        "${pkgs.anyrun}/lib/librink.so"
+        "${pkgs.anyrun}/lib/libshell.so"
+        "${pkgs.anyrun}/lib/libsymbols.so"
+        "${pkgs.anyrun}/lib/libwebsearch.so"
       ];
     };
 
