@@ -1,8 +1,7 @@
 # GitHub Maintenance
 
-- Maintenance Gate cache checks are delta-based. Existing full-head China-cache misses
-  are diagnostic baseline debt and must not block unrelated leaf PRs. Do not
-  change this to full-head blocking unless the user explicitly changes the
-  policy.
-- Changes to maintenance workflows require manual review. Do not auto-merge
-  them through generated leaf maintenance.
+- Keep `maintenance gate` as the single actual check job at `github.sha`, with
+  the existing configuration evaluation and small builds. Leave them to CI.
+- Preserve pull-request, merge-group, and manual triggers. See
+  `docs/maintenance.md` for scope and host acceptance boundaries.
+- Changes to maintenance workflows require manual review.

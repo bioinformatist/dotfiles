@@ -10,6 +10,7 @@
 }:
 
 let
+  caches = import ../lib/nix-caches.nix;
   desktopPkgs = inputs.nixpkgs-desktop.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   wechatDebReferer = "https://pro-store-packages.uniontech.com/";
   wechatPkgs = import inputs.nixpkgs-wechat {
@@ -81,18 +82,7 @@ in
 
   config = lib.mkMerge [
     {
-      nix.settings = {
-        extra-substituters = [
-          "https://anyrun.cachix.org"
-          "https://hyprland.cachix.org"
-          "https://noctalia.cachix.org"
-        ];
-        extra-trusted-public-keys = [
-          "anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s="
-          "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
-          "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
-        ];
-      };
+      nix.settings = caches.workstation;
 
       security.rtkit.enable = true;
       services.pipewire = {

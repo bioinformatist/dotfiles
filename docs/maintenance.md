@@ -2,15 +2,45 @@
 
 #### [中文](maintenance.zh-CN.md) | English
 
-The preferred local maintenance entry point is still:
+Update a selected flake input when needed, review and commit the changes, then
+run `maint-switch` to build and apply the current checkout. An input is a flake
+dependency; one input can supply several components, so updating it does not
+necessarily change only one application.
+
+## Update on Demand
+
+Renovate is disabled in `renovate.json`. Once that configuration reaches the
+default branch, Renovate stops proposing updates and performs its own one-time
+cleanup of existing bot work on a subsequent run.
+
+Choose the input to update. If its URL in `flake.nix` pins a revision or tag,
+change that pin first. For example, to update `nixpkgs-tools`:
 
 ```nu
+cd /path/to/dotfiles
+with-env (dotfiles-maint-config) {
+  nix flake update nixpkgs-tools
+}
+
+git diff -- flake.nix flake.lock
+git add flake.nix flake.lock
+git commit -m "chore: update nixpkgs-tools input"
 maint-switch
 ```
 
-Renovate proposes root `flake.lock` input updates. After they reach `main`, `maint-switch` performs the final China-network gate and system activation.
+Use `nix flake update INPUT` for another input, replacing `INPUT` with its name.
+Stage only the intended changes. Committing before activation makes the change
+easy to identify and revert; `maint-switch` does not enforce a clean checkout
+or create a commit. It does not pull from Git or update inputs.
 
-## Declarative Network Profile
+Codex runtime packages come from `llm-agents`; the standalone CLI includes its
+matching Code Mode Host and is used by terminals, Improve, and doctor. The
+desktop launcher selects that CLI through `CODEX_CLI_PATH`. `codex-base`
+supplies configuration, Improve, and skills. After updating either input, check
+that the selected runtime works with the inherited configuration. A running
+desktop application or SSH App Server keeps its backend until restarted.
+
+## Cache and Proxy Configuration
 
 `homePC` and `linglong` select the China-friendly profile:
 
@@ -18,7 +48,21 @@ Renovate proposes root `flake.lock` input updates. After they reach `main`, `mai
 dotfiles.nixNetwork.profile = "china";
 ```
 
-That uses the USTC Nix cache mirror for binary substitution without keeping the official `cache.nixos.org` cache as a fallback. The shared headless profile adds Numtide's official cache (`https://cache.numtide.com`) and public signing key for `llm-agents.nix` packages. Workstation modules additionally declare the Anyrun, Hyprland, and Noctalia Cachix caches. The local proxy URL is declared in NixOS config:
+Nix tries USTC first (`priority=10`), the official `cache.nixos.org` cache
+second (`priority=40`), then the target's declared third-party caches
+(`priority=60`). Lower numbers take priority; caches at the same priority have
+no ordering contract. The shared headless profile adds Numtide's cache for
+`llm-agents.nix`. Workstations also add Anyrun, Hyprland, and Noctalia Cachix
+caches. URLs and signing keys live in `lib/nix-caches.nix`; the global profile
+uses the official primary cache.
+
+Nix uses its normal cache selection and metadata lifetimes. If no usable
+substitute is available, it may compile from source. `fallback=false` still
+prevents a failed substitute download from silently turning into a source
+build. Signature checks remain enabled. There is no cache preflight or build
+classification gate.
+
+The local proxy is declared in NixOS configuration:
 
 ```nix
 dotfiles.nixNetwork.proxy = {
@@ -27,197 +71,77 @@ dotfiles.nixNetwork.proxy = {
 };
 ```
 
-This proxy is intentionally scoped to Nix maintenance paths. It is injected into `nix-daemon`, and the same values are exported to `/etc/dotfiles/nix-network.json` for `maint-switch`. It is not a desktop/session proxy.
+The proxy feeds `nix-daemon` and `/etc/dotfiles/nix-network.json`, which
+`dotfiles-maint-config` reads. USTC is included in `NO_PROXY` for direct access.
+The helper applies these values only around the build; activation runs outside
+that environment. Desktop sessions do not receive these proxy settings.
+Manual input updates use the scoped `with-env` command shown above. A proxy is
+not required when the configured sources are reachable directly.
 
-## Automated Update PRs
-
-`renovate.json` lets Renovate propose one root flake input per PR:
-
-| Leaf | Policy | What it updates |
-|---|---|---|
-| `anyrun` | `tools` | `anyrun` flake input |
-| `codex-base` | `tools` | Codex Base configuration, Improve, and global skills |
-| `llm-agents` | `tools` | Community standalone CLI and desktop packages |
-| `nixpkgs-tools` | `tools` | `nixpkgs-tools` flake input |
-| `wechat` | `tools` | `nixpkgs-wechat` flake input |
-| `nixpkgs-desktop` | `desktop` | Hyprland and its portal from the pinned `nixpkgs-desktop` input |
-| `noctalia` | `desktop` | Noctalia stable release input |
-| `sops-nix` | `infra` | `sops-nix` flake input |
-| `impermanence` | `infra` | `impermanence` flake input |
-| `disko` | `infra` | `disko` flake input |
-| `base` | `core` | `nixpkgs`, `home-manager` |
-
-Default cadence:
-
-| Policy | Schedule |
-|---|---|
-| `tools` | daily |
-| `desktop` | Saturdays UTC |
-| `infra` | first day of each month UTC |
-| `core` | first day of each month UTC |
-
-Root inputs outside this table, currently `fieldcraft`, `mattpocock-skills`, and `swww`, are intentionally not updated by Renovate until they are promoted to an explicit policy.
-Renovate `lockFileMaintenance` is disabled because whole-lock refreshes would
-mix multiple leaves into one PR and weaken cache-miss attribution.
-
-Codex runtime packages come from `llm-agents`: the standalone CLI includes its
-matching Code Mode Host and is used by terminals, Improve, and doctor on both
-headless and desktop hosts. The desktop launcher selects that CLI through
-`CODEX_CLI_PATH`. `codex-base` supplies configuration, Improve, and skills.
-Renovate updates these two root inputs separately; after either update, check
-the selected runtime against the inherited configuration and workflows. A
-running desktop application or SSH App Server keeps its current backend until
-restarted.
-
-The default branch should be protected by a ruleset that requires pull requests and requires the `maintenance gate` status check with strict up-to-date checks enabled.
-
-The required `maintenance gate` check summarizes two jobs. `configuration` runs native
-flake evaluation, evaluates the synthetic `ci@headless` Home Manager activation,
-and builds the existing WeChat controller, Codex adapter, and repo-local skill
-checks. It also runs the focused cache-preflight tests. `cache-preflight` compares
-the two maintained NixOS hosts and `ci@headless` against the base revision.
-Both jobs use Nix 2.34.7. A failed or inconclusive job blocks the required check.
-
-The preflight uses Nix's cold-store dry-run plan with the official cache,
-Numtide, and the declared Anyrun/Hyprland/Noctalia Cachix caches. It reports
-unapproved local builds as upstream gaps. For USTC, it first compares unique
-base/head fetch paths, then checks only new paths available from the official
-cache. Unchanged paths cause no added cache or archive probes. Nix metadata
-queries use one HTTP connection; NAR HEAD requests run serially with curl's
-one-per-second rate cap and native retry/backoff, stopping on an uncertain response.
-Missing metadata or a 404/410 NAR is a definite new gap; request failures,
-malformed output, and unexpected responses are inconclusive. The report does
-not claim full-head USTC readiness. Full store paths are the comparison
-identity. Declared direct fetch markers and leaf restrictions still apply.
-Raw Nix and HTTP results are logged for diagnosis. After an environmental
-failure, rerun the workflow manually.
-
-The reusable marker base lives in `scripts/maint/policy.json`, while
-`scripts/maint/policy-workstation.json` contains GUI-only additions. The flake
-exports their composition as `lib.maintenancePolicy`; the preflight evaluates
-it separately for base and head. Local `maint-switch` also uses that effective
-policy. Downstream repositories extend `lib.maintenancePolicyBase` with narrow
-local overlays. Renovate owns root flake input updates; policy groups and
-schedules live in `renovate.json`.
-
-The experimental China delta shadow was retired after 169 readable runs from
-2026-07-13 to 2026-09-29 yielded 52 passes, 4 misses, and 113 inconclusive
-results. Two misses disagreed with a passing formal gate and came from the same
-PR at two revisions; their historical causes were not established. The
-experiment also did not preserve Nix's cache-aware dependency pruning. A
-[representative run](https://github.com/bioinformatist/dotfiles/actions/runs/29306294755)
-shows its diagnostic output. The new required preflight replaces that gate.
-
-The marker policy is intentionally empirical. It should be refined from real
-misses: broad generated-glue markers such as `unit-`, `-etc-`, and
-`nixos-system-` may be tightened if they misclassify a derivation, and new
-release-tarball leaves must be declared explicitly before their direct fetches
-are allowed.
-
-If a local gate blocks a clearly generated NixOS/Home Manager glue derivation,
-such as environment-file or activation glue, treat it as policy drift. Update
-the shared base or the owning overlay narrowly; downstream repositories should
-refresh their upstream input, not copy the complete policy. Do not bypass the
-gate, and do not add heavy components to the allowlist.
-
-Network failures should be diagnosed by fetch path. Nix binary substitution,
-GitHub release/direct fetches, npm registry or node-gyp downloads, Cargo
-registries, and runtime proxies are different paths; a fix for one should not be
-silently generalized to the others.
-
-The required `maintenance gate` check in
-`.github/workflows/maintenance-gate.yml` is the whole-host merge decision.
-Renovate PRs use the same required check and Renovate's configured merge policy.
-
-Changes to maintenance policy, scripts, workflows, or Renovate configuration
-require independent review even when the required gate passes.
-
-If the gate or marker policy itself is broken, the repair can be impossible to
-merge through the same gate it is repairing. In that narrow case, use an admin
-bootstrap: temporarily disable the main ruleset, merge only the gate or policy
-fix, and immediately restore the ruleset. Do not use this path for
-package/version updates.
-
-`.github/workflows/maintenance-gate.yml` also supports the `merge_group` event.
-GitHub Merge Queue is not currently enabled here because GitHub only offers it
-for public repositories owned by organizations, or private organization
-repositories on Enterprise Cloud. If this repository is moved to an organization
-owner later, enable Merge Queue in the main ruleset and keep the same
-`maintenance gate` check.
+Diagnose network failures by fetch path: Nix substitutes, GitHub source or
+release downloads, npm/node-gyp, Cargo, and application traffic use different
+paths. A fix for one path does not establish the cause of another failure.
 
 ## Local `maint-switch`
 
-`maint-switch` has a small local responsibility:
-
-1. Require a clean local repo.
-2. Run `git pull --ff-only` by default.
-3. Dry-run the complete current system.
-4. Stop if the dry-run shows heavy local builds or any unapproved local derivation.
-5. Build the target system closure.
-6. Activate with `boot` or `switch` depending on kernel/NVIDIA runtime risk.
-
-By default, `maint-switch` uses the repo path generated in
-`~/.config/dotfiles/maint.nuon`. For maintenance from a clean worktree, pass an
-explicit repo path and skip the built-in pull:
-
 ```nu
-maint-switch --repo /tmp/dotfiles-clean --no-pull
-```
-
-Use this for host-local auto-generated data such as Rime sync files. Do not make
-a Rime-only commit just to satisfy the clean-checkout gate.
-
-Pass `--boot` when a reviewed change must be installed as the next booted
-generation without activating it in the current desktop session:
-
-```nu
+maint-switch
+maint-switch --repo /path/to/another/checkout
 maint-switch --boot
 ```
 
-This flag still runs the clean-check, optional pull, network gate, and complete
-toplevel build. It always calls `nixos-rebuild boot --store-path ...` and reports
-that a reboot is required. It is an explicit deferral path for lifecycle changes,
-not the day-to-day default; without it, the existing automatic kernel/NVIDIA risk
-selection remains in effect.
+The command reads `dotfiles/maint.nuon` under `XDG_CONFIG_HOME`, or `~/.config`
+when that variable is unset. Home Manager writes the repo, host, and parallel
+settings there. `--repo` overrides the configured checkout for this call.
 
-Default blocking markers include:
+It builds the selected host once, with visible logs and lock-file updates
+disabled. A successful build must return exactly one nonempty target path.
+Only then does it call `sudo nixos-rebuild --no-reexec … --store-path` with
+that path. Build failure prevents activation; activation failure is reported
+to the caller. The command leaves checkout files unchanged, so host-local
+Rime data does not need a maintenance-only commit.
 
-- `linux-`, `nvidia-x11`, `mesa-`, `systemd-`
-- `hyprland` and related `hypr*` components
-- `gcc-`, `xgcc`, `rustc-`, `cargo-vendor`
-- `chromium`, `electron`
-- `serenityos-emoji-font`, `nanoemoji`
+`--boot` installs the generation for the next boot and prints a reboot reminder.
+Without that flag, a changed booted kernel or changed NVIDIA userspace selects
+`boot` automatically; other changes use `switch` immediately.
 
-The allowlist is intentionally limited to generated glue and lightweight wrappers: Home Manager files/generations, NixOS unit/restart/activation files, generated manifests, repo-local Codex skill packaging, and declared MCP wrapper derivations may proceed. Declared fixed-output direct release fetches for Codex and Playwright CLI may also proceed through the configured maintenance proxy. Other local builds are treated as gate failures, and heavy components such as kernel, Mesa, systemd packages, Hyprland packages, GCC/Rust toolchains, Chromium/Electron, and large font pipelines remain blocked.
+The command-level concurrency defaults are `max-jobs=4` and `cores=2`, with
+overrides from the maintenance settings. HTTP download concurrency belongs to
+the daemon; the NixOS configuration sets `http-connections=8`.
 
-## Concurrency
+## CI and Downstream Interfaces
 
-`maint-switch` uses Nix's own concurrency controls instead of implementing parallel downloads in Nushell. The command-level defaults are:
+The single `maintenance gate` job in
+`.github/workflows/maintenance-gate.yml` checks `github.sha` with Nix 2.34.7 and
+`NIXPKGS_ALLOW_UNFREE=1`. It pre-evaluates the Hyprland source, runs
+`flake check --no-build`, evaluates the synthetic `ci@headless` Home Manager
+activation, and builds the existing WeChat controller, Codex adapter, and
+repo-local skill checks. These checks belong to CI; a passing run does not
+prove a full system build or host activation.
 
-```text
-max-jobs = 4
-cores = 2
-```
+The workflow handles pull requests, merge groups, and manual dispatch. Keep
+the existing required check name when changing it. Workflow and Renovate
+configuration changes require manual review; this change does not alter branch
+protection.
 
-HTTP download concurrency is a restricted Nix daemon setting, so an untrusted user cannot reliably override it with `--option` from `maint-switch`. The NixOS configuration declares:
+`lib.maintenancePolicyBase` and `lib.extendMaintenancePolicy` remain available
+for downstream consumers, backed by `scripts/maint/policy.json`. Upstream CI
+and `maint-switch` no longer use them. The desktop policy and combined
+`lib.maintenancePolicy` export are removed. Downstreams adopting the new helper
+must remove `--no-pull` from manual examples; the helper always uses the
+current checkout.
 
-```text
-http-connections = 8
-```
+## First Adoption and Recovery
 
-## Manual Full Refresh
+Sourcing `home/shell/nushell/maint.nu` from a new checkout replaces the shell
+helper only. The first build still uses the running daemon's cache settings
+and trust. New priorities and signing keys take effect after system activation.
+The trust transition is tracked in
+[#205](https://github.com/bioinformatist/dotfiles/issues/205); do not bypass it
+with `sudo build`, temporary trust, or broader `trusted-users`.
 
-`nix flake update` is still available for manual maintenance windows, but it is not the day-to-day entry point and does not benefit from Renovate's per-input PR isolation.
-
-```nu
-with-env (dotfiles-maint-config) {
-  nix flake update
-}
-
-git diff
-git add flake.lock
-git commit -m "chore: update flake inputs"
-maint-switch --no-pull
-```
-
-`maint-switch` requires a clean checkout, so a manual full refresh must be committed first. Use `--no-pull` to gate and switch that local commit.
+Revert the repository change to restore the prior code, or select the previous
+NixOS generation to recover an activated system. The on-demand workflow in
+[#259](https://github.com/bioinformatist/dotfiles/issues/259) replaces the earlier
+requirement to block uncached compilation. The application scope of
+[#240](https://github.com/bioinformatist/dotfiles/issues/240) remains separate.

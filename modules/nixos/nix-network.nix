@@ -6,9 +6,7 @@
 
 let
   cfg = config.dotfiles.nixNetwork;
-  chinaSubstituters = [
-    "https://mirrors.ustc.edu.cn/nix-channels/store"
-  ];
+  caches = import ../../lib/nix-caches.nix;
   proxyEnv = {
     HTTP_PROXY = cfg.proxy.url;
     HTTPS_PROXY = cfg.proxy.url;
@@ -62,7 +60,7 @@ in
 
   config = lib.mkMerge [
     (lib.mkIf (cfg.profile == "china") {
-      nix.settings.substituters = lib.mkForce chinaSubstituters;
+      nix.settings.substituters = lib.mkForce caches.china.substituters;
     })
     (lib.mkIf cfg.proxy.enable {
       assertions = [
