@@ -82,7 +82,7 @@ case "$1" in
       case "$arg" in
         *'#nixosConfigurations.homePC.config.system.build.toplevel') roots+=(/nix/store/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-system.drv) ;;
         *'#nixosConfigurations.linglong.config.system.build.toplevel') roots+=(/nix/store/ffffffffffffffffffffffffffffffff-system.drv) ;;
-        *'#homeConfigurations."ci@headless".config.activationPackage') roots+=(/nix/store/gggggggggggggggggggggggggggggggg-home.drv) ;;
+        *'#homeConfigurations."ci@headless".config.home.activationPackage') roots+=(/nix/store/gggggggggggggggggggggggggggggggg-home.drv) ;;
       esac
     done
     jq -n --args '$ARGS.positional | map({drvPath:.,outputs:{out:"/nix/store/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-system"}})' "${roots[@]}" > "$TEST_ROOT/current-outputs.json"
@@ -241,7 +241,7 @@ for scenario in first second third missing-reference; do
   dir="$tmp/native-$scenario"
   mkdir -p "$dir/source" "$dir/target"
   source_store="local?root=$dir/source"
-  nix eval --json --store "$source_store" --argstr scenario "$scenario" \
+  nix eval --json --store "$source_store" --apply "f: f { scenario = \"$scenario\"; }" \
     --expr '{scenario}: let dep = builtins.toFile "cache-preflight-${scenario}-dep" scenario; in { inherit dep; root = builtins.toFile "cache-preflight-${scenario}-root" dep; }' > "$dir/objects.json"
   object="$(jq -r '.root' "$dir/objects.json")"
   dependency="$(jq -r '.dep' "$dir/objects.json")"

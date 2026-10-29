@@ -15,13 +15,15 @@ def git_progress: split("\r") | all(.[]; git_line);
 def roots_valid:
   ($expected | type == "array" and length > 0 and all(.[]; type == "string" and store_path)) and
   ($outputs | type == "array" and length > 0 and
-    all(.[]; type == "object" and
-      (if has("drvPath") then
+    all(.[];
+      if type == "string" then store_path
+      else type == "object" and
         (.drvPath | type == "string" and store_path and endswith(".drv")) and
         (.outputs | type == "object" and length > 0 and
           all(.[]; type == "string" and store_path))
-      else (.path | type == "string" and store_path) end))) and
-  (($outputs | map(.drvPath // .path) | unique | sort) == ($expected | unique | sort));
+      end)) and
+  (($outputs | map(if type == "string" then . else .drvPath end) | unique | sort) ==
+    ($expected | unique | sort));
 
 [split("\n")[] | select(length > 0) |
   if startswith("@nix ") then .[5:] | fromjson

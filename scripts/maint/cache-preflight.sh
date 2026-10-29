@@ -76,8 +76,8 @@ for target in homePC linglong 'ci@headless'; do
   policy=maintenancePolicy
   if [[ "$target" == 'ci@headless' ]]; then
     config_attr="$flake_root#homeConfigurations.\"ci@headless\".config"
-    attr="$config_attr.activationPackage"
-    toplevel='c.activationPackage.drvPath'
+    attr="$config_attr.home.activationPackage"
+    toplevel='c.home.activationPackage.drvPath'
     policy=maintenancePolicyBase
   else
     config_attr="$flake_root#nixosConfigurations.$target.config"
