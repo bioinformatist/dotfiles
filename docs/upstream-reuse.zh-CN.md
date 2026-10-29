@@ -25,6 +25,10 @@
 Helix 与 Yazi，但不包含终端多路复用器；消费者可以自行提供工作区层。Zellij 已从本仓库
 维护中的配置退役。
 
+两个 TUI 导出均使用主 nixpkgs 的 Helix 和 Yazi，Yazi 的归档辅助包改为 `_7zz`。
+tools、WeChat、desktop、Anyrun、Noctalia 和 swww 的旧独立输入已退出根锁图；
+Home Manager 跟随 `master`，使用其内建桌面模块。
+
 `homeManagerModules.codex` 默认选择 `packages.<system>.codex` 导出的社区独立
 CLI。Improve 和 doctor 通过 `programs.codexBase.package` 使用同一个包，
 headless 消费者不会因此安装桌面应用。
@@ -72,6 +76,10 @@ flake 锁定的包集合，不通过 shared-nixpkgs overlay 重建。桌面与 C
 - WeChat、截图工具、基础 GUI 工具
 - 供共享桌面壳使用的 NetworkManager 与 BlueZ 系统后端
 
+NixOS 工作站层即使不使用 Home Manager，也会安装官方 Ghostty v1.4.0 包。
+`homeManagerModules.workstation` 通过 `programs.ghostty.package` 为仅使用
+Home Manager 的消费者选择同一个包，两处均保留官方 flake 的上游锁图。
+
 它不包含：
 
 - 磁盘布局
@@ -85,10 +93,16 @@ flake 锁定的包集合，不通过 shared-nixpkgs overlay 重建。桌面与 C
 NVIDIA 桌面机器应额外叠加 `nixosModules.nvidiaDesktop`。
 AMD 便携桌面机器可额外叠加 `nixosModules.amdMobile`。
 
-`homeManagerModules.workstation` 提供共享 Noctalia v5 桌面壳及其 systemd 用户服务。
+`homeManagerModules.workstation` 使用 Home Manager 内建 Noctalia 模块和主 nixpkgs
+的包，在 UWSM 会话中通过 Hyprland 启动一次。
 Noctalia 负责状态栏、原生网络/蓝牙/音频和通知面板、控制中心与会话面板，同时使用
 主机的 NetworkManager、BlueZ、PipeWire、UPower 和 power-profiles-daemon 后端。
 依赖硬件的控件保留在共享布局中，并在设备或后端缺失时安全降级。
+
+Noctalia 同时负责背景，声明式默认值为 `enabled = true`、
+`automation.enabled = false` 和 `fill_color = "surface"`，消费者可通过
+`programs.noctalia.settings.wallpaper` 覆盖。swww 与受管图像已退役；
+个人图像及持久化的 Noctalia Settings 覆盖仍由用户管理。
 
 模块唯一的地点接口是可为空字符串 `dotfiles.noctalia.weatherLocation`，默认值为
 `null`；下游可以不设置或选择自己的地点，而不会继承 Yu Sun 个人层的

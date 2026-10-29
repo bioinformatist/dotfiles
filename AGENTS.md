@@ -44,6 +44,19 @@ abstraction when changing shared modules, profiles, or flake outputs.
 
 ## Key Constraints
 
+### Package Sources
+
+- Prefer stable releases that meet the required behavior. When refreshing the
+  package set, inventory explicit applications, services, and key desktop
+  components; leave transitive dependencies to the package set.
+- Compare the main nixpkgs with maintained community and upstream sources.
+  Use an independent source when it offers a concrete version, maintenance,
+  or cache benefit; otherwise use the main nixpkgs. Preserve an upstream lock
+  graph when changing it would lose the intended substitutes.
+- If the newest release is uncached, prefer a newer cached release that meets
+  the need. Required features or fixes can justify compilation. Cache metadata
+  alone does not prove the full closure builds or runs on a host.
+
 ### Lightweight CI
 
 - Keep routine CI to configuration evaluation and the existing small checks.

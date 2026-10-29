@@ -5,9 +5,6 @@
   ...
 }:
 
-let
-  toolPkgs = inputs.nixpkgs-tools.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-in
 {
   imports = [
     ./core.nix
@@ -20,7 +17,7 @@ in
   xdg.enable = true;
 
   programs = {
-    yazi.package = toolPkgs.yazi;
-    helix.package = toolPkgs.helix;
+    yazi.package = pkgs.yazi;
+    helix.package = pkgs.helix;
   };
 }

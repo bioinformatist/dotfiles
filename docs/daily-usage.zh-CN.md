@@ -84,26 +84,30 @@
 
 | 应用 | 包 / 来源 | 说明 |
 | :--- | :--- | :--- |
-| **Hyprland** | `inputs.hyprland`（flake） | 动态平铺 Wayland 合成器，通过 UWSM 启动 |
-| **Ghostty** | `pkgs.ghostty` | 现代 GPU 加速终端模拟器（Zig），Linux 上原生 GTK |
+| **Hyprland** | `pkgs.hyprland` | 0.56.2 合成器及主包集配套 portal，通过 UWSM 启动 |
+| **Ghostty** | 官方 `inputs.ghostty` flake | v1.4.0 GPU 加速终端，NixOS 与 Home Manager 共用同一个包 |
+| **Anyrun** | `pkgs.anyrun` + `pkgs.anyrun-provider` | 26.10.0 启动器，保留 applications、rink、shell、symbols、websearch 五插件 |
 | **Google Chrome** | `pkgs.google-chrome` | Web 浏览器 |
 | **Clash Verge** | `programs.clash-verge`（NixOS 模块） | GUI 代理客户端（灵活网络管理） |
-| **Noctalia** | `inputs.noctalia` + Home Manager | 状态栏、原生硬件控制、通知以及控制/会话面板 |
-| **swww** | `inputs.swww`（flake） | Wayland 壁纸守护进程，附带多显示器随机轮换脚本 |
+| **Noctalia** | `pkgs.noctalia` + Home Manager 内建模块 | 5.4.0 状态栏、背景、硬件控制、通知和面板 |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland 原生锁屏 |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland 原生门户（屏幕共享、文件对话框等） |
-| **微信** | `nixpkgs-wechat.wechat-uos` | 微信桌面客户端（通过 XWayland 运行） |
+| **微信** | `pkgs.wechat-uos` | 保留 Referer 下载及 Fcitx/controller 包装的微信客户端（XWayland） |
 | **grim** + **slurp** | `pkgs.grim`、`pkgs.slurp` | Wayland 屏幕截图 + 区域选择器 |
 | **satty** | `pkgs.satty` | 截图标注编辑器（箭头、文字、模糊、画笔） |
 
 ### 共享 Noctalia 工作站桌面壳
 
-导出的工作站 Home Manager 模块通过 `noctalia.service` 运行 Noctalia。
+导出的工作站 Home Manager 模块在 UWSM 会话中通过 Hyprland 启动一次 Noctalia。
 Noctalia 负责带轮廓的多显示器状态栏、通知守护进程、附着式控制中心和会话面板，
 并原生提供网络、蓝牙、音频、电池、亮度和电源 profile 客户端。NetworkManager、
-BlueZ、PipeWire、UPower 和 power-profiles-daemon 仍是系统后端。AnyRun、swww、
-Hyprlock、KDE Polkit agent 和现有 Hyprland 快捷键继续分别负责启动、壁纸、锁屏、
+BlueZ、PipeWire、UPower 和 power-profiles-daemon 仍是系统后端。Anyrun、
+Hyprlock、KDE Polkit agent 和现有 Hyprland 快捷键继续分别负责启动、锁屏、
 授权和硬件按键。
+
+Noctalia 默认使用静态 `surface` 背景并关闭壁纸自动切换。swww 守护进程、轮换脚本
+与五张仓库受管 PNG 已退役；个人图像和 Noctalia 状态仍由用户管理，
+`~/.local/state/noctalia` 中已有的 Settings 覆盖继续优先。
 
 共享的 `dotfiles.noctalia.weatherLocation` 选项可为空，默认 `null` 会关闭声明式天气。
 Yu Sun 的个人 Home Manager 层将其设为 `Guangzhou, China`、摄氏度和 10 分钟刷新。
@@ -140,7 +144,7 @@ Battle.net 只有在 Wine 应用实际导出 SNI 时才会出现；缺失只是�
 地名，无需账号或令牌。
 Noctalia Settings 可将插件和状态栏的运行时覆盖保存到 `~/.local/state/noctalia`；
 如果实际状态栏与声明式布局不同，应检查相关覆盖。可复用工作站导出仍默认关闭 Clash；
-个人 Home Manager 层在维护中的个人 GUI 主机上于 `noctalia.service` 之后启动 Clash Verge。
+个人 Home Manager 层在维护中的个人 GUI 主机的 UWSM 会话中启动 Clash Verge。
 
 ### 已评估但未安装
 
@@ -154,11 +158,13 @@ Noctalia Settings 可将插件和状态栏的运行时覆盖保存到 `~/.local/
 | :--- | :--- | :--- |
 | **[Nushell](https://www.nushell.sh/)** | `pkgs.nushell`（默认 shell） | 将数据视为结构化表格的现代 Shell |
 | **[Starship](https://starship.rs/)** | Home Manager | 极简、极速的跨 Shell 提示符 |
-| **[Helix](https://helix-editor.com/)**（`hx`） | Home Manager | 后现代模态文本编辑器（`$EDITOR` / `$VISUAL`） |
+| **[Helix](https://helix-editor.com/)**（`hx`） | `pkgs.helix` + Home Manager | 模态文本编辑器（`$EDITOR` / `$VISUAL`） |
 | **[Yazi](https://yazi-rs.github.io/)** (`y`) | `pkgs.yazi` | 极速终端文件管理器（Rust）。使用 `y`（而非 `yazi`）——shell 封装器在退出时会自动切换工作目录 |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)**（`rg`） | Home Manager | 递归正则表达式搜索工具 |
 
 Zellij 已从维护中的工作站配置退役。
+工作站与导出的 TUI 模块统一使用主 nixpkgs 的 Helix 和 Yazi。
+Yazi 的归档辅助包为 `_7zz`（`7zz`）。
 
 ### 系统工具
 
@@ -259,15 +265,15 @@ input 是 flake 的依赖输入，可能提供多个应用；更新一个 input 
 ```nu
 cd /path/to/dotfiles
 with-env (dotfiles-maint-config) {
-  nix flake update nixpkgs-tools
+  nix flake update nixpkgs
 }
 git diff -- flake.nix flake.lock
 git add flake.nix flake.lock
-git commit -m "chore: update nixpkgs-tools input"
+git commit -m "chore: update nixpkgs input"
 maint-switch
 ```
 
-将 `nixpkgs-tools` 换成需要更新的输入，只暂存预期差异。Renovate 已停用。
+将 `nixpkgs` 换成需要更新的输入，只暂存预期差异。Renovate 已停用。
 建议激活前提交，但 `maint-switch` 不强制要求 checkout 干净。它直接构建当前
 checkout，不拉取 Git 更新、不更新 inputs，也不运行缓存门禁。缺少替代时可能
 需要编译。内核或 NVIDIA 变化会自动选择下次启动生效；`--boot` 可显式选择该模式。

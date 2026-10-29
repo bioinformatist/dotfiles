@@ -30,11 +30,11 @@
   };
 
   # Optional dependencies — auto-discovered by yazi via PATH.
-  # video: ffmpeg  |  archive: p7zip (7z)  |  JSON: jq  |  PDF: poppler_utils (pdftoppm)
+  # video: ffmpeg  |  archive: _7zz (7zz)  |  JSON: jq  |  PDF: poppler_utils (pdftoppm)
   # SVG: resvg     |  HEIC/JXL/font: imagemagick (≥7.1.1)  |  file search: fd
   home.packages = with pkgs; [
     ffmpeg
-    p7zip
+    _7zz
     jq
     poppler-utils
     fd

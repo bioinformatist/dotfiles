@@ -21,11 +21,15 @@ in
   };
   workstation = {
     extra-substituters = [
+      "https://cache.lantian.pub/lantian?priority=60"
+      "https://ghostty.cachix.org?priority=60"
       "https://anyrun.cachix.org?priority=60"
       "https://hyprland.cachix.org?priority=60"
       "https://noctalia.cachix.org?priority=60"
     ];
     extra-trusted-public-keys = [
+      "lantian:WVGO7vsRMSEN+h7Lp7kv6SAmrkEXgUGbbXm7jMDjBuQ="
+      "ghostty.cachix.org-1:QB389yTa6gTyneehvqG58y0WnHjQOqgnA+wBnpWWxns="
       "anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s="
       "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
       "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="

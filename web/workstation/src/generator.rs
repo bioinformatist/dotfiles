@@ -5,7 +5,7 @@ use zip::write::SimpleFileOptions;
 
 pub const UPSTREAM_REV: &str = env!("DOTFILES_GENERATOR_UPSTREAM_REV");
 const DISK_PLACEHOLDER: &str = "/dev/disk/by-id/REPLACE_ME_BEFORE_INSTALL";
-pub const WECHAT_DEB_URL: &str = "https://pro-store-packages.uniontech.com/appstore/pool/appstore/c/com.tencent.wechat/com.tencent.wechat_4.1.1.4_amd64.deb";
+pub const WECHAT_DEB_URL: &str = "https://pro-store-packages.uniontech.com/appstore/pool/appstore/c/com.tencent.wechat/com.tencent.wechat_4.1.1.7_amd64.deb";
 const WECHAT_DEB_REFERER: &str = "https://pro-store-packages.uniontech.com/";
 const WECHAT_PROXY_PLACEHOLDER: &str = "http://<lan-proxy-ip>:<port>";
 const CHINA_SUBSTITUTER: &str = "https://mirrors.ustc.edu.cn/nix-channels/store";
@@ -408,13 +408,13 @@ fn render_home(spec: &ProductSpec) -> String {
     let mut options = Vec::new();
     if !git_name.is_empty() {
         options.push(format!(
-            r#"  programs.git.userName = "{}";"#,
+            r#"  programs.git.settings.user.name = "{}";"#,
             escape_nix_string(git_name)
         ));
     }
     if !git_email.is_empty() {
         options.push(format!(
-            r#"  programs.git.userEmail = "{}";"#,
+            r#"  programs.git.settings.user.email = "{}";"#,
             escape_nix_string(git_email)
         ));
     }
@@ -927,9 +927,9 @@ mod tests {
             .expect("home")
             .contents
             .as_str();
-        assert!(home.contains("programs.git.userName"));
-        assert!(home.contains("programs.git.userEmail"));
-        assert!(!home.contains("programs.git.settings"));
+        assert!(home.contains("programs.git.settings.user.name"));
+        assert!(home.contains("programs.git.settings.user.email"));
+        assert!(!home.contains("programs.git.user"));
     }
 
     #[test]
@@ -952,7 +952,8 @@ mod tests {
             .expect("configuration")
             .contents
             .as_str();
-        assert!(home.contains(r#"programs.git.userName = "Alice \${USER} \"Example\" \\team";"#));
+        assert!(home
+            .contains(r#"programs.git.settings.user.name = "Alice \${USER} \"Example\" \\team";"#));
         assert!(config.contains(r#" \${USER}@workstation""#));
     }
 

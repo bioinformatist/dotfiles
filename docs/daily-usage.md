@@ -85,28 +85,33 @@ retired application data must be removed from that partition separately.
 
 | Application | Package / Source | Description |
 | :--- | :--- | :--- |
-| **Hyprland** | `inputs.hyprland` (flake) | Dynamic tiling Wayland compositor, launched via UWSM |
-| **Ghostty** | `pkgs.ghostty` | Modern GPU-accelerated terminal emulator (Zig), native GTK on Linux |
+| **Hyprland** | `pkgs.hyprland` | 0.56.2 compositor with its matching nixpkgs portal, launched via UWSM |
+| **Ghostty** | Official `inputs.ghostty` flake | v1.4.0 GPU-accelerated terminal, shared by NixOS and Home Manager |
+| **Anyrun** | `pkgs.anyrun` + `pkgs.anyrun-provider` | 26.10.0 launcher with applications, rink, shell, symbols, and websearch plugins |
 | **Google Chrome** | `pkgs.google-chrome` | Web browser |
 | **Clash Verge** | `programs.clash-verge` (NixOS module) | GUI proxy client (network flexibility) |
-| **Noctalia** | `inputs.noctalia` + Home Manager | Bar, native hardware controls, notifications, and control/session panels |
-| **swww** | `inputs.swww` (flake) | Wayland wallpaper daemon with custom multi-monitor rotation script |
+| **Noctalia** | `pkgs.noctalia` + native Home Manager module | 5.4.0 bar, background, hardware controls, notifications, and panels |
 | **hyprlock** | `pkgs.hyprlock` | Hyprland-native lock screen |
 | **XDG Desktop Portal** | `xdg-desktop-portal-hyprland` | Hyprland-native portal for screen sharing, file dialogs, etc. |
-| **WeChat** | `nixpkgs-wechat.wechat-uos` | WeChat desktop client (runs via XWayland) |
+| **WeChat** | `pkgs.wechat-uos` | WeChat desktop client with Referer download and Fcitx/controller wrappers (XWayland) |
 | **grim** + **slurp** | `pkgs.grim`, `pkgs.slurp` | Wayland screen capture + region selector |
 | **satty** | `pkgs.satty` | Screenshot annotation editor (arrows, text, blur, brush) |
 
 ### Shared Noctalia Workstation Shell
 
-The exported workstation Home Manager module runs Noctalia through
-`noctalia.service`. Noctalia owns the outlined multi-monitor bar, notification
+The exported workstation Home Manager module starts Noctalia once from
+Hyprland in the UWSM session. Noctalia owns the outlined multi-monitor bar, notification
 daemon, attached control center and session panel, and the native network,
 Bluetooth, audio, battery, brightness, and power-profile clients. NetworkManager,
 BlueZ, PipeWire, UPower, and power-profiles-daemon remain the system backends.
-AnyRun, swww, Hyprlock, the KDE Polkit agent, and the existing Hyprland
-keybindings continue to own launching, wallpaper, locking, authorization, and
+Anyrun, Hyprlock, the KDE Polkit agent, and the existing Hyprland
+keybindings continue to own launching, locking, authorization, and
 hardware keys.
+
+Noctalia defaults to a static `surface` background with wallpaper automation
+disabled. The swww daemon, rotation script, and five repository-managed PNGs
+are retired. Personal images and Noctalia state remain user-owned; existing
+Settings overrides under `~/.local/state/noctalia` continue to take precedence.
 
 The shared `dotfiles.noctalia.weatherLocation` option is nullable and defaults
 to `null`, which disables configured weather. Yu Sun's personal Home Manager
@@ -157,8 +162,7 @@ Simplified Chinese zone names. No account or token is needed. Noctalia Settings
 can persist plugin and bar overrides under `~/.local/state/noctalia`, so check
 those if the live bar differs from the declared layout. The reusable workstation
 export still keeps Clash disabled by default; the personal Home Manager layer
-starts Clash Verge for the maintained personal GUI hosts after
-`noctalia.service`.
+starts Clash Verge for the maintained personal GUI hosts in the UWSM session.
 
 ### Evaluated But Not Installed
 
@@ -172,11 +176,13 @@ starts Clash Verge for the maintained personal GUI hosts after
 | :--- | :--- | :--- |
 | **[Nushell](https://www.nushell.sh/)** | `pkgs.nushell` (default shell) | Modern shell treating data as structured tables |
 | **[Starship](https://starship.rs/)** | Home Manager | Minimal, blazing-fast cross-shell prompt |
-| **[Helix](https://helix-editor.com/)** (`hx`) | Home Manager | Post-modern modal text editor (`$EDITOR` / `$VISUAL`) |
+| **[Helix](https://helix-editor.com/)** (`hx`) | `pkgs.helix` + Home Manager | Modal text editor (`$EDITOR` / `$VISUAL`) |
 | **[Yazi](https://yazi-rs.github.io/)** (`y`) | `pkgs.yazi` | Blazing fast terminal file manager (Rust). Use `y` (not `yazi`) — the shell wrapper changes your cwd on exit |
 | **[ripgrep](https://github.com/BurntSushi/ripgrep)** (`rg`) | Home Manager | Recursive regex search tool |
 
 Zellij has been retired from the maintained workstation configurations.
+Helix and Yazi use the main nixpkgs in workstation and exported TUI modules.
+Yazi's archive helper is `_7zz` (`7zz`).
 
 ### System Utilities
 
@@ -279,15 +285,15 @@ revision or tag, edit the pin in `flake.nix` first.
 ```nu
 cd /path/to/dotfiles
 with-env (dotfiles-maint-config) {
-  nix flake update nixpkgs-tools
+  nix flake update nixpkgs
 }
 git diff -- flake.nix flake.lock
 git add flake.nix flake.lock
-git commit -m "chore: update nixpkgs-tools input"
+git commit -m "chore: update nixpkgs input"
 maint-switch
 ```
 
-Replace `nixpkgs-tools` with the input you need and stage only intended changes.
+Replace `nixpkgs` with the input you need and stage only intended changes.
 Renovate is disabled. Committing before activation is recommended, but
 `maint-switch` does not require a clean checkout. It builds the current checkout
 without pulling from Git, updating inputs, or running a cache gate. Missing
