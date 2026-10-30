@@ -53,7 +53,7 @@ let
   clash-verge-rev = pkgs.symlinkJoin {
     name = "clash-verge-rev-webkit-wrapper";
     paths = [ pkgs.clash-verge-rev ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.makeBinaryWrapper ];
     meta = pkgs.clash-verge-rev.meta or { } // {
       mainProgram = "clash-verge";
     };
