@@ -14,34 +14,35 @@ in
   };
 
   config = {
-    # Ensure monitors.conf exists before Hyprland parses `source = monitors.conf`.
-    # This must be a real writable file (not xdg.configFile symlink) because
-    # nwg-displays writes to it. Impermanence persists it across reboots.
-    home.activation.ensureMonitorsConf = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      touch "$HOME/.config/hypr/monitors.conf"
+    # nwg-displays needs a writable layout; never replace an existing one.
+    home.activation.ensureMonitorsLua = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      hypr_dir="''${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
+      mkdir -p "$hypr_dir"
+      if [ ! -e "$hypr_dir/monitors.lua" ]; then
+        touch "$hypr_dir/monitors.lua"
+      fi
     '';
 
     wayland.windowManager.hyprland = {
       systemd.enable = false;
       enable = true;
-      configType = "hyprlang";
+      configType = "lua";
       extraConfig =
-        builtins.readFile ./hyprland.conf
-        + "\nexec-once = ${lib.getExe config.programs.noctalia.package}\n"
+        builtins.readFile ./hyprland.lua
+        + ''
+
+          hl.on("hyprland.start", function()
+              hl.exec_cmd("${lib.getExe config.programs.noctalia.package}")
+          end)
+        ''
         + lib.optionalString cfg.rightAltCompose ''
 
-          # Keep the US layout while enabling Compose sequences for accents.
-          input {
-              kb_options = compose:ralt
-          }
+          hl.config({ input = { kb_options = "compose:ralt" } })
         ''
         + lib.optionalString cfg.noHardwareCursors ''
 
-          # NVIDIA: software-rendered cursor avoids hardware cursor flicker caused
-          # by DRM page-flip timing races. Perf impact is negligible.
-          cursor {
-              no_hardware_cursors = true
-          }
+          -- Avoid NVIDIA hardware cursor flicker from DRM page-flip timing races.
+          hl.config({ cursor = { no_hardware_cursors = true } })
         '';
     };
   };

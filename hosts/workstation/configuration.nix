@@ -286,7 +286,8 @@
       # the id_ed25519 symlink that sops-nix creates on tmpfs.
       files = [
         ".ssh/known_hosts"
-        ".config/hypr/monitors.conf" # nwg-displays monitor layout (persists across reboots)
+        ".config/hypr/monitors.lua" # nwg-displays layout
+        ".config/hypr/monitors.conf" # Retain the old layout for rollback
       ];
     };
   };

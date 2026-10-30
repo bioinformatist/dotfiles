@@ -71,7 +71,8 @@ This repository currently manages the `homePC` workstation and `linglong` keyboa
 | `~/.cache/noctalia/calendar` | Noctalia synchronized calendar event snapshots |
 | `~/.cache/fontconfig` | Font cache for GTK/Pango application startup |
 | `~/.ssh/known_hosts` | SSH known hosts (persisted as file, not directory — see note in config) |
-| `~/.config/hypr/monitors.conf` | Monitor layout written by nwg-displays |
+| `~/.config/hypr/monitors.lua` | Active monitor layout written by nwg-displays |
+| `~/.config/hypr/monitors.conf` | Previous layout retained for rollback |
 
 Everything else is wiped on reboot.
 Removing a path from this list does not delete its existing copy under `/persist`;
@@ -85,7 +86,7 @@ retired application data must be removed from that partition separately.
 
 | Application | Package / Source | Description |
 | :--- | :--- | :--- |
-| **Hyprland** | `pkgs.hyprland` | 0.56.2 compositor with its matching nixpkgs portal, launched via UWSM |
+| **Hyprland** | Official `inputs.hyprland` flake | v0.57.0 Lua configuration and matching portal, launched via UWSM |
 | **Ghostty** | Official `inputs.ghostty` flake | v1.4.0 GPU-accelerated terminal, shared by NixOS and Home Manager |
 | **Anyrun** | `pkgs.anyrun` + `pkgs.anyrun-provider` | 26.10.0 launcher with applications, rink, shell, symbols, and websearch plugins |
 | **Google Chrome** | `pkgs.google-chrome` | Web browser |
@@ -97,10 +98,17 @@ retired application data must be removed from that partition separately.
 | **grim** + **slurp** | `pkgs.grim`, `pkgs.slurp` | Wayland screen capture + region selector |
 | **satty** | `pkgs.satty` | Screenshot annotation editor (arrows, text, blur, brush) |
 
+Hyprland loads `hyprland.lua` and the writable `hypr/monitors.lua` under a nonempty
+`XDG_CONFIG_HOME`, falling back to `~/.config`. Activation creates only a missing
+layout file; it does not convert `monitors.conf`. Use nwg-displays 0.4.4 to save
+layouts; its GUI and saved-JSON paths include the Lua DPMS (display power) patch
+tracked in [#225](https://github.com/bioinformatist/dotfiles/issues/225#issuecomment-6498033996).
+See [the migration procedure](maintenance.md#hyprland-057-layout-handoff) before deployment.
+
 ### Shared Noctalia Workstation Shell
 
 The exported workstation Home Manager module starts Noctalia once from
-Hyprland in the UWSM session. Noctalia owns the outlined multi-monitor bar, notification
+the `hyprland.start` Lua callback in the UWSM session; its separate systemd service stays disabled. Noctalia owns the outlined multi-monitor bar, notification
 daemon, attached control center and session panel, and the native network,
 Bluetooth, audio, battery, brightness, and power-profile clients. NetworkManager,
 BlueZ, PipeWire, UPower, and power-profiles-daemon remain the system backends.
@@ -237,9 +245,10 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + SHIFT + Q` | **Force Logout** (Kill Hyprland session) |
 | `SUPER + C` | Close the active window; on WeChat's main window, exit the complete application |
 | `SUPER + V` | Toggle **Floating** |
-| `SUPER + F` | Toggle **Fullscreen** |
+| `SUPER + F` | Toggle **Maximized** (keeps input-method candidates visible) |
+| `SUPER + SHIFT + F` | Toggle **Fullscreen** |
+| `CTRL + Space` | Toggle Fcitx5 (the only binding that bypasses application shortcut inhibition) |
 | `SUPER + Return` | Launch **Terminal** (Ghostty) |
-| `SUPER + B` | Launch **Browser** (Chrome) |
 | `SUPER + W` | Launch or restore **WeChat**, then hide/show its mapped windows as one preserved group |
 | `SUPER + L` | **Lock Screen** (hyprlock) |
 | `SUPER + R` | Enter **Resize Mode** (arrow keys to resize, `Escape` to exit) |
@@ -254,8 +263,7 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + SHIFT + Arrow Keys` | Move/swap window position |
 | `SUPER + [1-0]` | Switch to **Workspace** 1-10 |
 | `SUPER + SHIFT + [1-0]` | Move active window to **Workspace** 1-10 |
-| `SUPER + S` | Toggle **Special Workspace** (Scratchpad) |
-| `SUPER + SHIFT + S` | Move window to **Special Workspace** |
+| `SUPER + T` | Toggle the Telegram special workspace |
 | `SUPER + G` | Toggle Group (Tabs) |
 | `SUPER + A` | Change active window within Group |
 | `SUPER + P` | Pseudo-tile (Dwindle layout) |
@@ -264,6 +272,10 @@ The **SUPER** key (Windows key) is the primary modifier for most shortcuts.
 | `SUPER + Mouse RMB` | Drag to resize window |
 
 ### Multimedia Keys
+
+Volume and brightness bindings repeat while held and work while locked. Playback
+bindings work while locked without repeating.
+
 - **Volume**: `XF86AudioRaiseVolume` / `LowerVolume` / `Mute`
 - **Brightness**: `XF86MonBrightnessUp` / `Down`
 - **Playback**: `XF86AudioPlay` / `Next` / `Prev` (Requires `playerctl`)
