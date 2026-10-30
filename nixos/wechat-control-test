@@ -54,9 +54,14 @@ if [[ $# -eq 2 && $1 == activewindow && $2 == -j ]]; then
   exit 0
 fi
 
-if [[ $# -eq 3 && $1 == dispatch && $2 == movetoworkspacesilent ]]; then
-  destination=${3%%,address:*}
-  address=${3#*,address:}
+if [[ $# -eq 2 && $1 == dispatch && $2 == 'hl.dsp.window.move('* ]]; then
+  destination=${2#hl.dsp.window.move\(\{workspace = }
+  destination=${destination%%, window = *}
+  destination=$(jq -r <<<"$destination")
+  address=${2#*, window = }
+  address=${address%, follow = false\}\)}
+  address=$(jq -r <<<"$address")
+  address=${address#address:}
   jq --arg address "$address" --arg destination "$destination" '
     map(
       if .address == $address
@@ -82,8 +87,11 @@ if [[ $# -eq 3 && $1 == dispatch && $2 == movetoworkspacesilent ]]; then
   exit 0
 fi
 
-if [[ $# -eq 3 && $1 == dispatch && $2 == focuswindow ]]; then
-  address=${3#address:}
+if [[ $# -eq 2 && $1 == dispatch && $2 == 'hl.dsp.focus('* ]]; then
+  address=${2#hl.dsp.focus\(\{window = }
+  address=${address%\}\)}
+  address=$(jq -r <<<"$address")
+  address=${address#address:}
   if ! jq -e --arg address "$address" '
     first(.[] | select(.address == $address))
   ' "$TEST_STATE_DIR/clients.json" >"$TEST_STATE_DIR/active-window.next"; then
@@ -94,7 +102,7 @@ if [[ $# -eq 3 && $1 == dispatch && $2 == focuswindow ]]; then
   exit 0
 fi
 
-if [[ $# -eq 2 && $1 == dispatch && $2 == killactive ]]; then
+if [[ $# -eq 2 && $1 == dispatch && $2 == 'hl.dsp.window.close()' ]]; then
   exit 0
 fi
 
@@ -308,14 +316,14 @@ JSON
 run_controller launch -- "$launch_uri_one" "$launch_uri_two"
 assert_log_line "$fixed_launch_with_uris"
 assert_log_prefix_count 2 \
-  "hyprctl <dispatch> <movetoworkspacesilent> <8,address:"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"8\", window = \"address:"
 assert_log_line \
-  "hyprctl <dispatch> <movetoworkspacesilent> <8,address:0xmain>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"8\", window = \"address:0xmain\", follow = false})>"
 assert_log_line \
-  "hyprctl <dispatch> <movetoworkspacesilent> <8,address:0xchild>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"8\", window = \"address:0xchild\", follow = false})>"
 assert_no_log_line \
-  "hyprctl <dispatch> <movetoworkspacesilent> <8,address:0xother>"
-assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"8\", window = \"address:0xother\", follow = false})>"
+assert_log_line "hyprctl <dispatch> <hl.dsp.focus({window = \"address:0xmain\"})>"
 assert_json '
   all(.[] | select(((.class // "") | ascii_downcase) == "wechat");
     .workspace.name == "8")
@@ -342,8 +350,8 @@ JSON
 run_controller toggle
 assert_log_line "$fixed_launch_command"
 assert_log_line \
-  "hyprctl <dispatch> <movetoworkspacesilent> <7,address:0xmain>"
-assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"7\", window = \"address:0xmain\", follow = false})>"
+assert_log_line "hyprctl <dispatch> <hl.dsp.focus({window = \"address:0xmain\"})>"
 assert_json \
   'length == 1 and .[0].workspace.name == "7"' \
   "$STATE_DIR/clients.json"
@@ -373,10 +381,10 @@ set_clients <<'JSON'
 JSON
 run_controller launch
 assert_log_prefix_count 2 \
-  "hyprctl <dispatch> <movetoworkspacesilent> <7,address:"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"7\", window = \"address:"
 assert_log_prefix_count 0 \
-  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:"
-assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"special:wechat\", window = \"address:"
+assert_log_line "hyprctl <dispatch> <hl.dsp.focus({window = \"address:0xmain\"})>"
 assert_log_prefix_count 0 "uwsm "
 assert_json 'all(.[]; .workspace.name == "7")' "$STATE_DIR/clients.json"
 assert_json '.address == "0xmain"' "$STATE_DIR/active-window.json"
@@ -426,15 +434,15 @@ set_move_injected_clients <<'JSON'
 JSON
 run_controller toggle
 assert_log_prefix_count 3 \
-  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"special:wechat\", window = \"address:"
 assert_log_line \
-  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:0xmain>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"special:wechat\", window = \"address:0xmain\", follow = false})>"
 assert_log_line \
-  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:0xchild1>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"special:wechat\", window = \"address:0xchild1\", follow = false})>"
 assert_log_line \
-  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:0xchild2>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"special:wechat\", window = \"address:0xchild2\", follow = false})>"
 assert_no_log_line \
-  "hyprctl <dispatch> <movetoworkspacesilent> <special:wechat,address:0xother>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"special:wechat\", window = \"address:0xother\", follow = false})>"
 assert_log_prefix_count 0 "uwsm "
 assert_json '
   all(.[] | select(((.class // "") | ascii_downcase) == "wechat");
@@ -474,8 +482,8 @@ set_clients <<'JSON'
 JSON
 run_controller toggle
 assert_log_prefix_count 3 \
-  "hyprctl <dispatch> <movetoworkspacesilent> <7,address:"
-assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"7\", window = \"address:"
+assert_log_line "hyprctl <dispatch> <hl.dsp.focus({window = \"address:0xmain\"})>"
 assert_log_prefix_count 0 "uwsm "
 assert_json \
   'all(.[]; .workspace.name == "7")' \
@@ -550,8 +558,8 @@ run_controller toggle
 assert_log_line "$activation_command"
 assert_log_prefix_count 0 "uwsm <app> <-t>"
 assert_log_prefix_count 3 \
-  "hyprctl <dispatch> <movetoworkspacesilent> <9,address:"
-assert_log_line "hyprctl <dispatch> <focuswindow> <address:0xmain>"
+  "hyprctl <dispatch> <hl.dsp.window.move({workspace = \"9\", window = \"address:"
+assert_log_line "hyprctl <dispatch> <hl.dsp.focus({window = \"address:0xmain\"})>"
 assert_json '
   all(.[] | select(((.class // "") | ascii_downcase) == "wechat");
     .workspace.name == "9")
@@ -599,12 +607,12 @@ set_active_window <<'JSON'
 JSON
 run_controller close-active
 assert_log_count 1 "systemctl <--user> <stop> <app-wechat.service>"
-assert_log_count 0 "hyprctl <dispatch> <killactive>"
+assert_log_count 0 "hyprctl <dispatch> <hl.dsp.window.close()>"
 assert_json \
   'length == 1 and .[0].address == "0xother"' \
   "$STATE_DIR/clients.json"
 
-# 6. Closing a WeChat child or a non-WeChat window retains killactive.
+# 6. Closing a WeChat child or a non-WeChat window retains a graceful close request.
 reset_state
 set_active_window <<'JSON'
 {
@@ -615,7 +623,7 @@ set_active_window <<'JSON'
 }
 JSON
 run_controller close-active
-assert_log_count 1 "hyprctl <dispatch> <killactive>"
+assert_log_count 1 "hyprctl <dispatch> <hl.dsp.window.close()>"
 assert_log_count 0 "systemctl <--user> <stop> <app-wechat.service>"
 
 reset_state
@@ -628,7 +636,7 @@ set_active_window <<'JSON'
 }
 JSON
 run_controller close-active
-assert_log_count 1 "hyprctl <dispatch> <killactive>"
+assert_log_count 1 "hyprctl <dispatch> <hl.dsp.window.close()>"
 assert_log_count 0 "systemctl <--user> <stop> <app-wechat.service>"
 
 # 8. Main-window recovery has a bounded, failing timeout.
@@ -650,8 +658,8 @@ if run_controller toggle >"$STATE_DIR/timeout.stdout" 2>"$STATE_DIR/timeout.stde
 fi
 assert_log_line "$activation_command"
 assert_log_prefix_count 0 \
-  "hyprctl <dispatch> <movetoworkspacesilent>"
-assert_log_prefix_count 0 "hyprctl <dispatch> <focuswindow>"
+  "hyprctl <dispatch> <hl.dsp.window.move("
+assert_log_prefix_count 0 "hyprctl <dispatch> <hl.dsp.focus("
 
 # 9. A held runtime lock makes a concurrent toggle a successful no-op.
 reset_state

@@ -149,7 +149,8 @@
       ];
       files = [
         ".ssh/known_hosts"
-        ".config/hypr/monitors.conf"
+        ".config/hypr/monitors.lua"
+        ".config/hypr/monitors.conf" # Retain the old layout for rollback
       ];
     };
   };

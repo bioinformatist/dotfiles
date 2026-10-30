@@ -71,7 +71,8 @@
 | `~/.cache/noctalia/calendar` | Noctalia 同步的日历事件快照 |
 | `~/.cache/fontconfig` | GTK/Pango 应用启动用字体缓存 |
 | `~/.ssh/known_hosts` | SSH 已知主机（以文件而非目录形式持久化，详见配置注释） |
-| `~/.config/hypr/monitors.conf` | nwg-displays 写入的显示器布局 |
+| `~/.config/hypr/monitors.lua` | nwg-displays 写入的当前显示器布局 |
+| `~/.config/hypr/monitors.conf` | 为回滚保留的旧布局 |
 
 其他所有内容在重启时清除。
 从持久化列表移除路径不会删除 `/persist` 中已有的副本；停用应用后的旧数据需另行清理。
@@ -84,7 +85,7 @@
 
 | 应用 | 包 / 来源 | 说明 |
 | :--- | :--- | :--- |
-| **Hyprland** | `pkgs.hyprland` | 0.56.2 合成器及主包集配套 portal，通过 UWSM 启动 |
+| **Hyprland** | 官方 `inputs.hyprland` flake | v0.57.0 Lua 配置及配套 portal，通过 UWSM 启动 |
 | **Ghostty** | 官方 `inputs.ghostty` flake | v1.4.0 GPU 加速终端，NixOS 与 Home Manager 共用同一个包 |
 | **Anyrun** | `pkgs.anyrun` + `pkgs.anyrun-provider` | 26.10.0 启动器，保留 applications、rink、shell、symbols、websearch 五插件 |
 | **Google Chrome** | `pkgs.google-chrome` | Web 浏览器 |
@@ -96,9 +97,16 @@
 | **grim** + **slurp** | `pkgs.grim`、`pkgs.slurp` | Wayland 屏幕截图 + 区域选择器 |
 | **satty** | `pkgs.satty` | 截图标注编辑器（箭头、文字、模糊、画笔） |
 
+Hyprland 从非空 `XDG_CONFIG_HOME`（否则为 `~/.config`）读取 `hyprland.lua`
+和可写的 `hypr/monitors.lua`。activation 只创建缺失的布局文件，不转换或读取
+`monitors.conf`。继续使用 nwg-displays 0.4.4 保存布局；其 GUI 与保存 JSON 的应用
+路径包含 Lua DPMS（显示器电源管理）补丁，见
+[#225](https://github.com/bioinformatist/dotfiles/issues/225#issuecomment-6498033996)。
+部署前参照[布局交接程序](maintenance.zh-CN.md#hyprland-057-布局交接)。
+
 ### 共享 Noctalia 工作站桌面壳
 
-导出的工作站 Home Manager 模块在 UWSM 会话中通过 Hyprland 启动一次 Noctalia。
+导出的工作站 Home Manager 模块在 UWSM 会话中通过 `hyprland.start` Lua 回调启动一次 Noctalia，其独立 systemd 服务保持禁用。
 Noctalia 负责带轮廓的多显示器状态栏、通知守护进程、附着式控制中心和会话面板，
 并原生提供网络、蓝牙、音频、电池、亮度和电源 profile 客户端。NetworkManager、
 BlueZ、PipeWire、UPower 和 power-profiles-daemon 仍是系统后端。Anyrun、
@@ -218,9 +226,10 @@ Compose（组合键）通过一段短按键序列输入单个字符，不改变�
 | `SUPER + SHIFT + Q` | **强制注销**（终止 Hyprland 会话） |
 | `SUPER + C` | 关闭当前窗口；焦点在微信主窗口时退出整个微信应用 |
 | `SUPER + V` | 切换**浮动** |
-| `SUPER + F` | 切换**全屏** |
+| `SUPER + F` | 切换**最大化**（保留输入法候选框可见） |
+| `SUPER + SHIFT + F` | 切换**全屏** |
+| `CTRL + Space` | 切换 Fcitx5（仅此绑定绕过应用快捷键抑制） |
 | `SUPER + Return` | 启动**终端**（Ghostty） |
-| `SUPER + B` | 启动**浏览器**（Chrome） |
 | `SUPER + W` | 启动或恢复**微信**，并把已映射窗口作为一个保留状态的窗口组隐藏/显示 |
 | `SUPER + L` | **锁屏**（hyprlock） |
 | `SUPER + R` | 进入**调整大小模式**（方向键调整，`Escape` 退出） |
@@ -235,8 +244,7 @@ Compose（组合键）通过一段短按键序列输入单个字符，不改变�
 | `SUPER + SHIFT + 方向键` | 移动/交换窗口位置 |
 | `SUPER + [1-0]` | 切换到**工作区** 1-10 |
 | `SUPER + SHIFT + [1-0]` | 将当前窗口移至**工作区** 1-10 |
-| `SUPER + S` | 切换**特殊工作区**（暂存区） |
-| `SUPER + SHIFT + S` | 将窗口移至**特殊工作区** |
+| `SUPER + T` | 切换 Telegram 特殊工作区 |
 | `SUPER + G` | 切换分组（标签页模式） |
 | `SUPER + A` | 在分组内切换活动窗口 |
 | `SUPER + P` | 伪平铺（Dwindle 布局） |
@@ -245,6 +253,9 @@ Compose（组合键）通过一段短按键序列输入单个字符，不改变�
 | `SUPER + 鼠标右键` | 拖拽调整窗口大小 |
 
 ### 多媒体按键
+
+音量和亮度绑定长按重复，锁屏时仍可用；播放控制锁屏时可用，不重复触发。
+
 - **音量**：`XF86AudioRaiseVolume` / `LowerVolume` / `Mute`
 - **亮度**：`XF86MonBrightnessUp` / `Down`
 - **播放控制**：`XF86AudioPlay` / `Next` / `Prev`（需要 `playerctl`）

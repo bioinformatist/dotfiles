@@ -39,8 +39,9 @@ compilation. Inventory explicit applications, services, and key desktop
 components when refreshing the package set. Transitive dependencies follow
 their package set.
 
-Anyrun and its five plugins, Noctalia, Hyprland and its portal, WeChat, Helix,
-and Yazi now use the main nixpkgs. Home Manager follows `master` for the native
+Anyrun and its five plugins, Noctalia, WeChat, Helix, and Yazi use the main
+nixpkgs. Hyprland v0.57.0 and its matching portal use the official
+`inputs.hyprland` flake with its upstream lock graph. Home Manager follows `master` for the native
 Anyrun and Noctalia modules. Ghostty uses the
 [official v1.4.0 flake](https://github.com/ghostty-org/ghostty/tree/v1.4.0)
 with its upstream lock graph; both the system and Home Manager entry points
@@ -162,3 +163,48 @@ NixOS generation to recover an activated system. The on-demand workflow in
 [#259](https://github.com/bioinformatist/dotfiles/issues/259) replaces the earlier
 requirement to block uncached compilation. The application scope of
 [#240](https://github.com/bioinformatist/dotfiles/issues/240) remains separate.
+
+
+## Hyprland 0.57 Layout Handoff
+
+Deploy the application refresh and Lua migration together after their existing
+CI checks pass. Record the final merge SHA and each host's old and new NixOS
+generations. Complete homePC before proceeding to linglong; keep each host's
+layout on that host.
+
+1. In the old graphical session, use nwg-displays 0.4.4 to save and check the
+   layout. Confirm that `monitors.conf` and `monitors.lua` both exist and describe
+   the same layout under `$XDG_CONFIG_HOME/hypr` (or `~/.config/hypr` when unset
+   or empty). Back up both to `~/Documents/hyprland-lua-migration/<timestamp>/`
+   and verify each copy with `cmp`.
+2. Exit the graphical session and use TTY or SSH maintenance access. From a
+   clean checkout of the recorded merge SHA, run `maint-switch --repo <checkout>`
+   and follow its reboot instructions. The running daemon must already trust
+   the required caches; follow the first-adoption boundary above if it does not.
+3. After the new persistence mappings take effect, restore the checked
+   `monitors.lua` before starting the new UWSM graphical session. Verify its
+   bytes with `cmp` and its `/persist` backing with `readlink` and `findmnt`.
+   If rebooting, restore it through SSH or the maintenance console before any
+   login hook starts the GUI. Activation creates a missing file only; the new
+   config never loads or converts `monitors.conf`. Both maintained hosts persist
+   both files at `~/.config/hypr`.
+4. Check configuration errors, input methods, Compose, software cursors, common
+   bindings, both fullscreen modes, dragging and resize mode. Check Anyrun's
+   five plugins; Noctalia's bar, background, D2R and power controls; and UWSM.
+   Save the monitor layout, then confirm it survives logout/login and reboot.
+   Test display power off/on and recovery through both the nwg-displays GUI and
+   saved-JSON application paths. Check WeChat's launch/hide/restore/close cycle,
+   portal screenshots and sharing, Chrome, Clash, Ghostty, Helix, Yazi, and the
+   existing audio and hardware behavior.
+5. On failure, select the old generation from the boot menu. Restore and verify
+   `monitors.conf` before starting its graphical session. Retain the Lua file,
+   backups and user state.
+
+Local implementation evidence is limited to the native `Hyprland --verify-config`
+checks for homePC, linglong and the public workstation consumer, each with empty
+and native Lua layouts, plus a build of the installed patched nwg-displays.
+Independent review covers the four DPMS send sites; a package build does not
+establish working display power control. Existing CI, full system builds and
+physical acceptance remain separate steps. The temporary nwg-displays patch is
+tracked in [#225](https://github.com/bioinformatist/dotfiles/issues/225#issuecomment-6498033996)
+and can be removed when upstream supports Lua dispatchers in both apply paths.

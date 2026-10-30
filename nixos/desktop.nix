@@ -11,6 +11,11 @@
 
 let
   caches = import ../lib/nix-caches.nix;
+  # shortcut: nwg-displays 0.4.4 uses retired DPMS commands; drop when upstream
+  # supports Lua dispatchers in both apply paths (tracking: #225).
+  nwg-displays = pkgs.nwg-displays.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./patches/nwg-displays-lua-dpms.patch ];
+  });
   wechatDebReferer = "https://pro-store-packages.uniontech.com/";
   wechat-uos-with-referer = pkgs.wechat-uos.override {
     # UOS package storage rejects the WeChat deb intermittently without Referer.
@@ -113,8 +118,9 @@ in
       programs.hyprland = {
         enable = true;
         withUWSM = true;
-        package = pkgs.hyprland;
-        portalPackage = pkgs.xdg-desktop-portal-hyprland;
+        package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+        portalPackage =
+          inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
       };
 
       # Portal configuration: add GTK portal as fallback for Screenshot interface.
@@ -141,10 +147,10 @@ in
       # sets XMODIFIERS=@im=fcitx automatically, and with waylandFrontend=true
       # deliberately omits GTK_IM_MODULE (native Wayland apps use text-input-v3).
       #
-      # NOTE: On Hyprland (wlroots), fcitx5's native trigger key (TriggerKeys in
+      # NOTE: On Hyprland, fcitx5's native trigger key (TriggerKeys in
       # globalOptions) does NOT work — Wayland input-method-v2 protocol doesn't
-      # reliably deliver key events to fcitx5. We use legacy Hyprland `bindp` in
-      # hyprland.conf to apply dontInhibit only to the Ctrl+Space toggle, without
+      # reliably deliver key events to fcitx5. The Lua binding applies
+      # dont_inhibit only to the Ctrl+Space toggle, without
       # disabling application shortcut inhibition for other bindings.
       #
       # Related: the "Keep virtual keyboard object for V2 Protocol" option in
@@ -223,12 +229,12 @@ in
           satty # Screenshot annotation editor (arrows, text, blur)
           xclip # X11 clipboard bridge (for XWayland apps like WeChat)
           jq # JSON processor (used by screenshot keybind to get active monitor)
-          nwg-displays # GUI monitor layout tool (like Windows display settings)
         ])
         ++ lib.optionals config.dotfiles.workstation.wechat.enable [
           wechat-uos-fcitx
         ]
         ++ [
+          nwg-displays # GUI monitor layout tool
           inputs.ghostty.packages.${pkgs.stdenv.hostPlatform.system}.default
         ];
     }

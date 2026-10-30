@@ -34,8 +34,8 @@ checkout 是否干净，也不会创建提交、拉取 Git 更新或更新 input
 缓存版；必要功能或修复可以接受编译。刷新包集时盘点显式应用、服务和关键桌面
 组件，间接依赖仍由各自包集管理。
 
-Anyrun 及五个插件、Noctalia、Hyprland 及配套 portal、微信、Helix 和 Yazi
-统一使用主 nixpkgs。Home Manager 跟随 `master`，提供内建 Anyrun 和 Noctalia
+Anyrun 及五个插件、Noctalia、微信、Helix 和 Yazi 使用主 nixpkgs。
+Hyprland v0.57.0 及配套 portal 使用官方 `inputs.hyprland` flake，保留上游锁图。Home Manager 跟随 `master`，提供内建 Anyrun 和 Noctalia
 模块。Ghostty 使用[官方 v1.4.0 flake](https://github.com/ghostty-org/ghostty/tree/v1.4.0)
 并保留上游锁图；系统层与 Home Manager 入口选择同一个包。
 ChatGPT 保留独立的 `llm-agents-chatgpt` pin。
@@ -135,3 +135,36 @@ required check 名称。工作流和 Renovate 配置变更需要人工审查；�
 [#259](https://github.com/bioinformatist/dotfiles/issues/259) 的按需维护决定替代了
 此前禁止无缓存编译的要求。[#240](https://github.com/bioinformatist/dotfiles/issues/240)
 的应用范围仍是独立工作。
+
+
+## Hyprland 0.57 布局交接
+
+应用刷新与 Lua 迁移在对应现有 CI 通过后联合部署。记录最终 merge SHA 和每台
+主机的新旧 NixOS generation。先完成 homePC，再进行 linglong；主机间不复制布局。
+
+1. 在旧图形会话用 nwg-displays 0.4.4 保存并核对布局。确认非空
+   `$XDG_CONFIG_HOME/hypr`（否则 `~/.config/hypr`）中 `monitors.conf`、
+   `monitors.lua` 同时存在且布局对应。将两文件备份至本机
+   `~/Documents/hyprland-lua-migration/<时间戳>/`，逐一用 `cmp` 验证。
+2. 退出图形会话，进入 TTY 或 SSH 维护会话。在记录的 merge SHA 的干净 checkout
+   执行 `maint-switch --repo <checkout>`，遵循输出的重启要求。运行中的 daemon
+   必须已经信任所需缓存；否则遵循上文首次采用的信任边界。
+3. 新持久化映射生效后，在启动新 UWSM 图形会话前恢复已核对的 `monitors.lua`。
+   用 `cmp` 验证内容，用 `readlink`、`findmnt` 确认其目标位于 `/persist`。
+   如果重启，通过 SSH 或维护控制台先恢复文件，避免登录钩子提前启动 GUI。
+   activation 只创建缺失文件；新配置不读取或转换 `monitors.conf`。
+   两台维护主机在 `~/.config/hypr` 同时持久化两文件。
+4. 核对配置错误、输入法、Compose、软件光标、常用按键、两种全屏、拖动和 resize
+   模式；检查 Anyrun 五插件，Noctalia 状态栏、背景、D2R、电源和 UWSM。
+   保存显示器布局，验证重登和重启后保留；分别从 nwg-displays GUI 和保存 JSON
+   的应用路径验证实际屏幕开关与恢复。检查微信启动、隐藏、恢复、关闭生命周期，
+   portal 截图与共享，Chrome、Clash、Ghostty、Helix、Yazi 及原有音频和硬件行为。
+5. 失败时从启动菜单返回旧 generation，在旧图形会话启动前恢复并核对
+   `monitors.conf`，保留 Lua 文件、备份和用户状态。
+
+本地实施检查只包括 homePC、linglong、公共 workstation 最终配置的原生
+`Hyprland --verify-config`（各用空布局和原生 Lua 布局）及实际安装的 patched
+nwg-displays 构建。独立审查核对四处 DPMS 发送点；构建通过不代表实际屏幕电源
+行为通过。现有 CI、整机构建和物理验收分别记录。临时 nwg-displays 补丁及上游
+替换条件见 [#225](https://github.com/bioinformatist/dotfiles/issues/225#issuecomment-6498033996)：
+上游两条应用路径支持 Lua dispatcher 后移除本地补丁。

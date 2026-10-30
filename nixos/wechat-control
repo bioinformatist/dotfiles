@@ -125,6 +125,15 @@ address_workspace() {
   ' <<<"$CLIENTS_JSON"
 }
 
+lua_string() {
+  # JSON quoting is shared with Lua except for Unicode escape syntax.
+  jq -nr --arg value "$1" '
+    $value | tojson | gsub("\\\\(?<escape>u[0-9a-fA-F]{4}|.)";
+      if .escape | startswith("u") then "\\u{\(.escape[1:])}"
+      else "\\\(.escape)" end)
+  '
+}
+
 move_group() {
   local destination=$1
   local main_address=$2
@@ -143,7 +152,7 @@ move_group() {
       if [[ $workspace == "$destination" ]]; then
         continue
       fi
-      if ! hyprctl dispatch movetoworkspacesilent "$destination,address:$address"; then
+      if ! hyprctl dispatch "hl.dsp.window.move({workspace = $(lua_string "$destination"), window = $(lua_string "address:$address"), follow = false})"; then
         refresh_clients
         if ! address_exists "$main_address"; then
           die "WeChat main window disappeared while moving the window group"
@@ -173,7 +182,7 @@ move_group() {
 focus_main() {
   local main_address=$1
 
-  if hyprctl dispatch focuswindow "address:$main_address"; then
+  if hyprctl dispatch "hl.dsp.focus({window = $(lua_string "address:$main_address")})"; then
     return
   fi
 
@@ -305,7 +314,7 @@ close_active() {
       or (.initialTitle == $main_title)
     )
   ' <<<"$active_json" >/dev/null; then
-    hyprctl dispatch killactive
+    hyprctl dispatch 'hl.dsp.window.close()'
     return
   fi
 
