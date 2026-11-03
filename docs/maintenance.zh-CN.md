@@ -34,11 +34,15 @@ checkout 是否干净，也不会创建提交、拉取 Git 更新或更新 input
 缓存版；必要功能或修复可以接受编译。刷新包集时盘点显式应用、服务和关键桌面
 组件，间接依赖仍由各自包集管理。
 
+x86_64-linux overlay 暂时使用上游源码哈希选择 Chrome 156.0.8078.79 和
+Noctalia 5.4.1，不更新共享 nixpkgs 锁定；锁定包集包含这些修复后移除对应覆盖。
+
 Anyrun 及五个插件、Noctalia、微信、Helix 和 Yazi 使用主 nixpkgs。
 Hyprland v0.57.0 及配套 portal 使用官方 `inputs.hyprland` flake，保留上游锁图。Home Manager 跟随 `master`，提供内建 Anyrun 和 Noctalia
 模块。Ghostty 使用[官方 v1.4.0 flake](https://github.com/ghostty-org/ghostty/tree/v1.4.0)
 并保留上游锁图；系统层与 Home Manager 入口选择同一个包。
-ChatGPT 保留独立的 `llm-agents-chatgpt` pin。
+Codex CLI 和 ChatGPT Desktop 共用 `llm-agents` 输入及其上游锁图，
+通过 `nix flake update llm-agents` 一起更新。
 
 Codex 运行时来自 `llm-agents`：独立 CLI 包含配套的 Code Mode Host，供终端、
 Improve 和 doctor 使用。桌面启动器通过 `CODEX_CLI_PATH` 选择该 CLI。
@@ -123,6 +127,10 @@ required check 名称。工作流和 Renovate 配置变更需要人工审查；�
 基础数据来自 `scripts/maint/policy.json`。上游 CI 与 `maint-switch` 不再消费它们。
 桌面 policy 和组合导出 `lib.maintenancePolicy` 已删除。下游采用新版 helper 时，
 需从手动示例中删除 `--no-pull`；新版始终应用当前 checkout。
+
+用户已授权的变更由助手创建 PR，跟进现有必需检查，并在可用时启用自动合并；
+否则在检查通过后由助手合并，无需用户额外人工点审或点击合并。保留现有 main
+保护、必需检查及仓库强制的审查要求；遇到阻塞时报告，不降低或绕过门禁。
 
 ## 首次采用与恢复
 

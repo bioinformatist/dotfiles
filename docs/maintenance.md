@@ -39,13 +39,18 @@ compilation. Inventory explicit applications, services, and key desktop
 components when refreshing the package set. Transitive dependencies follow
 their package set.
 
+The x86_64-linux overlay temporarily selects Chrome 156.0.8078.79 and Noctalia
+5.4.1 using upstream source hashes, without updating the shared nixpkgs lock.
+Remove those overrides when the locked package set includes these fixes.
+
 Anyrun and its five plugins, Noctalia, WeChat, Helix, and Yazi use the main
 nixpkgs. Hyprland v0.57.0 and its matching portal use the official
 `inputs.hyprland` flake with its upstream lock graph. Home Manager follows `master` for the native
 Anyrun and Noctalia modules. Ghostty uses the
 [official v1.4.0 flake](https://github.com/ghostty-org/ghostty/tree/v1.4.0)
 with its upstream lock graph; both the system and Home Manager entry points
-select that package. ChatGPT retains its independent `llm-agents-chatgpt` pin.
+select that package. Codex CLI and ChatGPT Desktop share the `llm-agents` input
+and its upstream lock graph; update them together with `nix flake update llm-agents`.
 
 Codex runtime packages come from `llm-agents`; the standalone CLI includes its
 matching Code Mode Host and is used by terminals, Improve, and doctor. The
@@ -141,6 +146,13 @@ The workflow handles pull requests, merge groups, and manual dispatch. Keep
 the existing required check name when changing it. Workflow and Renovate
 configuration changes require manual review; this change does not alter branch
 protection.
+
+For user-authorized changes, the assistant opens a PR, monitors its existing
+required checks, and enables auto-merge when available. Otherwise, the assistant
+merges after those checks pass. The user does not need an additional manual
+approval or merge click. Preserve existing main protection, required checks,
+and enforced review requirements; report blockers rather than weakening or
+bypassing them.
 
 `lib.maintenancePolicyBase` and `lib.extendMaintenancePolicy` remain available
 for downstream consumers, backed by `scripts/maint/policy.json`. Upstream CI

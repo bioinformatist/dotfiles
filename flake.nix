@@ -4,7 +4,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     llm-agents.url = "github:numtide/llm-agents.nix";
-    llm-agents-chatgpt.url = "github:numtide/llm-agents.nix/9c622ec005a9bb0a3f4b9098b395670484b05ccd";
     ghostty.url = "github:ghostty-org/ghostty/v1.4.0";
     hyprland.url = "github:hyprwm/Hyprland/v0.57.0";
     disko = {
@@ -283,7 +282,7 @@
             ];
           };
           communityCodex = inputs.llm-agents.packages.${system}.codex;
-          communityChatgpt = inputs.llm-agents-chatgpt.packages.${system}.chatgpt;
+          communityChatgpt = inputs.llm-agents.packages.${system}.chatgpt;
           syncVendoredSkills = pkgs.writeShellApplication {
             name = "sync-vendored-skills";
             runtimeInputs = with pkgs; [
@@ -477,7 +476,8 @@
           pkgs = import nixpkgs {
             inherit system;
           };
-          noctaliaPackage = pkgs.noctalia;
+          noctaliaPackage =
+            self.nixosConfigurations.homePC.config.home-manager.users.ysun.programs.noctalia.package;
           noctaliaConfigSources = {
             homePC =
               self.nixosConfigurations.homePC.config.home-manager.users.ysun.xdg.configFile."noctalia/config.toml".source;
