@@ -128,6 +128,10 @@ required check 名称。工作流和 Renovate 配置变更需要人工审查；�
 桌面 policy 和组合导出 `lib.maintenancePolicy` 已删除。下游采用新版 helper 时，
 需从手动示例中删除 `--no-pull`；新版始终应用当前 checkout。
 
+用户已授权的变更由助手创建 PR，跟进现有必需检查，并在可用时启用自动合并；
+否则在检查通过后由助手合并，无需用户额外人工点审或点击合并。保留现有 main
+保护、必需检查及仓库强制的审查要求；遇到阻塞时报告，不降低或绕过门禁。
+
 ## 首次采用与恢复
 
 从新 checkout source `home/shell/nushell/maint.nu` 只替换 shell 入口。

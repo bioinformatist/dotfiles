@@ -147,6 +147,13 @@ the existing required check name when changing it. Workflow and Renovate
 configuration changes require manual review; this change does not alter branch
 protection.
 
+For user-authorized changes, the assistant opens a PR, monitors its existing
+required checks, and enables auto-merge when available. Otherwise, the assistant
+merges after those checks pass. The user does not need an additional manual
+approval or merge click. Preserve existing main protection, required checks,
+and enforced review requirements; report blockers rather than weakening or
+bypassing them.
+
 `lib.maintenancePolicyBase` and `lib.extendMaintenancePolicy` remain available
 for downstream consumers, backed by `scripts/maint/policy.json`. Upstream CI
 and `maint-switch` no longer use them. The desktop policy and combined

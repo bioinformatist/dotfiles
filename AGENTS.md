@@ -76,6 +76,11 @@ maintenance.
 
 ### Repository Workflow
 
+- For user-authorized changes, open a PR, follow the existing required checks,
+  and merge automatically once they pass; no extra user click-through review is
+  needed. Preserve main protection and required checks, and report enforced
+  approval or permission blockers instead of bypassing them. See the CI section
+  in `docs/maintenance.md`.
 - The repo's shell workflow is Nushell-first. Prefer Nushell syntax when writing or updating repo commands and examples.
 - When executing Nushell snippets through Codex tools, do not rely on the tool's shell selection alone. Invoke Nushell explicitly as `nu -c '...'`, otherwise the command may still be interpreted by `/bin/sh`.
 - Leave Maintenance Gate evaluation and its existing small builds to CI. For an explicitly requested local full flake check, use `env NIXPKGS_ALLOW_UNFREE=1 nix flake check --impure --allow-import-from-derivation`; a plain check failing on `mudfish` is an unfree-policy failure, not a code regression.
