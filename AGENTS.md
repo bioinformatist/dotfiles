@@ -44,6 +44,13 @@ abstraction when changing shared modules, profiles, or flake outputs.
 
 ## Key Constraints
 
+### Personal Workstation Lock Screen
+
+For `homePC` and `linglong`, retain hyprlock. Do not replace it with Noctalia's
+built-in lock screen or add idle auto-lock or lock-before-suspend integration
+unless the user explicitly requests it. Preserve existing protections during
+maintenance.
+
 ### Package Sources
 
 - Prefer stable releases that meet the required behavior. When refreshing the
