@@ -704,23 +704,6 @@
         "type": "github"
       }
     },
-    "mattpocock-skills_2": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1785230297,
-        "narHash": "sha256-dQtG6usJWlg/FqTajrjcs8GSdymH92WsgLiUaCfvKPA=",
-        "owner": "mattpocock",
-        "repo": "skills",
-        "rev": "2ab958093e83e0ec752e6c1c5932da465bf23e0c",
-        "type": "github"
-      },
-      "original": {
-        "owner": "mattpocock",
-        "repo": "skills",
-        "rev": "2ab958093e83e0ec752e6c1c5932da465bf23e0c",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1790981744,
@@ -880,7 +863,6 @@
         "hyprland": "hyprland",
         "impermanence": "impermanence",
         "llm-agents": "llm-agents",
-        "mattpocock-skills": "mattpocock-skills_2",
         "nixpkgs": "nixpkgs_5",
         "noctalia-d2r": "noctalia-d2r",
         "sops-nix": "sops-nix"

@@ -27,10 +27,6 @@
       url = "github:bioinformatist/fieldcraft";
       flake = false;
     };
-    mattpocock-skills = {
-      url = "github:mattpocock/skills/2ab958093e83e0ec752e6c1c5932da465bf23e0c";
-      flake = false;
-    };
     codex-base = {
       url = "github:bioinformatist/codex-base";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -103,129 +99,6 @@
           name = "product-form-ux";
           source = "${inputs.fieldcraft}/skills/product-form-ux";
         }
-        {
-          name = "dotfiles-domain-modeling";
-          source = "${inputs.mattpocock-skills}/skills/engineering/domain-modeling";
-          skillMd =
-            builtins.replaceStrings
-              [
-                ''
-                  ---
-                  name: domain-modeling
-                  description: Build and sharpen a project's domain model. Use when the user wants to pin down domain terminology or a ubiquitous language, record an architectural decision, or when another skill needs to maintain the domain model.
-                  ---
-                ''
-              ]
-              [
-                ''
-                  ---
-                  name: dotfiles-domain-modeling
-                  description: Explicit-only workflow for sharpening this dotfiles project's domain terminology, ubiquitous language, and ADR-worthy decisions. Use only when the user explicitly invokes dotfiles-domain-modeling or asks to actively maintain dotfiles domain docs.
-                  ---
-                ''
-              ]
-              (builtins.readFile "${inputs.mattpocock-skills}/skills/engineering/domain-modeling/SKILL.md");
-          openaiYaml = ''
-            interface:
-              display_name: "Dotfiles Domain Modeling"
-              short_description: "Sharpen dotfiles domain terms and ADRs"
-              default_prompt: "Use $dotfiles-domain-modeling to clarify dotfiles domain terms or record an ADR-worthy decision."
-
-            policy:
-              allow_implicit_invocation: false
-          '';
-        }
-        {
-          name = "grill-with-docs";
-          source = "${inputs.mattpocock-skills}/skills/engineering/grill-with-docs";
-          skillMd = ''
-            ---
-            name: grill-with-docs
-            description: Explicit-only dotfiles design interview that stress-tests a plan while maintaining domain docs. Use only when the user explicitly invokes grill-with-docs or asks to stress-test a dotfiles design with docs.
-            ---
-
-            # Grill With Docs
-
-            This repo-local wrapper expects `dotfiles.codex.mattPocockSkills.enable`
-            to stay enabled for `homePC`; that global skill subset provides the
-            `$grilling` dependency used by this workflow.
-
-            Run `$grilling` to stress-test the user's dotfiles design one question
-            at a time. Keep `$dotfiles-domain-modeling` active as decisions settle:
-
-            - Update `CONTEXT.md` when a durable dotfiles domain term is introduced
-              or sharpened.
-            - Offer an ADR only when the decision is hard to reverse, surprising
-              without context, and the result of a real tradeoff.
-            - Keep implementation work out of the grilling loop unless the user
-              explicitly asks to proceed.
-          '';
-          openaiYaml = ''
-            interface:
-              display_name: "Grill With Docs"
-              short_description: "Stress-test a plan and update domain docs"
-              default_prompt: "Use $grill-with-docs to interview a dotfiles design and update domain docs as decisions settle."
-
-            policy:
-              allow_implicit_invocation: false
-          '';
-        }
-        {
-          name = "improve-codebase-architecture";
-          source = "${inputs.mattpocock-skills}/skills/engineering/improve-codebase-architecture";
-          skillMd = ''
-            ---
-            name: improve-codebase-architecture
-            description: Explicit-only dotfiles architecture review that scans for deepening opportunities and writes a temporary visual report. Use only when the user explicitly invokes improve-codebase-architecture or asks for a dotfiles architecture review.
-            ---
-
-            # Improve Codebase Architecture
-
-            This repo-local wrapper expects `dotfiles.codex.mattPocockSkills.enable`
-            to stay enabled for `homePC`; that global skill subset provides the
-            `$codebase-design` and `$grilling` dependencies used by this workflow.
-
-            Surface architectural friction in this dotfiles repo and propose
-            deepening opportunities: changes that make modules smaller at the
-            interface and deeper in implementation.
-
-            ## Process
-
-            1. Read `CONTEXT.md` and any relevant ADRs before judging the code.
-               Use `$codebase-design` for the architecture vocabulary.
-            2. Explore with normal Codex tools. Use available multi-agent tooling
-               when it is actually present; otherwise inspect the code directly and
-               make distinct candidates yourself.
-            3. Write a self-contained HTML report under the OS temp directory:
-               `$TMPDIR` when set, otherwise `/tmp`, using
-               `architecture-review-<timestamp>.html`.
-            4. Tell the user the absolute report path. Open a GUI viewer only when
-               the user explicitly asks.
-            5. For each candidate include files, problem, solution, benefits,
-               before/after diagram, and recommendation strength.
-            6. End with the top recommendation, then ask which candidate the user
-               wants to explore.
-
-            After the user picks a candidate, use `$grilling` to walk the design
-            tree with them. Use `$dotfiles-domain-modeling` to update `CONTEXT.md` or offer
-            an ADR when the conversation produces durable domain terms or decisions.
-
-            See [HTML-REPORT.md](HTML-REPORT.md) for the report scaffold, diagram
-            patterns, and styling guidance.
-          '';
-          htmlReportMd = builtins.replaceStrings [ "/codebase-design" ] [ "$codebase-design" ] (
-            builtins.readFile "${inputs.mattpocock-skills}/skills/engineering/improve-codebase-architecture/HTML-REPORT.md"
-          );
-          openaiYaml = ''
-            interface:
-              display_name: "Improve Codebase Architecture"
-              short_description: "Review dotfiles architecture with visual candidates"
-              default_prompt: "Use $improve-codebase-architecture to scan this dotfiles repo for architecture deepening opportunities."
-
-            policy:
-              allow_implicit_invocation: false
-          '';
-        }
       ];
       syncRepoLocalSkillShell =
         targetRoot:
@@ -234,17 +107,6 @@
             skill:
             ''
               sync_skill "${skill.source}" "${skill.name}"
-            ''
-            + lib.optionalString (skill ? skillMd) ''
-              cp ${builtins.toFile "${skill.name}-SKILL.md" skill.skillMd} "$target/SKILL.md"
-            ''
-            + lib.optionalString (skill ? htmlReportMd) ''
-              cp ${builtins.toFile "${skill.name}-HTML-REPORT.md" skill.htmlReportMd} "$target/HTML-REPORT.md"
-            ''
-            + lib.optionalString (skill ? openaiYaml) ''
-              mkdir -p "$target/agents"
-              cat > "$target/agents/openai.yaml" <<'YAML'
-              ${skill.openaiYaml}YAML
             '';
         in
         ''
@@ -532,7 +394,6 @@
               homePCCodexConfig.home.file.".codex/AGENTS.md".text;
           proxyRecoveryDisabled =
             !(lib.hasInfix proxyRecoveryText homePCCodexDisabledConfig.home.file.".codex/AGENTS.md".text);
-          globalMattPocockSkillsEnabled = homePCCodexConfig.dotfiles.codex.mattPocockSkills.enable;
           allCodexBaseConsumersEnabled = lib.all (
             consumer: consumer.programs.codexBase.enable
           ) codexConsumerConfigs;
@@ -704,11 +565,6 @@
               '';
 
           repo-local-skills = pkgs.runCommand "repo-local-skills-check" { } ''
-            ${lib.optionalString (!globalMattPocockSkillsEnabled) ''
-              echo "repo-local Matt Pocock workflow skills require dotfiles.codex.mattPocockSkills.enable for homePC" >&2
-              exit 1
-            ''}
-
             expected="$TMPDIR/expected"
             mkdir -p "$expected"
             ${syncRepoLocalSkillShell "$expected"}
@@ -738,13 +594,6 @@
               '(/codebase-design|/grilling|/domain-modeling|/improve-codebase-architecture|Agent tool|subagent_type|xdg-open <path>|open <path>|start <path>)' \
               ${./.agents/skills}; then
               echo "repo-local skills contain stale host-agent wording; adapt vendored skills for Codex first" >&2
-              exit 1
-            fi
-
-            if grep -n -F '$domain-modeling' \
-              ${./.agents/skills}/grill-with-docs/SKILL.md \
-              ${./.agents/skills}/improve-codebase-architecture/SKILL.md; then
-              echo "dotfiles workflow wrappers contain stale \$domain-modeling references" >&2
               exit 1
             fi
 

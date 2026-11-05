@@ -135,7 +135,7 @@ the daemon; the NixOS configuration sets `http-connections=8`.
 ## CI and Downstream Interfaces
 
 The single `maintenance gate` job in
-`.github/workflows/maintenance-gate.yml` checks `github.sha` with Nix 2.34.7 and
+`.github/workflows/maintenance-gate.yml` checks `github.sha` with Nix 2.34.9 and
 `NIXPKGS_ALLOW_UNFREE=1`. It pre-evaluates the Hyprland source, runs
 `flake check --no-build`, evaluates the synthetic `ci@headless` Home Manager
 activation, and builds the existing WeChat controller, Codex adapter, and

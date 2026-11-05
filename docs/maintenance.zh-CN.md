@@ -115,7 +115,7 @@ HTTP 下载并发属于 daemon 设置，NixOS 配置使用 `http-connections=8`�
 ## CI 与下游接口
 
 `.github/workflows/maintenance-gate.yml` 中唯一的 `maintenance gate` job
-使用 Nix 2.34.7 和 `NIXPKGS_ALLOW_UNFREE=1` 检查 `github.sha`。它预求值
+使用 Nix 2.34.9 和 `NIXPKGS_ALLOW_UNFREE=1` 检查 `github.sha`。它预求值
 Hyprland 源码，运行 `flake check --no-build`，求值合成的 `ci@headless`
 Home Manager activation，并构建既有的 WeChat controller、Codex adapter 和
 repo-local skill 检查。这些工作交给 CI；通过不代表完整系统构建或主机激活已通过。
