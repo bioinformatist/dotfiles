@@ -10,6 +10,15 @@
     (import ./noctalia.nix { inherit inputs; })
   ];
 
+  gtk = {
+    enable = true;
+    font = {
+      name = "Sarasa UI SC";
+      package = pkgs.sarasa-gothic;
+      size = 11;
+    };
+  };
+
   programs.ghostty.package = inputs.ghostty.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
   wayland.windowManager.hyprland = {
