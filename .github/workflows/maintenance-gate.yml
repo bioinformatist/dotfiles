@@ -26,8 +26,8 @@ jobs:
           ref: ${{ github.sha }}
       - uses: cachix/install-nix-action@v31
         with:
-          install_url: https://releases.nixos.org/nix/nix-2.34.7/install
-      # Nix 2.34.7's read-only flake check cannot read Hyprland's filtered VERSION in a cold store.
+          install_url: https://releases.nixos.org/nix/nix-2.34.9/install
+      # Pre-fetch Hyprland's filtered VERSION before the read-only flake check in a cold store.
       - run: nix eval --raw --impure --no-write-lock-file --option allow-import-from-derivation false '.#nixosConfigurations.homePC.config.programs.hyprland.package.src'
       - run: nix flake check --no-build --impure --no-write-lock-file --option allow-import-from-derivation false
       - run: nix eval --raw --impure '.#homeConfigurations."ci@headless".activationPackage.drvPath'
