@@ -34,11 +34,11 @@ checkout 是否干净，也不会创建提交、拉取 Git 更新或更新 input
 缓存版；必要功能或修复可以接受编译。刷新包集时盘点显式应用、服务和关键桌面
 组件，间接依赖仍由各自包集管理。
 
-x86_64-linux overlay 暂时使用上游源码哈希选择 Chrome 156.0.8078.79 和
-Noctalia 5.4.1，不更新共享 nixpkgs 锁定；锁定包集包含这些修复后移除对应覆盖。
+x86_64-linux overlay 暂时使用上游源码哈希选择 Chrome 157.0.8103.38 和
+Noctalia 5.4.1、hyprlock 0.9.7，不更新共享 nixpkgs 锁定；锁定包集包含这些修复后移除对应覆盖。
 
 Anyrun 及五个插件、Noctalia、微信、Helix 和 Yazi 使用主 nixpkgs。
-Hyprland v0.57.0 及配套 portal 使用官方 `inputs.hyprland` flake，保留上游锁图。Home Manager 跟随 `master`，提供内建 Anyrun 和 Noctalia
+Hyprland v0.57.1 及配套 portal 使用官方 `inputs.hyprland` flake，保留上游锁图。Home Manager 跟随 `master`，提供内建 Anyrun 和 Noctalia
 模块。Ghostty 使用[官方 v1.4.0 flake](https://github.com/ghostty-org/ghostty/tree/v1.4.0)
 并保留上游锁图；系统层与 Home Manager 入口选择同一个包。
 Codex CLI 和 ChatGPT Desktop 共用 `llm-agents` 输入及其上游锁图，
