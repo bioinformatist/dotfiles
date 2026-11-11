@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     llm-agents.url = "github:numtide/llm-agents.nix";
     ghostty.url = "github:ghostty-org/ghostty/v1.4.0";
-    hyprland.url = "github:hyprwm/Hyprland/v0.57.1";
+    hyprland.url = "github:hyprwm/Hyprland/v0.57.2";
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";

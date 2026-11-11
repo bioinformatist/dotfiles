@@ -39,12 +39,12 @@ compilation. Inventory explicit applications, services, and key desktop
 components when refreshing the package set. Transitive dependencies follow
 their package set.
 
-The x86_64-linux overlay temporarily selects Chrome 157.0.8103.38 and Noctalia
+The x86_64-linux overlay temporarily selects Chrome 157.0.8103.50 and Noctalia
 5.4.1, plus hyprlock 0.9.7, using upstream source hashes without updating the shared nixpkgs lock.
 Remove those overrides when the locked package set includes these fixes.
 
 Anyrun and its five plugins, Noctalia, WeChat, Helix, and Yazi use the main
-nixpkgs. Hyprland v0.57.1 and its matching portal use the official
+nixpkgs. Hyprland v0.57.2 and its matching portal use the official
 `inputs.hyprland` flake with its upstream lock graph. Home Manager follows `master` for the native
 Anyrun and Noctalia modules. Ghostty uses the
 [official v1.4.0 flake](https://github.com/ghostty-org/ghostty/tree/v1.4.0)
