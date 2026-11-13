@@ -1,6 +1,7 @@
 {
   inputs,
   config,
+  osConfig,
   pkgs,
   lib,
   ...
@@ -50,7 +51,12 @@
   dotfiles.codex.personalRules.enable = true;
   dotfiles.codex.proxyRecovery.enable = lib.mkDefault true;
 
-  home.packages = [ inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.chatgpt ];
+  home.packages = [
+    inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.chatgpt
+    # Keep the office suite user-scoped on our two workstations. Match the
+    # NixOS module's font integration without installing it system-wide.
+    (pkgs.onlyoffice-desktopeditors.override { extraFontPackages = osConfig.fonts.packages; })
+  ];
 
   xdg.mimeApps = {
     enable = true;

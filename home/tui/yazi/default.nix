@@ -1,7 +1,4 @@
-{
-  pkgs,
-  ...
-}:
+{ ... }:
 {
   programs.yazi = {
     enable = true;
@@ -29,18 +26,9 @@
     };
   };
 
-  # Optional dependencies — auto-discovered by yazi via PATH.
-  # video: ffmpeg  |  archive: _7zz (7zz)  |  JSON: jq  |  PDF: poppler_utils (pdftoppm)
-  # SVG: resvg     |  HEIC/JXL/font: imagemagick (≥7.1.1)  |  file search: fd
-  home.packages = with pkgs; [
-    ffmpeg
-    _7zz
-    jq
-    poppler-utils
-    fd
-    resvg
-    imagemagick
-  ];
+  # Nixpkgs wraps Yazi with its preview, archive and search helpers on a
+  # private PATH. Do not also expose those implementation dependencies as
+  # top-level user commands; keep independently used tools with their owner.
 
   # fzf and zoxide: shell integration keeps the zoxide database populated as
   # you navigate, so `z` / `Z` inside yazi actually finds historical paths.
