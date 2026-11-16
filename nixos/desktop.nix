@@ -11,7 +11,7 @@
 
 let
   caches = import ../lib/nix-caches.nix;
-  # shortcut: nwg-displays 0.4.4 uses retired DPMS commands; drop when upstream
+  # shortcut: nwg-displays 0.5.0 still uses retired DPMS commands; drop when upstream
   # supports Lua dispatchers in both apply paths (tracking: #225).
   nwg-displays = pkgs.nwg-displays.overrideAttrs (old: {
     patches = (old.patches or [ ]) ++ [ ./patches/nwg-displays-lua-dpms.patch ];
