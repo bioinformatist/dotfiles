@@ -1,22 +1,5 @@
 {
   "nodes": {
-    "adhx": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1789484643,
-        "narHash": "sha256-5Pv7LpWA5QPe221c9ZnRvBRzcZ1zUYyBUGIlq9s1JAA=",
-        "owner": "itsmemeworks",
-        "repo": "adhx",
-        "rev": "2dafb9c221398372d08f8dc75e857e801089f6b1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "itsmemeworks",
-        "repo": "adhx",
-        "rev": "2dafb9c221398372d08f8dc75e857e801089f6b1",
-        "type": "github"
-      }
-    },
     "aquamarine": {
       "inputs": {
         "hyprutils": [
@@ -86,10 +69,10 @@
     },
     "codex-base": {
       "inputs": {
-        "adhx": "adhx",
         "codex-src": "codex-src",
         "home-manager": "home-manager",
         "mattpocock-skills": "mattpocock-skills",
+        "mcp-nixos": "mcp-nixos",
         "nixpkgs": [
           "nixpkgs"
         ],
@@ -102,11 +85,11 @@
         "stop-slop": "stop-slop"
       },
       "locked": {
-        "lastModified": 1793102678,
-        "narHash": "sha256-BB3M+RWSj9fgYeIlJFHWLo2jn3tL7i77Sd1mVVQnryM=",
+        "lastModified": 1794902426,
+        "narHash": "sha256-+isyKAX16K0Va8or+rnYnjQeYaLHtY/hsWHc89+h1+M=",
         "owner": "bioinformatist",
         "repo": "codex-base",
-        "rev": "eba7c850297c05f57546af4360e7030ea40debdd",
+        "rev": "6092c917503d6c8e1fa687b701ee69cadea8a9fd",
         "type": "github"
       },
       "original": {
@@ -118,17 +101,39 @@
     "codex-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1792725312,
-        "narHash": "sha256-iib2+qQcGewC4Ga8cA80sInDJpzdSxDJP0y1DDOouI4=",
+        "lastModified": 1794545299,
+        "narHash": "sha256-p8Vw0Vu8ufPY35k/RkcKE6HOTMJta2J9W33ei/7in+A=",
         "owner": "openai",
         "repo": "codex",
-        "rev": "6aaac694803004a63c6f393d153c96d22521a6b9",
+        "rev": "d32063f96c2dff1dc96af839b3952abb6acfeda4",
         "type": "github"
       },
       "original": {
         "owner": "openai",
-        "ref": "rust-v0.164.0",
+        "ref": "rust-v0.169.0",
         "repo": "codex",
+        "type": "github"
+      }
+    },
+    "devshell": {
+      "inputs": {
+        "nixpkgs": [
+          "codex-base",
+          "mcp-nixos",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1768818222,
+        "narHash": "sha256-460jc0+CZfyaO8+w8JNtlClB2n4ui1RbHfPTLkpwhU8=",
+        "owner": "numtide",
+        "repo": "devshell",
+        "rev": "255a2b1725a20d060f566e4755dbf571bbbb5f76",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "devshell",
         "type": "github"
       }
     },
@@ -201,6 +206,24 @@
       }
     },
     "flake-parts": {
+      "inputs": {
+        "nixpkgs-lib": "nixpkgs-lib"
+      },
+      "locked": {
+        "lastModified": 1767609335,
+        "narHash": "sha256-feveD98mQpptwrAEggBQKJTYbvwwglSbOv53uCfH9PY=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "250481aafeb741edfe23d29195671c19b36b6dca",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "flake-parts_2": {
       "inputs": {
         "nixpkgs-lib": [
           "llm-agents",
@@ -668,7 +691,7 @@
     "llm-agents": {
       "inputs": {
         "bun2nix": "bun2nix",
-        "flake-parts": "flake-parts",
+        "flake-parts": "flake-parts_2",
         "nixpkgs": "nixpkgs_4",
         "systems": "systems_3",
         "treefmt-nix": "treefmt-nix"
@@ -690,17 +713,41 @@
     "mattpocock-skills": {
       "flake": false,
       "locked": {
-        "lastModified": 1791449074,
-        "narHash": "sha256-1QwFBwG+gORvDvW4HM0LrZlHZKmKtWr7pUHU0MAXF2Y=",
+        "lastModified": 1793269649,
+        "narHash": "sha256-ej0ATi0BWaAx+83dBwgCQxr9J2L2qEwKhUIeIRJ03Go=",
         "owner": "mattpocock",
         "repo": "skills",
-        "rev": "b0618bc436ad893b3c5e84e55fba86586d34a404",
+        "rev": "d1478fcb140db0b93c0c8df17bcfd311844749d0",
         "type": "github"
       },
       "original": {
         "owner": "mattpocock",
         "repo": "skills",
-        "rev": "b0618bc436ad893b3c5e84e55fba86586d34a404",
+        "rev": "d1478fcb140db0b93c0c8df17bcfd311844749d0",
+        "type": "github"
+      }
+    },
+    "mcp-nixos": {
+      "inputs": {
+        "devshell": "devshell",
+        "flake-parts": "flake-parts",
+        "nixpkgs": [
+          "codex-base",
+          "nixpkgs-tools"
+        ]
+      },
+      "locked": {
+        "lastModified": 1788575406,
+        "narHash": "sha256-EjSyb5FcVnZOW0qFbcvxzor/je02duSe/RhJsL5p+14=",
+        "owner": "utensils",
+        "repo": "mcp-nixos",
+        "rev": "6a517811658c21f97bd7703b35546085117fc310",
+        "type": "github"
+      },
+      "original": {
+        "owner": "utensils",
+        "ref": "v3.1.0",
+        "repo": "mcp-nixos",
         "type": "github"
       }
     },
@@ -715,6 +762,21 @@
       "original": {
         "type": "tarball",
         "url": "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst"
+      }
+    },
+    "nixpkgs-lib": {
+      "locked": {
+        "lastModified": 1765674936,
+        "narHash": "sha256-k00uTP4JNfmejrCLJOwdObYC9jHRrr/5M/a/8L2EIdo=",
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "rev": "2075416fcb47225d9b68ac469a5c4801a9c4dd85",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "type": "github"
       }
     },
     "nixpkgs_2": {
@@ -800,34 +862,34 @@
     "playwright-cli": {
       "flake": false,
       "locked": {
-        "lastModified": 1790637751,
-        "narHash": "sha256-80xzHvf7BHGvoKvMdkGeNUsUrpZrpw5eryuQM8NKT/E=",
+        "lastModified": 1794272923,
+        "narHash": "sha256-7dKRvxQ+ntqr4JPqGoWN+CHEZVg6E6Q/hO6EA6DXDKA=",
         "owner": "microsoft",
         "repo": "playwright-cli",
-        "rev": "b85c7a736bb473bf55b584e54a09ffa698d6d871",
+        "rev": "261206400b18cd0629a8b45dd14ea5488fcf261f",
         "type": "github"
       },
       "original": {
         "owner": "microsoft",
         "repo": "playwright-cli",
-        "rev": "b85c7a736bb473bf55b584e54a09ffa698d6d871",
+        "rev": "261206400b18cd0629a8b45dd14ea5488fcf261f",
         "type": "github"
       }
     },
     "ponytail": {
       "flake": false,
       "locked": {
-        "lastModified": 1791855980,
-        "narHash": "sha256-3GopEvTySUvo0ghGz4CF6xbN7x3kbB/IHEY7Dwr4dls=",
+        "lastModified": 1793243094,
+        "narHash": "sha256-CY0EifTY0UVc6/FPGVJjEfYEf/8QLsINQmoYYKZYh98=",
         "owner": "DietrichGebert",
         "repo": "ponytail",
-        "rev": "2961b52fc1fe6a5a87c7a959a79512e5c2f3ffe5",
+        "rev": "7801d061243d7b753bad0e0b3c057cd250b11755",
         "type": "github"
       },
       "original": {
         "owner": "DietrichGebert",
         "repo": "ponytail",
-        "rev": "2961b52fc1fe6a5a87c7a959a79512e5c2f3ffe5",
+        "rev": "7801d061243d7b753bad0e0b3c057cd250b11755",
         "type": "github"
       }
     },
