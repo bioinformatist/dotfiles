@@ -27,11 +27,9 @@
       url = "github:bioinformatist/fieldcraft";
       flake = false;
     };
-    codex-base = {
-      url = "github:bioinformatist/codex-base";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.nixpkgs-tools.follows = "nixpkgs";
-    };
+    # Preserve Codex Base's tested package graph; newer host Python sets can
+    # recurse in mcp-nixos's scoped FastMCP overlay.
+    codex-base.url = "github:bioinformatist/codex-base";
   };
 
   outputs =
