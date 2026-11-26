@@ -39,9 +39,9 @@ compilation. Inventory explicit applications, services, and key desktop
 components when refreshing the package set. Transitive dependencies follow
 their package set.
 
-Chrome, hyprlock and Noctalia now use the locked nixpkgs packages directly.
-The earlier security-version overrides were removed once the package set
-included their fixes, so they cannot accidentally downgrade newer packages.
+Hyprlock and Noctalia use the locked nixpkgs packages directly. On x86_64 Linux,
+the Chrome security override applies only while the locked package is older
+than the fixed version. Remove it when the locked nixpkgs catches up.
 
 Anyrun and its five plugins, Noctalia, WeChat, Helix, and Yazi use the main
 nixpkgs. Hyprland v0.57.2 and its matching portal use the official
