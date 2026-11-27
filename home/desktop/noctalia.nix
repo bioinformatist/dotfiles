@@ -105,6 +105,7 @@ in
         };
 
         bar.main = {
+          layer = "auto";
           position = "top";
           thickness = 42;
           background_opacity = 1.0;
